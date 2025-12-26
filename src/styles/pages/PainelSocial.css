@@ -1,0 +1,364 @@
+.painel-social {
+  min-height: 100vh;
+  padding: 40px 0;
+  background: var(--background);
+}
+
+.painel-header {
+  margin-bottom: 32px;
+}
+
+.header-content {
+  text-align: center;
+}
+
+.header-content h1 {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.header-content p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.bairro-selector select {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.indicadores-section {
+  margin-bottom: 32px;
+}
+
+.indicadores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.indicadores-secundarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.indicador-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.indicador-card.destaque {
+  border-color: var(--accent);
+  background: rgba(255, 122, 51, 0.05);
+}
+
+.indicador-icon {
+  font-size: 32px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  border-radius: 50%;
+}
+
+.indicador-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.indicador-numero {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.indicador-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.mapa-section,
+.familias-section,
+.grafico-section {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+
+.mapa-header,
+.familias-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.mapa-header h3,
+.familias-header h3,
+.grafico-section h3 {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.camadas-controle {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.camada-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.camada-checkbox input {
+  width: auto;
+  margin: 0;
+}
+
+.mapa-container {
+  background: var(--background);
+  border-radius: 8px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+}
+
+.mapa-placeholder {
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.pontos-mapa {
+  display: flex;
+  gap: 16px;
+  margin: 16px 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.ponto {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.filtros-familias {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filtro-radio {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.filtro-radio input {
+  width: auto;
+  margin: 0;
+}
+
+.familias-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.familia-card {
+  background: var(--background);
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.familia-info {
+  flex: 1;
+}
+
+.familia-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.familia-header h4 {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.vulnerabilidade-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.vulnerabilidade-badge.alta {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.vulnerabilidade-badge.média {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.vulnerabilidade-badge.baixa {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.familia-detalhes {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.familia-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.familia-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.familia-actions .btn {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.grafico-barras {
+  display: flex;
+  align-items: end;
+  gap: 24px;
+  height: 200px;
+  padding: 20px;
+  background: var(--background);
+  border-radius: 8px;
+  justify-content: center;
+}
+
+.barra-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 60px;
+}
+
+.barra {
+  width: 40px;
+  min-height: 20px;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.barra.alta {
+  background: #dc2626;
+}
+
+.barra.media {
+  background: #d97706;
+}
+
+.barra.baixa {
+  background: #16a34a;
+}
+
+.barra-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .painel-social {
+    padding: 20px 0;
+  }
+  
+  .indicadores-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .indicadores-secundarios {
+    grid-template-columns: 1fr;
+  }
+  
+  .mapa-header,
+  .familias-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .camadas-controle,
+  .filtros-familias {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .familia-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .familia-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .grafico-barras {
+    height: 150px;
+    padding: 16px;
+  }
+}

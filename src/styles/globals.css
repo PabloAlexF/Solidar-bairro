@@ -1,0 +1,92 @@
+/* Reset e configurações globais */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: #1A1A1A;
+  line-height: 1.5;
+  font-size: 16px;
+}
+
+/* Paleta com mais cor */
+:root {
+  --primary: #12253A;
+  --accent: #FF7A33;
+  --success: #34C38F;
+  --background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --surface: #FFFFFF;
+  --surface-soft: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --border-focus: #FF7A33;
+  --blue-soft: #dbeafe;
+  --green-soft: #dcfce7;
+  --orange-soft: #fed7aa;
+}
+
+.app-container {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Botões com mais cor */
+.btn {
+  border: none;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, #e66a2b 100%);
+  color: white;
+  padding: 12px 24px;
+  box-shadow: 0 4px 12px rgba(255, 122, 51, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 122, 51, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  transform: translateY(-1px);
+}
+
+/* Cards com gradientes suaves */
+.card {
+  background: linear-gradient(135deg, var(--surface) 0%, #fefefe 100%);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}

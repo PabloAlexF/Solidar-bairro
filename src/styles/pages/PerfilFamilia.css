@@ -1,0 +1,277 @@
+.perfil-familia {
+  min-height: 100vh;
+  padding: 40px 0;
+  background: var(--background);
+}
+
+.perfil-header {
+  margin-bottom: 32px;
+}
+
+.familia-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.familia-info h1 {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.vulnerabilidade-tag {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.vulnerabilidade-tag.alta {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.vulnerabilidade-tag.média {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.vulnerabilidade-tag.baixa {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.resumo-card,
+.vulnerabilidade-card,
+.necessidades-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+
+.resumo-card h3,
+.vulnerabilidade-card h3,
+.necessidades-card h3 {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.resumo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--background);
+  border-radius: 8px;
+}
+
+.resumo-icon {
+  font-size: 18px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.vulnerabilidade-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vulnerabilidade-item strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.vulnerabilidade-item p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.add-necessidade-form {
+  background: var(--background);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+
+.necessidades-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.necessidade-item {
+  background: var(--background);
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid var(--border);
+}
+
+.necessidade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.necessidade-header h4 {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.prioridade-tag {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.prioridade-tag.alta {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.prioridade-tag.média {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.prioridade-tag.baixa {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.necessidade-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.status-tag {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.status-tag.em-aberto {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-tag.atendida {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.necessidade-observacao {
+  font-style: italic;
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.necessidade-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.necessidade-actions .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+  border: 1px solid var(--success);
+}
+
+.btn-success:hover {
+  background: #2ea87a;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+  border: 1px solid #dc2626;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+.perfil-actions {
+  text-align: center;
+  margin-top: 32px;
+}
+
+.perfil-actions .btn {
+  padding: 16px 32px;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .perfil-familia {
+    padding: 20px 0;
+  }
+  
+  .familia-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .resumo-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .necessidade-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .necessidade-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .necessidade-actions {
+    justify-content: flex-start;
+  }
+}
