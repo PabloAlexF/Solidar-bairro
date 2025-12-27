@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 import '../styles/pages/CadastroFamilia.css';
 
 const CadastroFamilia = () => {
@@ -75,11 +76,9 @@ const CadastroFamilia = () => {
 
   return (
     <div className="cadastro-familia">
+      <Header />
       <div className="container">
         <div className="cadastro-header">
-          <button className="back-btn" onClick={() => navigate('/home')}>
-            ← Voltar
-          </button>
           <h1>Cadastro de Família</h1>
           <p>Preencha as informações básicas para mapear esta família no SolidarBairro</p>
         </div>

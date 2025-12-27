@@ -2,6 +2,7 @@
   min-height: 100vh;
   padding: 40px 0;
   background: #f5f5f7;
+  padding-top: 104px;
 }
 
 .cadastro-header {
@@ -13,26 +14,7 @@
 }
 
 .cadastro-header .back-btn {
-  position: absolute;
-  top: 24px;
-  left: 24px;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  padding: 12px 16px;
-  border-radius: 50px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #1d1d1f;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-}
-
-.cadastro-header .back-btn:hover {
-  background: white;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  display: none;
 }
 
 .cadastro-header h1 {

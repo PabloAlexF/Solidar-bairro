@@ -1,6 +1,7 @@
 .preciso-ajuda {
   min-height: 100vh;
   background: var(--gray-50);
+  padding-top: 64px;
 }
 
 .page-header {
@@ -314,6 +315,7 @@
   padding: 60px 20px;
   max-width: 480px;
   margin: 0 auto;
+  padding-top: 100px;
 }
 
 .success-animation {

@@ -16,7 +16,7 @@ const Home = () => {
   }, []);
 
   const handleCardClick = (route) => {
-    if (user) {
+    if (user && user.isVerified) {
       navigate(route);
     } else {
       setIsAuthOpen(true);
@@ -142,7 +142,7 @@ const Home = () => {
               <button 
                 className="join-button"
                 onClick={() => {
-                  if (user) {
+                  if (user && user.isVerified) {
                     navigate('/quero-ajudar');
                   } else {
                     window.dispatchEvent(new CustomEvent('openLogin'));

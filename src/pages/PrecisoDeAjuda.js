@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 import '../styles/pages/PrecisoDeAjuda.css';
 
 const categories = [
@@ -31,10 +32,7 @@ const PrecisoDeAjuda = () => {
   if (isPublished) {
     return (
       <div className="preciso-ajuda">
-        <header className="page-header">
-          <h1>Tudo certo!</h1>
-        </header>
-
+        <Header />
         <main className="success-content">
           <div className="success-animation">
             <div className="success-icon">
@@ -71,16 +69,7 @@ const PrecisoDeAjuda = () => {
 
   return (
     <div className="preciso-ajuda">
-      <header className="page-header">
-        <div className="container">
-          <div className="header-content">
-            <button className="back-btn" onClick={() => navigate('/')}>
-              ← Voltar
-            </button>
-            <h1>Pedir Ajuda</h1>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="form-content">
         <div className="container">
