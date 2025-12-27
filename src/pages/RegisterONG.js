@@ -29,9 +29,22 @@ const RegisterONG = () => {
     aceitaPoliticaOng: false,
     declaracaoVeracidade: false
   });
+  const [cidadeError, setCidadeError] = useState('');
 
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
+    
+    if (name === 'cidade') {
+      const normalizedValue = value.toLowerCase().trim();
+      const normalizedLagoaSanta = 'lagoa santa';
+      
+      if (value && normalizedValue !== normalizedLagoaSanta) {
+        setCidadeError('Atualmente atendemos apenas Lagoa Santa - MG');
+      } else {
+        setCidadeError('');
+      }
+    }
+    
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value
@@ -40,6 +53,14 @@ const RegisterONG = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validar cidade antes de enviar
+    const normalizedCidade = formData.cidade.toLowerCase().trim();
+    if (normalizedCidade !== 'lagoa santa') {
+      setCidadeError('Atualmente atendemos apenas Lagoa Santa - MG');
+      return;
+    }
+    
     console.log('Cadastro ONG:', formData);
     // Aqui seria enviado para verificação KYC
     alert('Cadastro enviado para verificação. Você receberá um e-mail em até 48h.');
@@ -226,8 +247,11 @@ const RegisterONG = () => {
                     name="cidade"
                     value={formData.cidade}
                     onChange={handleChange}
+                    placeholder="Lagoa Santa"
+                    className={cidadeError ? 'error' : ''}
                     required
                   />
+                  {cidadeError && <span className="error-message">{cidadeError}</span>}
                 </div>
                 <div className="form-group">
                   <label>CEP *</label>

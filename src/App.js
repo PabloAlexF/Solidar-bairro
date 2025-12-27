@@ -17,6 +17,7 @@ import CadastroFamilia from './pages/CadastroFamilia';
 import PerfilFamilia from './pages/PerfilFamilia';
 import AtualizarStatus from './pages/AtualizarStatus';
 import PainelSocial from './pages/PainelSocial';
+import Perfil from './pages/Perfil';
 import './styles/globals.css';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
         <Route path="/perfil-familia/:id" element={<PerfilFamilia />} />
         <Route path="/atualizar-status/:id" element={<AtualizarStatus />} />
         <Route path="/painel-social" element={<PainelSocial />} />
+        <Route path="/perfil" element={<Perfil />} />
       </Routes>
     </Router>
   );

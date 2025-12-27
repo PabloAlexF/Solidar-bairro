@@ -15,16 +15,38 @@ const RegisterCidadao = () => {
     senha: '',
     confirmarSenha: ''
   });
+  const [cidadeError, setCidadeError] = useState('');
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
+    
+    if (name === 'cidade') {
+      const normalizedValue = value.toLowerCase().trim();
+      const normalizedLagoaSanta = 'lagoa santa';
+      
+      if (value && normalizedValue !== normalizedLagoaSanta) {
+        setCidadeError('Atualmente atendemos apenas Lagoa Santa - MG');
+      } else {
+        setCidadeError('');
+      }
+    }
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validar cidade antes de enviar
+    const normalizedCidade = formData.cidade.toLowerCase().trim();
+    if (normalizedCidade !== 'lagoa santa') {
+      setCidadeError('Atualmente atendemos apenas Lagoa Santa - MG');
+      return;
+    }
+    
     // Aqui seria a lógica de cadastro
     console.log('Cadastro cidadão:', formData);
     navigate('/home');
@@ -112,8 +134,11 @@ const RegisterCidadao = () => {
                     name="cidade"
                     value={formData.cidade}
                     onChange={handleChange}
+                    placeholder="Lagoa Santa"
+                    className={cidadeError ? 'error' : ''}
                     required
                   />
+                  {cidadeError && <span className="error-message">{cidadeError}</span>}
                 </div>
                 <div className="form-group">
                   <label>CEP</label>

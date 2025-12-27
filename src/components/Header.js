@@ -93,6 +93,25 @@ const Header = ({ showLoginButton = true }) => {
     setShowUserMenu(false);
   };
 
+  const markAllAsRead = () => {
+    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updatedNotifications);
+    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    localStorage.removeItem('solidar-notifications');
+  };
+
+  const markAsRead = (notificationId) => {
+    const updatedNotifications = notifications.map(n => 
+      n.id === notificationId ? { ...n, read: true } : n
+    );
+    setNotifications(updatedNotifications);
+    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
+  };
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
@@ -136,6 +155,26 @@ const Header = ({ showLoginButton = true }) => {
                     <div className="notification-dropdown">
                       <div className="notification-header">
                         <h3>Notificações</h3>
+                        {notifications.length > 0 && (
+                          <div className="notification-actions">
+                            {unreadCount > 0 && (
+                              <button 
+                                className="action-btn mark-read-btn"
+                                onClick={markAllAsRead}
+                                title="Marcar todas como lidas"
+                              >
+                                ✓
+                              </button>
+                            )}
+                            <button 
+                              className="action-btn clear-btn"
+                              onClick={clearAllNotifications}
+                              title="Limpar todas"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <div className="notification-list">
                         {notifications.length === 0 ? (
@@ -144,11 +183,24 @@ const Header = ({ showLoginButton = true }) => {
                           </div>
                         ) : (
                           notifications.map((notification) => (
-                            <div key={notification.id} className="notification-item">
+                            <div 
+                              key={notification.id} 
+                              className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                              onClick={() => !notification.read && markAsRead(notification.id)}
+                            >
                               <div className="notification-content">
                                 <p className="notification-title">{notification.title}</p>
                                 <p className="notification-message">{notification.message}</p>
+                                <span className="notification-time">
+                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
                               </div>
+                              {!notification.read && <div className="unread-dot"></div>}
                             </div>
                           ))
                         )}
@@ -198,6 +250,16 @@ const Header = ({ showLoginButton = true }) => {
                       </div>
 
                       <div className="user-actions">
+                        <button 
+                          className="menu-item profile-btn"
+                          onClick={() => {
+                            navigate('/perfil');
+                            setShowUserMenu(false);
+                          }}
+                        >
+                          👤 Ver perfil
+                        </button>
+                        
                         {!user.isVerified && (
                           <button 
                             className="menu-item verify-btn"

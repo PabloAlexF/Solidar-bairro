@@ -29,6 +29,7 @@ const RegisterComercio = () => {
     aceitaTermos: false,
     aceitaPrivacidade: false
   });
+  const [cidadeError, setCidadeError] = useState('');
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -40,6 +41,14 @@ const RegisterComercio = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validar cidade antes de enviar
+    const normalizedCidade = formData.cidade.toLowerCase().trim();
+    if (normalizedCidade !== 'lagoa santa') {
+      setCidadeError('Atualmente atendemos apenas Lagoa Santa - MG');
+      return;
+    }
+    
     console.log('Cadastro comércio:', formData);
     alert('Cadastro de comércio enviado com sucesso!');
     navigate('/home');

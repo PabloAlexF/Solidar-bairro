@@ -57,6 +57,29 @@ const PrecisoDeAjuda = () => {
     e.preventDefault();
     if (selectedCat && description.trim()) {
       setIsSubmitting(true);
+      
+      // Criar o pedido
+      const newPedido = {
+        id: Date.now(),
+        tipo: categories.find(c => c.id === selectedCat)?.label,
+        titulo: `${categories.find(c => c.id === selectedCat)?.label} - ${urgency === 'alta' ? 'Urgente' : urgency === 'media' ? 'Moderada' : 'Flexível'}`,
+        descricao: description,
+        distancia: '0.2 km',
+        urgencia: urgency === 'alta' ? 'Alta' : urgency === 'media' ? 'Média' : 'Baixa',
+        tempo: 'Agora',
+        usuario: 'Você',
+        verificado: true,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Salvar no localStorage
+      const existingPedidos = JSON.parse(localStorage.getItem('solidar-pedidos') || '[]');
+      existingPedidos.unshift(newPedido);
+      localStorage.setItem('solidar-pedidos', JSON.stringify(existingPedidos));
+      
+      // Disparar evento para atualizar outras páginas
+      window.dispatchEvent(new CustomEvent('pedidoAdded'));
+      
       // Simulate API call
       setTimeout(() => {
         // Add notification to localStorage for header to pick up
@@ -219,7 +242,7 @@ const PrecisoDeAjuda = () => {
                           setDescription(e.target.value);
                         }
                       }}
-                      placeholder="Descreva sua necessidade...\n\nExemplo: Preciso de cesta básica para minha família de 4 pessoas. Estou desempregado há 2 meses."
+                      placeholder="Descreva sua necessidade... Exemplo: Preciso de cesta básica para minha família de 4 pessoas. Estou desempregado há 2 meses."
                       className="form-textarea"
                       rows="6"
                       required

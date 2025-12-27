@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import '../styles/pages/QueroAjudar.css';
@@ -6,55 +6,32 @@ import '../styles/pages/QueroAjudar.css';
 const QueroAjudar = () => {
   const navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState('Todos');
+  const [pedidos, setPedidos] = useState([]);
 
   const filters = ['Todos', 'Alimentos', 'Roupas', 'Medicamentos', 'Contas', 'Trabalho'];
 
-  const pedidos = [
-    {
-      id: 1,
-      tipo: 'Alimentos',
-      titulo: 'Cesta básica para família',
-      descricao: 'Família com 4 pessoas, incluindo 2 crianças, sem renda há 2 meses.',
-      distancia: '0.8 km',
-      urgencia: 'Alta',
-      tempo: '2h atrás',
-      usuario: 'Maria S.',
-      verificado: true
-    },
-    {
-      id: 2,
-      tipo: 'Contas',
-      titulo: 'Conta de luz em atraso',
-      descricao: 'Preciso de ajuda para pagar conta de energia elétrica no valor de R$ 180.',
-      distancia: '1.2 km',
-      urgencia: 'Média',
-      tempo: '4h atrás',
-      usuario: 'João M.',
-      verificado: false
-    },
-    {
-      id: 3,
-      tipo: 'Medicamentos',
-      titulo: 'Remédio para pressão alta',
-      descricao: 'Idoso precisa de medicamento Losartana 50mg para controle da pressão.',
-      distancia: '0.5 km',
-      urgencia: 'Alta',
-      tempo: '1h atrás',
-      usuario: 'Ana L.',
-      verificado: true
-    },
-    {
-      id: 4,
-      tipo: 'Roupas',
-      titulo: 'Roupas de inverno infantil',
-      descricao: 'Roupas para criança de 8 anos, especialmente casacos e calças.',
-      distancia: '2.1 km',
-      urgencia: 'Baixa',
-      tempo: '6h atrás',
-      usuario: 'Carlos R.',
-      verificado: true
-    }
-  ];
+  useEffect(() => {
+    // Carregar pedidos reais do localStorage
+    const loadPedidos = () => {
+      const savedPedidos = localStorage.getItem('solidar-pedidos');
+      if (savedPedidos) {
+        setPedidos(JSON.parse(savedPedidos));
+      }
+    };
+    
+    loadPedidos();
+    
+    // Escutar por novos pedidos
+    const handleNewPedido = () => {
+      loadPedidos();
+    };
+    
+    window.addEventListener('pedidoAdded', handleNewPedido);
+    
+    return () => {
+      window.removeEventListener('pedidoAdded', handleNewPedido);
+    };
+  }, []);
 
   const filteredPedidos = selectedFilter === 'Todos' 
     ? pedidos 
@@ -118,55 +95,69 @@ const QueroAjudar = () => {
             </div>
 
             <div className="pedidos-grid">
-              {filteredPedidos.map((pedido) => (
-                <div key={pedido.id} className="pedido-card">
-                  <div className="card-header">
-                    <div className="category-badge">
-                      <span className="category-icon">{getCategoryIcon(pedido.tipo)}</span>
-                      <span className="category-text">{pedido.tipo}</span>
-                    </div>
-                    <div className="urgency-badge" style={{ backgroundColor: getUrgencyColor(pedido.urgencia) }}>
-                      {pedido.urgencia}
-                    </div>
-                  </div>
-
-                  <div className="card-content">
-                    <h3 className="pedido-titulo">{pedido.titulo}</h3>
-                    <p className="pedido-descricao">{pedido.descricao}</p>
-                    
-                    <div className="pedido-meta">
-                      <div className="meta-item">
-                        <span className="meta-icon">📍</span>
-                        <span>{pedido.distancia}</span>
-                      </div>
-                      <div className="meta-item">
-                        <span className="meta-icon">⏰</span>
-                        <span>{pedido.tempo}</span>
-                      </div>
-                      <div className="meta-item">
-                        <span className="meta-icon">👤</span>
-                        <span>{pedido.usuario}</span>
-                        {pedido.verificado && <span className="verified-icon">✓</span>}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="card-actions">
-                    <button 
-                      className="btn-secondary"
-                      onClick={() => navigate(`/necessidade/${pedido.id}`)}
-                    >
-                      Ver detalhes
-                    </button>
-                    <button 
-                      className="btn-primary"
-                      onClick={() => navigate(`/necessidade/${pedido.id}`)}
-                    >
-                      Quero ajudar
-                    </button>
-                  </div>
+              {filteredPedidos.length === 0 ? (
+                <div className="no-pedidos">
+                  <div className="no-pedidos-icon">💝</div>
+                  <h3>Nenhum pedido de ajuda ainda</h3>
+                  <p>Quando alguém precisar de ajuda na sua região, os pedidos aparecerão aqui.</p>
+                  <button 
+                    className="btn-primary"
+                    onClick={() => navigate('/preciso-de-ajuda')}
+                  >
+                    Fazer um pedido
+                  </button>
                 </div>
-              ))}
+              ) : (
+                filteredPedidos.map((pedido) => (
+                  <div key={pedido.id} className="pedido-card">
+                    <div className="card-header">
+                      <div className="category-badge">
+                        <span className="category-icon">{getCategoryIcon(pedido.tipo)}</span>
+                        <span className="category-text">{pedido.tipo}</span>
+                      </div>
+                      <div className="urgency-badge" style={{ backgroundColor: getUrgencyColor(pedido.urgencia) }}>
+                        {pedido.urgencia}
+                      </div>
+                    </div>
+
+                    <div className="card-content">
+                      <h3 className="pedido-titulo">{pedido.titulo}</h3>
+                      <p className="pedido-descricao">{pedido.descricao}</p>
+                      
+                      <div className="pedido-meta">
+                        <div className="meta-item">
+                          <span className="meta-icon">📍</span>
+                          <span>{pedido.distancia}</span>
+                        </div>
+                        <div className="meta-item">
+                          <span className="meta-icon">⏰</span>
+                          <span>{pedido.tempo}</span>
+                        </div>
+                        <div className="meta-item">
+                          <span className="meta-icon">👤</span>
+                          <span>{pedido.usuario}</span>
+                          {pedido.verificado && <span className="verified-icon">✓</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="card-actions">
+                      <button 
+                        className="btn-secondary"
+                        onClick={() => navigate(`/necessidade/${pedido.id}`)}
+                      >
+                        Ver detalhes
+                      </button>
+                      <button 
+                        className="btn-primary"
+                        onClick={() => navigate(`/necessidade/${pedido.id}`)}
+                      >
+                        Quero ajudar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </section>
 
