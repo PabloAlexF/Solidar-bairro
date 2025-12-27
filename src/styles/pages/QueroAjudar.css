@@ -4,14 +4,14 @@
 }
 
 .main-content {
-  padding-top: 2rem;
+  padding-top: 4rem;
   padding-bottom: 4rem;
 }
 
 /* Hero Section */
 .hero-section {
   text-align: center;
-  padding: 3rem 0 4rem;
+  padding: 4rem 0 5rem;
   max-width: 800px;
   margin: 0 auto;
 }
