@@ -2,32 +2,34 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import '../styles/pages/PrecisoDeAjuda.css';
+import '../styles/pages/PrecisoDeAjudaWizard.css';
 
 const categories = [
-  { id: 'food', label: 'Alimentos', icon: '🛒', desc: 'Comida, cesta básica' },
-  { id: 'clothes', label: 'Roupas', icon: '👕', desc: 'Roupas, calçados' },
-  { id: 'hygiene', label: 'Higiene', icon: '🧼', desc: 'Produtos de limpeza' },
-  { id: 'meds', label: 'Medicamentos', icon: '💊', desc: 'Remédios, consultas' },
-  { id: 'bills', label: 'Contas', icon: '🧾', desc: 'Água, luz, aluguel' },
-  { id: 'work', label: 'Emprego', icon: '💼', desc: 'Trabalho, renda' },
-  { id: 'serv', label: 'Serviços', icon: '🔧', desc: 'Reparos, ajuda técnica' },
-  { id: 'other', label: 'Outros', icon: '➕', desc: 'Outras necessidades' },
+  { id: 'food', label: 'Alimentos', icon: '🛒', desc: 'Comida, cesta básica', color: '#f59e0b' },
+  { id: 'clothes', label: 'Roupas', icon: '👕', desc: 'Roupas, calçados', color: '#8b5cf6' },
+  { id: 'hygiene', label: 'Higiene', icon: '🧼', desc: 'Produtos de limpeza', color: '#06b6d4' },
+  { id: 'meds', label: 'Medicamentos', icon: '💊', desc: 'Remédios, consultas', color: '#ef4444' },
+  { id: 'bills', label: 'Contas', icon: '🧾', desc: 'Água, luz, aluguel', color: '#10b981' },
+  { id: 'work', label: 'Emprego', icon: '💼', desc: 'Trabalho, renda', color: '#f97316' },
+  { id: 'serv', label: 'Serviços', icon: '🔧', desc: 'Reparos, ajuda técnica', color: '#6366f1' },
+  { id: 'other', label: 'Outros', icon: '➕', desc: 'Outras necessidades', color: '#64748b' },
 ];
 
 const contactOptions = [
-  { id: 'whatsapp', label: 'WhatsApp', icon: '💬', desc: 'Mais rápido' },
-  { id: 'phone', label: 'Ligação', icon: '📞', desc: 'Tradicional' },
-  { id: 'chat', label: 'Chat Interno', icon: '💬', desc: 'Na plataforma' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: '💬', desc: 'Mais rápido', color: '#22c55e' },
+  { id: 'phone', label: 'Ligação', icon: '📞', desc: 'Tradicional', color: '#3b82f6' },
+  { id: 'chat', label: 'Chat Interno', icon: '💬', desc: 'Na plataforma', color: '#8b5cf6' },
 ];
 
 const visibilityOptions = [
-  { id: 'neighborhood', label: 'Apenas meu bairro', desc: 'Mais próximo' },
-  { id: 'nearby', label: 'Bairros próximos', desc: 'Área expandida' },
-  { id: 'ngos', label: 'ONGs parceiras', desc: 'Organizações' },
+  { id: 'neighborhood', label: 'Apenas meu bairro', desc: 'Mais próximo', icon: '🏠' },
+  { id: 'nearby', label: 'Bairros próximos', desc: 'Área expandida', icon: '🌍' },
+  { id: 'ngos', label: 'ONGs parceiras', desc: 'Organizações', icon: '🤝' },
 ];
 
 const PrecisoDeAjuda = () => {
   const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
   const [selectedCat, setSelectedCat] = useState(null);
   const [urgency, setUrgency] = useState('media');
   const [description, setDescription] = useState('');
@@ -35,14 +37,47 @@ const PrecisoDeAjuda = () => {
   const [visibility, setVisibility] = useState('neighborhood');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const totalSteps = 4;
+
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
   const handlePublish = (e) => {
     e.preventDefault();
     if (selectedCat && description.trim()) {
+      setIsSubmitting(true);
       // Simulate API call
       setTimeout(() => {
+        // Add notification to localStorage for header to pick up
+        const notification = {
+          id: Date.now(),
+          title: 'Pedido publicado com sucesso!',
+          message: 'Sua solicitação foi enviada para a comunidade.',
+          read: false,
+          timestamp: new Date().toISOString()
+        };
+        
+        const existingNotifications = JSON.parse(localStorage.getItem('solidar-notifications') || '[]');
+        existingNotifications.unshift(notification);
+        localStorage.setItem('solidar-notifications', JSON.stringify(existingNotifications));
+        
+        // Dispatch event to update header notifications
+        window.dispatchEvent(new CustomEvent('notificationAdded'));
+        
+        setIsSubmitting(false);
         setIsPublished(true);
-      }, 1000);
+      }, 2000);
     }
   };
 
@@ -71,12 +106,26 @@ const PrecisoDeAjuda = () => {
 
           <div className="success-stats">
             <div className="stat-item">
-              <span className="stat-number">127</span>
-              <span className="stat-label">pessoas no seu bairro</span>
+              <div className="stat-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <span className="stat-number">Em breve</span>
+              <span className="stat-label">pessoas cadastradas</span>
             </div>
             <div className="stat-item">
-              <span className="stat-number">~2h</span>
-              <span className="stat-label">tempo médio de resposta</span>
+              <div className="stat-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12,6 12,12 16,14"></polyline>
+                </svg>
+              </div>
+              <span className="stat-number">Crescendo</span>
+              <span className="stat-label">nossa comunidade</span>
             </div>
           </div>
 
@@ -104,176 +153,223 @@ const PrecisoDeAjuda = () => {
       <Header />
 
       <main className="form-content">
-        <div className="container">
-          <div className="page-intro">
-            <div className="intro-badge">
-              <span className="badge-text">🎆 Sua comunidade te ajuda</span>
+        <div className="container-wide">
+          <div className="wizard-container">
+            <div className="page-intro">
+              <h2>Preciso de Ajuda</h2>
+              <p>Conte ao seu bairro como podemos te ajudar. Juntos somos mais fortes.</p>
             </div>
-            <h2>Preciso de Ajuda</h2>
-            <p>Conte ao seu bairro como podemos te ajudar. Juntos somos mais fortes.</p>
-          </div>
 
-          <form onSubmit={handlePublish} className="help-form">
-            {/* Tipo de ajuda */}
-            <section className="form-section">
-              <h3>🎯 O que você está precisando?</h3>
-              <div className="categories-grid">
-                {categories.map((cat) => {
-                  const isSelected = selectedCat === cat.id;
-                  return (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCat(cat.id)}
-                      className={`category-btn ${isSelected ? 'selected' : ''}`}
-                    >
-                      <span className="category-icon">{cat.icon}</span>
-                      <span className="category-label">{cat.label}</span>
-                      <span className="category-desc">{cat.desc}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* Detalhes */}
-            <section className="form-section">
-              <h3>📝 Conte mais detalhes</h3>
-              <textarea 
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descreva brevemente sua necessidade para que as pessoas entendam como ajudar...\n\nExemplo: Preciso de cesta básica para minha família de 4 pessoas. Estou desempregado há 2 meses e as reservas acabaram."
-                className="form-textarea"
-                rows="5"
-                required
-              />
-              <div className="char-counter">
-                {description.length}/500 caracteres
-              </div>
-            </section>
-
-            {/* Urgência */}
-            <section className="form-section">
-              <h3>⏰ Qual a urgência?</h3>
-              <div className="urgency-grid">
-                <label className={`urgency-option ${urgency === 'alta' ? 'selected' : ''}`}>
-                  <input
-                    type="radio"
-                    name="urgency"
-                    value="alta"
-                    checked={urgency === 'alta'}
-                    onChange={(e) => setUrgency(e.target.value)}
-                  />
-                  <div className="urgency-content">
-                    <span className="urgency-emoji">🔴</span>
-                    <span className="urgency-label">Alta</span>
-                    <span className="urgency-desc">Essa semana</span>
+            {/* Progress Bar */}
+            <div className="progress-bar">
+              {[1, 2, 3, 4].map((step) => (
+                <div key={step} className={`progress-step ${currentStep >= step ? 'active' : ''}`}>
+                  <div className="step-circle">{step}</div>
+                  <div className="step-label">
+                    {step === 1 && 'Categoria'}
+                    {step === 2 && 'Detalhes'}
+                    {step === 3 && 'Preferências'}
+                    {step === 4 && 'Confirmação'}
                   </div>
-                </label>
-                <label className={`urgency-option ${urgency === 'media' ? 'selected' : ''}`}>
-                  <input
-                    type="radio"
-                    name="urgency"
-                    value="media"
-                    checked={urgency === 'media'}
-                    onChange={(e) => setUrgency(e.target.value)}
-                  />
-                  <div className="urgency-content">
-                    <span className="urgency-emoji">🟡</span>
-                    <span className="urgency-label">Média</span>
-                    <span className="urgency-desc">Até 30 dias</span>
-                  </div>
-                </label>
-                <label className={`urgency-option ${urgency === 'baixa' ? 'selected' : ''}`}>
-                  <input
-                    type="radio"
-                    name="urgency"
-                    value="baixa"
-                    checked={urgency === 'baixa'}
-                    onChange={(e) => setUrgency(e.target.value)}
-                  />
-                  <div className="urgency-content">
-                    <span className="urgency-emoji">🟢</span>
-                    <span className="urgency-label">Baixa</span>
-                    <span className="urgency-desc">Quando der</span>
-                  </div>
-                </label>
-              </div>
-            </section>
+                </div>
+              ))}
+            </div>
 
-            {/* Contato */}
-            <section className="form-section">
-              <h3>📞 Como prefere ser contatado?</h3>
-              <div className="contact-grid">
-                {contactOptions.map((option) => {
-                  const isSelected = contactMethod === option.id;
-                  return (
-                    <button 
-                      key={option.id}
-                      type="button" 
-                      onClick={() => setContactMethod(option.id)}
-                      className={`contact-option ${isSelected ? 'selected' : ''}`}
-                    >
-                      <span className="contact-icon">{option.icon}</span>
-                      <span className="contact-label">{option.label}</span>
-                      <span className="contact-desc">{option.desc}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* Privacidade */}
-            <section className="privacy-section">
-              <div className="privacy-header">
-                <span className="privacy-icon">🔒</span>
-                <h3>Privacidade e Visibilidade</h3>
-              </div>
-
-              <div className="privacy-options">
-                <label className="checkbox-option">
-                  <input
-                    type="checkbox"
-                    checked={isAnonymous}
-                    onChange={(e) => setIsAnonymous(e.target.checked)}
-                  />
-                  <div className="checkbox-content">
-                    <span className="checkbox-label">Não mostrar meu nome publicamente</span>
-                    <span className="checkbox-desc">Seu pedido aparecerá como "Anônimo"</span>
-                  </div>
-                </label>
-                
-                <div className="visibility-options">
-                  <h4>Quem pode ver seu pedido?</h4>
-                  <div className="visibility-buttons">
-                    {visibilityOptions.map((option) => {
-                      const isSelected = visibility === option.id;
+            <form onSubmit={handlePublish} className="wizard-form">
+              {/* Step 1: Category Selection */}
+              {currentStep === 1 && (
+                <div className="step-content">
+                  <h3>O que você está precisando?</h3>
+                  <div className="categories-carousel">
+                    {categories.map((cat) => {
+                      const isSelected = selectedCat === cat.id;
                       return (
-                        <button 
-                          key={option.id}
-                          type="button" 
-                          onClick={() => setVisibility(option.id)}
-                          className={`visibility-btn ${isSelected ? 'selected' : ''}`}
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setSelectedCat(cat.id)}
+                          className={`category-card ${isSelected ? 'selected' : ''}`}
+                          style={{
+                            '--category-color': cat.color,
+                            '--category-color-light': cat.color + '20'
+                          }}
                         >
-                          {option.label}
-                          <span className="visibility-desc">{option.desc}</span>
+                          <div className="category-icon">{cat.icon}</div>
+                          <h4>{cat.label}</h4>
+                          <p>{cat.desc}</p>
                         </button>
                       );
                     })}
                   </div>
                 </div>
-              </div>
-            </section>
+              )}
 
-            <button 
-              type="submit"
-              disabled={!selectedCat || !description.trim()}
-              className="btn btn-primary btn-large submit-btn"
-            >
-              <span className="btn-icon">🚀</span>
-              Publicar pedido de ajuda
-            </button>
-          </form>
+              {/* Step 2: Details */}
+              {currentStep === 2 && (
+                <div className="step-content">
+                  <h3>Conte mais detalhes</h3>
+                  <div className="details-section">
+                    <textarea 
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Descreva sua necessidade...\n\nExemplo: Preciso de cesta básica para minha família de 4 pessoas. Estou desempregado há 2 meses."
+                      className="form-textarea"
+                      rows="6"
+                      required
+                    />
+                    <div className="char-counter">{description.length}/500</div>
+                    
+                    <div className="urgency-selector">
+                      <h4>Qual a urgência?</h4>
+                      <div className="urgency-options">
+                        {['alta', 'media', 'baixa'].map((level) => (
+                          <label key={level} className={`urgency-card ${urgency === level ? 'selected' : ''}`}>
+                            <input
+                              type="radio"
+                              name="urgency"
+                              value={level}
+                              checked={urgency === level}
+                              onChange={(e) => setUrgency(e.target.value)}
+                            />
+                            <div className="urgency-content">
+                              <span className="urgency-dot"></span>
+                              <span className="urgency-label">
+                                {level === 'alta' && 'Alta - Esta semana'}
+                                {level === 'media' && 'Média - Até 30 dias'}
+                                {level === 'baixa' && 'Baixa - Quando der'}
+                              </span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Preferences */}
+              {currentStep === 3 && (
+                <div className="step-content">
+                  <h3>Preferências de contato</h3>
+                  <div className="preferences-grid">
+                    <div className="contact-section">
+                      <h4>Como prefere ser contatado?</h4>
+                      <div className="contact-options">
+                        {contactOptions.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => setContactMethod(option.id)}
+                            className={`contact-card ${contactMethod === option.id ? 'selected' : ''}`}
+                            style={{ '--contact-color': option.color }}
+                          >
+                            <span className="contact-icon">{option.icon}</span>
+                            <span className="contact-label">{option.label}</span>
+                            <span className="contact-desc">{option.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="visibility-section">
+                      <h4>Quem pode ver seu pedido?</h4>
+                      <div className="visibility-options">
+                        {visibilityOptions.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => setVisibility(option.id)}
+                            className={`visibility-card ${visibility === option.id ? 'selected' : ''}`}
+                          >
+                            <span className="visibility-icon">{option.icon}</span>
+                            <span className="visibility-label">{option.label}</span>
+                            <span className="visibility-desc">{option.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="privacy-toggle">
+                    <label className="toggle-option">
+                      <input
+                        type="checkbox"
+                        checked={isAnonymous}
+                        onChange={(e) => setIsAnonymous(e.target.checked)}
+                      />
+                      <div className="toggle-content">
+                        <span className="toggle-label">Manter anônimo</span>
+                        <span className="toggle-desc">Seu nome não aparecerá publicamente</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Confirmation */}
+              {currentStep === 4 && (
+                <div className="step-content">
+                  <h3>Confirme seus dados</h3>
+                  <div className="confirmation-summary">
+                    <div className="summary-card">
+                      <h4>Resumo do seu pedido</h4>
+                      <div className="summary-item">
+                        <strong>Categoria:</strong> {categories.find(c => c.id === selectedCat)?.label}
+                      </div>
+                      <div className="summary-item">
+                        <strong>Urgência:</strong> {urgency.charAt(0).toUpperCase() + urgency.slice(1)}
+                      </div>
+                      <div className="summary-item">
+                        <strong>Contato:</strong> {contactOptions.find(c => c.id === contactMethod)?.label}
+                      </div>
+                      <div className="summary-item">
+                        <strong>Visibilidade:</strong> {visibilityOptions.find(v => v.id === visibility)?.label}
+                      </div>
+                      <div className="summary-item">
+                        <strong>Descrição:</strong>
+                        <p className="description-preview">{description}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Buttons */}
+              <div className="wizard-navigation">
+                {currentStep > 1 && (
+                  <button type="button" onClick={prevStep} className="btn btn-secondary">
+                    Voltar
+                  </button>
+                )}
+                
+                {currentStep < totalSteps ? (
+                  <button 
+                    type="button" 
+                    onClick={nextStep}
+                    disabled={(currentStep === 1 && !selectedCat) || (currentStep === 2 && !description.trim())}
+                    className="btn btn-primary"
+                  >
+                    Próximo
+                  </button>
+                ) : (
+                  <button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`btn btn-primary btn-large ${isSubmitting ? 'submitting' : ''}`}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="btn-spinner"></div>
+                        Publicando...
+                      </>
+                    ) : (
+                      'Publicar pedido'
+                    )}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
         </div>
       </main>
     </div>

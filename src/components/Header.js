@@ -21,14 +21,32 @@ const Header = ({ showLoginButton = true }) => {
       setUser(JSON.parse(savedUser));
     }
 
+    // Load notifications from localStorage
+    const loadNotifications = () => {
+      const savedNotifications = localStorage.getItem('solidar-notifications');
+      if (savedNotifications) {
+        setNotifications(JSON.parse(savedNotifications));
+      }
+    };
+    
+    loadNotifications();
+
     // Listen for custom login event from Home page
     const handleOpenLogin = () => {
       setIsAuthOpen(true);
     };
+    
+    // Listen for new notifications
+    const handleNotificationAdded = () => {
+      loadNotifications();
+    };
+    
     window.addEventListener('openLogin', handleOpenLogin);
+    window.addEventListener('notificationAdded', handleNotificationAdded);
     
     return () => {
       window.removeEventListener('openLogin', handleOpenLogin);
+      window.removeEventListener('notificationAdded', handleNotificationAdded);
     };
   }, []);
 
