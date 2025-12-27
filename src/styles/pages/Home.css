@@ -1,6 +1,6 @@
 .home {
   min-height: 100vh;
-  background: #fafafa;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   padding-top: 64px;
 }
 
@@ -204,7 +204,7 @@
 }
 
 .info-section {
-  background: white;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   padding: 60px 0;
   margin-top: 40px;
   position: relative;
@@ -302,7 +302,7 @@
 
 /* Join Section - Clean Minimalist Style */
 .join-section {
-  background: #fafafa;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   padding: 100px 0;
   text-align: center;
   position: relative;
@@ -397,10 +397,10 @@
 }
 
 .home-footer {
-  background: #fafafa;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
   padding: 48px 0;
   text-align: center;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #d1d5db;
 }
 
 .home-footer p {
