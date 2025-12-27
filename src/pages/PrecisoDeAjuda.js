@@ -155,10 +155,12 @@ const PrecisoDeAjuda = () => {
       <main className="form-content">
         <div className="container-wide">
           <div className="wizard-container">
-            <div className="page-intro">
-              <h2>Preciso de Ajuda</h2>
-              <p>Conte ao seu bairro como podemos te ajudar. Juntos somos mais fortes.</p>
-            </div>
+            {currentStep === 1 && (
+              <div className="page-intro">
+                <h2>Preciso de Ajuda</h2>
+                <p>Conte ao seu bairro como podemos te ajudar. Juntos somos mais fortes.</p>
+              </div>
+            )}
 
             {/* Progress Bar */}
             <div className="progress-bar">
@@ -207,37 +209,53 @@ const PrecisoDeAjuda = () => {
               {/* Step 2: Details */}
               {currentStep === 2 && (
                 <div className="step-content">
-                  <h3>Conte mais detalhes</h3>
+                  <h3>Descreva sua situação</h3>
+                  <p className="step-subtitle">Conte-nos mais sobre o que você está precisando para que possamos te conectar com a ajuda certa</p>
                   <div className="details-section">
                     <textarea 
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 500) {
+                          setDescription(e.target.value);
+                        }
+                      }}
                       placeholder="Descreva sua necessidade...\n\nExemplo: Preciso de cesta básica para minha família de 4 pessoas. Estou desempregado há 2 meses."
                       className="form-textarea"
                       rows="6"
                       required
                     />
-                    <div className="char-counter">{description.length}/500</div>
+                    <div className={`char-counter ${description.length >= 500 ? 'limit-reached' : ''}`}>
+                      {description.length}/500
+                      {description.length >= 500 && <span className="limit-message"> - Limite atingido</span>}
+                    </div>
                     
                     <div className="urgency-selector">
-                      <h4>Qual a urgência?</h4>
+                      <h4>Quando você precisa dessa ajuda?</h4>
+                      <p className="urgency-subtitle">Isso nos ajuda a priorizar e conectar você com quem pode ajudar</p>
                       <div className="urgency-options">
-                        {['alta', 'media', 'baixa'].map((level) => (
-                          <label key={level} className={`urgency-card ${urgency === level ? 'selected' : ''}`}>
+                        {[
+                          { id: 'alta', label: 'Urgente', desc: 'Preciso esta semana', color: '#ef4444', bgColor: '#fef2f2' },
+                          { id: 'media', label: 'Moderada', desc: 'Posso aguardar até 30 dias', color: '#f59e0b', bgColor: '#fffbeb' },
+                          { id: 'baixa', label: 'Flexível', desc: 'Quando for possível', color: '#22c55e', bgColor: '#f0fdf4' }
+                        ].map((level) => (
+                          <label key={level.id} className={`urgency-card ${urgency === level.id ? 'selected' : ''}`}>
                             <input
                               type="radio"
                               name="urgency"
-                              value={level}
-                              checked={urgency === level}
+                              value={level.id}
+                              checked={urgency === level.id}
                               onChange={(e) => setUrgency(e.target.value)}
                             />
-                            <div className="urgency-content">
+                            <div 
+                              className="urgency-content"
+                              style={{
+                                '--urgency-color': level.color,
+                                '--urgency-bg': level.bgColor
+                              }}
+                            >
                               <span className="urgency-dot"></span>
-                              <span className="urgency-label">
-                                {level === 'alta' && 'Alta - Esta semana'}
-                                {level === 'media' && 'Média - Até 30 dias'}
-                                {level === 'baixa' && 'Baixa - Quando der'}
-                              </span>
+                              <span className="urgency-label">{level.label}</span>
+                              <span className="urgency-desc">{level.desc}</span>
                             </div>
                           </label>
                         ))}

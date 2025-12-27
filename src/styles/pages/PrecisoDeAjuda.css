@@ -458,6 +458,7 @@
   padding: 40px 20px;
   max-width: 450px;
   margin: 40px auto 0;
+  margin-left: 43% !important;
 }
 
 .success-animation {
