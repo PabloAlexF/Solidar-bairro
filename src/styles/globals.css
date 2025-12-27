@@ -10,7 +10,7 @@ body {
   background: #fafafa;
   color: #1a1a1a;
   line-height: 1.5;
-  font-size: 15px;
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -22,6 +22,15 @@ body {
   --success: #22c55e;
   --danger: #ef4444;
   --warning: #f59e0b;
+  --text-primary: #1e293b;
+  --text-muted: #64748b;
+  --text-muted-strong: #475569;
+  --accent-light-1: #fff7ed;
+  --accent-light-2: #fed7aa;
+  --accent-success-light: #f0fdf4;
+  --accent-success-dark: #bbf7d0;
+  --accent-gradient: linear-gradient(135deg, var(--primary), #fb923c);
+  --focus-ring: rgba(249, 115, 22, 0.12);
   --white: #ffffff;
   --gray-50: #fafafa;
   --gray-100: #f5f5f5;

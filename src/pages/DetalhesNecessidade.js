@@ -131,11 +131,6 @@ const DetalhesNecessidade = () => {
             <div className="contact-card">
               <h3>Como ajudar?</h3>
               <p>Entre em contato diretamente com a família para combinar a melhor forma de ajudar.</p>
-              
-              <button className="btn btn-primary btn-large" onClick={handleContato}>
-                <span>💬</span>
-                Entrar em contato via WhatsApp
-              </button>
 
               <div className="safety-tips">
                 <h4>💡 Dicas de segurança</h4>
@@ -146,6 +141,11 @@ const DetalhesNecessidade = () => {
                   <li>Documente sua ajuda (foto/recibo)</li>
                 </ul>
               </div>
+              
+              <button className="btn btn-primary btn-large" onClick={handleContato}>
+                <span>💬</span>
+                Entrar em contato via WhatsApp
+              </button>
             </div>
 
             <div className="share-card">
