@@ -82,7 +82,7 @@ const QueroAjudar = () => {
 
   return (
     <div className="quero-ajudar">
-      <Header />
+      <Header showLoginButton={false} />
       
       <main className="main-content">
         <div className="container">
