@@ -13,10 +13,35 @@ const Home = () => {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+
+    // Listen for user state changes
+    const handleUserChange = () => {
+      const updatedUser = localStorage.getItem('solidar-user');
+      if (updatedUser) {
+        setUser(JSON.parse(updatedUser));
+      } else {
+        setUser(null);
+      }
+    };
+
+    // Listen for storage changes
+    window.addEventListener('storage', handleUserChange);
+    
+    // Listen for custom user update events
+    window.addEventListener('userUpdated', handleUserChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleUserChange);
+      window.removeEventListener('userUpdated', handleUserChange);
+    };
   }, []);
 
   const handleCardClick = (route) => {
-    if (user && user.isVerified) {
+    // Always check fresh user data from localStorage
+    const currentUser = localStorage.getItem('solidar-user');
+    const userData = currentUser ? JSON.parse(currentUser) : null;
+    
+    if (userData && userData.isVerified) {
       navigate(route);
     } else {
       setIsAuthOpen(true);
@@ -87,7 +112,7 @@ const Home = () => {
               <div className="info-item">
                 <div className="info-number">01</div>
                 <h3>Próximo</h3>
-                <p>Apenas vizinhos do seu bairro</p>
+                <p>Apenas pessoas da sua cidade</p>
               </div>
               <div className="info-item">
                 <div className="info-number">02</div>
@@ -142,7 +167,11 @@ const Home = () => {
               <button 
                 className="join-button"
                 onClick={() => {
-                  if (user && user.isVerified) {
+                  // Always check fresh user data from localStorage
+                  const currentUser = localStorage.getItem('solidar-user');
+                  const userData = currentUser ? JSON.parse(currentUser) : null;
+                  
+                  if (userData && userData.isVerified) {
                     navigate('/quero-ajudar');
                   } else {
                     window.dispatchEvent(new CustomEvent('openLogin'));

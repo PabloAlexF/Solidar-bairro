@@ -48,6 +48,7 @@ const Header = ({ showLoginButton = true }) => {
       };
       setUser(newUser);
       localStorage.setItem('solidar-user', JSON.stringify(newUser));
+      window.dispatchEvent(new CustomEvent('userUpdated'));
       setIsAuthOpen(false);
       setIsVerifyOpen(true);
     }
@@ -59,6 +60,7 @@ const Header = ({ showLoginButton = true }) => {
       const verifiedUser = { ...user, isVerified: true };
       setUser(verifiedUser);
       localStorage.setItem('solidar-user', JSON.stringify(verifiedUser));
+      window.dispatchEvent(new CustomEvent('userUpdated'));
       setIsVerifyOpen(false);
       setVerificationCode('');
     }
@@ -67,6 +69,7 @@ const Header = ({ showLoginButton = true }) => {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('solidar-user');
+    window.dispatchEvent(new CustomEvent('userUpdated'));
     setName('');
     setPhone('');
     setShowUserMenu(false);
