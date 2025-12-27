@@ -40,9 +40,9 @@
   padding: 8px 20px;
   margin-bottom: 32px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeInUp 0.8s ease-out 0.2s forwards;
+  opacity: 1;
+  transform: translateY(0);
+  animation: fadeInUp 0.8s ease-out 0.2s both;
 }
 
 .badge-text {
@@ -446,62 +446,129 @@
 
 /* About Section - Clean Minimalist Style */
 .about-section {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  padding: 80px 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 100px 0;
   text-align: center;
   position: relative;
 }
 
 .about-content {
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
-.about-title {
-  font-size: 32px;
-  font-weight: 600;
-  color: #1d1d1f;
-  margin-bottom: 20px;
-  letter-spacing: -0.022em;
-  line-height: 1.1;
-}
-
-.about-description {
-  font-size: 18px;
-  color: #6b7280;
-  margin-bottom: 40px;
-  font-weight: 400;
-  line-height: 1.5;
-}
-
-.about-stats {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeInUp 0.8s ease-out 0.3s forwards;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
+.about-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 50px;
+  padding: 8px 20px;
+  margin-bottom: 24px;
+  opacity: 1;
+  transform: translateY(0);
+  animation: fadeInUp 0.8s ease-out 2s both;
 }
 
-.stat-label {
-  font-size: 13px;
-  color: #9ca3af;
+.about-badge-text {
+  font-size: 14px;
   font-weight: 500;
-  text-transform: uppercase;
+  color: #16a34a;
   letter-spacing: 0.5px;
 }
 
-.stat-value {
-  font-size: 16px;
-  color: #1d1d1f;
-  font-weight: 600;
+.about-title {
+  font-size: 40px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 24px;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  opacity: 1;
+  transform: translateY(0);
+  animation: fadeInUp 0.8s ease-out 2.2s both;
+}
+
+.about-description {
+  font-size: 20px;
+  color: #64748b;
+  margin-bottom: 60px;
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 1;
+  transform: translateY(0);
+  animation: fadeInUp 0.8s ease-out 2.4s both;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 60px;
+}
+
+.about-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 40px 24px;
+  text-align: center;
+  transition: all 0.4s ease;
+  opacity: 1;
+  transform: translateY(0);
+  animation: fadeInUp 0.8s ease-out both;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.about-card:nth-child(1) { animation-delay: 2.6s; }
+.about-card:nth-child(2) { animation-delay: 2.8s; }
+.about-card:nth-child(3) { animation-delay: 3s; }
+
+.about-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.about-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  margin: 0 auto 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.about-card:hover .about-icon {
+  transform: scale(1.1);
+  background: linear-gradient(135deg, #fff7ed, #fed7aa);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.2);
+}
+
+.about-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 12px;
+  letter-spacing: -0.025em;
+}
+
+.about-card p {
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 400;
 }
 
 .home-footer {
@@ -520,6 +587,10 @@
 
 /* Animações */
 @keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
   to {
     opacity: 1;
     transform: translateY(0);
@@ -815,34 +886,49 @@
   
   /* About Section Mobile */
   .about-section {
-    padding: 60px 0;
+    padding: 80px 0;
+  }
+  
+  .about-badge {
+    margin-bottom: 20px;
+  }
+  
+  .about-badge-text {
+    font-size: 13px;
   }
   
   .about-title {
-    font-size: 28px;
-    margin-bottom: 16px;
+    font-size: 32px;
+    margin-bottom: 20px;
   }
   
   .about-description {
-    font-size: 16px;
-    margin-bottom: 32px;
+    font-size: 17px;
+    margin-bottom: 48px;
   }
   
-  .about-stats {
-    flex-direction: column;
-    gap: 20px;
-    margin-bottom: 0;
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 48px;
   }
   
-  .stat {
-    gap: 6px;
+  .about-card {
+    padding: 32px 20px;
   }
   
-  .stat-label {
-    font-size: 12px;
+  .about-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
   }
   
-  .stat-value {
-    font-size: 15px;
+  .about-card h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  
+  .about-card p {
+    font-size: 14px;
   }
 }
