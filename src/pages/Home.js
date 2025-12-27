@@ -55,6 +55,10 @@ const Home = () => {
       <main className="home-main">
         <section className="hero-section">
           <div className="container">
+            <div className="hero-badge">
+              <span className="badge-text">✨ Conectando comunidades</span>
+            </div>
+            
             <div className="hero-content">
               <h1 className="hero-title">
                 Ajuda que <span className="text-primary">mora ao lado</span>
@@ -103,23 +107,45 @@ const Home = () => {
           <div className="hero-decorations">
             <div className="decoration decoration-1"></div>
             <div className="decoration decoration-2"></div>
+            <div className="decoration decoration-3"></div>
           </div>
         </section>
 
         <section className="info-section">
           <div className="container">
+            <div className="section-header">
+              <h2 className="section-title">Por que escolher o SolidarBairro?</h2>
+              <p className="section-subtitle">Simples, seguro e eficiente</p>
+            </div>
+            
             <div className="info-grid">
               <div className="info-item">
+                <div className="info-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
                 <div className="info-number">01</div>
                 <h3>Próximo</h3>
                 <p>Apenas pessoas da sua cidade</p>
               </div>
               <div className="info-item">
+                <div className="info-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                  </svg>
+                </div>
                 <div className="info-number">02</div>
                 <h3>Simples</h3>
                 <p>Conectar e ajudar em poucos cliques</p>
               </div>
               <div className="info-item">
+                <div className="info-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </div>
                 <div className="info-number">03</div>
                 <h3>Seguro</h3>
                 <p>Comunidade verificada e confiável</p>
@@ -128,58 +154,30 @@ const Home = () => {
           </div>
         </section>
 
-        <section className="join-section">
+        <section className="about-section">
           <div className="container">
-            <div className="join-content">
-              <h2 className="join-title">Junte-se ao SolidarBairro</h2>
-              <p className="join-subtitle">Faça parte de uma comunidade que se importa</p>
+            <div className="about-content">
+              <h2 className="about-title">Sobre nós</h2>
+              <p className="about-description">
+                Conectamos vizinhos para criar uma rede de apoio mútuo local. 
+                Ajudamos moradores a encontrar e oferecer ajuda em suas comunidades, 
+                fortalecendo laços através da solidariedade.
+              </p>
               
-              <div className="join-features">
-                <div className="feature">
-                  <div className="feature-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                      <polyline points="9,22 9,12 15,12 15,22"></polyline>
-                    </svg>
-                  </div>
-                  <span>Vizinhança conectada</span>
+              <div className="about-stats">
+                <div className="stat">
+                  <span className="stat-label">Para quem</span>
+                  <span className="stat-value">Moradores locais</span>
                 </div>
-                <div className="feature">
-                  <div className="feature-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"></polygon>
-                    </svg>
-                  </div>
-                  <span>Ajuda instantânea</span>
+                <div className="stat">
+                  <span className="stat-label">O que fazemos</span>
+                  <span className="stat-value">Conectamos necessidades</span>
                 </div>
-                <div className="feature">
-                  <div className="feature-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                      <circle cx="12" cy="16" r="1"></circle>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                  </div>
-                  <span>100% seguro</span>
+                <div className="stat">
+                  <span className="stat-label">Como</span>
+                  <span className="stat-value">Plataforma simples</span>
                 </div>
               </div>
-              
-              <button 
-                className="join-button"
-                onClick={() => {
-                  // Always check fresh user data from localStorage
-                  const currentUser = localStorage.getItem('solidar-user');
-                  const userData = currentUser ? JSON.parse(currentUser) : null;
-                  
-                  if (userData && userData.isVerified) {
-                    navigate('/quero-ajudar');
-                  } else {
-                    window.dispatchEvent(new CustomEvent('openLogin'));
-                  }
-                }}
-              >
-                Começar agora
-              </button>
             </div>
           </div>
         </section>
