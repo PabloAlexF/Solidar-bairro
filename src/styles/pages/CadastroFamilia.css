@@ -261,6 +261,7 @@
 
 .pessoas-contador {
   text-align: center;
+  margin-bottom: 32px;
 }
 
 .pessoas-contador label {
@@ -269,6 +270,59 @@
   font-weight: 600;
   margin-bottom: 16px;
   color: var(--text-primary);
+}
+
+.pessoas-contador .contador-input {
+  max-width: 140px;
+  height: 40px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+}
+
+.pessoas-contador .contador-btn {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+  font-weight: 500;
+  background: #f8fafc;
+  color: #64748b;
+  border: none;
+  margin: 0;
+  transition: all 0.2s ease;
+}
+
+.pessoas-contador .contador-btn:first-child {
+  border-radius: 8px 0 0 8px;
+  border-right: 1px solid #e2e8f0;
+}
+
+.pessoas-contador .contador-btn:last-child {
+  border-radius: 0 8px 8px 0;
+  border-left: 1px solid #e2e8f0;
+}
+
+.pessoas-contador .contador-btn:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.pessoas-contador .contador-display {
+  width: 60px;
+  height: 40px;
+  font-size: 16px;
+  font-weight: 600;
+  background: white;
+  border: none;
+  color: #1e293b;
+  -moz-appearance: textfield;
+}
+
+.pessoas-contador .contador-display::-webkit-outer-spin-button,
+.pessoas-contador .contador-display::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .contador-input {
@@ -333,6 +387,13 @@
   background: white;
   border-top: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
+  -moz-appearance: textfield;
+}
+
+.contador-display::-webkit-outer-spin-button,
+.contador-display::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .contador-display:focus {
