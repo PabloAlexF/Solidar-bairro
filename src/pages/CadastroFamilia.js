@@ -140,7 +140,8 @@ const CadastroFamilia = () => {
                     checked={formData.tipoCadastro === 'familia'}
                     onChange={handleChange}
                   />
-                  Família
+                  <span>Família</span>
+                  <div className="radio-checker">✓</div>
                 </label>
                 <label className="radio-option">
                   <input
@@ -150,7 +151,8 @@ const CadastroFamilia = () => {
                     checked={formData.tipoCadastro === 'pessoa_sozinha'}
                     onChange={handleChange}
                   />
-                  Pessoa sozinha
+                  <span>Pessoa sozinha</span>
+                  <div className="radio-checker">✓</div>
                 </label>
                 <label className="radio-option">
                   <input
@@ -160,7 +162,8 @@ const CadastroFamilia = () => {
                     checked={formData.tipoCadastro === 'instituicao'}
                     onChange={handleChange}
                   />
-                  Instituição / abrigo familiar
+                  <span>Instituição / abrigo familiar</span>
+                  <div className="radio-checker">✓</div>
                 </label>
               </div>
             </div>

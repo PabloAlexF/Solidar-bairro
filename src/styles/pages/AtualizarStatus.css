@@ -1,7 +1,7 @@
 .atualizar-status {
   min-height: 100vh;
-  padding: 40px 0;
-  background: var(--background);
+  background: var(--gray-50);
+  padding: 32px 0;
 }
 
 .status-header {
@@ -10,23 +10,86 @@
 
 .familia-info h1 {
   font-size: 24px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-bottom: 4px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 8px;
 }
 
 .familia-info p {
-  color: var(--text-secondary);
+  color: var(--gray-600);
   font-size: 14px;
 }
 
 .status-form {
   max-width: 800px;
   margin: 0 auto;
-  background: var(--surface);
-  border-radius: 12px;
-  padding: 32px;
+}
+
+.form-section {
+  background: var(--white);
   border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.form-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-option:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+}
+
+.radio-option input[type=\"radio\"] {
+  margin: 0;
+}
+
+.radio-option input[type=\"radio\"]:checked + span,
+.radio-option:has(input[type=\"radio\"]:checked) {
+  background: #fff7ed;
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .ajuda-grid {
@@ -34,6 +97,54 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
   margin-bottom: 20px;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkbox-group:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+}
+
+.checkbox-group:has(input:checked) {
+  background: #fff7ed;
+  border-color: var(--primary);
+}
+
+.checkbox-group input[type=\"checkbox\"] {
+  margin: 0;
+}
+
+.checkbox-group label {
+  margin: 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
 .historico-timeline {
@@ -46,14 +157,15 @@
   display: flex;
   gap: 16px;
   padding: 16px;
-  background: var(--background);
-  border-radius: 8px;
-  border-left: 3px solid var(--accent);
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--primary);
 }
 
 .timeline-date {
-  font-weight: 500;
-  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
   min-width: 40px;
 }
 
@@ -62,30 +174,72 @@
 }
 
 .timeline-content p {
-  color: var(--text-primary);
+  font-size: 14px;
+  color: var(--gray-900);
   margin-bottom: 4px;
 }
 
 .timeline-author {
-  color: var(--text-secondary);
   font-size: 12px;
+  color: var(--gray-600);
 }
 
+.form-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  padding: 24px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-top: 32px;
+}
+
+.form-actions .btn {
+  min-width: 140px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .atualizar-status {
     padding: 20px 0;
   }
   
-  .status-form {
-    padding: 24px 20px;
+  .form-section {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .form-section h3 {
+    font-size: 16px;
   }
   
   .ajuda-grid {
     grid-template-columns: 1fr;
   }
   
-  .timeline-item {
-    flex-direction: column;
+  .radio-group {
     gap: 8px;
+  }
+  
+  .radio-option {
+    padding: 10px 12px;
+  }
+  
+  .checkbox-group {
+    padding: 10px 12px;
+  }
+  
+  .timeline-item {
+    padding: 12px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    padding: 20px;
+  }
+  
+  .form-actions .btn {
+    min-width: auto;
   }
 }

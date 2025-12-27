@@ -1,70 +1,110 @@
-# Getting Started with Create React App
+# SolidarBairro - Plataforma de Solidariedade Comunitária
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Uma aplicação web que conecta vizinhos e fortalece laços comunitários através de uma rede de apoio mútuo local, inspirada no design e funcionalidades do Conecta Bairro.
 
-## Available Scripts
+## 🎯 Sobre o Projeto
 
-In the project directory, you can run:
+O SolidarBairro é uma plataforma que facilita a criação de uma economia solidária e promove ações sociais organizadas dentro dos bairros. A aplicação permite que moradores publiquem pedidos de ajuda e se conectem com pessoas dispostas a ajudar em sua comunidade.
 
-### `npm start`
+## ✨ Principais Funcionalidades
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 🆘 Quero Ajudar
+- Visualização de pedidos de ajuda próximos
+- Filtros por categoria e distância
+- Contato direto via WhatsApp
+- Detalhes completos de cada necessidade
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 🤲 Preciso de Ajuda
+- Formulário simples para publicar pedidos
+- Categorização automática
+- Geolocalização por bairro
+- Confirmação de publicação
 
-### `npm test`
+### 📱 Funcionalidades Principais
+- **Interface Responsiva**: Design otimizado para mobile e desktop
+- **Navegação por Abas**: Alternância fácil entre "Quero Ajudar" e "Preciso de Ajuda"
+- **Integração WhatsApp**: Contato direto entre usuários
+- **Sistema de Urgência**: Classificação por prioridade (alta, média, baixa)
+- **Categorização**: Alimentação, Saúde, Educação, Moradia, Trabalho
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🛠 Tecnologias Utilizadas
 
-### `npm run build`
+- **Frontend**: React 19.2.3
+- **Roteamento**: React Router DOM 7.11.0
+- **Estilização**: CSS customizado com design system
+- **Testes**: Jest e React Testing Library
+- **Build**: Create React App
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🚀 Como Executar
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Pré-requisitos
+- Node.js (versão 14 ou superior)
+- npm ou yarn
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Instalação
 
-### `npm run eject`
+```bash
+# Clone o repositório
+git clone https://github.com/seu-usuario/solidar-bairro.git
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Entre no diretório
+cd solidar-bairro
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+# Instale as dependências
+npm install
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+# Execute o projeto
+npm start
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+O projeto estará disponível em [http://localhost:3000](http://localhost:3000)
 
-## Learn More
+## 📱 Páginas Principais
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- **/** - Página principal (Quero Ajudar)
+- **/necessidade/:id** - Detalhes de uma necessidade específica
+- **/pedido-publicado** - Confirmação de pedido publicado
+- **/landing** - Página de apresentação original
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🎨 Design System
 
-### Code Splitting
+### Cores Principais
+- **Primary**: #12253A (Azul escuro)
+- **Accent**: #FF7A33 (Laranja)
+- **Success**: #34C38F (Verde)
+- **Background**: Gradiente suave cinza
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Componentes
+- Cards com hover effects
+- Botões com gradientes
+- Sistema de badges para categorias
+- Formulários com validação visual
 
-### Analyzing the Bundle Size
+## 📋 Scripts Disponíveis
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- `npm start` - Executa em modo de desenvolvimento
+- `npm test` - Executa os testes
+- `npm run build` - Build para produção
+- `npm run eject` - Ejeta as configurações (irreversível)
 
-### Making a Progressive Web App
+## 🤝 Como Contribuir
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
-### Advanced Configuration
+## 📄 Licença
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-### Deployment
+## 📞 Contato
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Para dúvidas ou sugestões, entre em contato:
+- Email: contato@solidarbairro.com.br
+- WhatsApp: (31) 99999-0000
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**SolidarBairro** - Conectando comunidades, fortalecendo laços! ❤️
