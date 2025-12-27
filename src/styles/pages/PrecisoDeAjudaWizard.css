@@ -50,8 +50,8 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #e2e8f0;
-  color: #64748b;
+  background: rgba(255, 122, 51, 0.3);
+  color: #FF7A33;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -61,10 +61,10 @@
 }
 
 .progress-step.active .step-circle {
-  background: linear-gradient(135deg, var(--primary), #ea580c);
+  background: linear-gradient(135deg, #FF7A33, #ea580c);
   color: white;
   transform: scale(1.1);
-  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 20px rgba(255, 122, 51, 0.3);
 }
 
 .step-label {

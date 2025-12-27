@@ -5,26 +5,26 @@ import '../styles/pages/PrecisoDeAjuda.css';
 import '../styles/pages/PrecisoDeAjudaWizard.css';
 
 const categories = [
-  { id: 'food', label: 'Alimentos', icon: '🛒', desc: 'Comida, cesta básica', color: '#f59e0b' },
-  { id: 'clothes', label: 'Roupas', icon: '👕', desc: 'Roupas, calçados', color: '#8b5cf6' },
-  { id: 'hygiene', label: 'Higiene', icon: '🧼', desc: 'Produtos de limpeza', color: '#06b6d4' },
-  { id: 'meds', label: 'Medicamentos', icon: '💊', desc: 'Remédios, consultas', color: '#ef4444' },
-  { id: 'bills', label: 'Contas', icon: '🧾', desc: 'Água, luz, aluguel', color: '#10b981' },
-  { id: 'work', label: 'Emprego', icon: '💼', desc: 'Trabalho, renda', color: '#f97316' },
-  { id: 'serv', label: 'Serviços', icon: '🔧', desc: 'Reparos, ajuda técnica', color: '#6366f1' },
-  { id: 'other', label: 'Outros', icon: '➕', desc: 'Outras necessidades', color: '#64748b' },
+  { id: 'food', label: 'Alimentos', icon: <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="alimentos" width="36" height="36" />, desc: 'Comida, cesta básica', color: '#f59e0b' },
+  { id: 'clothes', label: 'Roupas', icon: <img src="https://cdn-icons-png.flaticon.com/512/892/892458.png" alt="roupas" width="36" height="36" />, desc: 'Roupas, calçados', color: '#8b5cf6' },
+  { id: 'hygiene', label: 'Higiene', icon: <img src="https://cdn-icons-png.flaticon.com/512/2553/2553642.png" alt="higiene" width="36" height="36" />, desc: 'Produtos de limpeza', color: '#06b6d4' },
+  { id: 'meds', label: 'Medicamentos', icon: <img src="https://cdn-icons-png.flaticon.com/512/883/883356.png" alt="medicamentos" width="36" height="36" />, desc: 'Remédios, consultas', color: '#ef4444' },
+  { id: 'bills', label: 'Contas', icon: <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="contas" width="36" height="36" />, desc: 'Água, luz, aluguel', color: '#10b981' },
+  { id: 'work', label: 'Emprego', icon: <img src="https://cdn-icons-png.flaticon.com/512/1077/1077976.png" alt="emprego" width="36" height="36" />, desc: 'Trabalho, renda', color: '#f97316' },
+  { id: 'serv', label: 'Serviços', icon: <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="serviços" width="36" height="36" />, desc: 'Reparos, ajuda técnica', color: '#6366f1' },
+  { id: 'other', label: 'Outros', icon: <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="outros" width="36" height="36" />, desc: 'Outras necessidades', color: '#64748b' },
 ];
 
 const contactOptions = [
-  { id: 'whatsapp', label: 'WhatsApp', icon: '💬', desc: 'Mais rápido', color: '#22c55e' },
-  { id: 'phone', label: 'Ligação', icon: '📞', desc: 'Tradicional', color: '#3b82f6' },
-  { id: 'chat', label: 'Chat Interno', icon: '💬', desc: 'Na plataforma', color: '#8b5cf6' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="whatsapp" width="24" height="24" />, desc: 'Mais rápido', color: '#22c55e' },
+  { id: 'phone', label: 'Ligação', icon: <img src="https://cdn-icons-png.flaticon.com/512/724/724664.png" alt="telefone" width="24" height="24" />, desc: 'Tradicional', color: '#3b82f6' },
+  { id: 'chat', label: 'Chat Interno', icon: <img src="https://cdn-icons-png.flaticon.com/512/2040/2040946.png" alt="chat" width="24" height="24" />, desc: 'Na plataforma', color: '#8b5cf6' },
 ];
 
 const visibilityOptions = [
-  { id: 'neighborhood', label: 'Apenas meu bairro', desc: 'Mais próximo', icon: '🏠' },
-  { id: 'nearby', label: 'Bairros próximos', desc: 'Área expandida', icon: '🌍' },
-  { id: 'ngos', label: 'ONGs parceiras', desc: 'Organizações', icon: '🤝' },
+  { id: 'neighborhood', label: 'Apenas meu bairro', desc: 'Mais próximo', icon: <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" alt="bairro" width="24" height="24" /> },
+  { id: 'nearby', label: 'Bairros próximos', desc: 'Área expandida', icon: <img src="https://cdn-icons-png.flaticon.com/512/854/854878.png" alt="mundo" width="24" height="24" /> },
+  { id: 'ngos', label: 'ONGs parceiras', desc: 'Organizações', icon: <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="parceiros" width="24" height="24" /> },
 ];
 
 const PrecisoDeAjuda = () => {

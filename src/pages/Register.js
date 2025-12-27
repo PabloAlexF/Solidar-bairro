@@ -10,29 +10,40 @@ const Register = () => {
     {
       id: 'cidadao',
       title: 'Cidadão',
-      description: 'Pessoa física que quer ajudar ou receber ajuda da comunidade',
-      features: ['Pedir ajuda quando precisar', 'Oferecer ajuda aos vizinhos', 'Participar de ações solidárias'],
+      description: 'Pessoa física que quer fazer parte de uma comunidade mais solidária e conectada',
+      features: ['Pedir ajuda quando precisar', 'Oferecer ajuda aos vizinhos', 'Participar de ações solidárias', 'Conectar-se com a vizinhança'],
       recommended: false
     },
     {
       id: 'comercio',
       title: 'Comércio Local',
-      description: 'Estabelecimento comercial que quer apoiar a comunidade',
-      features: ['Oferecer produtos solidários', 'Aceitar moeda social', 'Participar de campanhas'],
+      description: 'Estabelecimento que quer fortalecer laços com a comunidade e gerar impacto social',
+      features: ['Oferecer produtos solidários', 'Aceitar moeda social', 'Participar de campanhas', 'Aumentar visibilidade local'],
       recommended: true
     },
     {
       id: 'ong',
-      title: 'ONG',
-      description: 'Organização sem fins lucrativos com verificação rigorosa',
-      features: ['Acesso a dados de vulnerabilidade', 'Relatórios detalhados', 'Coordenar ações sociais'],
+      title: 'Organização Social',
+      description: 'ONG ou instituição sem fins lucrativos com acesso a ferramentas avançadas',
+      features: ['Acesso a dados de vulnerabilidade', 'Relatórios detalhados', 'Coordenar ações sociais', 'Gestão de campanhas'],
+      recommended: false
+    },
+    {
+      id: 'familia',
+      title: 'Família',
+      description: 'Cadastro de família para mapeamento social e identificação de vulnerabilidades',
+      features: ['Mapeamento de vulnerabilidade', 'Acesso a programas sociais', 'Priorização em campanhas', 'Acompanhamento personalizado'],
       recommended: false
     }
   ];
 
   const handleContinue = () => {
     if (userType) {
-      navigate(`/cadastro/${userType}`);
+      if (userType === 'familia') {
+        navigate('/cadastro-familia');
+      } else {
+        navigate(`/cadastro/${userType}`);
+      }
     }
   };
 
@@ -47,8 +58,8 @@ const Register = () => {
             >
               ← Voltar
             </button>
-            <h1>Junte-se ao SolidarBairro</h1>
-            <p>Escolha o tipo de cadastro que melhor representa você</p>
+            <h1>Transforme sua comunidade</h1>
+            <p>Escolha como você quer fazer parte dessa rede de solidariedade</p>
           </div>
 
           <div className="user-types">
@@ -60,7 +71,7 @@ const Register = () => {
               >
                 {type.recommended && (
                   <div className="recommended-badge">
-                    Mais popular
+                    ✨ Mais escolhido
                   </div>
                 )}
                 <div className="card-header">
@@ -85,10 +96,10 @@ const Register = () => {
               onClick={handleContinue}
               disabled={!userType}
             >
-              Continuar cadastro
+              Começar jornada
             </button>
             <p className="help-text">
-              Não sabe qual escolher? <button className="link-btn" onClick={() => navigate('/sobre-tipos')}>Saiba mais sobre cada tipo</button>
+              Tem dúvidas sobre qual escolher? <button className="link-btn" onClick={() => navigate('/sobre-tipos')}>Conheça cada tipo em detalhes</button>
             </p>
           </div>
         </div>
