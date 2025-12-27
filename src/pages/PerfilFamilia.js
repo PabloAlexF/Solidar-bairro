@@ -224,47 +224,77 @@ const PerfilFamilia = () => {
             </div>
           )}
 
-          <div className="necessidades-list">
-            {necessidades.map(necessidade => (
-              <div key={necessidade.id} className="necessidade-item">
-                <div className="necessidade-content">
-                  <div className="necessidade-header">
-                    <h4>{necessidade.necessidade}</h4>
-                    <span className={`prioridade-tag ${necessidade.prioridade.toLowerCase()}`}>
-                      {necessidade.prioridade}
-                    </span>
+          <div className="carrossel-container">
+            <button className="carrossel-nav carrossel-nav-prev" onClick={() => {
+              const carousel = document.querySelector('.necessidades-carousel');
+              carousel.scrollBy({ left: -400, behavior: 'smooth' });
+            }}>
+              ← Anterior
+            </button>
+
+            <div className="necessidades-carousel">
+              {necessidades.map(necessidade => (
+                <div key={necessidade.id} className="necessidade-item">
+                  <div className="necessidade-info">
+                    <div className="necessidade-title-section">
+                      <h4>{necessidade.necessidade}</h4>
+                    </div>
+                    
+                    <div className="necessidade-details">
+                      <div className="detail-group">
+                        <span className="detail-label">Prioridade:</span>
+                        <span className={`prioridade-tag ${necessidade.prioridade.toLowerCase()}`}>
+                          {necessidade.prioridade}
+                        </span>
+                      </div>
+                      
+                      <div className="detail-group">
+                        <span className="detail-label">Data:</span>
+                        <span className="detail-value">{necessidade.atualizadoEm}</span>
+                      </div>
+                      
+                      <div className="detail-group">
+                        <span className="detail-label">Status:</span>
+                        <span className={`status-tag ${necessidade.status.toLowerCase().replace(' ', '-')}`}>
+                          {necessidade.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {necessidade.observacao && (
+                      <p className="necessidade-observacao">
+                        <strong>Observação:</strong> {necessidade.observacao}
+                      </p>
+                    )}
                   </div>
-                  <div className="necessidade-meta">
-                    <span>Atualizado em: {necessidade.atualizadoEm}</span>
-                    <span className={`status-tag ${necessidade.status.toLowerCase().replace(' ', '-')}`}>
-                      {necessidade.status}
-                    </span>
-                  </div>
-                  {necessidade.observacao && (
-                    <p className="necessidade-observacao">
-                      Observação: "{necessidade.observacao}"
-                    </p>
-                  )}
-                </div>
-                <div className="necessidade-actions">
-                  {necessidade.status === 'Em aberto' && (
+
+                  <div className="necessidade-actions">
+                    {necessidade.status === 'Em aberto' && (
+                      <button 
+                        className="btn btn-success"
+                        onClick={() => handleMarcarAtendida(necessidade.id)}
+                      >
+                        ✓ Atender
+                      </button>
+                    )}
+                    <button className="btn btn-secondary">✏️ Editar</button>
                     <button 
-                      className="btn btn-success"
-                      onClick={() => handleMarcarAtendida(necessidade.id)}
+                      className="btn btn-danger"
+                      onClick={() => handleRemoverNecessidade(necessidade.id)}
                     >
-                      Marcar como atendida
+                      🗑️ Excluir
                     </button>
-                  )}
-                  <button className="btn btn-secondary">Editar</button>
-                  <button 
-                    className="btn btn-danger"
-                    onClick={() => handleRemoverNecessidade(necessidade.id)}
-                  >
-                    Excluir
-                  </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            <button className="carrossel-nav carrossel-nav-next" onClick={() => {
+              const carousel = document.querySelector('.necessidades-carousel');
+              carousel.scrollBy({ left: 400, behavior: 'smooth' });
+            }}>
+              Próximo →
+            </button>
           </div>
         </div>
 

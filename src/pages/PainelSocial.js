@@ -97,19 +97,6 @@ const PainelSocial = () => {
             </div>
           </div>
 
-          <div className="stats-section">
-            <div className="header-stats">
-              <div className="stat-item">
-                <span className="stat-number">{familias.length}</span>
-                <span className="stat-label">Famílias</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">{bairros.length}</span>
-                <span className="stat-label">Bairros</span>
-              </div>
-            </div>
-          </div>
-
           {/* Indicadores principais */}
           <section className="indicadores">
             <div className="indicadores-grid">
