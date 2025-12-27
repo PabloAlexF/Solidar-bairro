@@ -1,0 +1,9 @@
+.stats-section {
+  margin-bottom: 40px;
+}
+
+.stats-section .header-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}

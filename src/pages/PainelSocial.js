@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import MapaInterativo from '../components/MapaInterativo';
 import '../styles/pages/PainelSocial.css';
 
 const PainelSocial = () => {
@@ -56,32 +57,56 @@ const PainelSocial = () => {
 
   return (
     <div className="painel-social">
-      <Header />
+      <Header showLoginButton={false} />
       
       <main className="painel-main">
         <div className="container">
           <div className="painel-header">
-            <h1>Painel Social - {bairroSelecionado === 'todos' ? 'Todos os Bairros' : bairroSelecionado}</h1>
-            <p>Mapa social em tempo real do SolidarBairro</p>
+            <div className="header-content">
+              <div className="header-text">
+                <h1>
+                  <img src="https://cdn-icons-png.flaticon.com/512/3135/3135673.png" alt="painel" width="32" height="32" style={{marginRight: '12px'}} />
+                  Painel Social - {bairroSelecionado === 'todos' ? 'Todos os Bairros' : bairroSelecionado}
+                </h1>
+                <p>Monitoramento social em tempo real da comunidade SolidarBairro</p>
+              </div>
+            </div>
             
             <div className="filtros">
-              <select
-                value={bairroSelecionado}
-                onChange={(e) => setBairroSelecionado(e.target.value)}
-                className="filtro-bairro"
-              >
-                <option value="todos">Todos os bairros</option>
-                {bairros.map(bairro => (
-                  <option key={bairro} value={bairro}>{bairro}</option>
-                ))}
-              </select>
+              <div className="filtro-group">
+                <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="localização" width="20" height="20" />
+                <select
+                  value={bairroSelecionado}
+                  onChange={(e) => setBairroSelecionado(e.target.value)}
+                  className="filtro-bairro"
+                >
+                  <option value="todos">Todos os bairros</option>
+                  {bairros.map(bairro => (
+                    <option key={bairro} value={bairro}>{bairro}</option>
+                  ))}
+                </select>
+              </div>
               
               <button
-                className="btn btn-primary"
+                className="btn btn-primary btn-nova-familia"
                 onClick={() => navigate('/cadastro-familia')}
               >
-                + Nova Família
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="adicionar" width="18" height="18" />
+                Nova Família
               </button>
+            </div>
+          </div>
+
+          <div className="stats-section">
+            <div className="header-stats">
+              <div className="stat-item">
+                <span className="stat-number">{familias.length}</span>
+                <span className="stat-label">Famílias</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-number">{bairros.length}</span>
+                <span className="stat-label">Bairros</span>
+              </div>
             </div>
           </div>
 
@@ -140,26 +165,29 @@ const PainelSocial = () => {
             </div>
           </section>
 
-          {/* Mapa placeholder */}
+          {/* Mapa interativo */}
           <section className="mapa-section">
             <h2>🗺️ Mapa do bairro</h2>
-            <div className="mapa-placeholder">
-              <div className="mapa-content">
-                <p>Mapa interativo em desenvolvimento</p>
-                <div className="mapa-legenda">
-                  <div className="legenda-item">
-                    <span className="cor-alta"></span>
-                    <span>Alta vulnerabilidade</span>
-                  </div>
-                  <div className="legenda-item">
-                    <span className="cor-media"></span>
-                    <span>Média vulnerabilidade</span>
-                  </div>
-                  <div className="legenda-item">
-                    <span className="cor-baixa"></span>
-                    <span>Baixa vulnerabilidade</span>
-                  </div>
-                </div>
+            <MapaInterativo 
+              familias={familiasFiltradas} 
+              pedidos={JSON.parse(localStorage.getItem('solidar-pedidos') || '[]')} 
+            />
+            <div className="mapa-legenda">
+              <div className="legenda-item">
+                <div style={{width: '20px', height: '20px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'}}>👥</div>
+                <span>Famílias - Alta vulnerabilidade</span>
+              </div>
+              <div className="legenda-item">
+                <div style={{width: '20px', height: '20px', backgroundColor: '#f59e0b', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'}}>👥</div>
+                <span>Famílias - Média vulnerabilidade</span>
+              </div>
+              <div className="legenda-item">
+                <div style={{width: '20px', height: '20px', backgroundColor: '#22c55e', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'}}>👥</div>
+                <span>Famílias - Baixa vulnerabilidade</span>
+              </div>
+              <div className="legenda-item">
+                <div style={{width: '24px', height: '24px', background: 'linear-gradient(135deg, #FF7A33, #e66a2b)', borderRadius: '6px', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'white'}}>🆘</div>
+                <span>Pedidos de ajuda</span>
               </div>
             </div>
           </section>
@@ -197,7 +225,10 @@ const PainelSocial = () => {
                 familiasFiltradas.map(familia => (
                   <div key={familia.id} className="familia-card">
                     <div className="familia-header">
-                      <h3>{familia.nomeCompleto}</h3>
+                      <h3>
+                        <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="pessoa" width="20" height="20" />
+                        {familia.nomeCompleto}
+                      </h3>
                       <span 
                         className="vulnerabilidade-tag"
                         style={{ backgroundColor: getVulnerabilidadeColor(familia.vulnerabilidade) }}
@@ -208,32 +239,57 @@ const PainelSocial = () => {
                     
                     <div className="familia-info">
                       <div className="info-item">
-                        <span className="icon">👨👩👧👦</span>
-                        <span>{familia.numeroPessoas} pessoas</span>
+                        <div className="icon">
+                          <img src="https://cdn-icons-png.flaticon.com/512/4436/4436481.png" alt="família" width="16" height="16" />
+                        </div>
+                        <div className="info-text">
+                          <span className="info-label">Total de pessoas</span>
+                          <span className="info-value">{familia.numeroPessoas}</span>
+                        </div>
                       </div>
                       
                       {familia.criancas > 0 && (
                         <div className="info-item">
-                          <span className="icon">👶</span>
-                          <span>{familia.criancas} crianças</span>
+                          <div className="icon">
+                            <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="crianças" width="16" height="16" />
+                          </div>
+                          <div className="info-text">
+                            <span className="info-label">Crianças (0-12 anos)</span>
+                            <span className="info-value">{familia.criancas}</span>
+                          </div>
                         </div>
                       )}
                       
                       {familia.idosos > 0 && (
                         <div className="info-item">
-                          <span className="icon">👵</span>
-                          <span>{familia.idosos} idosos</span>
+                          <div className="icon">
+                            <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="idosos" width="16" height="16" />
+                          </div>
+                          <div className="info-text">
+                            <span className="info-label">Idosos (60+ anos)</span>
+                            <span className="info-value">{familia.idosos}</span>
+                          </div>
                         </div>
                       )}
                       
                       <div className="info-item">
-                        <span className="icon">💸</span>
-                        <span>{familia.rendaFamiliar?.replace('-', ' ')}</span>
+                        <div className="icon">
+                          <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="dinheiro" width="16" height="16" />
+                        </div>
+                        <div className="info-text">
+                          <span className="info-label">Renda familiar</span>
+                          <span className="info-value">{familia.rendaFamiliar?.replace('-', ' ')}</span>
+                        </div>
                       </div>
                       
                       <div className="info-item">
-                        <span className="icon">📍</span>
-                        <span>{familia.bairro}</span>
+                        <div className="icon">
+                          <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="localização" width="16" height="16" />
+                        </div>
+                        <div className="info-text">
+                          <span className="info-label">Localização</span>
+                          <span className="info-value">{familia.bairro}</span>
+                        </div>
                       </div>
                     </div>
                     

@@ -48,12 +48,12 @@ const QueroAjudar = () => {
 
   const getCategoryIcon = (tipo) => {
     switch(tipo) {
-      case 'Alimentos': return '🛒';
-      case 'Roupas': return '👕';
-      case 'Medicamentos': return '💊';
-      case 'Contas': return '💡';
-      case 'Trabalho': return '💼';
-      default: return '❤️';
+      case 'Alimentos': return <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="alimentos" width="20" height="20" />;
+      case 'Roupas': return <img src="https://cdn-icons-png.flaticon.com/512/892/892458.png" alt="roupas" width="20" height="20" />;
+      case 'Medicamentos': return <img src="https://cdn-icons-png.flaticon.com/512/883/883356.png" alt="medicamentos" width="20" height="20" />;
+      case 'Contas': return <img src="https://cdn-icons-png.flaticon.com/512/1611/1611179.png" alt="contas" width="20" height="20" />;
+      case 'Trabalho': return <img src="https://cdn-icons-png.flaticon.com/512/1077/1077976.png" alt="trabalho" width="20" height="20" />;
+      default: return <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="outros" width="20" height="20" />;
     }
   };
 
@@ -97,7 +97,9 @@ const QueroAjudar = () => {
             <div className="pedidos-grid">
               {filteredPedidos.length === 0 ? (
                 <div className="no-pedidos">
-                  <div className="no-pedidos-icon">💝</div>
+                  <div className="no-pedidos-icon">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="sem pedidos" width="64" height="64" />
+                  </div>
                   <h3>Nenhum pedido de ajuda ainda</h3>
                   <p>Quando alguém precisar de ajuda na sua região, os pedidos aparecerão aqui.</p>
                   <button 
@@ -126,15 +128,15 @@ const QueroAjudar = () => {
                       
                       <div className="pedido-meta">
                         <div className="meta-item">
-                          <span className="meta-icon">📍</span>
+                          <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="localização" width="16" height="16" className="meta-icon" />
                           <span>{pedido.distancia}</span>
                         </div>
                         <div className="meta-item">
-                          <span className="meta-icon">⏰</span>
+                          <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="tempo" width="16" height="16" className="meta-icon" />
                           <span>{pedido.tempo}</span>
                         </div>
                         <div className="meta-item">
-                          <span className="meta-icon">👤</span>
+                          <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="usuário" width="16" height="16" className="meta-icon" />
                           <span>{pedido.usuario}</span>
                           {pedido.verificado && <span className="verified-icon">✓</span>}
                         </div>
