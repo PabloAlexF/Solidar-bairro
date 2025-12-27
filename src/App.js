@@ -22,7 +22,7 @@ import './styles/globals.css';
 
 function App() {
   return (
-    <Router>
+    <Router basename={process.env.NODE_ENV === 'production' ? '/solidar-bairro' : ''}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/quero-ajudar" element={<QueroAjudar />} />
