@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.local
+.env.production
+logs/
+*.log
+npm-debug.log*
+coverage/
+.nyc_output/
+dist/
+build/
+serviceAccountKey.json
+.firebase/
+firebase-debug.log
