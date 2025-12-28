@@ -1,0 +1,135 @@
+/* Custom Select Component - Modern Dropdown */
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+/* Select Trigger (Input Field) */
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 15px;
+  color: #374151;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.select-trigger:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.select-trigger.open,
+.select-trigger:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+}
+
+.select-value {
+  flex: 1;
+  text-align: left;
+  color: #374151;
+}
+
+.select-value:empty::before {
+  content: attr(placeholder);
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.select-arrow {
+  color: #6b7280;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.select-trigger.open .select-arrow {
+  transform: rotate(180deg);
+}
+
+/* Floating Dropdown List */
+.select-dropdown {
+  position: absolute;
+  top: calc(100% + 8px); /* Separação do input */
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: white;
+  border-radius: 12px; /* Mesma curvatura do input */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Sombra suave */
+  border: none !important;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Options Styling */
+.select-option {
+  padding: 12px 16px; /* Espaçamento interno generoso */
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #374151;
+  font-size: 15px;
+  border-bottom: 1px solid #f9fafb;
+}
+
+.select-option:last-child {
+  border-bottom: none;
+}
+
+/* Hover Effect - Fundo cinza claro */
+.select-option:hover {
+  background-color: #f3f4f6; /* Cinza bem clarinho */
+  color: #374151; /* Texto continua escuro */
+}
+
+/* Selected Option */
+.select-option.selected {
+  background-color: #fef3c7;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.select-option.selected:hover {
+  background-color: #fde68a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .select-trigger {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+  
+  .select-option {
+    padding: 14px 16px;
+    font-size: 14px;
+  }
+}
+/* Force remove all borders from dropdown */
+.select-dropdown {
+  border: 0 !important;
+  outline: 0 !important;
+}
+
+.select-dropdown * {
+  border: 0 !important;
+  outline: 0 !important;
+}

@@ -9,8 +9,79 @@ const QueroAjudar = () => {
   const [selectedUrgencies, setSelectedUrgencies] = useState([]);
   const [pedidos, setPedidos] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedPedido, setSelectedPedido] = useState(null);
+  const [showCategoryDetails, setShowCategoryDetails] = useState(false);
 
-  const filters = ['Todos', 'Alimentos', 'Roupas', 'Medicamentos', 'Contas', 'Trabalho'];
+  const filters = ['Todos', 'Alimentos', 'Roupas', 'Medicamentos', 'Contas', 'Trabalho', 'Higiene', 'Serviços', 'Outros'];
+
+  // Category-specific options
+  const categoryOptions = {
+    'Roupas': {
+      title: 'Detalhes da Roupa Necessária',
+      fields: [
+        { type: 'select', name: 'tamanho', label: 'Tamanho', options: ['PP', 'P', 'M', 'G', 'GG', 'XG'] },
+        { type: 'select', name: 'tipo', label: 'Tipo de Peça', options: ['Camiseta', 'Calça', 'Vestido', 'Sapato', 'Casaco', 'Roupa Íntima', 'Uniforme'] },
+        { type: 'select', name: 'idade', label: 'Para quem?', options: ['Adulto', 'Criança (0-5 anos)', 'Criança (6-12 anos)', 'Adolescente'] },
+        { type: 'select', name: 'genero', label: 'Gênero', options: ['Masculino', 'Feminino', 'Unissex'] },
+        { type: 'select', name: 'condicao', label: 'Condição', options: ['Nova', 'Seminova', 'Usada (bom estado)'] }
+      ]
+    },
+    'Alimentos': {
+      title: 'Detalhes dos Alimentos',
+      fields: [
+        { type: 'select', name: 'tipo', label: 'Tipo de Alimento', options: ['Cesta Básica', 'Alimentos Infantis', 'Dieta Específica', 'Produtos Frescos'] },
+        { type: 'select', name: 'quantidade', label: 'Quantidade', options: ['Para 1 pessoa', 'Para 2-3 pessoas', 'Para 4-5 pessoas', 'Para família grande (6+)'] },
+        { type: 'textarea', name: 'observacoes', label: 'Observações Especiais', placeholder: 'Ex: Sem glúten, diabético, etc.' }
+      ]
+    },
+    'Higiene': {
+      title: 'Itens de Higiene Necessários',
+      fields: [
+        { type: 'checkbox', name: 'itens', label: 'Itens Necessários', options: ['Fraldas', 'Sabonete', 'Shampoo', 'Pasta de dente', 'Absorvente', 'Papel higiênico', 'Desodorante'] },
+        { type: 'select', name: 'urgencia', label: 'Urgência', options: ['Imediata', 'Esta semana', 'Este mês'] }
+      ]
+    },
+    'Medicamentos': {
+      title: 'Informações do Medicamento',
+      fields: [
+        { type: 'text', name: 'nome', label: 'Nome do Medicamento', placeholder: 'Ex: Paracetamol' },
+        { type: 'text', name: 'dosagem', label: 'Dosagem', placeholder: 'Ex: 500mg' },
+        { type: 'select', name: 'uso', label: 'Tipo de Uso', options: ['Uso Contínuo', 'Emergencial', 'Tratamento Temporário'] },
+        { type: 'textarea', name: 'observacoes', label: 'Observações', placeholder: 'Prescrição médica, alergias, etc.' }
+      ]
+    },
+    'Contas': {
+      title: 'Detalhes da Conta',
+      fields: [
+        { type: 'select', name: 'tipo', label: 'Tipo de Conta', options: ['Água', 'Luz', 'Aluguel', 'Gás', 'Internet', 'Telefone'] },
+        { type: 'text', name: 'valor', label: 'Valor Aproximado', placeholder: 'Ex: R$ 150,00' },
+        { type: 'select', name: 'urgencia', label: 'Urgência', options: ['Vencida', 'Vence esta semana', 'Vence este mês'] }
+      ]
+    },
+    'Trabalho': {
+      title: 'Oportunidade de Emprego',
+      fields: [
+        { type: 'select', name: 'tipo', label: 'Tipo de Vaga', options: ['CLT', 'Freelancer', 'Meio Período', 'Temporário', 'Estágio'] },
+        { type: 'text', name: 'area', label: 'Área de Interesse', placeholder: 'Ex: Vendas, Limpeza, Cozinha' },
+        { type: 'select', name: 'disponibilidade', label: 'Disponibilidade', options: ['Manhã', 'Tarde', 'Noite', 'Fins de semana', 'Integral'] }
+      ]
+    },
+    'Serviços': {
+      title: 'Tipo de Serviço',
+      fields: [
+        { type: 'select', name: 'tipo', label: 'Tipo de Serviço', options: ['Reforma/Reparo', 'Transporte', 'Cuidado (idoso/criança)', 'Limpeza', 'Jardinagem', 'Técnico'] },
+        { type: 'textarea', name: 'descricao', label: 'Descrição do Serviço', placeholder: 'Descreva o que precisa ser feito' },
+        { type: 'select', name: 'urgencia', label: 'Urgência', options: ['Imediata', 'Esta semana', 'Este mês', 'Flexível'] }
+      ]
+    },
+    'Outros': {
+      title: 'Outras Necessidades',
+      fields: [
+        { type: 'textarea', name: 'descricao', label: 'Descreva sua necessidade', placeholder: 'Conte-nos o que você precisa' },
+        { type: 'select', name: 'urgencia', label: 'Urgência', options: ['Alta', 'Média', 'Baixa'] }
+      ]
+    }
+  };
 
   useEffect(() => {
     // Carregar pedidos reais do localStorage
@@ -194,7 +265,10 @@ const QueroAjudar = () => {
                     <div className="card-actions">
                       <button 
                         className="btn-secondary"
-                        onClick={() => navigate(`/necessidade/${pedido.id}`)}
+                        onClick={() => {
+                          setSelectedPedido(pedido);
+                          setShowCategoryDetails(true);
+                        }}
                       >
                         Ver detalhes
                       </button>
@@ -221,6 +295,115 @@ const QueroAjudar = () => {
           </section>
         </div>
       </main>
+
+      {/* Category Details Modal */}
+      {showCategoryDetails && selectedPedido && (
+        <div className="modal-overlay" onClick={() => setShowCategoryDetails(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Detalhes da Necessidade</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowCategoryDetails(false)}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="need-summary">
+                <div className="need-category">
+                  <span className="category-icon">{getCategoryIcon(selectedPedido.tipo)}</span>
+                  <span className="category-name">{selectedPedido.tipo}</span>
+                </div>
+                <h4>{selectedPedido.titulo}</h4>
+                <p>{selectedPedido.descricao}</p>
+              </div>
+
+              {categoryOptions[selectedPedido.tipo] && (
+                <div className="category-details">
+                  <h5>{categoryOptions[selectedPedido.tipo].title}</h5>
+                  <div className="details-form">
+                    {categoryOptions[selectedPedido.tipo].fields.map((field, index) => (
+                      <div key={index} className="detail-field">
+                        <label>{field.label}</label>
+                        {field.type === 'select' && (
+                          <select className="form-select">
+                            <option value="">Selecione uma opção</option>
+                            {field.options.map((option, optIndex) => (
+                              <option key={optIndex} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        )}
+                        {field.type === 'text' && (
+                          <input 
+                            type="text" 
+                            className="form-input" 
+                            placeholder={field.placeholder}
+                          />
+                        )}
+                        {field.type === 'textarea' && (
+                          <textarea 
+                            className="form-textarea" 
+                            placeholder={field.placeholder}
+                            rows="3"
+                          />
+                        )}
+                        {field.type === 'checkbox' && (
+                          <div className="checkbox-group">
+                            {field.options.map((option, optIndex) => (
+                              <label key={optIndex} className="checkbox-item">
+                                <input type="checkbox" />
+                                <span>{option}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="contact-info">
+                <h5>Informações de Contato</h5>
+                <div className="contact-details">
+                  <div className="contact-item">
+                    <span className="contact-label">Distância:</span>
+                    <span>{selectedPedido.distancia}</span>
+                  </div>
+                  <div className="contact-item">
+                    <span className="contact-label">Publicado:</span>
+                    <span>{selectedPedido.tempo}</span>
+                  </div>
+                  <div className="contact-item">
+                    <span className="contact-label">Usuário:</span>
+                    <span>{selectedPedido.usuario} {selectedPedido.verificado && '✓'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                className="btn-secondary"
+                onClick={() => setShowCategoryDetails(false)}
+              >
+                Fechar
+              </button>
+              <button 
+                className="btn-primary"
+                onClick={() => {
+                  setShowCategoryDetails(false);
+                  navigate(`/necessidade/${selectedPedido.id}`);
+                }}
+              >
+                Quero ajudar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

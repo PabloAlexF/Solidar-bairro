@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import CustomSelect from '../components/CustomSelect';
 import '../styles/pages/PrecisoDeAjuda.css';
 import '../styles/pages/PrecisoDeAjudaWizard.css';
 
@@ -54,7 +55,10 @@ const PrecisoDeAjuda = () => {
   ];
 
   const timeOptions = [
-    'Manhã (8h às 12h)', 'Tarde (12h às 18h)', 'Noite (18h às 22h)', 'Qualquer horário'
+    { value: 'manha', label: 'Manhã (8h às 12h)' },
+    { value: 'tarde', label: 'Tarde (12h às 18h)' },
+    { value: 'noite', label: 'Noite (18h às 22h)' },
+    { value: 'qualquer', label: 'Qualquer horário' }
   ];
 
   const toggleItem = (item) => {
@@ -65,7 +69,7 @@ const PrecisoDeAjuda = () => {
     );
   };
 
-  const totalSteps = 4;
+  const totalSteps = 5;
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
@@ -225,14 +229,15 @@ const PrecisoDeAjuda = () => {
 
             {/* Progress Bar */}
             <div className="progress-bar">
-              {[1, 2, 3, 4].map((step) => (
+              {[1, 2, 3, 4, 5].map((step) => (
                 <div key={step} className={`progress-step ${currentStep >= step ? 'active' : ''}`}>
                   <div className="step-circle">{step}</div>
                   <div className="step-label">
                     {step === 1 && 'Categoria'}
                     {step === 2 && 'Detalhes'}
-                    {step === 3 && 'Preferências'}
-                    {step === 4 && 'Confirmação'}
+                    {step === 3 && 'Urgência'}
+                    {step === 4 && 'Preferências'}
+                    {step === 5 && 'Confirmação'}
                   </div>
                 </div>
               ))}
@@ -290,137 +295,404 @@ const PrecisoDeAjuda = () => {
                       {description.length >= 500 && <span className="limit-message"> - Limite atingido</span>}
                     </div>
                     
-                    <div className="urgency-selector">
-                      <h4>Quando você precisa dessa ajuda?</h4>
-                      <p className="urgency-subtitle">Isso nos ajuda a priorizar e conectar você com quem pode ajudar</p>
-                      <div className="urgency-options">
-                        {[
-                          { id: 'alta', label: 'Urgente', desc: 'Preciso esta semana', color: '#ef4444', bgColor: '#fef2f2' },
-                          { id: 'media', label: 'Moderada', desc: 'Posso aguardar até 30 dias', color: '#f59e0b', bgColor: '#fffbeb' },
-                          { id: 'baixa', label: 'Flexível', desc: 'Quando for possível', color: '#22c55e', bgColor: '#f0fdf4' }
-                        ].map((level) => (
-                          <label key={level.id} className={`urgency-card ${urgency === level.id ? 'selected' : ''}`}>
-                            <input
-                              type="radio"
-                              name="urgency"
-                              value={level.id}
-                              checked={urgency === level.id}
-                              onChange={(e) => setUrgency(e.target.value)}
-                            />
-                            <div 
-                              className="urgency-content"
-                              style={{
-                                '--urgency-color': level.color,
-                                '--urgency-bg': level.bgColor
-                              }}
-                            >
-                              <span className="urgency-dot"></span>
-                              <span className="urgency-label">{level.label}</span>
-                              <span className="urgency-desc">{level.desc}</span>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* Additional fields for food category */}
-                    {selectedCat === 'food' && (
+                    {/* Additional fields for all categories */}
+                    {selectedCat && selectedCat !== 'other' && (
                       <div className="additional-details">
-                        <h4>Informações da família</h4>
-                        <div className="family-info">
-                          <div className="input-group">
-                            <label>Quantas pessoas na família?</label>
-                            <input
-                              type="number"
-                              value={familySize}
-                              onChange={(e) => setFamilySize(e.target.value)}
-                              placeholder="Ex: 4"
-                              min="1"
-                              max="20"
-                              className="form-input"
-                            />
-                          </div>
-                          <div className="input-group">
-                            <label>Quantas crianças?</label>
-                            <input
-                              type="number"
-                              value={children}
-                              onChange={(e) => setChildren(e.target.value)}
-                              placeholder="Ex: 2"
-                              min="0"
-                              max="10"
-                              className="form-input"
-                            />
-                          </div>
-                        </div>
+                        {selectedCat === 'food' && (
+                          <>
+                            <h4>Informações da família</h4>
+                            <div className="family-info-cards">
+                              <div className="info-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="família" width="24" height="24" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Quantas pessoas na família?</label>
+                                  <input
+                                    type="number"
+                                    value={familySize}
+                                    onChange={(e) => setFamilySize(e.target.value)}
+                                    placeholder="Ex: 4"
+                                    min="1"
+                                    max="20"
+                                    className="form-input"
+                                  />
+                                </div>
+                              </div>
+                              <div className="info-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="crianças" width="24" height="24" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Quantas crianças?</label>
+                                  <input
+                                    type="number"
+                                    value={children}
+                                    onChange={(e) => setChildren(e.target.value)}
+                                    placeholder="Ex: 2"
+                                    min="0"
+                                    max="10"
+                                    className="form-input"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
                         
-                        <div className="items-section">
-                          <h4>Itens específicos necessários</h4>
-                          <p className="items-subtitle">Selecione os itens que mais precisa (opcional)</p>
-                          <div className="items-grid">
-                            {foodItems.map((item) => (
-                              <button
-                                key={item}
-                                type="button"
-                                onClick={() => toggleItem(item)}
-                                className={`item-tag ${specificItems.includes(item) ? 'selected' : ''}`}
-                              >
-                                <i className={`fi ${specificItems.includes(item) ? 'fi-rr-check-circle' : 'fi-rr-circle'}`}></i>
-                                <span>{item}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                        {selectedCat === 'clothes' && (
+                          <>
+                            <h4>Detalhes da Roupa</h4>
+                            <div className="preferences-cards">
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/1611/1611179.png" alt="tamanho" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Tamanho</label>
+                                  <select className="form-select">
+                                    <option value="">Selecione</option>
+                                    <option value="PP">PP</option>
+                                    <option value="P">P</option>
+                                    <option value="M">M</option>
+                                    <option value="G">G</option>
+                                    <option value="GG">GG</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/892/892458.png" alt="roupa" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Tipo de Peça</label>
+                                  <select className="form-select">
+                                    <option value="">Selecione</option>
+                                    <option value="camiseta">Camiseta</option>
+                                    <option value="calca">Calça</option>
+                                    <option value="sapato">Sapato</option>
+                                    <option value="casaco">Casaco</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="pessoa" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Para quem?</label>
+                                  <select className="form-select">
+                                    <option value="">Selecione</option>
+                                    <option value="adulto">Adulto</option>
+                                    <option value="crianca">Criança</option>
+                                    <option value="adolescente">Adolescente</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
                         
-                        <div className="delivery-preferences">
-                          <h4>Preferências de entrega</h4>
-                          <div className="preferences-grid">
-                            <div className="input-group">
-                              <label>Melhor horário para receber</label>
-                              <select
-                                value={preferredTime}
-                                onChange={(e) => setPreferredTime(e.target.value)}
-                                className="form-select"
-                              >
-                                <option value="">Selecione um horário</option>
-                                {timeOptions.map((time) => (
-                                  <option key={time} value={time}>{time}</option>
+                        {selectedCat === 'meds' && (
+                          <>
+                            <h4>Informações do Medicamento</h4>
+                            <div className="preferences-cards">
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/883/883356.png" alt="medicamento" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Nome do Medicamento</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Ex: Paracetamol"
+                                    className="form-input"
+                                  />
+                                </div>
+                              </div>
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="dosagem" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Dosagem</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Ex: 500mg"
+                                    className="form-input"
+                                  />
+                                </div>
+                              </div>
+                              <div className="pref-card full-width">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="uso" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Tipo de Uso</label>
+                                  <select className="form-select">
+                                    <option value="">Selecione</option>
+                                    <option value="continuo">Uso Contínuo</option>
+                                    <option value="emergencial">Emergencial</option>
+                                    <option value="temporario">Tratamento Temporário</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {selectedCat === 'bills' && (
+                          <>
+                            <h4>Detalhes da Conta</h4>
+                            <div className="preferences-cards">
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/1611/1611179.png" alt="conta" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Tipo de Conta</label>
+                                  <select className="form-select">
+                                    <option value="">Selecione</option>
+                                    <option value="agua">Água</option>
+                                    <option value="luz">Luz</option>
+                                    <option value="aluguel">Aluguel</option>
+                                    <option value="gas">Gás</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="dinheiro" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Valor Aproximado</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Ex: R$ 150,00"
+                                    className="form-input"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {selectedCat === 'work' && (
+                          <>
+                            <h4>Oportunidade de Emprego</h4>
+                            <div className="preferences-cards">
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/1077/1077976.png" alt="trabalho" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Área de Interesse</label>
+                                  <input
+                                    type="text"
+                                    placeholder="Ex: Vendas, Limpeza, Cozinha"
+                                    className="form-input"
+                                  />
+                                </div>
+                              </div>
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="horário" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Disponibilidade</label>
+                                  <select className="form-select">
+                                    <option value="">Selecione</option>
+                                    <option value="manha">Manhã</option>
+                                    <option value="tarde">Tarde</option>
+                                    <option value="noite">Noite</option>
+                                    <option value="integral">Integral</option>
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {selectedCat === 'serv' && (
+                          <>
+                            <h4>Tipo de Serviço</h4>
+                            <div className="preferences-cards">
+                              <div className="pref-card">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="serviço" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Tipo de Serviço</label>
+                                  <select className="form-select">
+                                    <option value="">Selecione</option>
+                                    <option value="reforma">Reforma/Reparo</option>
+                                    <option value="transporte">Transporte</option>
+                                    <option value="cuidado">Cuidado</option>
+                                    <option value="limpeza">Limpeza</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="pref-card full-width">
+                                <div className="card-icon">
+                                  <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="descrição" width="20" height="20" />
+                                </div>
+                                <div className="card-content">
+                                  <label>Descrição do Serviço</label>
+                                  <textarea
+                                    placeholder="Descreva o que precisa ser feito"
+                                    className="form-textarea"
+                                    rows="3"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        
+                        {selectedCat === 'hygiene' && (
+                          <>
+                            <h4>Itens de Higiene</h4>
+                            <div className="items-section">
+                              <p className="items-subtitle">Selecione os itens que precisa</p>
+                              <div className="items-grid">
+                                {['Fraldas', 'Sabonete', 'Shampoo', 'Pasta de dente', 'Absorvente', 'Papel higiênico'].map((item) => (
+                                  <button
+                                    key={item}
+                                    type="button"
+                                    onClick={() => toggleItem(item)}
+                                    className={`item-tag ${specificItems.includes(item) ? 'selected' : ''}`}
+                                  >
+                                    <span>{item}</span>
+                                  </button>
                                 ))}
-                              </select>
+                              </div>
                             </div>
-                            <div className="input-group">
-                              <label>Local preferido para encontro</label>
-                              <input
-                                type="text"
-                                value={preferredLocation}
-                                onChange={(e) => setPreferredLocation(e.target.value)}
-                                placeholder="Ex: Próximo ao mercado central"
-                                className="form-input"
-                              />
+                          </>
+                        )}
+                        
+                        {selectedCat === 'food' && (
+                          <>
+                            <div className="items-section">
+                              <h4>Itens específicos necessários</h4>
+                              <p className="items-subtitle">Selecione os itens que mais precisa (opcional)</p>
+                              <div className="items-grid">
+                                {foodItems.map((item) => (
+                                  <button
+                                    key={item}
+                                    type="button"
+                                    onClick={() => toggleItem(item)}
+                                    className={`item-tag ${specificItems.includes(item) ? 'selected' : ''}`}
+                                  >
+                                    <span>{item}</span>
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                            <div className="input-group full-width">
-                              <label>Observações especiais</label>
-                              <textarea
-                                value={observations}
-                                onChange={(e) => setObservations(e.target.value)}
-                                placeholder="Ex: Prefere receber aos finais de semana"
-                                className="form-textarea"
-                                rows="2"
-                              />
+                            
+                            <div className="delivery-preferences">
+                              <h4>Preferências de entrega</h4>
+                              
+                              <div className="delivery-grid">
+                                <div className="delivery-field">
+                                  <label className="field-label">Melhor horário para receber</label>
+                                  <div className="input-wrapper">
+                                    <div className="input-icon">
+                                      <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="horário" width="18" height="18" />
+                                    </div>
+                                    <CustomSelect
+                                      options={timeOptions}
+                                      value={preferredTime}
+                                      onChange={setPreferredTime}
+                                      placeholder="Selecione um horário"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="delivery-field">
+                                  <label className="field-label">Local preferido para encontro</label>
+                                  <div className="input-wrapper">
+                                    <div className="input-icon">
+                                      <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="localização" width="18" height="18" />
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={preferredLocation}
+                                      onChange={(e) => setPreferredLocation(e.target.value)}
+                                      placeholder="Ex: Próximo ao mercado central"
+                                      className="form-input enhanced"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="observations-section">
+                                <label className="field-label">Observações especiais</label>
+                                <div className="input-wrapper">
+                                  <div className="input-icon">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="observações" width="18" height="18" />
+                                  </div>
+                                  <textarea
+                                    value={observations}
+                                    onChange={(e) => setObservations(e.target.value)}
+                                    placeholder="Ex: Prefere receber aos finais de semana"
+                                    className="form-textarea enhanced"
+                                    rows="3"
+                                  />
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Step 3: Preferences */}
+              {/* Step 3: Urgency */}
               {currentStep === 3 && (
                 <div className="step-content">
+                  <h3>Quando você precisa dessa ajuda?</h3>
+                  <p className="urgency-subtitle">Isso nos ajuda a priorizar e conectar você com quem pode ajudar</p>
+                  
+                  <div className="urgency-selector">
+                    <div className="urgency-options">
+                      {[
+                        { id: 'alta', label: 'Urgente', desc: 'Preciso esta semana', color: '#ef4444', bgColor: '#fef2f2' },
+                        { id: 'media', label: 'Moderada', desc: 'Posso aguardar até 30 dias', color: '#f59e0b', bgColor: '#fffbeb' },
+                        { id: 'baixa', label: 'Flexível', desc: 'Quando for possível', color: '#22c55e', bgColor: '#f0fdf4' }
+                      ].map((level) => (
+                        <label key={level.id} className={`urgency-card ${urgency === level.id ? 'selected' : ''}`}>
+                          <input
+                            type="radio"
+                            name="urgency"
+                            value={level.id}
+                            checked={urgency === level.id}
+                            onChange={(e) => setUrgency(e.target.value)}
+                          />
+                          <div 
+                            className="urgency-content"
+                            style={{
+                              '--urgency-color': level.color,
+                              '--urgency-bg': level.bgColor
+                            }}
+                          >
+                            <span className="urgency-dot"></span>
+                            <span className="urgency-label">{level.label}</span>
+                            <span className="urgency-desc">{level.desc}</span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 4: Preferences */}
+              {currentStep === 4 && (
+                <div className="step-content">
                   <h3>Preferências de contato</h3>
-                  <div className="preferences-grid">
+                  <div className="preferences-layout">
                     <div className="contact-section">
                       <h4>Como prefere ser contatado?</h4>
                       <div className="contact-options">
@@ -475,8 +747,8 @@ const PrecisoDeAjuda = () => {
                 </div>
               )}
 
-              {/* Step 4: Confirmation */}
-              {currentStep === 4 && (
+              {/* Step 5: Confirmation */}
+              {currentStep === 5 && (
                 <div className="step-content">
                   <h3>Confirme seus dados</h3>
                   <div className="confirmation-summary">
@@ -515,7 +787,7 @@ const PrecisoDeAjuda = () => {
                   <button 
                     type="button" 
                     onClick={nextStep}
-                    disabled={(currentStep === 1 && !selectedCat) || (currentStep === 2 && !description.trim())}
+                    disabled={(currentStep === 1 && !selectedCat) || (currentStep === 2 && !description.trim()) || (currentStep === 3 && !urgency)}
                     className="btn btn-primary"
                   >
                     Próximo
