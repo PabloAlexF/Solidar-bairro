@@ -56,12 +56,12 @@ const Home = () => {
         <section className="hero-section">
           <div className="container">
             <div className="hero-badge">
-              <span className="badge-text">✨ Conectando comunidades</span>
+              <span className="badge-text">Conectando comunidades</span>
             </div>
             
             <div className="hero-content">
               <h1 className="hero-title">
-                Ajuda que <span className="text-primary">mora ao lado</span>
+                A ajuda que <span className="text-primary">mora ao lado</span>
               </h1>
               <p className="hero-subtitle">
                 Conecte-se com vizinhos. Ofereça ou receba ajuda. Fortaleça sua comunidade.
