@@ -1,53 +1,51 @@
 .detalhes-necessidade {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--gray-50) 0%, rgba(226,232,240,0.8) 100%);
   padding: 2rem 0;
 }
 
-.detalhes-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+.safety-tips {
+  margin-top: 24px;
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent-success-light) 0%, #ecfdf5 100%);
+  border: 1px solid var(--accent-success-dark);
+  transition: all 0.3s ease;
 }
-
-.back-btn {
+.safety-tips h4 {
+  color: var(--ls-green);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  color: #64748b;
-  text-decoration: none;
+  gap: 8px;
+  letter-spacing: -0.3px;
+}
+.safety-tips ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.safety-tips li {
+  color: var(--text-muted-strong);
+  font-size: 0.85rem;
+  padding: 6px 0;
+  padding-left: 24px;
+  position: relative;
   font-weight: 500;
-  transition: all 0.2s ease;
-  cursor: pointer;
+  line-height: 1.5;
+}
+.safety-tips li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--ls-accent-2);
+  font-weight: 700;
+  font-size: 14px;
 }
 
-.back-btn:hover {
-  background: #f8fafc;
-  color: #1e293b;
-}
-
-.header-badges {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.categoria-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: #f1f5f9;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  color: #64748b;
-  font-weight: 500;
-}
 
 .categoria-icon {
   font-size: 1.1rem;
@@ -182,12 +180,12 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #f97316 0%, #fb923c 100%);
+  background: linear-gradient(90deg, var(--ls-accent-1) 0%, var(--ls-accent-2) 100%);
 }
 
 .contact-card:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-  border-color: #cbd5e1;
+  box-shadow: 0 18px 48px rgba(8, 36, 48, 0.12);
+  border-color: rgba(15,116,144,0.06);
 }
 
 .contact-card h3 {
@@ -231,13 +229,13 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--ls-green) 0%, #10b981 100%);
   color: white;
   border: none;
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 6px 18px rgba(21,128,61,0.18);
   margin-top: auto;
   position: relative;
   overflow: hidden;
@@ -255,8 +253,8 @@
 }
 
 .btn-large:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
+  background: linear-gradient(135deg, #059669 0%, var(--ls-blue) 100%);
+  box-shadow: 0 10px 28px rgba(15,116,144,0.16);
   transform: translateY(-2px);
 }
 
@@ -346,10 +344,10 @@
 .share-btn {
   flex: 1;
   padding: 12px 16px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid var(--border);
   border-radius: 10px;
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-  color: #475569;
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+  color: var(--text-muted-strong);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -388,15 +386,15 @@
 }
 
 .share-btn.whatsapp {
-  border-color: #86efac;
-  background: linear-gradient(135deg, #ecfdf5 0%, #dcfce7 100%);
-  color: #15803d;
+  border-color: var(--accent-success-dark);
+  background: linear-gradient(135deg, var(--accent-success-light) 0%, #dcfce7 100%);
+  color: var(--ls-green);
 }
 
 .share-btn.whatsapp:hover {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  border-color: #4ade80;
-  color: #166534;
+  background: linear-gradient(135deg, #bbf7d0 0%, var(--ls-green) 100%);
+  border-color: #34d399;
+  color: var(--text-primary);
 }
 
 .share-btn.facebook {

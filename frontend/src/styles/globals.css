@@ -20,6 +20,13 @@ body {
   --primary: #f97316;
   --secondary: #64748b;
   --success: #22c55e;
+  /* Lagoa Santa palette */
+  --ls-blue: #0f7490; /* lake water */
+  --ls-green: #15803d; /* vegetation */
+  --ls-accent-1: #ef476f; /* vibrant art coral */
+  --ls-accent-2: #ffd166; /* vibrant art yellow */
+  --ls-accent-3: #7c3aed; /* vibrant art purple */
+  --home-accent-gradient: linear-gradient(135deg, var(--ls-blue), var(--ls-green));
   --danger: #ef4444;
   --warning: #f59e0b;
   --text-primary: #1e293b;

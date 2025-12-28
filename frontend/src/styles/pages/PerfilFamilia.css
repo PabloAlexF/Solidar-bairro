@@ -1,13 +1,13 @@
 .perfil-familia {
   min-height: 100vh;
   padding: 60px 0;
-  background: #f6f7f9;
+  background: linear-gradient(180deg, var(--gray-50), rgba(250,250,252,0.6));
 }
 
 .perfil-header {
   margin-bottom: 48px;
   padding-bottom: 32px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border);
 }
 
 .familia-info {
@@ -35,36 +35,37 @@
 }
 
 .vulnerabilidade-tag.alta {
-  background: #fee2e2;
-  color: #dc2626;
+  background: linear-gradient(135deg, rgba(254,226,226,0.9), rgba(255,245,245,0.7));
+  color: var(--danger);
 }
 
 .vulnerabilidade-tag.média {
-  background: #fef3c7;
-  color: #d97706;
+  background: linear-gradient(135deg, rgba(255,243,199,0.9), rgba(255,250,230,0.7));
+  color: var(--warning);
 }
 
 .vulnerabilidade-tag.baixa {
-  background: #dcfce7;
-  color: #16a34a;
+  background: linear-gradient(135deg, rgba(220,252,231,0.95), rgba(240,255,245,0.8));
+  color: var(--ls-green);
 }
 
 .resumo-card,
 .vulnerabilidade-card,
 .necessidades-card {
-  background: #ffffff;
+  background: linear-gradient(180deg, var(--white), #fcfcfd);
   border-radius: 16px;
   padding: 32px;
   margin-bottom: 40px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
 }
 
 .resumo-card:hover,
 .vulnerabilidade-card:hover,
 .necessidades-card:hover {
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-6px);
 }
 
 .resumo-card h3,
@@ -134,12 +135,12 @@
 }
 
 .add-necessidade-form {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  background: linear-gradient(135deg, var(--gray-100), #f1f5f9);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
-  border: 1px solid #d1d5db;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow);
 }
 
 .necessidades-list {
@@ -157,8 +158,8 @@
 }
 
 .carrossel-nav {
-  background: white;
-  color: #f97316;
+  background: linear-gradient(135deg, var(--white), #fffaf0);
+  color: var(--ls-accent-1);
   border: none;
   width: 44px;
   height: 44px;
@@ -175,10 +176,10 @@
 }
 
 .carrossel-nav:hover {
-  background: #f97316;
+  background: linear-gradient(135deg, var(--ls-accent-1), var(--ls-accent-3));
   color: white;
-  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.25);
-  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(15,116,144,0.14);
+  transform: scale(1.06);
 }
 
 .carrossel-nav:active {
@@ -207,21 +208,21 @@
 }
 
 .necessidades-carousel::-webkit-scrollbar-thumb {
-  background: #f97316;
+  background: linear-gradient(90deg, var(--ls-accent-2), var(--primary));
   border-radius: 8px;
 }
 
 .necessidades-carousel::-webkit-scrollbar-thumb:hover {
-  background: #ea580c;
+  background: linear-gradient(90deg, var(--ls-accent-1), var(--ls-blue));
 }
 
 .necessidade-item {
-  background: #ffffff;
+  background: linear-gradient(180deg, var(--white), #fbfbfd);
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 18px rgba(10, 40, 50, 0.06);
+  transition: all 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -231,9 +232,9 @@
 }
 
 .necessidade-item:hover {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  border-color: #d1d5db;
-  transform: translateY(-4px);
+  box-shadow: 0 18px 48px rgba(12, 60, 80, 0.12);
+  border-color: rgba(15,116,144,0.08);
+  transform: translateY(-8px) scale(1.01);
 }
 
 .necessidade-item:active {
