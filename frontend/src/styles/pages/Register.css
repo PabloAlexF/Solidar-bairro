@@ -53,8 +53,8 @@
 
 .user-types {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
   margin-bottom: 60px;
 }
 
