@@ -96,18 +96,26 @@ const PrecisoDeAjuda = () => {
         usuario: 'Você',
         verificado: true,
         timestamp: new Date().toISOString(),
-        detalhes: {
-          pessoas: parseInt(familySize) || 1,
-          criancas: parseInt(children) || 0,
-          idosos: 0,
-          situacao: "Necessidade atual",
-          itensEspecificos: specificItems.length > 0 ? specificItems : [],
-          preferencias: {
-            horario: preferredTime || "Qualquer horário",
-            local: preferredLocation || "A combinar",
-            observacoes: observations || "Sem observações especiais"
-          }
-        }
+                        detalhes: {
+                          pessoas: parseInt(familySize) || 1,
+                          criancas: parseInt(children) || 0,
+                          idosos: 0,
+                          situacao: "Necessidade atual",
+                          itensEspecificos: specificItems.length > 0 ? specificItems : [],
+                          preferencias: {
+                            horario: preferredTime || "Qualquer horário",
+                            local: preferredLocation || "A combinar",
+                            observacoes: observations || "Sem observações especiais"
+                          },
+                          informacoesFamilia: {
+                            tamanhoFamilia: parseInt(familySize) || 1,
+                            numeroCriancas: parseInt(children) || 0,
+                            itensNecessarios: specificItems,
+                            horarioPreferido: preferredTime,
+                            localPreferido: preferredLocation,
+                            observacoesEspeciais: observations
+                          }
+                        }
       };
       
       // Salvar no localStorage
@@ -224,10 +232,15 @@ const PrecisoDeAjuda = () => {
             )}
 
             {/* Progress Bar */}
-            <div className="progress-bar">
+            <div className="progress-bar" style={{'--current-step': currentStep}}>
               {[1, 2, 3, 4].map((step) => (
-                <div key={step} className={`progress-step ${currentStep >= step ? 'active' : ''}`}>
-                  <div className="step-circle">{step}</div>
+                <div key={step} className={`progress-step ${
+                  currentStep > step ? 'completed' : 
+                  currentStep === step ? 'active' : ''
+                }`}>
+                  <div className="step-circle">
+                    {currentStep > step ? '' : step}
+                  </div>
                   <div className="step-label">
                     {step === 1 && 'Categoria'}
                     {step === 2 && 'Detalhes'}
@@ -241,7 +254,7 @@ const PrecisoDeAjuda = () => {
             <form onSubmit={handlePublish} className="wizard-form">
               {/* Step 1: Category Selection */}
               {currentStep === 1 && (
-                <div className="step-content">
+                <div className="step-content" data-step="1">
                   <h3>O que você está precisando?</h3>
                   <div className="categories-carousel">
                     {categories.map((cat) => {
@@ -269,7 +282,7 @@ const PrecisoDeAjuda = () => {
 
               {/* Step 2: Details */}
               {currentStep === 2 && (
-                <div className="step-content">
+                <div className="step-content" data-step="2">
                   <h3>Descreva sua situação</h3>
                   <p className="step-subtitle">Conte-nos mais sobre o que você está precisando para que possamos te conectar com a ajuda certa</p>
                   <div className="details-section">
@@ -418,7 +431,7 @@ const PrecisoDeAjuda = () => {
 
               {/* Step 3: Preferences */}
               {currentStep === 3 && (
-                <div className="step-content">
+                <div className="step-content" data-step="3">
                   <h3>Preferências de contato</h3>
                   <div className="preferences-grid">
                     <div className="contact-section">
@@ -477,7 +490,7 @@ const PrecisoDeAjuda = () => {
 
               {/* Step 4: Confirmation */}
               {currentStep === 4 && (
-                <div className="step-content">
+                <div className="step-content" data-step="4">
                   <h3>Confirme seus dados</h3>
                   <div className="confirmation-summary">
                     <div className="summary-card">
