@@ -6,7 +6,9 @@ import '../styles/pages/QueroAjudar.css';
 const QueroAjudar = () => {
   const navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState('Todos');
+  const [selectedUrgencies, setSelectedUrgencies] = useState([]);
   const [pedidos, setPedidos] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   const filters = ['Todos', 'Alimentos', 'Roupas', 'Medicamentos', 'Contas', 'Trabalho'];
 
@@ -35,7 +37,11 @@ const QueroAjudar = () => {
 
   const filteredPedidos = selectedFilter === 'Todos' 
     ? pedidos 
-    : pedidos.filter(p => p.tipo === selectedFilter);
+    : pedidos.filter(p => {
+        const matchesCategory = p.tipo === selectedFilter;
+        const matchesUrgency = selectedUrgencies.length === 0 || selectedUrgencies.includes(p.urgencia);
+        return matchesCategory && matchesUrgency;
+      });
 
   const getUrgencyColor = (urgencia) => {
     switch(urgencia) {
@@ -72,27 +78,69 @@ const QueroAjudar = () => {
             </p>
           </section>
 
-          {/* Filtros */}
-          <section className="filters-section">
-            <div className="filters-container">
-              {filters.map((filter) => (
-                <button
-                  key={filter}
-                  className={`filter-btn ${selectedFilter === filter ? 'active' : ''}`}
-                  onClick={() => setSelectedFilter(filter)}
-                >
-                  {filter}
-                </button>
-              ))}
-            </div>
-          </section>
-
           {/* Lista de Pedidos */}
           <section className="pedidos-section">
             <div className="section-header">
               <h2>Pedidos próximos a você</h2>
-              <span className="pedidos-count">{filteredPedidos.length} pedidos encontrados</span>
+              <div className="header-actions">
+                <span className="pedidos-count">{filteredPedidos.length} pedidos encontrados</span>
+                <button 
+                  className="filter-toggle-btn"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <i className="fi fi-rr-filter"></i>
+                  Filtrar
+                </button>
+              </div>
             </div>
+
+            {/* Dropdown de Filtros */}
+            {showFilters && (
+              <div className="filters-dropdown">
+                <div className="filters-grid">
+                  {filters.map((filter) => (
+                    <button
+                      key={filter}
+                      className={`filter-option ${selectedFilter === filter ? 'active' : ''}`}
+                      onClick={() => {
+                        setSelectedFilter(filter);
+                        setSelectedUrgencies([]);
+                        if (filter === 'Todos') {
+                          setShowFilters(false);
+                        }
+                      }}
+                    >
+                      {filter}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Filtros de Urgência */}
+                {selectedFilter !== 'Todos' && (
+                  <div className="urgency-filters">
+                    <h4>Nível de urgência:</h4>
+                    <div className="urgency-options">
+                      {['Alta', 'Média', 'Baixa'].map((urgency) => (
+                        <button
+                          key={urgency}
+                          className={`urgency-option ${selectedUrgencies.includes(urgency) ? 'active' : ''}`}
+                          onClick={() => {
+                            setSelectedUrgencies(prev => 
+                              prev.includes(urgency)
+                                ? prev.filter(u => u !== urgency)
+                                : [...prev, urgency]
+                            );
+                          }}
+                        >
+                          <span className={`urgency-dot ${urgency.toLowerCase()}`}></span>
+                          {urgency}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="pedidos-grid">
               {filteredPedidos.length === 0 ? (

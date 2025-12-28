@@ -32,44 +32,7 @@
   margin: 0 auto;
 }
 
-/* Filtros */
-.filters-section {
-  margin-bottom: 3rem;
-}
 
-.filters-container {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: 0 1rem;
-}
-
-.filter-btn {
-  padding: 0.75rem 1.5rem;
-  border: 2px solid #e2e8f0;
-  background: white;
-  border-radius: 50px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #4a5568;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.filter-btn:hover {
-  border-color: #3182ce;
-  color: #3182ce;
-  transform: translateY(-1px);
-}
-
-.filter-btn.active {
-  background: #3182ce;
-  border-color: #3182ce;
-  color: white;
-  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
-}
 
 /* Seção de Pedidos */
 .pedidos-section {
@@ -82,6 +45,178 @@
   align-items: center;
   margin-bottom: 2rem;
   padding: 0 1rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+.filter-toggle-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.filter-toggle-btn i {
+  font-size: 1rem;
+}
+
+/* Dropdown de Filtros */
+.filters-dropdown {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.filter-option {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.filter-option:hover {
+  border-color: #22c55e;
+  color: #22c55e;
+  transform: translateY(-1px);
+}
+
+.filter-option.active {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-color: #22c55e;
+  color: white;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+/* Filtros de Urgência */
+.urgency-filters {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.urgency-filters h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.urgency-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.urgency-option {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.urgency-option::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  transition: all 0.3s ease;
+}
+
+.urgency-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
+}
+
+.urgency-option.active {
+  border-color: #22c55e;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  color: #15803d;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+}
+
+.urgency-option.active::before {
+  background: #22c55e;
+}
+
+.urgency-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 2px solid white;
+}
+
+.urgency-dot.alta {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.urgency-dot.média {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.urgency-dot.baixa {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
 .section-header h2 {
@@ -322,14 +457,13 @@
     padding: 0 0.5rem;
   }
   
-  .filters-container {
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding: 0 0.5rem;
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
   }
   
-  .filter-btn {
-    flex-shrink: 0;
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .card-actions {
@@ -384,4 +518,36 @@
   margin-left: auto;
   margin-right: auto;
   line-height: 1.5;
+}
+/* Cabeçalho dos filtros - QueroAjudar */
+.filters-section {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.filters-header {
+  margin-bottom: 24px;
+}
+
+.filters-header h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.filters-header p {
+  color: #64748b;
+  font-size: 16px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+/* Ajuste espaçamento filtros */
+.filters-section {
+  margin-bottom: 40px !important;
+  margin-top: -20px !important;
+}
+
+.hero-section {
+  margin-bottom: 20px !important;
 }

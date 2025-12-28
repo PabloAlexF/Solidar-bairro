@@ -9,6 +9,7 @@ const Home = () => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const totalSlides = 4; // 6 cards - 2 visible = 4 positions
+  const [mobileScrollIndex, setMobileScrollIndex] = useState(0);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('solidar-user');
@@ -66,6 +67,14 @@ const Home = () => {
 
   const goToSlide = (index) => {
     setCurrentSlide(index);
+  };
+
+  // Handle mobile scroll detection
+  const handleMobileScroll = (e) => {
+    const scrollLeft = e.target.scrollLeft;
+    const cardWidth = 260; // 240px card + 20px gap
+    const newIndex = Math.round(scrollLeft / cardWidth);
+    setMobileScrollIndex(newIndex);
   };
 
   // Calculate transform based on card width
@@ -153,14 +162,14 @@ const Home = () => {
               <p className="section-subtitle">Simples, seguro e eficiente</p>
             </div>
             
-            <div className="info-grid">
+            <div className="info-grid" onScroll={handleMobileScroll}>
               <div className="info-item">
                 <div className="info-icon">
                   <i className="fi fi-rr-marker"></i>
                 </div>
                 <div className="info-number">01</div>
                 <h3>Próximo</h3>
-                <p>Pessoas e ajudas próximas à sua localização</p>
+                <p>Pessoas e ajudas<br />próximas à sua<br />localização</p>
               </div>
 
               <div className="info-item">
@@ -169,7 +178,7 @@ const Home = () => {
                 </div>
                 <div className="info-number">02</div>
                 <h3>Simples</h3>
-                <p>Publique ou responda em poucos cliques</p>
+                <p>Publique ou responda<br />em poucos cliques</p>
               </div>
 
               <div className="info-item">
@@ -178,7 +187,7 @@ const Home = () => {
                 </div>
                 <div className="info-number">03</div>
                 <h3>Seguro</h3>
-                <p>Perfis e ações verificadas pela comunidade</p>
+                <p>Perfis e ações<br />verificadas pela<br />comunidade</p>
               </div>
 
               <div className="info-item">
@@ -187,7 +196,7 @@ const Home = () => {
                 </div>
                 <div className="info-number">04</div>
                 <h3>Mapa em tempo real</h3>
-                <p>Visualize pedidos com localização ao vivo no mapa</p>
+                <p>Visualize pedidos com<br />localização ao vivo<br />no mapa</p>
               </div>
 
               <div className="info-item">
@@ -196,7 +205,7 @@ const Home = () => {
                 </div>
                 <div className="info-number">05</div>
                 <h3>Notificações</h3>
-                <p>Receba alertas quando surgirem pedidos perto de você</p>
+                <p>Receba alertas quando<br />surgirem pedidos<br />perto de você</p>
               </div>
 
               <div className="info-item">
@@ -205,8 +214,17 @@ const Home = () => {
                 </div>
                 <div className="info-number">06</div>
                 <h3>Contato direto</h3>
-                <p>Converse com quem publicou — WhatsApp, telefone ou chat interno</p>
+                <p>Converse com quem<br />publicou — WhatsApp,<br />telefone ou chat interno</p>
               </div>
+            </div>
+            
+            <div className="mobile-carousel-dots">
+              {[...Array(6)].map((_, index) => (
+                <span 
+                  key={index}
+                  className={`mobile-dot ${mobileScrollIndex === index ? 'active' : ''}`}
+                ></span>
+              ))}
             </div>
           </div>
         </section>
@@ -246,7 +264,7 @@ const Home = () => {
                   <div className="about-icon">
                     <i className="fi fi-rr-star"></i>
                   </div>
-                  <h3>Como</h3>
+                  <h3>Nossa tecnologia</h3>
                   <p>Plataforma simples, segura e focada na sua vizinhança</p>
                 </div>
               </div>
