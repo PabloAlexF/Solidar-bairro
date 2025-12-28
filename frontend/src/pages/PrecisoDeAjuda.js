@@ -83,8 +83,7 @@ const PrecisoDeAjuda = () => {
     }
   };
 
-  const handlePublish = (e) => {
-    e.preventDefault();
+  const handlePublish = () => {
     if (selectedCat && description.trim()) {
       setIsSubmitting(true);
       
@@ -100,18 +99,26 @@ const PrecisoDeAjuda = () => {
         usuario: 'Você',
         verificado: true,
         timestamp: new Date().toISOString(),
-        detalhes: {
-          pessoas: parseInt(familySize) || 1,
-          criancas: parseInt(children) || 0,
-          idosos: 0,
-          situacao: "Necessidade atual",
-          itensEspecificos: specificItems.length > 0 ? specificItems : [],
-          preferencias: {
-            horario: preferredTime || "Qualquer horário",
-            local: preferredLocation || "A combinar",
-            observacoes: observations || "Sem observações especiais"
-          }
-        }
+                        detalhes: {
+                          pessoas: parseInt(familySize) || 1,
+                          criancas: parseInt(children) || 0,
+                          idosos: 0,
+                          situacao: "Necessidade atual",
+                          itensEspecificos: specificItems.length > 0 ? specificItems : [],
+                          preferencias: {
+                            horario: preferredTime || "Qualquer horário",
+                            local: preferredLocation || "A combinar",
+                            observacoes: observations || "Sem observações especiais"
+                          },
+                          informacoesFamilia: {
+                            tamanhoFamilia: parseInt(familySize) || 1,
+                            numeroCriancas: parseInt(children) || 0,
+                            itensNecessarios: specificItems,
+                            horarioPreferido: preferredTime,
+                            localPreferido: preferredLocation,
+                            observacoesEspeciais: observations
+                          }
+                        }
       };
       
       // Salvar no localStorage
@@ -243,7 +250,7 @@ const PrecisoDeAjuda = () => {
               ))}
             </div>
 
-            <form onSubmit={handlePublish} className="wizard-form">
+            <div className="wizard-form">
               {/* Step 1: Category Selection */}
               {currentStep === 1 && (
                 <div className="step-content">
@@ -750,25 +757,84 @@ const PrecisoDeAjuda = () => {
               {/* Step 5: Confirmation */}
               {currentStep === 5 && (
                 <div className="step-content">
-                  <h3>Confirme seus dados</h3>
                   <div className="confirmation-summary">
                     <div className="summary-card">
                       <h4>Resumo do seu pedido</h4>
-                      <div className="summary-item">
-                        <strong>Categoria:</strong> {categories.find(c => c.id === selectedCat)?.label}
+                      
+                      <div className="summary-section">
+                        <h5>Informações Básicas</h5>
+                        <div className="summary-grid">
+                          <div className="summary-row">
+                            <span className="summary-label">Categoria:</span>
+                            <span className="summary-value">{categories.find(c => c.id === selectedCat)?.label || <span className="missing">Não informado</span>}</span>
+                          </div>
+                          <div className="summary-row">
+                            <span className="summary-label">Descrição:</span>
+                            <span className="summary-value">{description || <span className="missing">Não informado</span>}</span>
+                          </div>
+                          <div className="summary-row">
+                            <span className="summary-label">Urgência:</span>
+                            <span className="summary-value">{urgency ? (urgency.charAt(0).toUpperCase() + urgency.slice(1)) : <span className="missing">Não informado</span>}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="summary-item">
-                        <strong>Urgência:</strong> {urgency.charAt(0).toUpperCase() + urgency.slice(1)}
+
+                      <div className="summary-section">
+                        <h5>Detalhes Específicos</h5>
+                        <div className="summary-grid">
+                          {selectedCat === 'food' && (
+                            <>
+                              <div className="summary-row">
+                                <span className="summary-label">Pessoas na família:</span>
+                                <span className="summary-value">{familySize || <span className="missing">Não informado</span>}</span>
+                              </div>
+                              <div className="summary-row">
+                                <span className="summary-label">Crianças:</span>
+                                <span className="summary-value">{children || <span className="missing">Não informado</span>}</span>
+                              </div>
+                              <div className="summary-row">
+                                <span className="summary-label">Itens específicos:</span>
+                                <span className="summary-value">{specificItems.length > 0 ? specificItems.join(', ') : <span className="missing">Nenhum item selecionado</span>}</span>
+                              </div>
+                              <div className="summary-row">
+                                <span className="summary-label">Horário preferido:</span>
+                                <span className="summary-value">{preferredTime ? timeOptions.find(t => t.value === preferredTime)?.label : <span className="missing">Não informado</span>}</span>
+                              </div>
+                              <div className="summary-row">
+                                <span className="summary-label">Local preferido:</span>
+                                <span className="summary-value">{preferredLocation || <span className="missing">Não informado</span>}</span>
+                              </div>
+                              <div className="summary-row">
+                                <span className="summary-label">Observações:</span>
+                                <span className="summary-value">{observations || <span className="missing">Nenhuma observação</span>}</span>
+                              </div>
+                            </>
+                          )}
+                          {selectedCat === 'hygiene' && (
+                            <div className="summary-row">
+                              <span className="summary-label">Itens de higiene:</span>
+                              <span className="summary-value">{specificItems.length > 0 ? specificItems.join(', ') : <span className="missing">Nenhum item selecionado</span>}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="summary-item">
-                        <strong>Contato:</strong> {contactOptions.find(c => c.id === contactMethod)?.label}
-                      </div>
-                      <div className="summary-item">
-                        <strong>Visibilidade:</strong> {visibilityOptions.find(v => v.id === visibility)?.label}
-                      </div>
-                      <div className="summary-item">
-                        <strong>Descrição:</strong>
-                        <p className="description-preview">{description}</p>
+
+                      <div className="summary-section">
+                        <h5>Preferências de Contato</h5>
+                        <div className="summary-grid">
+                          <div className="summary-row">
+                            <span className="summary-label">Método de contato:</span>
+                            <span className="summary-value">{contactOptions.find(c => c.id === contactMethod)?.label || <span className="missing">Não informado</span>}</span>
+                          </div>
+                          <div className="summary-row">
+                            <span className="summary-label">Visibilidade:</span>
+                            <span className="summary-value">{visibilityOptions.find(v => v.id === visibility)?.label || <span className="missing">Não informado</span>}</span>
+                          </div>
+                          <div className="summary-row">
+                            <span className="summary-label">Perfil anônimo:</span>
+                            <span className="summary-value">{isAnonymous ? 'Sim' : 'Não'}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -787,14 +853,15 @@ const PrecisoDeAjuda = () => {
                   <button 
                     type="button" 
                     onClick={nextStep}
-                    disabled={(currentStep === 1 && !selectedCat) || (currentStep === 2 && !description.trim()) || (currentStep === 3 && !urgency)}
+                    disabled={(currentStep === 1 && !selectedCat) || (currentStep === 2 && !description.trim())}
                     className="btn btn-primary"
                   >
                     Próximo
                   </button>
                 ) : (
                   <button 
-                    type="submit"
+                    type="button"
+                    onClick={handlePublish}
                     disabled={isSubmitting}
                     className={`btn btn-primary btn-large ${isSubmitting ? 'submitting' : ''}`}
                   >
@@ -809,7 +876,7 @@ const PrecisoDeAjuda = () => {
                   </button>
                 )}
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </main>
