@@ -38,6 +38,32 @@ const PrecisoDeAjuda = () => {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // New fields for detailed information
+  const [familySize, setFamilySize] = useState('');
+  const [children, setChildren] = useState('');
+  const [specificItems, setSpecificItems] = useState([]);
+  const [preferredTime, setPreferredTime] = useState('');
+  const [preferredLocation, setPreferredLocation] = useState('');
+  const [observations, setObservations] = useState('');
+
+  const foodItems = [
+    'Arroz (5kg)', 'Feijão (2kg)', 'Óleo de soja', 'Açúcar (2kg)',
+    'Leite em pó', 'Fraldas', 'Produtos de higiene', 'Macarrão',
+    'Farinha de trigo', 'Café', 'Sal', 'Molho de tomate'
+  ];
+
+  const timeOptions = [
+    'Manhã (8h às 12h)', 'Tarde (12h às 18h)', 'Noite (18h às 22h)', 'Qualquer horário'
+  ];
+
+  const toggleItem = (item) => {
+    setSpecificItems(prev => 
+      prev.includes(item) 
+        ? prev.filter(i => i !== item)
+        : [...prev, item]
+    );
+  };
 
   const totalSteps = 4;
 
@@ -69,7 +95,19 @@ const PrecisoDeAjuda = () => {
         tempo: 'Agora',
         usuario: 'Você',
         verificado: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        detalhes: {
+          pessoas: parseInt(familySize) || 1,
+          criancas: parseInt(children) || 0,
+          idosos: 0,
+          situacao: "Necessidade atual",
+          itensEspecificos: specificItems.length > 0 ? specificItems : [],
+          preferencias: {
+            horario: preferredTime || "Qualquer horário",
+            local: preferredLocation || "A combinar",
+            observacoes: observations || "Sem observações especiais"
+          }
+        }
       };
       
       // Salvar no localStorage
@@ -284,6 +322,96 @@ const PrecisoDeAjuda = () => {
                         ))}
                       </div>
                     </div>
+                    
+                    {/* Additional fields for food category */}
+                    {selectedCat === 'food' && (
+                      <div className="additional-details">
+                        <h4>Informações da família</h4>
+                        <div className="family-info">
+                          <div className="input-group">
+                            <label>Quantas pessoas na família?</label>
+                            <input
+                              type="number"
+                              value={familySize}
+                              onChange={(e) => setFamilySize(e.target.value)}
+                              placeholder="Ex: 4"
+                              min="1"
+                              max="20"
+                              className="form-input"
+                            />
+                          </div>
+                          <div className="input-group">
+                            <label>Quantas crianças?</label>
+                            <input
+                              type="number"
+                              value={children}
+                              onChange={(e) => setChildren(e.target.value)}
+                              placeholder="Ex: 2"
+                              min="0"
+                              max="10"
+                              className="form-input"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="items-section">
+                          <h4>Itens específicos necessários</h4>
+                          <p className="items-subtitle">Selecione os itens que mais precisa (opcional)</p>
+                          <div className="items-grid">
+                            {foodItems.map((item) => (
+                              <button
+                                key={item}
+                                type="button"
+                                onClick={() => toggleItem(item)}
+                                className={`item-tag ${specificItems.includes(item) ? 'selected' : ''}`}
+                              >
+                                <i className={`fi ${specificItems.includes(item) ? 'fi-rr-check-circle' : 'fi-rr-circle'}`}></i>
+                                <span>{item}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="delivery-preferences">
+                          <h4>Preferências de entrega</h4>
+                          <div className="preferences-grid">
+                            <div className="input-group">
+                              <label>Melhor horário para receber</label>
+                              <select
+                                value={preferredTime}
+                                onChange={(e) => setPreferredTime(e.target.value)}
+                                className="form-select"
+                              >
+                                <option value="">Selecione um horário</option>
+                                {timeOptions.map((time) => (
+                                  <option key={time} value={time}>{time}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="input-group">
+                              <label>Local preferido para encontro</label>
+                              <input
+                                type="text"
+                                value={preferredLocation}
+                                onChange={(e) => setPreferredLocation(e.target.value)}
+                                placeholder="Ex: Próximo ao mercado central"
+                                className="form-input"
+                              />
+                            </div>
+                            <div className="input-group full-width">
+                              <label>Observações especiais</label>
+                              <textarea
+                                value={observations}
+                                onChange={(e) => setObservations(e.target.value)}
+                                placeholder="Ex: Prefere receber aos finais de semana"
+                                className="form-textarea"
+                                rows="2"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
