@@ -7,6 +7,8 @@ const Home = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const totalSlides = 4; // 6 cards - 2 visible = 4 positions
 
   useEffect(() => {
     const savedUser = localStorage.getItem('solidar-user');
@@ -24,6 +26,11 @@ const Home = () => {
       }
     };
 
+    // Auto-slide carousel
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % totalSlides);
+    }, 3000);
+
     // Listen for storage changes
     window.addEventListener('storage', handleUserChange);
     
@@ -31,10 +38,11 @@ const Home = () => {
     window.addEventListener('userUpdated', handleUserChange);
     
     return () => {
+      clearInterval(interval);
       window.removeEventListener('storage', handleUserChange);
       window.removeEventListener('userUpdated', handleUserChange);
     };
-  }, []);
+  }, [totalSlides]);
 
   const handleCardClick = (route) => {
     // Always check fresh user data from localStorage
@@ -48,6 +56,23 @@ const Home = () => {
     }
   };
 
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
+  };
+
+  // Calculate transform based on card width
+  const getTransform = () => {
+    return `translateX(-${currentSlide * 300}px)`;
+  };
+
   return (
     <div className="home">
       <Header showLoginButton={false} />
@@ -56,49 +81,59 @@ const Home = () => {
         <section className="hero-section">
           <div className="container">
             <div className="hero-badge">
-              <span className="badge-text">Conectando comunidades</span>
+              <span className="badge-text">✨ Plataforma de Solidariedade</span>
             </div>
             
             <div className="hero-content">
               <h1 className="hero-title">
-                A ajuda que <span className="text-primary">mora ao lado</span>
+                <span className="brand-name">SolidarBairro</span>
+                <span className="main-headline">A rede de ajuda da sua <span className="text-primary">vizinhança</span></span>
               </h1>
               <p className="hero-subtitle">
-                Conecte-se com vizinhos. Ofereça ou receba ajuda. Fortaleça sua comunidade.
+                Conecte-se com vizinhos, ofereça ou receba ajuda, e fortaleça os laços da sua comunidade. Juntos somos mais fortes.
               </p>
             </div>
 
             <div className="options-grid">
               <div className="option-card" onClick={() => handleCardClick('/quero-ajudar')}>
                 <div className="option-icon primary">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                  </svg>
+                  <i className="fi fi-rr-heart"></i>
                 </div>
+                <div className="option-badge">Solidariedade</div>
                 <h2 className="option-title">Quero Ajudar</h2>
                 <p className="option-description">
-                  Veja quem precisa de ajuda no seu bairro
+                  Descubra pessoas próximas que precisam da sua ajuda. Seja a diferença na vida de alguém.
                 </p>
+                <div className="option-stats">
+                  <span className="stat-item"><i className="fi fi-rr-marker"></i> No seu bairro</span>
+                  <span className="stat-item"><i className="fi fi-rr-bolt"></i> Tempo real</span>
+                </div>
                 <button className="option-button primary">
-                  Ver pedidos
+                  <span>Ver pedidos</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
                 </button>
               </div>
 
               <div className="option-card" onClick={() => handleCardClick('/preciso-de-ajuda')}>
                 <div className="option-icon secondary">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                  </svg>
+                  <i className="fi fi-rr-hand-holding-heart"></i>
                 </div>
+                <div className="option-badge">Comunidade</div>
                 <h2 className="option-title">Preciso de Ajuda</h2>
                 <p className="option-description">
-                  Publique sua necessidade para a comunidade
+                  Compartilhe sua necessidade com vizinhos dispostos a ajudar. Você não está sozinho.
                 </p>
+                <div className="option-stats">
+                  <span className="stat-item"><i className="fi fi-rr-shield-check"></i> Seguro</span>
+                  <span className="stat-item"><i className="fi fi-rr-badge-check"></i> Verificado</span>
+                </div>
                 <button className="option-button secondary">
-                  Pedir ajuda
+                  <span>Pedir ajuda</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
                 </button>
               </div>
             </div>
@@ -121,10 +156,7 @@ const Home = () => {
             <div className="info-grid">
               <div className="info-item">
                 <div className="info-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                  </svg>
+                  <i className="fi fi-rr-marker"></i>
                 </div>
                 <div className="info-number">01</div>
                 <h3>Próximo</h3>
@@ -133,9 +165,7 @@ const Home = () => {
 
               <div className="info-item">
                 <div className="info-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-                  </svg>
+                  <i className="fi fi-rr-bolt"></i>
                 </div>
                 <div className="info-number">02</div>
                 <h3>Simples</h3>
@@ -144,9 +174,7 @@ const Home = () => {
 
               <div className="info-item">
                 <div className="info-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                  </svg>
+                  <i className="fi fi-rr-shield-check"></i>
                 </div>
                 <div className="info-number">03</div>
                 <h3>Seguro</h3>
@@ -155,10 +183,7 @@ const Home = () => {
 
               <div className="info-item">
                 <div className="info-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 10c0-5-4-9-9-9S3 5 3 10c0 7 9 13 9 13s9-6 9-13z"></path>
-                    <circle cx="12" cy="10" r="3"></circle>
-                  </svg>
+                  <i className="fi fi-rr-map"></i>
                 </div>
                 <div className="info-number">04</div>
                 <h3>Mapa em tempo real</h3>
@@ -167,11 +192,7 @@ const Home = () => {
 
               <div className="info-item">
                 <div className="info-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
+                  <i className="fi fi-rr-bell"></i>
                 </div>
                 <div className="info-number">05</div>
                 <h3>Notificações</h3>
@@ -180,9 +201,7 @@ const Home = () => {
 
               <div className="info-item">
                 <div className="info-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-6.7A8.38 8.38 0 0 1 4 10.5 8.5 8.5 0 0 1 8.7 3 8.38 8.38 0 0 1 12.5 2h.5a8.5 8.5 0 0 1 8.5 8.5c0 .8-.1 1.6-.5 2.4z"></path>
-                  </svg>
+                  <i className="fi fi-rr-comment"></i>
                 </div>
                 <div className="info-number">06</div>
                 <h3>Contato direto</h3>
@@ -196,7 +215,7 @@ const Home = () => {
           <div className="container">
             <div className="about-content">
               <div className="about-badge">
-                <span className="about-badge-text">🤝 Nossa missão</span>
+                <span className="about-badge-text"><i className="fi fi-rr-handshake"></i> Nossa missão</span>
               </div>
               
               <h2 className="about-title">Sobre nós</h2>
@@ -209,12 +228,7 @@ const Home = () => {
               <div className="about-grid">
                 <div className="about-card">
                   <div className="about-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="9" cy="7" r="4"></circle>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
+                    <i className="fi fi-rr-users"></i>
                   </div>
                   <h3>Para quem</h3>
                   <p>Moradores locais que querem fazer a diferença em sua comunidade</p>
@@ -222,9 +236,7 @@ const Home = () => {
                 
                 <div className="about-card">
                   <div className="about-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
+                    <i className="fi fi-rr-heart"></i>
                   </div>
                   <h3>O que fazemos</h3>
                   <p>Conectamos necessidades com pessoas dispostas a ajudar</p>
@@ -232,9 +244,7 @@ const Home = () => {
                 
                 <div className="about-card">
                   <div className="about-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                    </svg>
+                    <i className="fi fi-rr-star"></i>
                   </div>
                   <h3>Como</h3>
                   <p>Plataforma simples, segura e focada na sua vizinhança</p>

@@ -121,7 +121,7 @@ const Header = ({ showLoginButton = true }) => {
           <div className="header-content">
             <div className="logo" onClick={() => navigate('/')}>
               <div className="logo-icon">
-                ❤️
+                <i className="fi fi-rr-heart"></i>
               </div>
               <span className="logo-text">
                 Solidar<span className="logo-accent">Bairro</span>
