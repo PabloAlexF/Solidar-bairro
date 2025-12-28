@@ -128,8 +128,9 @@ const Home = () => {
                 </div>
                 <div className="info-number">01</div>
                 <h3>Próximo</h3>
-                <p>Apenas pessoas da sua cidade</p>
+                <p>Pessoas e ajudas próximas à sua localização</p>
               </div>
+
               <div className="info-item">
                 <div className="info-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -138,8 +139,9 @@ const Home = () => {
                 </div>
                 <div className="info-number">02</div>
                 <h3>Simples</h3>
-                <p>Conectar e ajudar em poucos cliques</p>
+                <p>Publique ou responda em poucos cliques</p>
               </div>
+
               <div className="info-item">
                 <div className="info-icon">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -148,7 +150,43 @@ const Home = () => {
                 </div>
                 <div className="info-number">03</div>
                 <h3>Seguro</h3>
-                <p>Comunidade verificada e confiável</p>
+                <p>Perfis e ações verificadas pela comunidade</p>
+              </div>
+
+              <div className="info-item">
+                <div className="info-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 10c0-5-4-9-9-9S3 5 3 10c0 7 9 13 9 13s9-6 9-13z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+                <div className="info-number">04</div>
+                <h3>Mapa em tempo real</h3>
+                <p>Visualize pedidos com localização ao vivo no mapa</p>
+              </div>
+
+              <div className="info-item">
+                <div className="info-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                </div>
+                <div className="info-number">05</div>
+                <h3>Notificações</h3>
+                <p>Receba alertas quando surgirem pedidos perto de você</p>
+              </div>
+
+              <div className="info-item">
+                <div className="info-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-6.7A8.38 8.38 0 0 1 4 10.5 8.5 8.5 0 0 1 8.7 3 8.38 8.38 0 0 1 12.5 2h.5a8.5 8.5 0 0 1 8.5 8.5c0 .8-.1 1.6-.5 2.4z"></path>
+                  </svg>
+                </div>
+                <div className="info-number">06</div>
+                <h3>Contato direto</h3>
+                <p>Converse com quem publicou — WhatsApp, telefone ou chat interno</p>
               </div>
             </div>
           </div>
