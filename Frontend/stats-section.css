@@ -1,0 +1,51 @@
+.stats-section {
+  margin-bottom: 40px;
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.stats-section .header-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.stats-section .stat-item {
+  text-align: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, white, #f8fafc);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border: 1px solid #f1f5f9;
+  min-width: 100px;
+  transition: all 0.2s ease;
+}
+
+.stats-section .stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 122, 51, 0.15);
+  border-color: var(--accent);
+}
+
+.stats-section .stat-number {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), #e66a2b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.stats-section .stat-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
