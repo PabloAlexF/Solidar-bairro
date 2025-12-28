@@ -1,18 +1,28 @@
 {
   "projects": {
-    "default": "your-project-id"
+    "default": "solidar-bairro"
   },
   "hosting": {
-    "public": "public",
+    "public": "../frontend/build",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ]
   },
   "functions": {
     "source": "src",
     "runtime": "nodejs18"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   },
   "emulators": {
     "auth": {
@@ -24,8 +34,12 @@
     "functions": {
       "port": 5001
     },
+    "hosting": {
+      "port": 5000
+    },
     "ui": {
-      "enabled": true
+      "enabled": true,
+      "port": 4000
     }
   }
 }

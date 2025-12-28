@@ -1,8 +1,11 @@
-const { db, auth } = require('../config/firebase');
+const firebaseConnection = require('../config/firebase');
 
 class UserService {
   async createUser(userData) {
     try {
+      const auth = firebaseConnection.getAuth();
+      const db = firebaseConnection.getDb();
+      
       // Criar usuário no Authentication
       const userRecord = await auth.createUser({
         email: userData.email,
@@ -26,6 +29,7 @@ class UserService {
 
   async getUserById(uid) {
     try {
+      const db = firebaseConnection.getDb();
       const userDoc = await db.collection('users').doc(uid).get();
       if (!userDoc.exists) {
         throw new Error('Usuário não encontrado');
@@ -38,6 +42,7 @@ class UserService {
 
   async updateUser(uid, updateData) {
     try {
+      const db = firebaseConnection.getDb();
       await db.collection('users').doc(uid).update({
         ...updateData,
         updatedAt: new Date()
@@ -50,6 +55,9 @@ class UserService {
 
   async deleteUser(uid) {
     try {
+      const auth = firebaseConnection.getAuth();
+      const db = firebaseConnection.getDb();
+      
       await auth.deleteUser(uid);
       await db.collection('users').doc(uid).delete();
       return { message: 'Usuário deletado com sucesso' };
