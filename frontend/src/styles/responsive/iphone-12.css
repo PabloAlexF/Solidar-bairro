@@ -1,24 +1,24 @@
 /* iPhone 12/13/14 - 390x844px */
 @media (min-width: 376px) and (max-width: 390px) and (min-height: 800px) {
   .preciso-ajuda {
-    padding-top: 100px !important;
-    overflow-x: hidden !important;
+    padding-top: 100px;
+    overflow-x: hidden;
   }
   
   .container-wide {
-    width: calc(100% - 32px) !important;
-    max-width: 370px !important;
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-    position: relative !important;
-    left: auto !important;
-    transform: none !important;
-    margin: 0 auto !important;
-    box-sizing: border-box !important;
+    width: calc(100% - 32px);
+    max-width: 370px;
+    padding-left: 16px;
+    padding-right: 16px;
+    position: relative;
+    left: auto;
+    transform: none;
+    margin: 0 auto;
+    box-sizing: border-box;
   }
   
   .form-content {
-    padding: 30px 0 80px !important;
-    overflow-x: hidden !important;
+    padding: 30px 0 80px;
+    overflow-x: hidden;
   }
 }

@@ -2,91 +2,91 @@
 
 /* Base Mobile Header - iPhone SE Fix */
 .header {
-  width: 100% !important;
-  padding: 0 12px !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  padding: 0 12px;
+  box-sizing: border-box;
 }
 
 .header-content {
-  width: 100% !important;
-  max-width: 100% !important;
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 /* Force visibility on iPhone SE */
 @media (max-width: 375px) {
   .user-menu-wrapper,
   .notification-wrapper {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    align-items: center !important;
-    gap: 6px !important;
-    flex-shrink: 0 !important;
+    display: flex;
+    visibility: visible;
+    opacity: 1;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
   
   .user-menu-wrapper {
-    margin-left: auto !important;
+    margin-left: auto;
   }
   
   .notification-wrapper .notification-icon,
   .user-menu-wrapper .user-avatar,
   .user-menu-wrapper .user-icon {
-    width: 24px !important;
-    height: 24px !important;
-    flex-shrink: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    visibility: visible !important;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: visible;
   }
   
   .user-avatar {
-    border-radius: 50% !important;
-    object-fit: cover !important;
+    border-radius: 50%;
+    object-fit: cover;
   }
 }
 
 .user-menu-wrapper,
 .notification-wrapper {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .user-menu-wrapper {
-  margin-left: auto !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Make elements smaller and side by side */
 .notification-wrapper .notification-icon,
 .user-menu-wrapper .user-avatar,
 .user-menu-wrapper .user-icon {
-  width: 28px !important;
-  height: 28px !important;
-  flex-shrink: 0 !important;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
 }
 
 /* Tablet adjustments */
 @media (min-width: 768px) and (max-width: 1024px) {
   .user-menu-wrapper,
   .notification-wrapper {
-    gap: 10px !important;
+    gap: 10px;
   }
   
   .notification-wrapper .notification-icon,
   .user-menu-wrapper .user-avatar,
   .user-menu-wrapper .user-icon {
-    width: 32px !important;
-    height: 32px !important;
+    width: 32px;
+    height: 32px;
   }
 }
 
@@ -94,94 +94,94 @@
 @media (min-width: 1025px) {
   .user-menu-wrapper,
   .notification-wrapper {
-    gap: 12px !important;
+    gap: 12px;
   }
   
   .notification-wrapper .notification-icon,
   .user-menu-wrapper .user-avatar,
   .user-menu-wrapper .user-icon {
-    width: 36px !important;
-    height: 36px !important;
+    width: 36px;
+    height: 36px;
   }
 }
 
 /* Ensure no overflow */
 .header {
-  overflow-x: hidden !important;
-  overflow-y: visible !important;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .header * {
-  box-sizing: border-box !important;
+  box-sizing: border-box;
 }
 
 /* Fix dropdown positioning and visibility */
 .user-menu-wrapper,
 .notification-wrapper {
-  position: relative !important;
-  z-index: 1000 !important;
+  position: relative;
+  z-index: 1000;
 }
 
 .user-dropdown,
 .notification-dropdown {
-  position: absolute !important;
-  top: calc(100% + 12px) !important;
-  right: 0 !important;
-  z-index: 9999 !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(226, 232, 240, 0.6) !important;
-  border-radius: 20px !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12) !important;
-  overflow: hidden !important;
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 9999;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
 }
 
 .user-dropdown {
-  width: 300px !important;
+  width: 300px;
 }
 
 .notification-dropdown {
-  width: 320px !important;
+  width: 320px;
 }
 
 /* Mobile adjustments for dropdowns */
 @media (max-width: 375px) {
   .user-dropdown {
-    right: -20px !important;
-    min-width: 260px !important;
-    max-width: 280px !important;
+    right: -20px;
+    min-width: 260px;
+    max-width: 280px;
   }
   
   .notification-dropdown {
-    right: -20px !important;
-    min-width: 280px !important;
-    max-width: 300px !important;
+    right: -20px;
+    min-width: 280px;
+    max-width: 300px;
   }
 }
 
 /* Force dropdown visibility - override any conflicting styles */
 .user-dropdown[style*="display: none"],
 .notification-dropdown[style*="display: none"] {
-  display: block !important;
+  display: block;
 }
 
 .user-dropdown,
 .notification-dropdown {
-  transform: none !important;
-  transition: none !important;
-  animation: none !important;
+  transform: none;
+  transition: none;
+  animation: none;
 }
 
 /* Ensure dropdown content is visible */
 .user-dropdown *,
 .notification-dropdown * {
-  visibility: visible !important;
-  opacity: 1 !important;
-  display: block !important;
+  visibility: visible;
+  opacity: 1;
+  display: block;
 }
 
 .user-dropdown .user-info,
@@ -189,7 +189,7 @@
 .user-dropdown .user-actions,
 .notification-dropdown .notification-header,
 .notification-dropdown .notification-list {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }

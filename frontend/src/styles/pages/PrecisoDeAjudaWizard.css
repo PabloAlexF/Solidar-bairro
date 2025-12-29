@@ -203,9 +203,9 @@
 }
 
 .step-content h3 {
-  font-size: 40px !important;
-  font-weight: 700 !important;
-  color: #1e293b !important;
+  font-size: 40px;
+  font-weight: 700;
+  color: #1e293b;
   margin-bottom: 16px;
   text-align: center;
   line-height: 1.2;
@@ -216,7 +216,7 @@
   color: #64748b;
   text-align: center;
   margin: 0 auto 50px;
-  margin-left: 17% !important;
+  margin-left: 17%;
   font-weight: 500;
   width: 70%;
   line-height: 1.4;
@@ -420,9 +420,9 @@
 }
 
 .urgency-selector h4 {
-  font-size: 28px !important;
-  font-weight: 700 !important;
-  color: #1e293b !important;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
   margin-bottom: 12px;
   text-align: center;
 }

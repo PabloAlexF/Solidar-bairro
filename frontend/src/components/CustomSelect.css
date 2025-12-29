@@ -67,7 +67,7 @@
   background: white;
   border-radius: 12px; /* Mesma curvatura do input */
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Sombra suave */
-  border: none !important;
+  border: none;
   overflow: hidden;
   animation: dropdownFadeIn 0.2s ease-out;
 }
@@ -128,63 +128,63 @@
 }
 /* Force remove all borders from dropdown */
 .select-dropdown {
-  border: 0 !important;
-  outline: 0 !important;
+  border: 0;
+  outline: 0;
 }
 
 .select-dropdown * {
-  border: 0 !important;
-  outline: 0 !important;
+  border: 0;
+  outline: 0;
 }
 /* Force CustomSelect to expand properly */
 .input-wrapper .custom-select,
 .input-wrapper .select-trigger,
 .input-wrapper .select-value {
-  width: 100% !important;
-  flex: 1 !important;
-  min-width: 0 !important;
+  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .input-wrapper .select-trigger {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .input-wrapper .select-arrow {
-  flex-shrink: 0 !important;
-  margin-left: auto !important;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 /* Make select invisible within input wrapper */
 .input-wrapper .select-trigger {
-  background: transparent !important;
-  border: none !important;
-  padding: 14px 0 !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+  background: transparent;
+  border: none;
+  padding: 14px 0;
+  box-shadow: none;
+  border-radius: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .input-wrapper .custom-select {
-  width: 100% !important;
-  height: 100% !important;
+  width: 100%;
+  height: 100%;
 }
 /* Override select-trigger completely */
 .select-trigger {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 14px 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 14px 0;
+  width: 100%;
+  height: 100%;
 }
 /* Remove all visual styling from select-trigger */
 .select-trigger:hover,
 .select-trigger:focus,
 .select-trigger.open {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  outline: none !important;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  outline: none;
 }

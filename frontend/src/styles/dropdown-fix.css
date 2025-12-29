@@ -2,58 +2,58 @@
 
 /* Mobile-first positioning - Overlay preciso-ajuda */
 .user-dropdown {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 99999 !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  background: rgba(255, 255, 255, 0.98) !important;
-  backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(226, 232, 240, 0.8) !important;
-  border-radius: 20px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-  overflow: visible !important;
-  animation: none !important;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  overflow: visible;
+  animation: none;
 }
 
 .notification-dropdown {
-  position: fixed !important;
-  top: 40vh !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  z-index: 99999 !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  background: rgba(255, 255, 255, 0.98) !important;
-  backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(226, 232, 240, 0.8) !important;
-  border-radius: 20px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-  overflow: visible !important;
-  animation: none !important;
+  position: fixed;
+  top: 40vh;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  overflow: visible;
+  animation: none;
 }
 
 .user-dropdown {
-  width: 280px !important;
-  max-width: 90vw !important;
+  width: 280px;
+  max-width: 90vw;
 }
 
 .notification-dropdown {
-  width: 300px !important;
-  max-width: 90vw !important;
+  width: 300px;
+  max-width: 90vw;
 }
 
 /* Force all dropdown content to be visible */
 .user-dropdown *,
 .notification-dropdown * {
-  visibility: visible !important;
-  opacity: 1 !important;
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Specific fixes for dropdown sections */
@@ -62,71 +62,71 @@
 .user-actions,
 .notification-header,
 .notification-list {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: relative !important;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  position: relative;
 }
 
 /* Menu items */
 .menu-item {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  display: flex;
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Notification items */
 .notification-item {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  display: block;
+  visibility: visible;
+  opacity: 1;
 }
 
 /* Override any hidden states */
 [style*="display: none"] .user-dropdown,
 [style*="display: none"] .notification-dropdown {
-  display: block !important;
+  display: block;
 }
 
 /* iPhone SE specific centering */
 @media (max-width: 375px) {
   .user-dropdown {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 260px !important;
-    max-width: 90vw !important;
-    z-index: 99999 !important;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px;
+    max-width: 90vw;
+    z-index: 99999;
   }
   
   .notification-dropdown {
-    position: fixed !important;
-    top: 40vh !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 260px !important;
-    max-width: 90vw !important;
-    z-index: 99999 !important;
+    position: fixed;
+    top: 40vh;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px;
+    max-width: 90vw;
+    z-index: 99999;
   }
 }
 
 @media (max-width: 768px) {
   .user-dropdown {
-    width: 280px !important;
+    width: 280px;
   }
   
   .notification-dropdown {
-    width: 300px !important;
+    width: 300px;
   }
 }
 
 @media (max-width: 480px) {
   .user-dropdown {
-    width: 260px !important;
+    width: 260px;
   }
   
   .notification-dropdown {
-    width: 280px !important;
+    width: 280px;
   }
 }

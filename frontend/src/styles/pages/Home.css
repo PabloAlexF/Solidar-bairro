@@ -839,11 +839,11 @@
   
   .option-card {
     padding: 32px 24px;
-    transform: none !important;
+    transform: none;
   }
   
   .option-card:hover {
-    transform: translateY(-4px) !important;
+    transform: translateY(-4px);
   }
   
   .option-icon {
@@ -1002,270 +1002,270 @@
 }
 /* Ícones melhorados */
 .option-icon {
-  width: 80px !important;
-  height: 80px !important;
-  border-radius: 24px !important;
-  font-size: 36px !important;
-  margin: 0 auto 20px !important;
-  border: 3px solid rgba(255, 255, 255, 0.8) !important;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15), inset 0 2px 8px rgba(255, 255, 255, 0.3) !important;
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  font-size: 36px;
+  margin: 0 auto 20px;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15), inset 0 2px 8px rgba(255, 255, 255, 0.3);
 }
 
 .option-card:hover .option-icon {
-  transform: scale(1.15) rotate(-8deg) !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), inset 0 2px 8px rgba(255, 255, 255, 0.4) !important;
+  transform: scale(1.15) rotate(-8deg);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25), inset 0 2px 8px rgba(255, 255, 255, 0.4);
 }
 
 .option-icon.primary {
-  background: linear-gradient(135deg, #22c55e 0%, #f97316 50%, #16a34a 100%) !important;
-  background-size: 200% 200% !important;
-  animation: iconGradientFlow 3s ease-in-out infinite !important;
+  background: linear-gradient(135deg, #22c55e 0%, #f97316 50%, #16a34a 100%);
+  background-size: 200% 200%;
+  animation: iconGradientFlow 3s ease-in-out infinite;
 }
 
 .option-icon.secondary {
-  background: linear-gradient(135deg, #f97316 0%, #22c55e 50%, #ea580c 100%) !important;
-  background-size: 200% 200% !important;
-  animation: iconGradientFlow 3s ease-in-out infinite reverse !important;
+  background: linear-gradient(135deg, #f97316 0%, #22c55e 50%, #ea580c 100%);
+  background-size: 200% 200%;
+  animation: iconGradientFlow 3s ease-in-out infinite reverse;
 }
 /* Badges melhorados */
 .option-badge {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(249, 115, 22, 0.15)) !important;
-  border: 2px solid rgba(34, 197, 94, 0.3) !important;
-  border-radius: 25px !important;
-  padding: 8px 16px !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2) !important;
-  margin-bottom: 20px !important;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(249, 115, 22, 0.15));
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 25px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+  margin-bottom: 20px;
 }
 
 /* Botões melhorados */
 .option-button {
-  height: 52px !important;
-  padding: 16px 24px !important;
-  font-size: 16px !important;
-  font-weight: 700 !important;
-  border-radius: 26px !important;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
-  text-transform: uppercase !important;
-  letter-spacing: 1px !important;
+  height: 52px;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 26px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .option-button:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
 }
 
 /* Títulos melhorados */
 .option-title {
-  font-size: 24px !important;
-  font-weight: 800 !important;
-  margin-bottom: 12px !important;
-  background: linear-gradient(135deg, #1e293b, #475569) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #1e293b, #475569);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Descrições melhoradas */
 .option-description {
-  font-size: 16px !important;
-  line-height: 1.6 !important;
-  margin-bottom: 24px !important;
-  color: #64748b !important;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  color: #64748b;
 }
 /* Estatísticas melhoradas */
 .stat-item {
-  font-size: 13px !important;
-  color: #16a34a !important;
-  font-weight: 600 !important;
-  background: rgba(34, 197, 94, 0.1) !important;
-  padding: 6px 12px !important;
-  border-radius: 15px !important;
-  border: 1px solid rgba(34, 197, 94, 0.2) !important;
-  gap: 6px !important;
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 6px 12px;
+  border-radius: 15px;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  gap: 6px;
 }
 
 .option-stats {
-  gap: 20px !important;
-  margin-bottom: 28px !important;
+  gap: 20px;
+  margin-bottom: 28px;
 }
 /* Nova cor para ícone primary */
 .option-icon.primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  color: white !important;
-  animation: none !important;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  animation: none;
 }
 /* Correção cor ícone primary - verde */
 .option-icon.primary {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
-  color: white !important;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
 }
 /* Badge ajustado - fundo do tamanho do texto */
 .option-badge {
-  display: inline-block !important;
-  background: rgba(255, 255, 255, 0.9) !important;
-  border: 1px solid rgba(34, 197, 94, 0.2) !important;
-  border-radius: 8px !important;
-  padding: 3px 8px !important;
-  font-size: 11px !important;
-  font-weight: 500 !important;
-  color: #16a34a !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
-  margin-bottom: 16px !important;
-  backdrop-filter: blur(10px) !important;
-  width: fit-content !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #16a34a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  backdrop-filter: blur(10px);
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 /* Botão primary redesenhado */
 .option-button.primary {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
-  border: 2px solid #16a34a !important;
-  color: white !important;
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3) !important;
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-  text-transform: none !important;
-  letter-spacing: 0 !important;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: 2px solid #16a34a;
+  color: white;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .option-button.primary:hover {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4) !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
 }
 /* Botão secondary redesenhado */
 .option-button.secondary {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
-  border: 2px solid #ea580c !important;
-  color: white !important;
-  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3) !important;
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-  text-transform: none !important;
-  letter-spacing: 0 !important;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border: 2px solid #ea580c;
+  color: white;
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .option-button.secondary:hover {
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4) !important;
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
 }
 /* Animações individuais no hover do card */
 .option-card:hover .option-badge {
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2) !important;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
 }
 
 .option-card:hover .option-title {
-  transform: translateY(-2px) !important;
+  transform: translateY(-2px);
 }
 
 .option-card:hover .option-description {
-  color: #475569 !important;
+  color: #475569;
 }
 
 .option-card:hover .stat-item {
-  transform: scale(1.02) !important;
-  background: rgba(34, 197, 94, 0.15) !important;
+  transform: scale(1.02);
+  background: rgba(34, 197, 94, 0.15);
 }
 
 .option-card:hover .option-button {
-  transform: translateY(-1px) scale(1.02) !important;
+  transform: translateY(-1px) scale(1.02);
 }
 /* Animações específicas dos botões */
 .option-button.primary:hover {
-  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
-  transform: translateY(-3px) scale(1.05) !important;
-  box-shadow: 0 12px 30px rgba(34, 197, 94, 0.5) !important;
-  border-color: #15803d !important;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 30px rgba(34, 197, 94, 0.5);
+  border-color: #15803d;
 }
 
 .option-button.secondary:hover {
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
-  transform: translateY(-3px) scale(1.05) !important;
-  box-shadow: 0 12px 30px rgba(249, 115, 22, 0.5) !important;
-  border-color: #c2410c !important;
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 30px rgba(249, 115, 22, 0.5);
+  border-color: #c2410c;
 }
 
 .option-button:hover svg {
-  transform: translateX(6px) rotate(15deg) !important;
+  transform: translateX(6px) rotate(15deg);
 }
 /* Estatísticas melhoradas */
 .option-stats {
-  display: flex !important;
-  justify-content: center !important;
-  gap: 12px !important;
-  margin-bottom: 24px !important;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .stat-item {
-  font-size: 11px !important;
-  color: #64748b !important;
-  font-weight: 500 !important;
-  background: rgba(248, 250, 252, 0.8) !important;
-  padding: 4px 8px !important;
-  border-radius: 8px !important;
-  border: 1px solid rgba(226, 232, 240, 0.6) !important;
-  backdrop-filter: blur(10px) !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
-  transition: all 0.3s ease !important;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  background: rgba(248, 250, 252, 0.8);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 /* Ajuste tamanho das fontes dos cards */
 .option-badge {
-  font-size: 13px !important;
+  font-size: 13px;
 }
 
 .option-title {
-  font-size: 26px !important;
+  font-size: 26px;
 }
 
 .option-description {
-  font-size: 17px !important;
+  font-size: 17px;
 }
 
 .stat-item {
-  font-size: 13px !important;
+  font-size: 13px;
 }
 
 .option-button {
-  font-size: 17px !important;
+  font-size: 17px;
 }
 /* Botões primary melhorados */
 .option-button.primary {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
-  border: none !important;
-  color: white !important;
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4) !important;
-  border-radius: 16px !important;
-  font-weight: 700 !important;
-  height: 56px !important;
-  padding: 0 28px !important;
-  position: relative !important;
-  overflow: hidden !important;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+  border-radius: 16px;
+  font-weight: 700;
+  height: 56px;
+  padding: 0 28px;
+  position: relative;
+  overflow: hidden;
 }
 
 .option-button.primary::before {
-  content: '' !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: -100% !important;
-  width: 100% !important;
-  height: 100% !important;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent) !important;
-  transition: left 0.6s ease !important;
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.6s ease;
 }
 
 .option-button.primary:hover::before {
-  left: 100% !important;
+  left: 100%;
 }
 /* Ícones Flaticon nas estatísticas */
 .stat-item i {
-  font-size: 12px !important;
-  color: #16a34a !important;
-  margin-right: 4px !important;
+  font-size: 12px;
+  color: #16a34a;
+  margin-right: 4px;
 }
 /* Info section melhorada */
 .info-section {
@@ -1273,139 +1273,139 @@
 }
 
 .info-item {
-  background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(248,250,252,0.8)) !important;
-  border: 2px solid rgba(255, 255, 255, 0.6) !important;
-  border-radius: 24px !important;
-  padding: 48px 28px !important;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1) !important;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(248,250,252,0.8));
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  padding: 48px 28px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .info-item:hover {
-  transform: translateY(-12px) scale(1.02) !important;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15) !important;
-  border-color: rgba(34, 197, 94, 0.4) !important;
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
 .info-icon {
-  width: 64px !important;
-  height: 64px !important;
-  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
-  border-radius: 20px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin: 0 auto 24px !important;
-  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3) !important;
-  border: 3px solid rgba(255, 255, 255, 0.8) !important;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.8);
 }
 
 .info-icon i {
-  font-size: 28px !important;
-  color: white !important;
+  font-size: 28px;
+  color: white;
 }
 
 .info-item:hover .info-icon {
-  transform: scale(1.1) rotate(-8deg) !important;
-  box-shadow: 0 12px 35px rgba(34, 197, 94, 0.4) !important;
+  transform: scale(1.1) rotate(-8deg);
+  box-shadow: 0 12px 35px rgba(34, 197, 94, 0.4);
 }
 
 .info-number {
-  background: linear-gradient(135deg, #f97316, #ea580c) !important;
-  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4) !important;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
 }
 
 .info-item h3 {
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  margin-bottom: 12px !important;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
 }
 
 .info-item p {
-  font-size: 16px !important;
-  line-height: 1.6 !important;
+  font-size: 16px;
+  line-height: 1.6;
 }
 /* About section melhorada */
 .about-section {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
-  padding: 120px 0 !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 120px 0;
 }
 
 .about-badge {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(34, 197, 94, 0.1)) !important;
-  border: 2px solid rgba(249, 115, 22, 0.3) !important;
-  border-radius: 25px !important;
-  padding: 10px 20px !important;
-  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.2) !important;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(34, 197, 94, 0.1));
+  border: 2px solid rgba(249, 115, 22, 0.3);
+  border-radius: 25px;
+  padding: 10px 20px;
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.2);
 }
 
 .about-badge-text {
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  color: #ea580c !important;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ea580c;
 }
 
 .about-badge-text i {
-  font-size: 16px !important;
-  margin-right: 8px !important;
-  color: #f97316 !important;
+  font-size: 16px;
+  margin-right: 8px;
+  color: #f97316;
 }
 
 .about-title {
-  font-size: 44px !important;
-  background: linear-gradient(135deg, #1e293b, #475569, #f97316) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
+  font-size: 44px;
+  background: linear-gradient(135deg, #1e293b, #475569, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .about-card {
-  background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9)) !important;
-  border: 2px solid rgba(255, 255, 255, 0.6) !important;
-  border-radius: 24px !important;
-  padding: 44px 28px !important;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.08) !important;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9));
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  padding: 44px 28px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .about-card:hover {
-  transform: translateY(-10px) scale(1.02) !important;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.12) !important;
-  border-color: rgba(249, 115, 22, 0.4) !important;
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.12);
+  border-color: rgba(249, 115, 22, 0.4);
 }
 
 .about-icon {
-  width: 64px !important;
-  height: 64px !important;
-  background: linear-gradient(135deg, #f97316, #ea580c) !important;
-  border-radius: 20px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin: 0 auto 24px !important;
-  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.3) !important;
-  border: 3px solid rgba(255, 255, 255, 0.8) !important;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.8);
 }
 
 .about-icon i {
-  font-size: 28px !important;
-  color: white !important;
+  font-size: 28px;
+  color: white;
 }
 
 .about-card:hover .about-icon {
-  transform: scale(1.1) rotate(8deg) !important;
-  box-shadow: 0 12px 35px rgba(249, 115, 22, 0.4) !important;
+  transform: scale(1.1) rotate(8deg);
+  box-shadow: 0 12px 35px rgba(249, 115, 22, 0.4);
 }
 
 .about-card h3 {
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  margin-bottom: 12px !important;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
 }
 
 .about-card p {
-  font-size: 16px !important;
-  line-height: 1.6 !important;
+  font-size: 16px;
+  line-height: 1.6;
 }
 /* Carrossel de informações */
 .info-carousel {
@@ -1472,7 +1472,7 @@
 }
 /* Carrossel controlável */
 .info-carousel {
-  position: relative !important;
+  position: relative;
 }
 
 .carousel-btn {
@@ -1506,8 +1506,8 @@
 }
 
 .carousel-track {
-  animation: none !important;
-  transition: transform 0.5s ease !important;
+  animation: none;
+  transition: transform 0.5s ease;
 }
 
 @media (max-width: 768px) {
@@ -1517,169 +1517,169 @@
 }
 /* Ajustes do carrossel */
 .info-carousel {
-  max-width: 1200px !important;
-  padding: 0 60px !important;
+  max-width: 1200px;
+  padding: 0 60px;
 }
 
 .carousel-track .info-item {
-  min-width: calc(33.333% - 40px) !important;
-  padding: 32px 20px !important;
+  min-width: calc(33.333% - 40px);
+  padding: 32px 20px;
 }
 
 .carousel-btn.prev {
-  left: 10px !important;
+  left: 10px;
 }
 
 .carousel-btn.next {
-  right: 10px !important;
+  right: 10px;
 }
 
 @media (max-width: 768px) {
   .info-carousel {
-    padding: 0 20px !important;
+    padding: 0 20px;
   }
 }
 /* Maior espaçamento no carrossel */
 .carousel-track {
-  gap: 48px !important;
+  gap: 48px;
 }
 /* Altura apenas do carousel-track */
 .carousel-track {
-  min-height: 500px !important;
-  align-items: center !important;
+  min-height: 500px;
+  align-items: center;
 }
 /* Altura 350px do carousel-track */
 .carousel-track {
-  min-height: 350px !important;
+  min-height: 350px;
 }
 /* Carrossel com 2 cards centralizados */
 .carousel-track .info-item {
-  min-width: calc(50% - 24px) !important;
+  min-width: calc(50% - 24px);
 }
 
 .carousel-container {
-  display: flex !important;
-  justify-content: center !important;
+  display: flex;
+  justify-content: center;
 }
 
 .carousel-track {
-  justify-content: center !important;
+  justify-content: center;
 }
 /* Carrossel corrigido - 2 cards por slide */
 .info-carousel {
-  max-width: 900px !important;
-  padding: 0 80px !important;
+  max-width: 900px;
+  padding: 0 80px;
 }
 
 .carousel-container {
-  width: 100% !important;
-  overflow: hidden !important;
+  width: 100%;
+  overflow: hidden;
 }
 
 .carousel-track {
-  width: 300% !important;
-  display: flex !important;
-  justify-content: flex-start !important;
-  gap: 24px !important;
+  width: 300%;
+  display: flex;
+  justify-content: flex-start;
+  gap: 24px;
 }
 
 .carousel-track .info-item {
-  min-width: calc(16.666% - 20px) !important;
-  flex-shrink: 0 !important;
-  margin: 0 !important;
+  min-width: calc(16.666% - 20px);
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .carousel-btn.prev {
-  left: 20px !important;
+  left: 20px;
 }
 
 .carousel-btn.next {
-  right: 20px !important;
+  right: 20px;
 }
 /* Ajuste posição inicial do carrossel */
 .carousel-track {
-  padding-left: 20px !important;
-  transform: translateX(0) !important;
+  padding-left: 20px;
+  transform: translateX(0);
 }
 
 .carousel-container {
-  padding: 0 20px !important;
+  padding: 0 20px;
 }
 /* Movendo apenas o primeiro card para direita */
 .carousel-track .info-item:first-child {
-  margin-left: 40px !important;
+  margin-left: 40px;
 }
 /* Primeiro card com margin-left 60px */
 .carousel-track .info-item:first-child {
-  margin-left: 60px !important;
+  margin-left: 60px;
 }
 /* Primeiro card com margin-left 100px */
 .carousel-track .info-item:first-child {
-  margin-left: 100px !important;
+  margin-left: 100px;
 }
 /* Primeiro card com margin-left 120px */
 .carousel-track .info-item:first-child {
-  margin-left: 120px !important;
+  margin-left: 120px;
 }
 /* Primeiro card com margin-left 135px */
 .carousel-track .info-item:first-child {
-  margin-left: 135px !important;
+  margin-left: 135px;
 }
 /* Primeiro card com margin-left 145px */
 .carousel-track .info-item:first-child {
-  margin-left: 145px !important;
+  margin-left: 145px;
 }
 /* Primeiro card com margin-left 150px */
 .carousel-track .info-item:first-child {
-  margin-left: 150px !important;
+  margin-left: 150px;
 }
 /* Primeiro card com margin-left 155px */
 .carousel-track .info-item:first-child {
-  margin-left: 155px !important;
+  margin-left: 155px;
 }
 /* Primeiro card com margin-left 160px */
 .carousel-track .info-item:first-child {
-  margin-left: 160px !important;
+  margin-left: 160px;
 }
 /* Correção carrossel - mostrar todos os cards */
 .carousel-track {
-  width: 600% !important;
+  width: 600%;
 }
 
 .carousel-track .info-item {
-  min-width: calc(16.666% - 4px) !important;
+  min-width: calc(16.666% - 4px);
 }
 
 .carousel-track .info-item:first-child {
-  margin-left: 0 !important;
+  margin-left: 0;
 }
 
 .carousel-container {
-  padding: 0 !important;
+  padding: 0;
 }
 /* Carrossel simples funcionando */
 .carousel-track {
-  width: 100% !important;
-  display: flex !important;
-  gap: 20px !important;
-  transition: transform 0.5s ease !important;
-  padding: 0 !important;
+  width: 100%;
+  display: flex;
+  gap: 20px;
+  transition: transform 0.5s ease;
+  padding: 0;
 }
 
 .carousel-track .info-item {
-  min-width: 280px !important;
-  flex-shrink: 0 !important;
+  min-width: 280px;
+  flex-shrink: 0;
 }
 
 .carousel-container {
-  width: 600px !important;
-  overflow: hidden !important;
-  margin: 0 auto !important;
+  width: 600px;
+  overflow: hidden;
+  margin: 0 auto;
 }
 
 .info-carousel {
-  max-width: 100% !important;
-  padding: 0 60px !important;
+  max-width: 100%;
+  padding: 0 60px;
 }
 /* Carrossel final simplificado */
 .info-carousel {
@@ -1705,97 +1705,97 @@
 }
 /* Carrossel com movimento visível */
 .info-carousel {
-  max-width: 600px !important;
+  max-width: 600px;
 }
 
 .carousel-track .info-item {
-  min-width: 250px !important;
+  min-width: 250px;
 }
 
 .carousel-container {
-  width: 520px !important;
+  width: 520px;
 }
 /* Voltando ao grid original */
 .info-grid {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 32px !important;
-  max-width: 900px !important;
-  margin: 0 auto !important;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 /* Cores temáticas para cada ícone */
 .info-item:nth-child(1) .info-icon {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
 }
 
 .info-item:nth-child(2) .info-icon {
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
 .info-item:nth-child(3) .info-icon {
-  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
 .info-item:nth-child(4) .info-icon {
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
 .info-item:nth-child(5) .info-icon {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
 }
 
 .info-item:nth-child(6) .info-icon {
-  background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
 }
 /* Estilo landing page - marca em destaque */
 .brand-name {
-  display: block !important;
-  font-size: 64px !important;
-  font-weight: 900 !important;
-  background: linear-gradient(135deg, #22c55e, #f97316, #16a34a) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  margin-bottom: 16px !important;
-  letter-spacing: -0.02em !important;
+  display: block;
+  font-size: 64px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #22c55e, #f97316, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
 }
 
 .main-headline {
-  display: block !important;
-  font-size: 48px !important;
-  font-weight: 700 !important;
-  color: #1a1a1a !important;
-  line-height: 1.1 !important;
+  display: block;
+  font-size: 48px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.1;
 }
 
 @media (max-width: 768px) {
   .brand-name {
-    font-size: 48px !important;
+    font-size: 48px;
   }
   
   .main-headline {
-    font-size: 36px !important;
+    font-size: 36px;
   }
 }
 /* Carrossel mobile para info-section */
 @media (max-width: 768px) {
   .info-grid {
-    display: flex !important;
-    overflow-x: auto !important;
-    scroll-snap-type: x mandatory !important;
-    gap: 20px !important;
-    padding: 0 20px !important;
-    -webkit-overflow-scrolling: touch !important;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 20px;
+    padding: 0 20px;
+    -webkit-overflow-scrolling: touch;
   }
   
   .info-item {
-    min-width: 280px !important;
-    flex-shrink: 0 !important;
-    scroll-snap-align: center !important;
+    min-width: 280px;
+    flex-shrink: 0;
+    scroll-snap-align: center;
   }
   
   .info-grid::-webkit-scrollbar {
-    display: none !important;
+    display: none;
   }
 }
 /* Bolinhas indicadoras e animação mobile */
@@ -1805,22 +1805,22 @@
 
 @media (max-width: 768px) {
   .info-grid {
-    animation: mobileCarouselSlide 18s infinite linear !important;
+    animation: mobileCarouselSlide 18s infinite linear;
   }
   
   .mobile-carousel-dots {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    margin-top: 24px !important;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
   }
   
   .mobile-dot {
-    width: 8px !important;
-    height: 8px !important;
-    border-radius: 50% !important;
-    background: rgba(34, 197, 94, 0.3) !important;
-    animation: dotPulse 3s infinite !important;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.3);
+    animation: dotPulse 3s infinite;
   }
   
   .mobile-dot:nth-child(1) { animation-delay: 0s; }
@@ -1866,67 +1866,67 @@
 
 @media (max-width: 768px) {
   .info-grid {
-    animation: none !important;
+    animation: none;
   }
   
   .mobile-carousel-arrows {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 20px !important;
-    margin-top: 24px !important;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 24px;
   }
   
   .mobile-arrow {
-    width: 44px !important;
-    height: 44px !important;
-    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
-    border: none !important;
-    border-radius: 50% !important;
-    color: white !important;
-    font-size: 18px !important;
-    cursor: pointer !important;
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3) !important;
-    transition: all 0.3s ease !important;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    transition: all 0.3s ease;
   }
   
   .mobile-arrow:hover {
-    transform: scale(1.1) !important;
-    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4) !important;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
   }
 }
 /* Cards menores para mobile */
 @media (max-width: 768px) {
   .info-item {
-    min-width: 240px !important;
-    padding: 24px 16px !important;
+    min-width: 240px;
+    padding: 24px 16px;
   }
   
   .info-icon {
-    width: 40px !important;
-    height: 40px !important;
-    margin: 0 auto 12px !important;
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 12px;
   }
   
   .info-icon i {
-    font-size: 18px !important;
+    font-size: 18px;
   }
   
   .info-number {
-    width: 20px !important;
-    height: 20px !important;
-    font-size: 9px !important;
-    top: 8px !important;
-    right: 8px !important;
+    width: 20px;
+    height: 20px;
+    font-size: 9px;
+    top: 8px;
+    right: 8px;
   }
   
   .info-item h3 {
-    font-size: 16px !important;
-    margin-bottom: 6px !important;
+    font-size: 16px;
+    margin-bottom: 6px;
   }
   
   .info-item p {
-    font-size: 13px !important;
-    line-height: 1.4 !important;
+    font-size: 13px;
+    line-height: 1.4;
   }
 }
 /* Bolinhas indicadoras mobile */
@@ -1936,65 +1936,65 @@
 
 @media (max-width: 768px) {
   .mobile-carousel-dots {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    margin-top: 20px !important;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
   }
   
   .mobile-dot {
-    width: 8px !important;
-    height: 8px !important;
-    border-radius: 50% !important;
-    background: rgba(34, 197, 94, 0.3) !important;
-    transition: all 0.3s ease !important;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.3);
+    transition: all 0.3s ease;
   }
   
   .mobile-dot:first-child {
-    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
-    transform: scale(1.2) !important;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    transform: scale(1.2);
   }
 }
 /* Bolinhas dinâmicas baseadas no scroll */
 @media (max-width: 768px) {
   .mobile-dot.active {
-    background: linear-gradient(135deg, #22c55e, #16a34a) !important;
-    transform: scale(1.2) !important;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    transform: scale(1.2);
   }
   
   .mobile-dot:not(.active) {
-    background: rgba(34, 197, 94, 0.3) !important;
-    transform: scale(1) !important;
+    background: rgba(34, 197, 94, 0.3);
+    transform: scale(1);
   }
 }
 /* Espaçamento superior e inferior dos cards */
 .info-grid {
-  margin-top: 60px !important;
-  margin-bottom: 60px !important;
+  margin-top: 60px;
+  margin-bottom: 60px;
 }
 /* Remover animações mobile */
 @media (max-width: 768px) {
   .info-item {
-    animation: none !important;
-    transform: none !important;
-    opacity: 1 !important;
+    animation: none;
+    transform: none;
+    opacity: 1;
   }
   
   .info-item:hover {
-    transform: none !important;
+    transform: none;
   }
   
   .info-item:hover .info-icon {
-    transform: none !important;
+    transform: none;
   }
 }
 /* Remover sombras mobile */
 @media (max-width: 768px) {
   .info-item {
-    box-shadow: none !important;
+    box-shadow: none;
   }
   
   .info-item:hover {
-    box-shadow: none !important;
+    box-shadow: none;
   }
 }

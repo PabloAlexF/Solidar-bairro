@@ -1,19 +1,40 @@
+/* Clean dropdown positioning without */
+
 .user-dropdown {
-  position: fixed !important;
-  top: 200px !important;
-  left: 150px !important;
-  z-index: 999999 !important;
-  width: 280px !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(226, 232, 240, 0.6) !important;
-  border-radius: 20px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  overflow: hidden !important;
-  pointer-events: auto !important;
-  margin: 0 !important;
-  transform: none !important;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  width: 300px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  width: 320px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+/* Ensure parent containers have relative positioning */
+.user-menu-wrapper {
+  position: relative;
+}
+
+.notification-wrapper {
+  position: relative;
 }

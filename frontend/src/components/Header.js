@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPortal } from 'react-dom';
 import './Header.css';
 import '../styles/dropdown-clean.css';
 
@@ -15,8 +14,6 @@ const Header = ({ showLoginButton = true }) => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [notificationBtnRef, setNotificationBtnRef] = useState(null);
-  const [userBtnRef, setUserBtnRef] = useState(null);
 
   // Carregar usuário do localStorage
   useEffect(() => {
@@ -45,14 +42,32 @@ const Header = ({ showLoginButton = true }) => {
       loadNotifications();
     };
     
+    // Close dropdowns when clicking outside
+    const handleClickOutside = (event) => {
+      if (showUserMenu || showNotifications) {
+        const userMenuElement = document.querySelector('.user-menu-wrapper');
+        const notificationElement = document.querySelector('.notification-wrapper');
+        
+        if (userMenuElement && !userMenuElement.contains(event.target)) {
+          setShowUserMenu(false);
+        }
+        
+        if (notificationElement && !notificationElement.contains(event.target)) {
+          setShowNotifications(false);
+        }
+      }
+    };
+    
     window.addEventListener('openLogin', handleOpenLogin);
     window.addEventListener('notificationAdded', handleNotificationAdded);
+    document.addEventListener('mousedown', handleClickOutside);
     
     return () => {
       window.removeEventListener('openLogin', handleOpenLogin);
       window.removeEventListener('notificationAdded', handleNotificationAdded);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showUserMenu, showNotifications]);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -146,7 +161,6 @@ const Header = ({ showLoginButton = true }) => {
                 {/* Notificações */}
                 <div className="notification-wrapper">
                   <button 
-                    ref={setNotificationBtnRef}
                     className="notification-btn"
                     onClick={() => setShowNotifications(!showNotifications)}
                   >
@@ -156,7 +170,7 @@ const Header = ({ showLoginButton = true }) => {
                     )}
                   </button>
                   
-                  {showNotifications && createPortal(
+                  {showNotifications && (
                     <div className="notification-dropdown">
                       <div className="notification-header">
                         <h3>Notificações</h3>
@@ -210,14 +224,13 @@ const Header = ({ showLoginButton = true }) => {
                           ))
                         )}
                       </div>
-                    </div>, document.body
+                    </div>
                   )}
                 </div>
 
                 {/* Menu do usuário */}
                 <div className="user-menu-wrapper">
                   <button 
-                    ref={setUserBtnRef}
                     className="user-btn"
                     onClick={() => setShowUserMenu(!showUserMenu)}
                   >
@@ -227,7 +240,7 @@ const Header = ({ showLoginButton = true }) => {
                     {user.isVerified && <span className="verified-badge">✓</span>}
                   </button>
 
-                  {showUserMenu && createPortal(
+                  {showUserMenu && (
                     <div className="user-dropdown">
                       <div className="user-info">
                         <div className="user-avatar-large">
@@ -295,7 +308,7 @@ const Header = ({ showLoginButton = true }) => {
                           🚪 Sair
                         </button>
                       </div>
-                    </div>, document.body
+                    </div>
                   )}
                 </div>
               </div>

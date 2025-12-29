@@ -1,23 +1,23 @@
 /* Large Screens - 1440px+ */
 @media (min-width: 1441px) {
   .preciso-ajuda {
-    padding-top: 100px !important;
-    overflow-x: hidden !important;
+    padding-top: 100px;
+    overflow-x: hidden;
   }
   
   .container-wide {
-    width: calc(100% - 160px) !important;
-    max-width: 1200px !important;
-    padding-left: 80px !important;
-    padding-right: 80px !important;
-    position: absolute !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    box-sizing: border-box !important;
+    width: calc(100% - 160px);
+    max-width: 1200px;
+    padding-left: 80px;
+    padding-right: 80px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    box-sizing: border-box;
   }
   
   .form-content {
-    padding: 80px 0 140px !important;
-    overflow-x: hidden !important;
+    padding: 80px 0 140px;
+    overflow-x: hidden;
   }
 }

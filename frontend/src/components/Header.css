@@ -1,15 +1,15 @@
 /* Header */
 .header {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 999 !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
   box-shadow: 0 1px 20px rgba(0, 0, 0, 0.04);
-  overflow: visible !important;
+  overflow: visible;
 }
 
 .header-content {
@@ -21,7 +21,7 @@
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
-  overflow: visible !important;
+  overflow: visible;
 }
 
 /* Logo */
@@ -78,7 +78,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  overflow: visible !important;
+  overflow: visible;
 }
 
 .login-btn {
@@ -989,109 +989,109 @@
 }
 /* Fix Auth Modal Layout Issues */
 .auth-modal .modal-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  z-index: 9999 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 20px !important;
-  box-sizing: border-box !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .auth-modal .modal-content {
-  width: 100% !important;
-  max-width: 420px !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  position: relative !important;
-  margin: 0 !important;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  margin: 0;
 }
 
 .auth-modal .modal-header {
-  padding: 32px 24px 24px !important;
+  padding: 32px 24px 24px;
 }
 
 .auth-modal .modal-header h2 {
-  font-size: 24px !important;
-  line-height: 1.2 !important;
-  word-wrap: break-word !important;
+  font-size: 24px;
+  line-height: 1.2;
+  word-wrap: break-word;
 }
 
 .auth-modal .modal-header p {
-  font-size: 16px !important;
-  line-height: 1.4 !important;
-  word-wrap: break-word !important;
+  font-size: 16px;
+  line-height: 1.4;
+  word-wrap: break-word;
 }
 
 .auth-modal .auth-form {
-  padding: 0 24px 32px !important;
+  padding: 0 24px 32px;
 }
 
 .auth-modal .form-input {
-  width: 100% !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .auth-modal .btn {
-  width: 100% !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 480px) {
   .auth-modal .modal-content {
-    max-width: 95vw !important;
-    margin: 10px !important;
+    max-width: 95vw;
+    margin: 10px;
   }
   
   .auth-modal .modal-header {
-    padding: 24px 20px 20px !important;
+    padding: 24px 20px 20px;
   }
   
   .auth-modal .auth-form {
-    padding: 0 20px 24px !important;
+    padding: 0 20px 24px;
   }
 }
 /* Organize Modal Content in Column Layout */
 .modal-content {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .modal-header {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  text-align: center !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .auth-form,
 .verify-form {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-group {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .auth-footer {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  text-align: center !important;
-  width: 100% !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
 }
