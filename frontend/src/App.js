@@ -20,6 +20,7 @@ import AtualizarStatus from './pages/AtualizarStatus';
 import PainelSocial from './pages/PainelSocial';
 import Perfil from './pages/Perfil';
 import './styles/index.css';
+import './styles/container.css';
 
 function App() {
   return (

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/layout/Header';
 import '../styles/pages/QueroAjudar.css';
 import '../styles/section-titles.css';
 import '../styles/section-override.css';
@@ -142,18 +141,15 @@ const QueroAjudar = () => {
 
   return (
     <div className="quero-ajudar">
-      <Header showLoginButton={false} />
-      
-      <main className="main-content">
-        <div className="container">
-          {/* Hero Section */}
-          <section className="hero-section">
-            <h1 className="hero-title">Como você gostaria de ajudar?</h1>
-            <p className="hero-subtitle">
-              Encontre pessoas no seu bairro que precisam de uma mãozinha. 
-              Cada gesto de solidariedade fortalece nossa comunidade.
-            </p>
-          </section>
+      <div className="container">
+        {/* Hero Section */}
+        <section className="hero-section">
+          <h1 className="hero-title">Como você gostaria de ajudar?</h1>
+          <p className="hero-subtitle">
+            Encontre pessoas no seu bairro que precisam de uma mãozinha. 
+            Cada gesto de solidariedade fortalece nossa comunidade.
+          </p>
+        </section>
 
           {/* Lista de Pedidos */}
           <section className="pedidos-section">
@@ -299,8 +295,7 @@ const QueroAjudar = () => {
               <button className="btn-cta">Receber notificações</button>
             </div>
           </section>
-        </div>
-      </main>
+      </div>
 
       {/* Category Details Modal */}
       {showCategoryDetails && selectedPedido && (
