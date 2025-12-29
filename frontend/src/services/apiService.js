@@ -35,7 +35,7 @@ class ApiService {
     }
   }
 
-  // Validar dados antes de enviar
+  // Validar dados de cidadão
   validateCidadaoData(data) {
     const errors = [];
     if (!data.nome?.trim()) errors.push('Nome é obrigatório');
@@ -43,6 +43,30 @@ class ApiService {
     if (!data.telefone?.trim()) errors.push('Telefone é obrigatório');
     if (!data.password || data.password.length < 6) errors.push('Senha deve ter pelo menos 6 caracteres');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.push('Email inválido');
+    return errors;
+  }
+
+  // Validar dados de comércio
+  validateComercioData(data) {
+    const errors = [];
+    if (!data.nomeEstabelecimento?.trim()) errors.push('Nome do estabelecimento é obrigatório');
+    if (!data.cnpj?.trim()) errors.push('CNPJ é obrigatório');
+    if (!data.razaoSocial?.trim()) errors.push('Razão social é obrigatória');
+    if (!data.tipoComercio?.trim()) errors.push('Tipo de comércio é obrigatório');
+    if (!data.responsavelNome?.trim()) errors.push('Nome do responsável é obrigatório');
+    if (!data.responsavelCpf?.trim()) errors.push('CPF do responsável é obrigatório');
+    if (!data.telefone?.trim()) errors.push('Telefone é obrigatório');
+    if (!data.endereco?.trim()) errors.push('Endereço é obrigatório');
+    if (!data.bairro?.trim()) errors.push('Bairro é obrigatório');
+    if (!data.cidade?.trim()) errors.push('Cidade é obrigatória');
+    if (!data.senha || data.senha.length < 6) errors.push('Senha deve ter pelo menos 6 caracteres');
+    
+    // Validar CNPJ básico
+    const cnpjNumbers = data.cnpj?.replace(/\D/g, '');
+    if (cnpjNumbers && cnpjNumbers.length !== 14) {
+      errors.push('CNPJ deve ter 14 dígitos');
+    }
+    
     return errors;
   }
 
@@ -88,6 +112,12 @@ class ApiService {
   // Métodos para comércios
   async createComercio(comercioData) {
     const sanitizedData = this.sanitizeData(comercioData);
+    const errors = this.validateComercioData(sanitizedData);
+    
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+
     return this.request('/comercios', {
       method: 'POST',
       body: JSON.stringify(sanitizedData),

@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ApiService from '../services/apiService';
 import '../styles/pages/CadastroFamilia.css';
 
 const RegisterComercio = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 6;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     nomeEstabelecimento: '',
     cnpj: '',
@@ -53,18 +56,61 @@ const RegisterComercio = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
     const normalizedCidade = formData.cidade.toLowerCase().trim();
     if (normalizedCidade !== 'lagoa santa') {
       setCidadeError('Atualmente atendemos apenas Lagoa Santa - MG');
       return;
     }
+
+    if (formData.senha !== formData.confirmarSenha) {
+      setError('As senhas não coincidem');
+      return;
+    }
+
+    if (formData.senha.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (!formData.aceitaTermos || !formData.aceitaPrivacidade) {
+      setError('Você deve aceitar os termos e política de privacidade');
+      return;
+    }
     
-    console.log('Cadastro comércio:', formData);
-    alert('Cadastro de comércio enviado com sucesso!');
-    navigate('/home');
+    setLoading(true);
+    
+    try {
+      const comercioData = {
+        nomeEstabelecimento: formData.nomeEstabelecimento,
+        cnpj: formData.cnpj,
+        razaoSocial: formData.razaoSocial,
+        tipoComercio: formData.tipoComercio,
+        descricaoAtividade: formData.descricaoAtividade,
+        responsavelNome: formData.responsavelNome,
+        responsavelCpf: formData.responsavelCpf,
+        telefone: formData.telefone,
+        email: formData.email,
+        endereco: formData.endereco,
+        bairro: formData.bairro,
+        cidade: formData.cidade,
+        senha: formData.senha
+      };
+
+      const response = await ApiService.createComercio(comercioData);
+      
+      if (response.success) {
+        alert('Cadastro de comércio realizado com sucesso! Aguarde verificação.');
+        navigate('/login');
+      }
+    } catch (error) {
+      setError(error.message || 'Erro ao cadastrar comércio');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const tiposComercio = [
@@ -217,10 +263,11 @@ const RegisterComercio = () => {
             {currentStep === 5 && (
               <div className="step-content">
                 <h3><img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="senha" width="32" height="32" style={{marginRight: '8px'}} /> Senha de acesso</h3>
+                {error && <div className="error-message" style={{marginBottom: '1rem', color: 'red'}}>{error}</div>}
                 <div className="form-row">
                   <div className="form-group">
                     <label>Senha *</label>
-                    <input type="password" name="senha" value={formData.senha} onChange={handleChange} required />
+                    <input type="password" name="senha" value={formData.senha} onChange={handleChange} minLength="6" required />
                   </div>
                   <div className="form-group">
                     <label>Confirmar senha *</label>
@@ -251,7 +298,9 @@ const RegisterComercio = () => {
               {currentStep < totalSteps ? (
                 <button type="button" onClick={nextStep} className="btn btn-primary">Próximo</button>
               ) : (
-                <button type="submit" className="btn btn-primary btn-large">Cadastrar comércio</button>
+                <button type="submit" className="btn btn-primary btn-large" disabled={loading}>
+                  {loading ? 'Cadastrando...' : 'Cadastrar comércio'}
+                </button>
               )}
             </div>
           </form>
