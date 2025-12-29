@@ -2,8 +2,10 @@
   min-height: 100vh;
   background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-200) 50%, var(--gray-100) 100%);
   padding-top: 72px;
-  padding-right: 22%;
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
 .preciso-ajuda::before {
@@ -39,12 +41,6 @@
   margin: 0 auto;
   padding: 0 20px;
   box-sizing: border-box;
-}
-
-/* Slightly shift the wizard to the right on desktop for visual balance */
-.wizard-container {
-  position: relative;
-  left: 80px;
 }
 
 @media (max-width: 768px) {

@@ -1,9 +1,23 @@
 /* Modern Wizard-Style CSS for Preciso de Ajuda */
 
+.form-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.container-wide {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .wizard-container {
   max-width: 1100px;
   width: 80vw;
-  margin: 0;
+  margin: 0 auto;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border-radius: 24px;
@@ -981,31 +995,90 @@
   text-align: center;
 }
 
-.summary-item {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  font-size: 16px;
+/* Summary Sections - Melhor organização */
+.summary-section {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
 }
 
-.summary-item:last-child {
+.summary-section h5 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-section h5::before {
+  content: '📋';
+  font-size: 20px;
+}
+
+.summary-section:nth-child(2) h5::before {
+  content: '📝';
+}
+
+.summary-section:nth-child(3) h5::before {
+  content: '⚙️';
+}
+
+.summary-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: start;
+}
+
+.summary-row:last-child {
   border-bottom: none;
 }
 
-.summary-item strong {
-  color: var(--primary);
+.summary-label {
   font-weight: 600;
+  color: #475569;
+  font-size: 14px;
 }
 
-.description-preview {
-  margin-top: 12px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 12px;
-  font-style: italic;
-  color: #64748b;
-  font-size: 15px;
+.summary-value {
+  color: #1e293b;
+  font-size: 14px;
   line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.summary-value.missing {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.missing {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .summary-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .summary-section {
+    padding: 20px;
+  }
 }
 
 /* Navigation */
@@ -1151,128 +1224,210 @@
   }
 }
 
-/* Additional Details for Food Category */
-.additional-details {
-  margin-top: 3rem;
-  padding-top: 2rem;
-  border-top: 2px solid #e2e8f0;
-}
-
-.additional-details h4 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.family-info {
+/* Preferences Cards - Melhor organização */
+.preferences-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
 }
 
-.input-group {
+.pref-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 12px;
+  min-height: 120px;
 }
 
-.input-group.full-width {
+.pref-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
+}
+
+.pref-card.full-width {
   grid-column: 1 / -1;
 }
 
-.input-group label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.form-input,
-.form-select {
-  padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  transition: all 0.3s ease;
-  background: white;
-}
-
-.form-input:focus,
-.form-select:focus {
-  outline: none;
-  border-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-}
-
-.items-section {
-  margin: 2rem 0;
-}
-
-.items-subtitle {
-  font-size: 0.875rem;
-  color: #64748b;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.items-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.75rem;
-}
-
-.item-tag {
+.card-icon {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  align-self: flex-start;
+}
+
+.card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-content label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.card-content .form-input,
+.card-content .form-select,
+.card-content .form-textarea {
+  width: 100%;
+  padding: 12px 16px;
   border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.card-content .form-input:focus,
+.card-content .form-select:focus,
+.card-content .form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   background: white;
-  font-size: 0.875rem;
-  cursor: pointer;
+}
+
+/* Family Info Cards - Melhor layout */
+.family-info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 24px;
+}
+
+.info-card {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(22, 163, 74, 0.03));
+  border: 2px solid rgba(34, 197, 94, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transition: all 0.3s ease;
+  min-height: 100px;
+}
+
+.info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.info-card .card-icon {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  border: 2px solid rgba(34, 197, 94, 0.2);
+  margin-bottom: 0;
+}
+
+.info-card .card-content {
+  flex: 1;
+}
+
+/* Delivery Grid - Melhor espaçamento */
+.delivery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.delivery-field {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.form-input.enhanced,
+.form-textarea.enhanced {
+  padding-left: 48px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
   transition: all 0.3s ease;
 }
 
-.item-tag:hover {
-  border-color: #22c55e;
-  transform: translateY(-1px);
+.form-input.enhanced:focus,
+.form-textarea.enhanced:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  background: white;
 }
 
-.item-tag.selected {
-  border-color: #22c55e;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  color: #15803d;
+/* Observations Section */
+.observations-section {
+  margin-top: 24px;
 }
 
-.item-tag i {
-  color: #22c55e;
-  font-size: 1rem;
+.observations-section .input-wrapper {
+  margin-top: 8px;
 }
 
-.delivery-preferences {
-  margin-top: 2rem;
-}
-
-.preferences-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
-}
-
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .family-info {
+  .preferences-cards {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   
-  .items-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .family-info-cards {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
   
-  .preferences-grid {
+  .delivery-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .pref-card,
+  .info-card {
+    padding: 20px;
+  }
+  
+  .card-icon {
+    width: 36px;
+    height: 36px;
   }
 }

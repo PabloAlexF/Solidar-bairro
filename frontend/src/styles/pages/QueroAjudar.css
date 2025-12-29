@@ -137,6 +137,9 @@
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .urgency-filters h4 {
@@ -151,24 +154,27 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  align-items: center;
 }
 
 .urgency-option {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+  border: 3px solid #e5e7eb;
   background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  width: 200px;
 }
 
 .urgency-option::before {
@@ -177,46 +183,61 @@
   left: 0;
   top: 0;
   height: 100%;
-  width: 4px;
+  width: 6px;
   transition: all 0.3s ease;
 }
 
 .urgency-option:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: #d1d5db;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  border-color: #9ca3af;
 }
 
 .urgency-option.active {
-  border-color: #22c55e;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-  color: #15803d;
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.2);
+  border-color: #10b981;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  color: #047857;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
+  transform: translateY(-2px);
 }
 
 .urgency-option.active::before {
-  background: #22c55e;
+  background: #10b981;
 }
 
 .urgency-dot {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 2px solid white;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  border: 3px solid white;
 }
 
 .urgency-dot.alta {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  animation: pulse 2s infinite;
 }
 
 .urgency-dot.média {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  animation: pulse 2s infinite;
 }
 
 .urgency-dot.baixa {
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
 }
 
 .section-header h2 {

@@ -4,8 +4,9 @@
   "description": "Backend API para Solidar Bairro",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "NODE_ENV=production node src/server.js",
+    "dev": "NODE_ENV=development nodemon --inspect src/server.js",
+    "start:prod": "pm2 start src/server.js --name solidar-backend",
     "deploy": "firebase deploy",
     "serve": "firebase emulators:start",
     "test": "jest"
