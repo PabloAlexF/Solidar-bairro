@@ -13,6 +13,7 @@ body {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  padding-top: 72px; /* Espaço para Header fixo */
 }
 
 /* Variáveis minimalistas */
@@ -389,6 +390,10 @@ html {
 
 /* Responsive */
 @media (max-width: 768px) {
+  body {
+    padding-top: 64px; /* Espaço menor para mobile */
+  }
+  
   .container {
     padding: 0 12px;
   }

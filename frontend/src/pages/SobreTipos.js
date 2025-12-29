@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/layout/Header';
 import '../styles/pages/SobreTipos.css';
 
 const SobreTipos = () => {
@@ -68,7 +69,9 @@ const SobreTipos = () => {
   ];
 
   return (
-    <div className="sobre-tipos">
+    <>
+      <Header showLoginButton={false} />
+      <div className="sobre-tipos">
       <div className="container">
         <div className="sobre-header">
           <button className="back-btn" onClick={() => navigate('/cadastro')}>
@@ -126,6 +129,7 @@ const SobreTipos = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

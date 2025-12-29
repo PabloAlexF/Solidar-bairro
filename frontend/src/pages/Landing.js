@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/layout/Header';
 import '../styles/pages/Landing.css';
 
 const Landing = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="landing">
+    <>
+      <Header showLoginButton={true} />
+      <div className="landing">
       {/* Hero Section */}
       <div className="hero">
         <div className="hero-background">
@@ -160,6 +163,7 @@ const Landing = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

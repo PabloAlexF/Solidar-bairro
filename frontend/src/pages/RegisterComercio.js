@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ApiService from '../services/apiService';
+import Header from '../components/layout/Header';
 import '../styles/pages/CadastroFamilia.css';
 
 const RegisterComercio = () => {
@@ -121,7 +122,9 @@ const RegisterComercio = () => {
   const bairros = ['São Lucas', 'Centro', 'Vila Nova', 'Jardim América', 'Santa Rita'];
 
   return (
-    <div className="cadastro-familia">
+    <>
+      <Header showLoginButton={false} />
+      <div className="cadastro-familia">
       <div className="container-wide">
         <div className="wizard-container">
           {currentStep === 1 && (
@@ -307,6 +310,7 @@ const RegisterComercio = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

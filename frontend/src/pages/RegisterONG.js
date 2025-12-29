@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/layout/Header';
 import '../styles/pages/CadastroFamilia.css';
 
 const RegisterONG = () => {
@@ -85,7 +86,9 @@ const RegisterONG = () => {
   ];
 
   return (
-    <div className="cadastro-familia">
+    <>
+      <Header showLoginButton={false} />
+      <div className="cadastro-familia">
       <div className="container-wide">
         <div className="wizard-container">
           {currentStep === 1 && (
@@ -270,6 +273,7 @@ const RegisterONG = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

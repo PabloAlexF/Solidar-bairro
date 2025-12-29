@@ -1,0 +1,27 @@
+/* Fix spacing between header and main */
+@media (min-width: 1024px) {
+  .form-content {
+    padding: 0;
+    margin: 0;
+  }
+  
+  .preciso-ajuda {
+    margin: 0;
+    padding: 0;
+  }
+  
+  main {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+}

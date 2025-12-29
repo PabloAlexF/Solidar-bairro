@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import Header from '../components/layout/Header';
 import '../styles/pages/AtualizarStatus.css';
 
 const AtualizarStatus = () => {
@@ -71,7 +72,9 @@ const AtualizarStatus = () => {
   };
 
   return (
-    <div className="atualizar-status">
+    <>
+      <Header />
+      <div className="atualizar-status">
       <div className="container">
         <div className="status-header">
           <button className="back-btn" onClick={() => navigate(`/perfil-familia/${id}`)}>
@@ -252,7 +255,8 @@ const AtualizarStatus = () => {
           </div>
         </form>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

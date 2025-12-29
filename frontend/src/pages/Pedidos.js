@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/layout/Header';
 import '../styles/pages/Pedidos.css';
 
 // Função para obter cores de categoria
@@ -105,7 +106,9 @@ const Pedidos = () => {
   };
 
   return (
-    <div className="pedidos">
+    <>
+      <Header />
+      <div className="pedidos">
       <header className="page-header">
         <div className="container">
           <div className="header-content">
@@ -320,6 +323,7 @@ const Pedidos = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

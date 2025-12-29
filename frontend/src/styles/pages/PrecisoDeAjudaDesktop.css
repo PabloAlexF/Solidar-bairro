@@ -1,0 +1,52 @@
+/* Desktop Layout - Remove all backgrounds */
+@media (min-width: 1024px) {
+  .form-content {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    padding: 0;
+    min-height: 100vh;
+  }
+  
+  .wizard-container {
+    display: contents;
+  }
+  
+  .page-intro {
+    max-width: 1000px;
+    margin: 0 auto 80px;
+    padding: 60px;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+  
+  .progress-bar {
+    max-width: 1000px;
+    margin: 0 auto 120px;
+    padding: 60px 0;
+    background: none;
+  }
+  
+  .step-content {
+    max-width: 1200px;
+    margin: 0 auto 120px;
+    padding: 0 80px;
+    background: none;
+  }
+  
+  .categories-carousel {
+    max-width: 1400px;
+    margin: 80px auto;
+    gap: 40px;
+    padding: 0 40px;
+    background: none;
+  }
+  
+  .wizard-navigation {
+    max-width: 1000px;
+    margin: 80px auto;
+    padding: 50px 80px;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+}

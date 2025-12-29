@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/layout/Header';
 import '../styles/pages/Register.css';
 
 const Register = () => {
@@ -48,7 +49,9 @@ const Register = () => {
   };
 
   return (
-    <div className="register">
+    <>
+      <Header showLoginButton={false} />
+      <div className="register">
       <div className="container">
         <div className="register-content">
           <div className="register-header">
@@ -105,6 +108,7 @@ const Register = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

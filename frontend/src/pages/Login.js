@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/layout/Header';
 import '../styles/pages/Login.css';
 
 const Login = () => {
@@ -24,7 +25,9 @@ const Login = () => {
   };
 
   return (
-    <div className="login">
+    <>
+      <Header showLoginButton={false} />
+      <div className="login">
       <div className="container">
         <div className="login-content">
           <div className="login-header">
@@ -75,7 +78,8 @@ const Login = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
