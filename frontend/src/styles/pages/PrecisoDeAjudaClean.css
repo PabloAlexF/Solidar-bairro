@@ -1,20 +1,78 @@
 /* PrecisoDeAjuda - Design System Implementation */
 
 .preciso-ajuda {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  width: 100%;
+  min-height: calc(100vh - var(--header-height));
 }
 
 .preciso-ajuda .container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
   padding: var(--space-6) var(--space-4);
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   width: 100%;
+}
+
+/* Desktop Layout Optimization */
+/* Desktop Layout Optimization */
+@media (min-width: 1024px) {
+  .preciso-ajuda .container {
+    padding: var(--space-10) var(--space-16);
+    max-width: 1800px;
+    margin: 0 auto;
+  }
+  
+  .step-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .step-progress {
+    max-width: 1200px;
+    margin: 0 auto var(--space-12) auto;
+    padding: var(--space-8) 0;
+  }
+  
+  .step-header {
+    margin-bottom: var(--space-12);
+    padding: 0 var(--space-8);
+  }
+  
+  .step-title {
+    font-size: 32px;
+    margin-bottom: var(--space-4);
+  }
+  
+  .step-subtitle {
+    font-size: 18px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .step-item {
+    max-width: 160px;
+  }
+  
+  .step-dot {
+    width: 64px;
+    height: 64px;
+    font-size: 20px;
+  }
+  
+  .step-number {
+    font-size: 22px;
+  }
+  
+  .step-label {
+    font-size: 15px;
+    margin-top: var(--space-4);
+    font-weight: 700;
+  }
+  
+  .step-progress-bar {
+    left: 80px;
+    right: 80px;
+    height: 4px;
+  }
 }
 
 /* Step Progress */
@@ -106,6 +164,46 @@
   margin-bottom: var(--space-8);
 }
 
+@media (min-width: 1024px) {
+  .categories-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-8);
+    max-width: 1200px;
+    margin: 0 auto var(--space-12) auto;
+  }
+  
+  .category-card {
+    padding: var(--space-8);
+    min-height: 140px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  }
+  
+  .category-icon {
+    width: 64px;
+    height: 64px;
+    margin-bottom: var(--space-4);
+  }
+  
+  .category-icon img {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .category-info h3 {
+    font-size: 20px;
+    margin-bottom: var(--space-2);
+  }
+  
+  .category-info p {
+    font-size: 15px;
+  }
+}
+
 .category-card {
   background: var(--bg-primary);
   border: 2px solid var(--border-light);
@@ -191,6 +289,31 @@
   margin-bottom: var(--space-8);
 }
 
+@media (min-width: 1024px) {
+  .form-section {
+    max-width: 1000px;
+    margin: 0 auto var(--space-12) auto;
+    padding: 0 var(--space-8);
+  }
+  
+  .form-textarea {
+    min-height: 180px;
+    font-size: 16px;
+    line-height: 1.6;
+    padding: var(--space-6);
+  }
+  
+  .form-label {
+    font-size: 16px;
+    margin-bottom: var(--space-3);
+  }
+  
+  .form-help {
+    font-size: 14px;
+    margin-top: var(--space-2);
+  }
+}
+
 .form-section-title {
   font-size: 18px;
   font-weight: 600;
@@ -210,6 +333,35 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--space-3);
+}
+
+@media (min-width: 1024px) {
+  .urgency-options {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .urgency-option {
+    padding: var(--space-6);
+    min-height: 120px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .urgency-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+  
+  .urgency-label {
+    font-size: 18px;
+    margin-bottom: var(--space-3);
+  }
+  
+  .urgency-desc {
+    font-size: 14px;
+  }
 }
 
 .urgency-option {
@@ -274,6 +426,46 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-3);
+}
+
+@media (min-width: 1024px) {
+  .contact-methods {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .contact-method {
+    padding: var(--space-6);
+    min-height: 100px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .contact-method:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+  
+  .contact-icon {
+    width: 56px;
+    height: 56px;
+    margin-right: var(--space-4);
+  }
+  
+  .contact-icon img {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .contact-info h4 {
+    font-size: 18px;
+    margin-bottom: var(--space-2);
+  }
+  
+  .contact-info p {
+    font-size: 14px;
+  }
 }
 
 .contact-method {
@@ -471,65 +663,62 @@
 }
 
 /* Responsive Design */
-@media (max-width: 640px) {
-  .preciso-ajuda .container {
-    padding: var(--space-4) var(--space-3);
+@media (max-width: 768px) {
+  .step-progress {
+    padding: var(--space-4) 0;
   }
   
-  .categories-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
+  .step-item {
+    max-width: 80px;
   }
   
-  .category-card {
-    padding: var(--space-4);
-  }
-  
-  .step-title {
-    font-size: 20px;
-  }
-  
-  .step-subtitle {
+  .step-dot {
+    width: 40px;
+    height: 40px;
     font-size: 14px;
   }
   
-  .urgency-options,
-  .contact-methods,
-  .items-grid {
-    grid-template-columns: 1fr;
+  .step-number {
+    font-size: 16px;
   }
   
-  .form-row {
-    grid-template-columns: 1fr;
+  .step-label {
+    font-size: 11px;
+    margin-top: var(--space-1);
   }
   
-  .step-navigation {
-    flex-direction: column;
-    gap: var(--space-3);
-  }
-  
-  .nav-buttons {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .success-actions {
-    max-width: none;
+  .step-progress-bar {
+    left: 40px;
+    right: 40px;
   }
 }
 
 @media (max-width: 480px) {
-  .step-indicator {
-    gap: var(--space-2);
+  .step-item {
+    max-width: 60px;
   }
   
   .step-dot {
-    width: 28px;
-    height: 28px;
+    width: 36px;
+    height: 36px;
     font-size: 12px;
   }
   
-  .step-line {
-    width: 30px;
+  .step-number {
+    font-size: 14px;
+  }
+  
+  .step-label {
+    font-size: 10px;
+    line-height: 1.1;
+  }
+  
+  .step-progress-bar {
+    left: 30px;
+    right: 30px;
+  }
+  
+  .step-connector {
+    margin: 0 var(--space-1);
   }
 }

@@ -129,21 +129,44 @@ const PrecisoDeAjuda = () => {
         {/* Step Progress */}
         <div className="step-progress">
           <div className="step-indicator">
-            {[1, 2, 3, 4, 5].map((step, index) => (
-              <React.Fragment key={step}>
-                <div className={`step-dot ${
-                  step === currentStep ? 'active' : 
-                  step < currentStep ? 'completed' : ''
-                }`}>
-                  {step < currentStep ? '✓' : step}
+            {[
+              { num: 1, label: 'Categoria' },
+              { num: 2, label: 'Descrição' },
+              { num: 3, label: 'Urgência' },
+              { num: 4, label: 'Contato' },
+              { num: 5, label: 'Revisão' }
+            ].map((step, index) => (
+              <React.Fragment key={step.num}>
+                <div className="step-item">
+                  <div className={`step-dot ${
+                    step.num === currentStep ? 'active' : 
+                    step.num < currentStep ? 'completed' : 'pending'
+                  }`}>
+                    {step.num < currentStep ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                      </svg>
+                    ) : (
+                      <span className="step-number">{step.num}</span>
+                    )}
+                  </div>
+                  <div className="step-label">{step.label}</div>
                 </div>
                 {index < 4 && (
-                  <div className={`step-line ${
-                    step < currentStep ? 'completed' : ''
-                  }`} />
+                  <div className={`step-connector ${
+                    step.num < currentStep ? 'completed' : 'pending'
+                  }`}>
+                    <div className="step-line" />
+                  </div>
                 )}
               </React.Fragment>
             ))}
+          </div>
+          <div className="step-progress-bar">
+            <div 
+              className="step-progress-fill"
+              style={{ width: `${((currentStep - 1) / 4) * 100}%` }}
+            />
           </div>
         </div>
 

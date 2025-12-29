@@ -148,12 +148,14 @@ const Header = ({ showLoginButton = true }) => {
             </div>
 
             {showLoginButton && !user && (
-              <button 
-                className="btn btn-primary"
-                onClick={() => setIsAuthOpen(true)}
-              >
-                Entrar
-              </button>
+              <div style={{ display: 'none' }}>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => setIsAuthOpen(true)}
+                >
+                  Entrar
+                </button>
+              </div>
             )}
 
             {user && (

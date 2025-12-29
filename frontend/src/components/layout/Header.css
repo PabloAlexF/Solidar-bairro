@@ -9,7 +9,7 @@
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
-  height: 72px;
+  height: 88px;
   overflow: visible !important;
 }
 
@@ -18,8 +18,8 @@
   align-items: center;
   justify-content: space-between;
   height: 100%;
-  padding: 0 24px;
-  max-width: 1200px;
+  padding: 0 32px;
+  max-width: 1400px;
   margin: 0 auto;
   overflow: visible !important;
 }
