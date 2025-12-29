@@ -331,6 +331,8 @@
   opacity: 0;
   transform: translateY(30px);
   animation: fadeInUp 0.8s ease-out 1.2s forwards;
+  display: flex;
+  flex-direction: column;
 }
 
 .section-title {
@@ -339,6 +341,7 @@
   color: #1e293b;
   margin-bottom: 12px;
   letter-spacing: -0.025em;
+  display: block;
 }
 
 .section-subtitle {
@@ -346,6 +349,7 @@
   color: #64748b;
   font-weight: 400;
   margin: 0;
+  display: block;
 }
 
 .info-grid {
