@@ -1,0 +1,123 @@
+/* Estilos específicos para o formulário de Oportunidade de Emprego */
+
+.work-form-container {
+  margin-top: 1.5rem;
+}
+
+.work-section {
+  margin-bottom: 2.5rem;
+}
+
+.work-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ea580c;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.work-field {
+  margin-top: 0.75rem;
+}
+
+.work-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.work-input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.work-input,
+.work-select {
+  width: 100%;
+  padding: 14px 16px 14px 50px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.work-input:focus,
+.work-select:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+  outline: none;
+}
+
+.work-input::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.work-select {
+  cursor: pointer;
+}
+
+.work-select option {
+  padding: 8px;
+}
+
+/* Desktop - Layout em duas colunas */
+@media (min-width: 769px) {
+  .work-form-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+  
+  .work-section {
+    margin-bottom: 0;
+  }
+  
+  .work-section-title {
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+    border-left: 3px solid #f97316;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(249, 115, 22, 0.1);
+  }
+}
+
+/* Mobile - Layout em coluna única */
+@media (max-width: 768px) {
+  .work-section {
+    margin-bottom: 2rem;
+  }
+  
+  .work-section-title {
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+    border-left: 4px solid #f97316;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1);
+  }
+  
+  .work-input,
+  .work-select {
+    padding: 12px 14px 12px 45px;
+    font-size: 0.9rem;
+  }
+  
+  .work-input-icon {
+    left: 12px;
+  }
+}

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import '../styles/pages/QueroAjudar.css';
+import '../styles/section-titles.css';
+import '../styles/section-override.css';
+import '../styles/emprego-form.css';
 
 const QueroAjudar = () => {
   const navigate = useNavigate();
@@ -31,7 +34,8 @@ const QueroAjudar = () => {
       fields: [
         { type: 'select', name: 'tipo', label: 'Tipo de Alimento', options: ['Cesta Básica', 'Alimentos Infantis', 'Dieta Específica', 'Produtos Frescos'] },
         { type: 'select', name: 'quantidade', label: 'Quantidade', options: ['Para 1 pessoa', 'Para 2-3 pessoas', 'Para 4-5 pessoas', 'Para família grande (6+)'] },
-        { type: 'textarea', name: 'observacoes', label: 'Observações Especiais', placeholder: 'Ex: Sem glúten, diabético, etc.' }
+        { type: 'section', name: 'preferencias_section', label: 'Preferências de entrega' },
+        { type: 'textarea', name: 'observacoes', placeholder: 'Ex: Sem glúten, diabético, etc.' }
       ]
     },
     'Higiene': {
@@ -62,8 +66,10 @@ const QueroAjudar = () => {
       title: 'Oportunidade de Emprego',
       fields: [
         { type: 'select', name: 'tipo', label: 'Tipo de Vaga', options: ['CLT', 'Freelancer', 'Meio Período', 'Temporário', 'Estágio'] },
-        { type: 'text', name: 'area', label: 'Área de Interesse', placeholder: 'Ex: Vendas, Limpeza, Cozinha' },
-        { type: 'select', name: 'disponibilidade', label: 'Disponibilidade', options: ['Manhã', 'Tarde', 'Noite', 'Fins de semana', 'Integral'] }
+        { type: 'section', name: 'area_section', label: 'Área de Interesse' },
+        { type: 'text', name: 'area', placeholder: 'Ex: Vendas, Limpeza, Cozinha, Atendimento, Construção' },
+        { type: 'section', name: 'horario_section', label: 'Horário' },
+        { type: 'select', name: 'disponibilidade', label: 'Disponibilidade', options: ['Manhã (6h-12h)', 'Tarde (12h-18h)', 'Noite (18h-24h)', 'Fins de semana', 'Período integral', 'Horário flexível'] }
       ]
     },
     'Serviços': {
@@ -326,7 +332,12 @@ const QueroAjudar = () => {
                   <div className="details-form">
                     {categoryOptions[selectedPedido.tipo].fields.map((field, index) => (
                       <div key={index} className="detail-field">
-                        <label>{field.label}</label>
+                        {field.type === 'section' && (
+                          <h6 className="section-title">{field.label}</h6>
+                        )}
+                        {field.type !== 'section' && field.label && (
+                          <label>{field.label}</label>
+                        )}
                         {field.type === 'select' && (
                           <select className="form-select">
                             <option value="">Selecione uma opção</option>

@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import CustomSelect from '../components/CustomSelect';
 import '../styles/pages/PrecisoDeAjuda.css';
 import '../styles/pages/PrecisoDeAjudaWizard.css';
+import '../styles/work-form.css';
 
 const categories = [
   { id: 'food', label: 'Alimentos', icon: <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="alimentos" width="36" height="36" />, desc: 'Comida, cesta básica', color: '#f59e0b' },
@@ -487,33 +488,40 @@ const PrecisoDeAjuda = () => {
                         {selectedCat === 'work' && (
                           <>
                             <h4>Oportunidade de Emprego</h4>
-                            <div className="preferences-cards">
-                              <div className="pref-card">
-                                <div className="card-icon">
-                                  <img src="https://cdn-icons-png.flaticon.com/512/1077/1077976.png" alt="trabalho" width="20" height="20" />
-                                </div>
-                                <div className="card-content">
-                                  <label>Área de Interesse</label>
-                                  <input
-                                    type="text"
-                                    placeholder="Ex: Vendas, Limpeza, Cozinha"
-                                    className="form-input"
-                                  />
+                            <div className="work-form-container">
+                              <div className="work-section">
+                                <h5 className="work-section-title">Área de Interesse</h5>
+                                <div className="work-field">
+                                  <div className="work-input-wrapper">
+                                    <div className="work-input-icon">
+                                      <img src="https://cdn-icons-png.flaticon.com/512/1077/1077976.png" alt="trabalho" width="20" height="20" />
+                                    </div>
+                                    <input
+                                      type="text"
+                                      placeholder="Ex: Vendas, Limpeza, Cozinha, Atendimento, Construção"
+                                      className="work-input"
+                                    />
+                                  </div>
                                 </div>
                               </div>
-                              <div className="pref-card">
-                                <div className="card-icon">
-                                  <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="horário" width="20" height="20" />
-                                </div>
-                                <div className="card-content">
-                                  <label>Disponibilidade</label>
-                                  <select className="form-select">
-                                    <option value="">Selecione</option>
-                                    <option value="manha">Manhã</option>
-                                    <option value="tarde">Tarde</option>
-                                    <option value="noite">Noite</option>
-                                    <option value="integral">Integral</option>
-                                  </select>
+                              
+                              <div className="work-section">
+                                <h5 className="work-section-title">Disponibilidade</h5>
+                                <div className="work-field">
+                                  <div className="work-input-wrapper">
+                                    <div className="work-input-icon">
+                                      <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="horário" width="20" height="20" />
+                                    </div>
+                                    <select className="work-select">
+                                      <option value="">Selecione</option>
+                                      <option value="manha">Manhã (6h-12h)</option>
+                                      <option value="tarde">Tarde (12h-18h)</option>
+                                      <option value="noite">Noite (18h-24h)</option>
+                                      <option value="fins-semana">Fins de semana</option>
+                                      <option value="integral">Período integral</option>
+                                      <option value="flexivel">Horário flexível</option>
+                                    </select>
+                                  </div>
                                 </div>
                               </div>
                             </div>
