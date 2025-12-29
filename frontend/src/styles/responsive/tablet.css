@@ -1,0 +1,24 @@
+/* Tablet - 768x1024px */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .preciso-ajuda {
+    padding-top: 90px !important;
+    overflow-x: hidden !important;
+  }
+  
+  .container-wide {
+    width: calc(100% - 80px) !important;
+    max-width: 700px !important;
+    padding-left: 40px !important;
+    padding-right: 40px !important;
+    position: relative !important;
+    left: auto !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+  
+  .form-content {
+    padding: 40px 0 100px !important;
+    overflow-x: hidden !important;
+  }
+}

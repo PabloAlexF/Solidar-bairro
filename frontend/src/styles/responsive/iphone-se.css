@@ -1,0 +1,24 @@
+/* iPhone SE - 375x667px */
+@media (max-width: 375px) and (max-height: 667px) {
+  .preciso-ajuda {
+    padding-top: 90px !important;
+    overflow-x: hidden !important;
+  }
+  
+  .container-wide {
+    width: calc(100% - 16px) !important;
+    max-width: 340px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    position: relative !important;
+    left: auto !important;
+    transform: none !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+  
+  .form-content {
+    padding: 20px 0 60px !important;
+    overflow-x: hidden !important;
+  }
+}

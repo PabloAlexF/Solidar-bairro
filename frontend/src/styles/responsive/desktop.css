@@ -1,0 +1,24 @@
+/* Desktop/Laptop - 1024px+ */
+@media (min-width: 1025px) {
+  .preciso-ajuda {
+    padding-top: 180px !important;
+    overflow-x: hidden !important;
+  }
+  
+  .container-wide {
+    width: calc(100% - 120px) !important;
+    max-width: 1000px !important;
+    padding-left: 60px !important;
+    padding-right: 60px !important;
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: 180px !important;
+    box-sizing: border-box !important;
+  }
+  
+  .form-content {
+    padding: 60px 0 120px !important;
+    overflow-x: hidden !important;
+  }
+}

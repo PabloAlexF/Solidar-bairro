@@ -1,0 +1,195 @@
+/* Header Mobile-First Responsive Fixes */
+
+/* Base Mobile Header - iPhone SE Fix */
+.header {
+  width: 100% !important;
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+}
+
+.header-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Force visibility on iPhone SE */
+@media (max-width: 375px) {
+  .user-menu-wrapper,
+  .notification-wrapper {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .user-menu-wrapper {
+    margin-left: auto !important;
+  }
+  
+  .notification-wrapper .notification-icon,
+  .user-menu-wrapper .user-avatar,
+  .user-menu-wrapper .user-icon {
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+  }
+  
+  .user-avatar {
+    border-radius: 50% !important;
+    object-fit: cover !important;
+  }
+}
+
+.user-menu-wrapper,
+.notification-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.user-menu-wrapper {
+  margin-left: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* Make elements smaller and side by side */
+.notification-wrapper .notification-icon,
+.user-menu-wrapper .user-avatar,
+.user-menu-wrapper .user-icon {
+  width: 28px !important;
+  height: 28px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .user-menu-wrapper,
+  .notification-wrapper {
+    gap: 10px !important;
+  }
+  
+  .notification-wrapper .notification-icon,
+  .user-menu-wrapper .user-avatar,
+  .user-menu-wrapper .user-icon {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 1025px) {
+  .user-menu-wrapper,
+  .notification-wrapper {
+    gap: 12px !important;
+  }
+  
+  .notification-wrapper .notification-icon,
+  .user-menu-wrapper .user-avatar,
+  .user-menu-wrapper .user-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+
+/* Ensure no overflow */
+.header {
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+.header * {
+  box-sizing: border-box !important;
+}
+
+/* Fix dropdown positioning and visibility */
+.user-menu-wrapper,
+.notification-wrapper {
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+.user-dropdown,
+.notification-dropdown {
+  position: absolute !important;
+  top: calc(100% + 12px) !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.6) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12) !important;
+  overflow: hidden !important;
+}
+
+.user-dropdown {
+  width: 300px !important;
+}
+
+.notification-dropdown {
+  width: 320px !important;
+}
+
+/* Mobile adjustments for dropdowns */
+@media (max-width: 375px) {
+  .user-dropdown {
+    right: -20px !important;
+    min-width: 260px !important;
+    max-width: 280px !important;
+  }
+  
+  .notification-dropdown {
+    right: -20px !important;
+    min-width: 280px !important;
+    max-width: 300px !important;
+  }
+}
+
+/* Force dropdown visibility - override any conflicting styles */
+.user-dropdown[style*="display: none"],
+.notification-dropdown[style*="display: none"] {
+  display: block !important;
+}
+
+.user-dropdown,
+.notification-dropdown {
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Ensure dropdown content is visible */
+.user-dropdown *,
+.notification-dropdown * {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+.user-dropdown .user-info,
+.user-dropdown .user-stats,
+.user-dropdown .user-actions,
+.notification-dropdown .notification-header,
+.notification-dropdown .notification-list {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

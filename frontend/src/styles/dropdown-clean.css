@@ -1,0 +1,19 @@
+.user-dropdown {
+  position: fixed !important;
+  top: 200px !important;
+  left: 150px !important;
+  z-index: 999999 !important;
+  width: 280px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.6) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  overflow: hidden !important;
+  pointer-events: auto !important;
+  margin: 0 !important;
+  transform: none !important;
+}

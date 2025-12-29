@@ -5,6 +5,8 @@ import CustomSelect from '../components/CustomSelect';
 import '../styles/pages/PrecisoDeAjuda.css';
 import '../styles/pages/PrecisoDeAjudaWizard.css';
 import '../styles/delivery-pattern.css';
+import '../styles/responsive/mobile-first.css';
+import '../styles/responsive/header-responsive.css';
 
 const categories = [
   { id: 'food', label: 'Alimentos', icon: <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="alimentos" width="36" height="36" />, desc: 'Comida, cesta básica', color: '#f59e0b' },

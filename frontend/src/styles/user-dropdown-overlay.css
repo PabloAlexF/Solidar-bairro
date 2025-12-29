@@ -1,0 +1,35 @@
+/* User Dropdown Overlay - iPhone SE Centered */
+.user-dropdown {
+  position: fixed !important;
+  top: 333px !important;
+  left: 187px !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 999999 !important;
+  width: 280px !important;
+  max-width: 90vw !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.6) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12) !important;
+  overflow: hidden !important;
+}
+
+/* Override any parent container constraints */
+.form-content .user-dropdown,
+.preciso-ajuda .user-dropdown {
+  position: fixed !important;
+  z-index: 999999 !important;
+}
+
+/* iPhone SE specific */
+@media (max-width: 375px) {
+  .user-dropdown {
+    width: 260px !important;
+    top: 333px !important;
+    left: 187px !important;
+  }
+}

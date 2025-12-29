@@ -1,0 +1,23 @@
+/* Large Screens - 1440px+ */
+@media (min-width: 1441px) {
+  .preciso-ajuda {
+    padding-top: 100px !important;
+    overflow-x: hidden !important;
+  }
+  
+  .container-wide {
+    width: calc(100% - 160px) !important;
+    max-width: 1200px !important;
+    padding-left: 80px !important;
+    padding-right: 80px !important;
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    box-sizing: border-box !important;
+  }
+  
+  .form-content {
+    padding: 80px 0 140px !important;
+    overflow-x: hidden !important;
+  }
+}

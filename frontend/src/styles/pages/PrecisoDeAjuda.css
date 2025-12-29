@@ -3,27 +3,14 @@
   background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-200) 50%, var(--gray-100) 100%);
   padding-top: 72px;
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-.preciso-ajuda::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: radial-gradient(circle at 20% 80%, rgba(34, 197, 94, 0.05) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.05) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.preciso-ajuda > * {
-  position: relative;
-  z-index: 1;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .form-content {
@@ -32,21 +19,63 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
-}
-
-/* Center the wizard and limit its width for better readability */
-.wizard-container {
-  width: 100%;
-  max-width: 980px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding-inline: 20px;
   box-sizing: border-box;
 }
 
+.wizard-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Responsive Container System */
+.wizard-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-inline: 20px;
+  box-sizing: border-box;
+}
+
+.container-wide {
+  width: 100% !important;
+  max-width: 1000px !important;
+  margin: 0 auto !important;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
 @media (max-width: 768px) {
-  .wizard-container {
-    left: 0;
-    padding: 0 12px;
+  .container-wide {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+  .container-wide {
+    padding-left: 40px !important;
+    padding-right: 40px !important;
+    max-width: 900px !important;
+  }
+}
+
+@media (min-width: 1201px) {
+  .container-wide {
+    padding-left: 60px !important;
+    padding-right: 60px !important;
+    max-width: 1000px !important;
   }
 }
 
@@ -2983,11 +3012,33 @@ select.form-select.enhanced option:checked {
 .summary-card {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%) !important;
 }
-/* Enhanced Confirmation Screen - Desktop Optimized with Proper Hierarchy */
+/* Enhanced Confirmation Screen - Responsive Centering */
 .confirmation-summary {
-  max-width: 900px !important;
+  max-width: 1000px !important;
   margin: 0 auto !important;
-  padding: 0 20px !important;
+  padding-inline: 20px !important;
+}
+
+/* Responsive Confirmation Summary */
+@media (max-width: 640px) {
+  .confirmation-summary {
+    max-width: 100%;
+    padding-inline: 16px !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .confirmation-summary {
+    max-width: 800px;
+    padding-inline: 24px !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .confirmation-summary {
+    max-width: 1000px;
+    padding-inline: 32px !important;
+  }
 }
 
 .summary-card {
@@ -3191,7 +3242,7 @@ select.form-select.enhanced option:checked {
   from { opacity: 0; transform: translateX(-20px); }
   to { opacity: 1; transform: translateX(0); }
 }
-/* Enhanced Success Screen */
+/* Enhanced Success Content Centering */
 .success-content {
   display: flex !important;
   flex-direction: column !important;
@@ -3204,6 +3255,29 @@ select.form-select.enhanced option:checked {
   border-radius: 24px !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
   border: 1px solid #e2e8f0 !important;
+}
+
+/* Responsive Success Content */
+@media (max-width: 640px) {
+  .success-content {
+    max-width: 95%;
+    padding: 40px 20px !important;
+    margin: 40px auto 0 !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .success-content {
+    max-width: 500px;
+    padding: 50px 30px !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .success-content {
+    max-width: 600px;
+    padding: 60px 40px !important;
+  }
 }
 
 .success-animation {
@@ -3290,12 +3364,4 @@ select.form-select.enhanced option:checked {
 
 .success-stats {
   margin-bottom: 24px !important;
-}
-/* Move Success Content to Right */
-.success-content {
-  margin-left: 25% !important;
-}
-/* Adjust Success Content Position */
-.success-content {
-  margin-left: 45% !important;
 }

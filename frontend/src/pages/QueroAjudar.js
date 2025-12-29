@@ -200,7 +200,7 @@ const QueroAjudar = () => {
                       {['Alta', 'Média', 'Baixa'].map((urgency) => (
                         <button
                           key={urgency}
-                          className={`urgency-option ${selectedUrgencies.includes(urgency) ? 'active' : ''}`}
+                          className={`urgency-option ${urgency.toLowerCase()} ${selectedUrgencies.includes(urgency) ? 'active' : ''}`}
                           onClick={() => {
                             setSelectedUrgencies(prev => 
                               prev.includes(urgency)
@@ -209,8 +209,8 @@ const QueroAjudar = () => {
                             );
                           }}
                         >
-                          <span className={`urgency-dot ${urgency.toLowerCase()}`}></span>
                           {urgency}
+                          <span className={`urgency-dot ${urgency.toLowerCase()}`}></span>
                         </button>
                       ))}
                     </div>

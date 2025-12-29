@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import './Header.css';
+import '../styles/dropdown-clean.css';
 
 const Header = ({ showLoginButton = true }) => {
   const navigate = useNavigate();
@@ -13,6 +15,8 @@ const Header = ({ showLoginButton = true }) => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [notificationBtnRef, setNotificationBtnRef] = useState(null);
+  const [userBtnRef, setUserBtnRef] = useState(null);
 
   // Carregar usuário do localStorage
   useEffect(() => {
@@ -142,6 +146,7 @@ const Header = ({ showLoginButton = true }) => {
                 {/* Notificações */}
                 <div className="notification-wrapper">
                   <button 
+                    ref={setNotificationBtnRef}
                     className="notification-btn"
                     onClick={() => setShowNotifications(!showNotifications)}
                   >
@@ -151,7 +156,7 @@ const Header = ({ showLoginButton = true }) => {
                     )}
                   </button>
                   
-                  {showNotifications && (
+                  {showNotifications && createPortal(
                     <div className="notification-dropdown">
                       <div className="notification-header">
                         <h3>Notificações</h3>
@@ -205,13 +210,14 @@ const Header = ({ showLoginButton = true }) => {
                           ))
                         )}
                       </div>
-                    </div>
+                    </div>, document.body
                   )}
                 </div>
 
                 {/* Menu do usuário */}
                 <div className="user-menu-wrapper">
                   <button 
+                    ref={setUserBtnRef}
                     className="user-btn"
                     onClick={() => setShowUserMenu(!showUserMenu)}
                   >
@@ -221,7 +227,7 @@ const Header = ({ showLoginButton = true }) => {
                     {user.isVerified && <span className="verified-badge">✓</span>}
                   </button>
 
-                  {showUserMenu && (
+                  {showUserMenu && createPortal(
                     <div className="user-dropdown">
                       <div className="user-info">
                         <div className="user-avatar-large">
@@ -289,7 +295,7 @@ const Header = ({ showLoginButton = true }) => {
                           🚪 Sair
                         </button>
                       </div>
-                    </div>
+                    </div>, document.body
                   )}
                 </div>
               </div>
