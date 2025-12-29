@@ -18,7 +18,7 @@ import PerfilFamilia from './pages/PerfilFamilia';
 import AtualizarStatus from './pages/AtualizarStatus';
 import PainelSocial from './pages/PainelSocial';
 import Perfil from './pages/Perfil';
-import './styles/globals.css';
+import './styles/index.css';
 
 function App() {
   return (

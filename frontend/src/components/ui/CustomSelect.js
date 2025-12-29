@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import './CustomSelect.css';
+import '../CustomSelect.css';
 
 const CustomSelect = ({ options, value, onChange, placeholder = "Selecione uma opção", className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);

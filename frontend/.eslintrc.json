@@ -1,0 +1,16 @@
+{
+  "extends": [
+    "react-app",
+    "react-app/jest"
+  ],
+  "rules": {
+    "no-unused-vars": "off",
+    "no-console": "off",
+    "comma-dangle": "off",
+    "quotes": "off",
+    "curly": "off",
+    "react/prop-types": "off",
+    "react/jsx-key": "off",
+    "react/no-array-index-key": "off"
+  }
+}

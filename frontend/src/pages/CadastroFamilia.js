@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
+import Header from '../components/layout/Header';
 import '../styles/pages/CadastroFamilia.css';
 
 const CadastroFamilia = () => {

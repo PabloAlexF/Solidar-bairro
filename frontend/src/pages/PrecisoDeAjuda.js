@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import CustomSelect from '../components/CustomSelect';
+import Header from '../components/layout/Header';
+import CustomSelect from '../components/ui/CustomSelect';
 import '../styles/pages/PrecisoDeAjuda.css';
 import '../styles/pages/PrecisoDeAjudaWizard.css';
 import '../styles/delivery-pattern.css';

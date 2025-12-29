@@ -1,0 +1,36 @@
+/* Solidar Bairro - Estilos Principais */
+
+/* Importações de estilos base */
+@import './globals.css';
+
+/* Importações de componentes */
+@import './components/BottomNav.css';
+@import './components/NearbyHelps.css';
+@import './components/QuickActions.css';
+@import './components/UserImpact.css';
+
+/* Importações de páginas */
+@import './pages/Home.css';
+@import './pages/Landing.css';
+@import './pages/Login.css';
+@import './pages/Register.css';
+@import './pages/Pedidos.css';
+@import './pages/PrecisoDeAjuda.css';
+@import './pages/QueroAjudar.css';
+@import './pages/Perfil.css';
+@import './pages/AtualizarStatus.css';
+@import './pages/CadastroFamilia.css';
+@import './pages/DetalhesNecessidade.css';
+@import './pages/PainelSocial.css';
+@import './pages/PedidoPublicado.css';
+@import './pages/PerfilFamilia.css';
+@import './pages/QueroAjudarNew.css';
+@import './pages/SobreTipos.css';
+
+/* Importações responsivas */
+@import './responsive/mobile-first.css';
+@import './responsive/tablet.css';
+@import './responsive/desktop.css';
+
+/* Utilitários */
+@import './dropdown-clean.css';

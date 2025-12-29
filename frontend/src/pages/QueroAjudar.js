@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
+import Header from '../components/layout/Header';
 import '../styles/pages/QueroAjudar.css';
 import '../styles/section-titles.css';
 import '../styles/section-override.css';

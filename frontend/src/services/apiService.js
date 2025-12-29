@@ -1,8 +1,12 @@
-import { API_BASE_URL } from '../config/firebaseConnection';
+import { API_CONFIG, VALIDATION_CONFIG } from '../config';
 
 class ApiService {
+  constructor() {
+    this.baseURL = API_CONFIG.BASE_URL;
+    this.timeout = API_CONFIG.TIMEOUT;
+  }
   async request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const url = `${this.baseURL}${endpoint}`;
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -17,7 +21,7 @@ class ApiService {
       // Verificar se a resposta é JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        throw new Error(`Servidor retornou ${response.status}. Verifique se a API está rodando em ${API_BASE_URL}`);
+        throw new Error(`Servidor retornou ${response.status}. Verifique se a API está rodando em ${this.baseURL}`);
       }
       
       const data = await response.json();
@@ -41,8 +45,8 @@ class ApiService {
     if (!data.nome?.trim()) errors.push('Nome é obrigatório');
     if (!data.email?.trim()) errors.push('Email é obrigatório');
     if (!data.telefone?.trim()) errors.push('Telefone é obrigatório');
-    if (!data.password || data.password.length < 6) errors.push('Senha deve ter pelo menos 6 caracteres');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.push('Email inválido');
+    if (!data.password || data.password.length < VALIDATION_CONFIG.PASSWORD_MIN_LENGTH) errors.push(`Senha deve ter pelo menos ${VALIDATION_CONFIG.PASSWORD_MIN_LENGTH} caracteres`);
+    if (!VALIDATION_CONFIG.EMAIL_PATTERN.test(data.email)) errors.push('Email inválido');
     return errors;
   }
 
@@ -59,12 +63,12 @@ class ApiService {
     if (!data.endereco?.trim()) errors.push('Endereço é obrigatório');
     if (!data.bairro?.trim()) errors.push('Bairro é obrigatório');
     if (!data.cidade?.trim()) errors.push('Cidade é obrigatória');
-    if (!data.senha || data.senha.length < 6) errors.push('Senha deve ter pelo menos 6 caracteres');
+    if (!data.senha || data.senha.length < VALIDATION_CONFIG.PASSWORD_MIN_LENGTH) errors.push(`Senha deve ter pelo menos ${VALIDATION_CONFIG.PASSWORD_MIN_LENGTH} caracteres`);
     
     // Validar CNPJ básico
     const cnpjNumbers = data.cnpj?.replace(/\D/g, '');
-    if (cnpjNumbers && cnpjNumbers.length !== 14) {
-      errors.push('CNPJ deve ter 14 dígitos');
+    if (cnpjNumbers && cnpjNumbers.length !== VALIDATION_CONFIG.CNPJ_LENGTH) {
+      errors.push(`CNPJ deve ter ${VALIDATION_CONFIG.CNPJ_LENGTH} dígitos`);
     }
     
     return errors;
