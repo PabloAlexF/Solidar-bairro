@@ -27,6 +27,47 @@ class UserService {
     }
   }
 
+  async createCidadao(userData) {
+    try {
+      const auth = firebaseConnection.getAuth();
+      const db = firebaseConnection.getDb();
+      
+      // Criar usuário no Authentication
+      const userRecord = await auth.createUser({
+        email: userData.email,
+        password: userData.password,
+        displayName: userData.nome
+      });
+
+      // Dados específicos do cidadão
+      const cidadaoData = {
+        nome: userData.nome,
+        email: userData.email,
+        telefone: userData.telefone,
+        endereco: {
+          cep: userData.cep,
+          rua: userData.rua,
+          numero: userData.numero,
+          complemento: userData.complemento || '',
+          bairro: userData.bairro,
+          cidade: userData.cidade,
+          estado: userData.estado
+        },
+        tipo: 'cidadao',
+        ativo: true,
+        criadoEm: new Date(),
+        atualizadoEm: new Date()
+      };
+
+      // Salvar no Firestore na subcoleção cidadaos
+      await db.collection('usuarios').doc('cidadaos').collection('cidadaos').doc(userRecord.uid).set(cidadaoData);
+
+      return { uid: userRecord.uid, ...cidadaoData };
+    } catch (error) {
+      throw new Error(`Erro ao cadastrar cidadão: ${error.message}`);
+    }
+  }
+
   async getUserById(uid) {
     try {
       const db = firebaseConnection.getDb();

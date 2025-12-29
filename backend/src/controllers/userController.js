@@ -20,6 +20,27 @@ class UserController {
     }
   }
 
+  async createCidadao(req, res) {
+    try {
+      // Validação básica dos campos obrigatórios
+      const { nome, email, telefone, cep, rua, numero, bairro, cidade, estado, password } = req.body;
+      
+      if (!nome || !email || !telefone || !cep || !rua || !numero || !bairro || !cidade || !estado || !password) {
+        return res.status(400).json({ 
+          error: 'Todos os campos obrigatórios devem ser preenchidos' 
+        });
+      }
+
+      const cidadao = await userService.createCidadao(req.body);
+      res.status(201).json({
+        message: 'Cidadão cadastrado com sucesso',
+        data: cidadao
+      });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
   async updateUser(req, res) {
     try {
       const { uid } = req.params;
