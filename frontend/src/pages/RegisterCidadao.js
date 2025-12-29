@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ApiService from '../services/apiService';
 import '../styles/pages/CadastroFamilia.css';
 
 const RegisterCidadao = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     nome: '',
     telefone: '',
     email: '',
-    endereco: '',
+    rua: '',
+    numero: '',
     bairro: '',
     cidade: '',
+    estado: 'MG',
     cep: '',
-    senha: '',
+    password: '',
     confirmarSenha: ''
   });
   const [cidadeError, setCidadeError] = useState('');
@@ -51,17 +56,53 @@ const RegisterCidadao = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
     const normalizedCidade = formData.cidade.toLowerCase().trim();
     if (normalizedCidade !== 'lagoa santa') {
       setCidadeError('Atualmente atendemos apenas Lagoa Santa - MG');
       return;
     }
+
+    if (formData.password !== formData.confirmarSenha) {
+      setError('As senhas não coincidem');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
     
-    console.log('Cadastro cidadão:', formData);
-    navigate('/home');
+    setLoading(true);
+    
+    try {
+      const cidadaoData = {
+        nome: formData.nome,
+        email: formData.email,
+        telefone: formData.telefone,
+        password: formData.password,
+        rua: formData.rua,
+        numero: formData.numero,
+        bairro: formData.bairro,
+        cidade: formData.cidade,
+        estado: formData.estado,
+        cep: formData.cep
+      };
+
+      const response = await ApiService.createCidadao(cidadaoData);
+      
+      if (response.success) {
+        alert('Cadastro realizado com sucesso!');
+        navigate('/login');
+      }
+    } catch (error) {
+      setError(error.message || 'Erro ao cadastrar cidadão');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -112,9 +153,15 @@ const RegisterCidadao = () => {
             {currentStep === 2 && (
               <div className="step-content">
                 <h3><img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" alt="endereço" width="32" height="32" style={{marginRight: '8px'}} /> Endereço</h3>
-                <div className="form-group">
-                  <label>Endereço completo *</label>
-                  <input type="text" name="endereco" value={formData.endereco} onChange={handleChange} placeholder="Rua, número, complemento" required />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Rua *</label>
+                    <input type="text" name="rua" value={formData.rua} onChange={handleChange} required />
+                  </div>
+                  <div className="form-group">
+                    <label>Número *</label>
+                    <input type="text" name="numero" value={formData.numero} onChange={handleChange} required />
+                  </div>
                 </div>
                 <div className="form-row">
                   <div className="form-group">
@@ -137,10 +184,11 @@ const RegisterCidadao = () => {
             {currentStep === 3 && (
               <div className="step-content">
                 <h3><img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="senha" width="32" height="32" style={{marginRight: '8px'}} /> Senha de acesso</h3>
+                {error && <div className="error-message" style={{marginBottom: '1rem', color: 'red'}}>{error}</div>}
                 <div className="form-row">
                   <div className="form-group">
                     <label>Senha *</label>
-                    <input type="password" name="senha" value={formData.senha} onChange={handleChange} required />
+                    <input type="password" name="password" value={formData.password} onChange={handleChange} minLength="6" required />
                   </div>
                   <div className="form-group">
                     <label>Confirmar senha *</label>
@@ -157,7 +205,9 @@ const RegisterCidadao = () => {
               {currentStep < totalSteps ? (
                 <button type="button" onClick={nextStep} className="btn btn-primary">Próximo</button>
               ) : (
-                <button type="submit" className="btn btn-primary btn-large">Criar conta</button>
+                <button type="submit" className="btn btn-primary btn-large" disabled={loading}>
+                  {loading ? 'Cadastrando...' : 'Criar conta'}
+                </button>
               )}
             </div>
           </form>
