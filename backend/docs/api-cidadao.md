@@ -90,7 +90,7 @@ Content-Type: application/json
 
 ### cURL
 ```bash
-curl -X POST http://localhost:3000/api/cidadaos \
+curl -X POST http://localhost:3001/api/cidadaos \
   -H "Content-Type: application/json" \
   -d '{
     "nome": "Maria Santos",
@@ -109,7 +109,7 @@ curl -X POST http://localhost:3000/api/cidadaos \
 
 ### JavaScript (Fetch)
 ```javascript
-const response = await fetch('/api/cidadaos', {
+const response = await fetch('http://localhost:3001/api/cidadaos', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json'
