@@ -1,0 +1,33 @@
+.app-layout {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  padding-top: 72px;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    height: calc(100vh - 64px);
+    padding-top: 64px;
+  }
+}
+
+/* Garantir que dropdowns não sejam cortados */
+.header {
+  overflow: visible !important;
+}
+
+.header-content {
+  overflow: visible !important;
+}
+
+.user-section {
+  overflow: visible !important;
+}

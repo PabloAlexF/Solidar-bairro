@@ -1,36 +1,27 @@
 .preciso-ajuda {
-  min-height: 100vh;
-  background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-200) 50%, var(--gray-100) 100%);
-  padding-top: 72px;
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
   width: 100%;
-  margin: 0;
-  padding-left: 0;
-  padding-right: 0;
-  box-sizing: border-box;
+  min-height: 100%;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
 }
 
 .form-content {
-  padding: 60px 0 100px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-inline: 20px;
-  box-sizing: border-box;
+  margin: 0;
+  padding: 40px 0;
 }
 
 .wizard-container {
   width: 100%;
-  max-width: 100%;
-  margin: 0;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 0;
   box-sizing: border-box;
+  background: transparent;
+  backdrop-filter: none;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  overflow: hidden;
 }
 
 /* Responsive Container System */
@@ -49,10 +40,6 @@
   padding-left: 20px;
   padding-right: 20px;
   box-sizing: border-box;
-  display: block;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 @media (max-width: 768px) {
@@ -81,8 +68,13 @@
 
 .page-intro {
   text-align: center;
-  margin-bottom: 80px;
+  margin-bottom: 60px;
   width: 100%;
+  padding: 60px 40px;
+  background: transparent;
+  border: none;
+  position: relative;
+  overflow: hidden;
 }
 
 .intro-badge {
@@ -103,19 +95,24 @@
 }
 
 .page-intro h2 {
-  font-size: 44px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 16px;
+  font-size: 48px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1e293b, #475569);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
   letter-spacing: -0.025em;
+  line-height: 1.1;
 }
 
 .page-intro p {
-  color: var(--text-muted-strong);
-  font-size: 20px;
-  max-width: 720px;
-  margin: 0 auto;
-  line-height: 1.5;
+  color: #64748b;
+  font-size: 22px;
+  font-weight: 500;
+  max-width: 600px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
 }
 
 .help-form {
@@ -161,39 +158,44 @@
   }
 }
 
-.categories-grid {
+.categories-carousel {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  gap: 24px;
+  max-width: 100%;
+  margin: 0;
+  padding: 40px;
 }
 
-.category-btn {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.6);
-  border-radius: 16px;
-  padding: 24px 16px;
+.category-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 32px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
 }
 
-.category-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.95);
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border-color: #f97316;
 }
 
-.category-btn.selected {
-  border-color: var(--primary);
-  background: linear-gradient(135deg, var(--accent-light-1), var(--accent-light-2));
-  color: var(--primary);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.2);
+.category-card.selected {
+  border-color: #f97316;
+  background: linear-gradient(135deg, #fff7ed, #fed7aa);
+  color: #f97316;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(249, 115, 22, 0.25);
+  animation: categorySelect 0.4s ease-out;
 }
 
 .category-icon {
@@ -3382,36 +3384,37 @@ select.form-select.enhanced option:checked {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 60px;
-  margin: 40px 0;
-  max-width: 100%;
-  width: 100%;
-  padding: 20px 0;
+  gap: 80px;
+  margin: 0;
+  padding: 40px;
+  background: transparent;
+  border: none;
 }
 
 .progress-step {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   position: relative;
 }
 
 .step-circle {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 18px;
+  font-size: 20px;
   background: white;
   border: 3px solid #e5e7eb;
   color: #6b7280;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 2;
   position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .progress-step.active .step-circle {
@@ -3419,7 +3422,7 @@ select.form-select.enhanced option:checked {
   border-color: #f97316;
   color: white;
   transform: scale(1.1);
-  box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 8px 32px rgba(249, 115, 22, 0.4);
 }
 
 .progress-step.active .step-circle::before {
@@ -3435,15 +3438,17 @@ select.form-select.enhanced option:checked {
 }
 
 .step-label {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #6b7280;
   text-align: center;
   transition: color 0.3s ease;
+  letter-spacing: 0.025em;
 }
 
 .progress-step.active .step-label {
   color: #f97316;
+  font-weight: 700;
 }
 
 @keyframes progressPulse {
@@ -3455,6 +3460,12 @@ select.form-select.enhanced option:checked {
     transform: scale(1.3);
     opacity: 0;
   }
+}
+
+@keyframes categorySelect {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.02); }
+  100% { transform: translateY(-4px) scale(1); }
 }
 
 @media (max-width: 768px) {
@@ -3491,10 +3502,10 @@ select.form-select.enhanced option:checked {
 .page-intro {
   text-align: center;
   margin-bottom: 60px;
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.05), rgba(34, 197, 94, 0.05));
+  background: transparent;
   padding: 40px;
-  border-radius: 20px;
-  border: 1px solid rgba(249, 115, 22, 0.1);
+  border-radius: 0;
+  border: none;
 }
 
 .page-intro h2 {

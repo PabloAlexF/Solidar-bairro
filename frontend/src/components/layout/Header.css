@@ -10,6 +10,7 @@
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
   height: 72px;
+  overflow: visible !important;
 }
 
 .header-content {
@@ -20,6 +21,7 @@
   padding: 0 24px;
   max-width: 1200px;
   margin: 0 auto;
+  overflow: visible !important;
 }
 
 /* Logo */
@@ -65,10 +67,7 @@
   background-clip: text;
 }
 
-/* Espaçamento para conteúdo das páginas */
-body {
-  padding-top: 72px !important;
-}
+/* Espaçamento para conteúdo das páginas - removido pois agora é gerenciado pelo Layout */
 
 /* Responsivo */
 @media (max-width: 768px) {
@@ -91,7 +90,7 @@ body {
   }
   
   body {
-    padding-top: 64px !important;
+    /* padding-top removido - gerenciado pelo Layout */
   }
 }
 
@@ -100,7 +99,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  overflow: visible;
+  overflow: visible !important;
+  position: relative;
 }
 
 .login-btn {
@@ -171,13 +171,14 @@ body {
   top: 100%;
   right: 0;
   width: 320px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(226, 232, 240, 0.6);
   border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   margin-top: 12px;
   overflow: hidden;
+  z-index: 9999 !important;
 }
 
 .notification-header {
@@ -303,13 +304,14 @@ body {
   top: 100%;
   right: 0;
   width: 300px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(226, 232, 240, 0.6);
   border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   margin-top: 12px;
   overflow: hidden;
+  z-index: 9999 !important;
 }
 
 .user-info {

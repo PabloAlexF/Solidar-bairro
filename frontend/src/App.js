@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import QueroAjudar from './pages/QueroAjudar';
 import PrecisoDeAjuda from './pages/PrecisoDeAjuda';
@@ -24,24 +25,24 @@ function App() {
   return (
     <Router basename={process.env.PUBLIC_URL}>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/quero-ajudar" element={<QueroAjudar />} />
-        <Route path="/preciso-de-ajuda" element={<PrecisoDeAjuda />} />
-        <Route path="/pedidos" element={<Pedidos />} />
-        <Route path="/necessidade/:id" element={<DetalhesNecessidade />} />
-        <Route path="/pedido-publicado" element={<PedidoPublicado />} />
-        <Route path="/landing" element={<Landing />} />
-        <Route path="/cadastro" element={<Register />} />
-        <Route path="/sobre-tipos" element={<SobreTipos />} />
-        <Route path="/cadastro/cidadao" element={<RegisterCidadao />} />
-        <Route path="/cadastro/ong" element={<RegisterONG />} />
-        <Route path="/cadastro/comercio" element={<RegisterComercio />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/cadastro-familia" element={<CadastroFamilia />} />
-        <Route path="/perfil-familia/:id" element={<PerfilFamilia />} />
-        <Route path="/atualizar-status/:id" element={<AtualizarStatus />} />
-        <Route path="/painel-social" element={<PainelSocial />} />
-        <Route path="/perfil" element={<Perfil />} />
+        <Route path="/" element={<Layout><Home /></Layout>} />
+        <Route path="/quero-ajudar" element={<Layout><QueroAjudar /></Layout>} />
+        <Route path="/preciso-de-ajuda" element={<Layout><PrecisoDeAjuda /></Layout>} />
+        <Route path="/pedidos" element={<Layout><Pedidos /></Layout>} />
+        <Route path="/necessidade/:id" element={<Layout><DetalhesNecessidade /></Layout>} />
+        <Route path="/pedido-publicado" element={<Layout><PedidoPublicado /></Layout>} />
+        <Route path="/landing" element={<Layout showHeader={false}><Landing /></Layout>} />
+        <Route path="/cadastro" element={<Layout><Register /></Layout>} />
+        <Route path="/sobre-tipos" element={<Layout><SobreTipos /></Layout>} />
+        <Route path="/cadastro/cidadao" element={<Layout><RegisterCidadao /></Layout>} />
+        <Route path="/cadastro/ong" element={<Layout><RegisterONG /></Layout>} />
+        <Route path="/cadastro/comercio" element={<Layout><RegisterComercio /></Layout>} />
+        <Route path="/login" element={<Layout><Login /></Layout>} />
+        <Route path="/cadastro-familia" element={<Layout><CadastroFamilia /></Layout>} />
+        <Route path="/perfil-familia/:id" element={<Layout><PerfilFamilia /></Layout>} />
+        <Route path="/atualizar-status/:id" element={<Layout><AtualizarStatus /></Layout>} />
+        <Route path="/painel-social" element={<Layout><PainelSocial /></Layout>} />
+        <Route path="/perfil" element={<Layout><Perfil /></Layout>} />
       </Routes>
     </Router>
   );

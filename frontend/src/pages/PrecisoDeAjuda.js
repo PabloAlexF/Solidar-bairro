@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/layout/Header';
 import CustomSelect from '../components/ui/CustomSelect';
 import '../styles/pages/PrecisoDeAjuda.css';
+import '../styles/pages/PrecisoDeAjudaEnhanced.css';
 import '../styles/pages/PrecisoDeAjudaWizard.css';
 import '../styles/pages/PrecisoDeAjudaDesktop.css';
 import '../styles/pages/PrecisoDeAjudaSpacing.css';
+import '../styles/pages/PrecisoDeAjudaNoBackground.css';
+import '../styles/pages/PrecisoDeAjudaMinimal.css';
 import '../styles/delivery-pattern.css';
 import '../styles/responsive/mobile-first.css';
 import '../styles/responsive/header-responsive.css';
@@ -196,7 +198,6 @@ const PrecisoDeAjuda = () => {
   if (isPublished) {
     return (
       <div className="preciso-ajuda">
-        <Header />
         <main className="success-content">
           <div className="success-animation">
             <div className="success-icon">
@@ -262,36 +263,15 @@ const PrecisoDeAjuda = () => {
 
   return (
     <div className="preciso-ajuda">
-      <Header />
-
       <main className="form-content">
         <div className="container-wide">
           <div className="wizard-container">
             {currentStep === 1 && (
               <div className="page-intro">
-                <div className="intro-icon">
-                  <div className="help-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 6L9 17l-5-5"/>
-                      <circle cx="12" cy="12" r="10"/>
-                    </svg>
-                  </div>
-                </div>
                 <h2>Preciso de Ajuda</h2>
                 <p>Conte ao seu bairro como podemos te ajudar. Juntos somos mais fortes.</p>
-                <div className="intro-stats">
-                  <div className="stat">
-                    <span className="stat-number">500+</span>
-                    <span className="stat-label">pessoas ajudadas</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-number">24h</span>
-                    <span className="stat-label">tempo médio de resposta</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-number">95%</span>
-                    <span className="stat-label">pedidos atendidos</span>
-                  </div>
+                <div className="mission-statement">
+                  <p>"Nossa plataforma está crescendo e conectando pessoas que querem ajudar com quem precisa de apoio. Seja parte dessa rede de solidariedade."</p>
                 </div>
               </div>
             )}
@@ -344,14 +324,16 @@ const PrecisoDeAjuda = () => {
                           className={`category-card ${isSelected ? 'selected' : ''} ${errors.category ? 'error' : ''}`}
                           style={{
                             '--category-color': cat.color,
-                            '--category-color-light': cat.color + '20'
+                            '--category-bg': cat.color + '15',
+                            '--category-text': cat.color + 'dd',
+                            '--category-shadow': cat.color + '40'
                           }}
                           onMouseEnter={() => setShowTooltip(cat.id)}
                           onMouseLeave={() => setShowTooltip(null)}
                         >
                           <div className="category-icon">{cat.icon}</div>
-                          <h4>{cat.label}</h4>
-                          <p>{cat.desc}</p>
+                          <h4 className="category-label">{cat.label}</h4>
+                          <p className="category-desc">{cat.desc}</p>
                           {showTooltip === cat.id && (
                             <div className="category-tooltip">
                               Clique para selecionar {cat.label.toLowerCase()}
@@ -406,7 +388,7 @@ const PrecisoDeAjuda = () => {
                         </svg>
                       </div>
                     </div>
-                    <div className={`char-counter ${description.length >= 500 ? 'limit-reached' : ''}`}>
+                    <div className="char-counter">
                       <span className="char-count">{description.length}/500</span>
                       {description.length >= 500 && <span className="limit-message"> - Limite atingido</span>}
                       {description.length >= 20 && description.length < 500 && (

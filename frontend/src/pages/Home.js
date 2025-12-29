@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/layout/Header';
 import '../styles/pages/Home.css';
 
 const Home = () => {
@@ -84,8 +83,6 @@ const Home = () => {
 
   return (
     <div className="home">
-      <Header showLoginButton={false} />
-
       <main className="home-main">
         <section className="hero-section">
           <div className="container">
