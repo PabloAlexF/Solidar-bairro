@@ -45,12 +45,23 @@ Content-Type: application/json
 ### Campos Opcionais
 - `complemento`: Complemento do endereço (apartamento, bloco, etc.)
 
+## Endpoints Disponíveis
+
+### POST /api/cidadaos
+Cadastrar novo cidadão
+
+### GET /api/cidadaos
+Listar todos os cidadãos
+
+### GET /api/cidadaos/:uid
+Buscar cidadão por ID
+
 ## Respostas
 
 ### Sucesso (201)
 ```json
 {
-  "message": "Cidadão cadastrado com sucesso",
+  "success": true,
   "data": {
     "uid": "firebase-uid-gerado",
     "nome": "João Silva",
@@ -72,17 +83,11 @@ Content-Type: application/json
 }
 ```
 
-### Erro - Campos Obrigatórios (400)
+### Erro - Dados Inválidos (400)
 ```json
 {
-  "error": "Todos os campos obrigatórios devem ser preenchidos"
-}
-```
-
-### Erro - Email já existe (400)
-```json
-{
-  "error": "Erro ao cadastrar cidadão: The email address is already in use by another account."
+  "success": false,
+  "error": "Dados inválidos: Nome é obrigatório, Email é obrigatório"
 }
 ```
 
@@ -100,50 +105,15 @@ curl -X POST http://localhost:3001/api/cidadaos \
     "cep": "04567-890",
     "rua": "Av. Paulista",
     "numero": "1000",
-    "complemento": "Sala 101",
     "bairro": "Bela Vista",
     "cidade": "São Paulo",
     "estado": "SP"
   }'
 ```
 
-### JavaScript (Fetch)
-```javascript
-const response = await fetch('http://localhost:3001/api/cidadaos', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    nome: 'Maria Santos',
-    email: 'maria@email.com',
-    telefone: '(11) 98765-4321',
-    password: 'senha123',
-    cep: '04567-890',
-    rua: 'Av. Paulista',
-    numero: '1000',
-    bairro: 'Bela Vista',
-    cidade: 'São Paulo',
-    estado: 'SP'
-  })
-});
-
-const data = await response.json();
-```
-
 ## Estrutura no Firestore
 
 Os dados são armazenados em:
 ```
-usuarios/
-└── cidadaos/
-    └── cidadaos/ (subcoleção)
-        └── {uid} (documento do cidadão)
+cidadaos/{uid}
 ```
-
-## Validações
-
-- Email deve ser único
-- Senha deve ter pelo menos 6 caracteres
-- Todos os campos obrigatórios devem estar presentes
-- Email deve ter formato válido

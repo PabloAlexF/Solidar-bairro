@@ -11,6 +11,28 @@ projeto-pablo/
 └── README.md         # Este arquivo
 ```
 
+## APIs Disponíveis
+
+### 👥 Cidadãos
+- **POST** `/api/cidadaos` - Cadastrar cidadão
+- **GET** `/api/cidadaos` - Listar cidadãos
+- **GET** `/api/cidadaos/:uid` - Buscar cidadão
+
+### 🏪 Comércios
+- **POST** `/api/comercios` - Cadastrar comércio
+- **GET** `/api/comercios` - Listar comércios
+- **GET** `/api/comercios/:uid` - Buscar comércio
+
+### 🏛️ ONGs
+- **POST** `/api/ongs` - Cadastrar ONG
+- **GET** `/api/ongs` - Listar ONGs
+- **GET** `/api/ongs/:uid` - Buscar ONG
+
+### 👨👩👧👦 Famílias
+- **POST** `/api/familias` - Cadastrar família
+- **GET** `/api/familias` - Listar famílias
+- **GET** `/api/familias/:id` - Buscar família
+
 ## Arquitetura
 
 ### Padrões de Design Implementados
@@ -57,6 +79,20 @@ cd frontend
 npm install
 npm start
 ```
+
+### Testar APIs
+```bash
+cd backend
+node test-all-apis.js
+```
+
+## 📚 Documentação
+
+- [Documentação Geral da API](./backend/docs/README.md)
+- [API Cidadão](./backend/docs/api-cidadao.md)
+- [API Comércio](./backend/docs/api-comercio.md)
+- [API ONG](./backend/docs/api-ong.md)
+- [API Família](./backend/docs/api-familia.md)
 
 ## Tecnologias
 
