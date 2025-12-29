@@ -1,0 +1,91 @@
+/* Melhorias para o formulário de Oportunidade de Emprego */
+
+/* Título principal com margem inferior adequada */
+.category-details h5 {
+  margin-bottom: 2rem !important;
+}
+
+/* Seções com maior espaçamento */
+.section-title {
+  margin-top: 2.5rem !important;
+  margin-bottom: 1rem !important;
+  padding: 1rem 1.25rem !important;
+  background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%) !important;
+  border-left: 4px solid #f97316 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.1) !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: #ea580c !important;
+}
+
+/* Primeira seção sem margem superior excessiva */
+.section-title:first-of-type {
+  margin-top: 1.5rem !important;
+}
+
+/* Campos de formulário com mais padding interno */
+.detail-field .form-input,
+.detail-field .form-select {
+  padding: 14px 16px !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Estados de foco melhorados */
+.detail-field .form-input:focus,
+.detail-field .form-select:focus {
+  border-color: #f97316 !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1) !important;
+  outline: none !important;
+}
+
+/* Espaçamento entre campos */
+.detail-field {
+  margin-bottom: 1.5rem !important;
+}
+
+/* Labels com melhor posicionamento */
+.detail-field label {
+  display: block !important;
+  margin-bottom: 8px !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  font-size: 0.9rem !important;
+}
+
+/* Placeholder com melhor contraste */
+.detail-field .form-input::placeholder {
+  color: #9ca3af !important;
+  font-style: italic !important;
+}
+
+/* Container do formulário com melhor espaçamento */
+.details-form {
+  padding: 0 0.5rem !important;
+}
+
+/* Ajuste para ícones se existirem */
+.detail-field {
+  position: relative !important;
+}
+
+.detail-field .form-input[data-icon],
+.detail-field .form-select[data-icon] {
+  padding-left: 45px !important;
+}
+
+/* Ícone posicionado */
+.detail-field::before {
+  content: attr(data-icon) !important;
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #f97316 !important;
+  font-size: 1.1rem !important;
+  z-index: 1 !important;
+}

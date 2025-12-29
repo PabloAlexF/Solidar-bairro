@@ -984,3 +984,16 @@
   max-width: 420px !important;
   width: 100% !important;
 }
+/* Section Title Styling */
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 1.5rem 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.section-title:first-child {
+  margin-top: 0;
+}

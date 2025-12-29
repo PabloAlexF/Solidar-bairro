@@ -1,0 +1,162 @@
+/* Aplicando exatamente o padrão da delivery-preferences */
+
+/* Trabalho - seguindo delivery-preferences */
+.work-form-container {
+  margin-top: 2rem;
+}
+
+.work-section {
+  margin-bottom: 0;
+}
+
+.work-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.work-field {
+  margin-top: 0;
+}
+
+.work-input-wrapper {
+  position: relative;
+}
+
+.work-input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.work-input-icon img {
+  width: 18px;
+  height: 18px;
+}
+
+.work-input,
+.work-select {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.work-input:focus,
+.work-select:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* Desktop layout */
+@media (min-width: 769px) {
+  .work-form-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* Outras categorias - seguindo delivery-preferences */
+.additional-details h4 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.preferences-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.pref-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pref-card .card-content {
+  position: relative;
+}
+
+.pref-card .card-content label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.pref-card .card-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pref-card .card-icon img {
+  width: 18px;
+  height: 18px;
+}
+
+.pref-card .form-input,
+.pref-card .form-select {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.pref-card .form-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  background: white;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.pref-card .form-input:focus,
+.pref-card .form-select:focus,
+.pref-card .form-textarea:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.pref-card .form-input::placeholder,
+.pref-card .form-textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .preferences-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .work-form-container {
+    grid-template-columns: 1fr;
+  }
+}
