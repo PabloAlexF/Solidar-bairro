@@ -8,6 +8,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     senha: ''
@@ -52,29 +53,28 @@ const Login = () => {
       <div className="login">
         <div className="container">
           <div className="login-content">
-            {/* Header com badge e título */}
-            <div className="login-header">
-              <div className="login-badge">
-                <span className="badge-text">🔐 Área do Usuário</span>
-              </div>
-              
-              <div className="login-brand">
-                <span className="brand-name">SolidarBairro</span>
-                <h1 className="login-title">Bem-vindo de volta!</h1>
-                <p className="login-subtitle">
-                  Entre na sua conta e continue fazendo a diferença na sua comunidade
-                </p>
-              </div>
-            </div>
-
             {/* Card do formulário */}
             <div className="login-card">
+              {/* Botão voltar - desktop */}
+              <div className="login-back-desktop">
+                <button 
+                  className="back-button-desktop"
+                  onClick={() => navigate('/')}
+                >
+                  <div className="back-icon">
+                    <i className="fi fi-rr-arrow-left"></i>
+                  </div>
+                </button>
+              </div>
+
               <div className="login-card-header">
+                <div className="login-card-header-content">
+                  <h2>Fazer Login</h2>
+                  <p>Acesse sua conta para continuar</p>
+                </div>
                 <div className="login-icon">
                   <i className="fi fi-rr-user"></i>
                 </div>
-                <h2>Fazer Login</h2>
-                <p>Acesse sua conta para continuar</p>
               </div>
 
               <form onSubmit={handleSubmit} className="login-form">
@@ -106,15 +106,24 @@ const Login = () => {
                     <i className="fi fi-rr-lock"></i>
                     Senha
                   </label>
-                  <input
-                    id="senha"
-                    type="password"
-                    name="senha"
-                    value={formData.senha}
-                    onChange={handleChange}
-                    placeholder="Digite sua senha"
-                    required
-                  />
+                  <div className="password-input-wrapper">
+                    <input
+                      id="senha"
+                      type={showPassword ? 'text' : 'password'}
+                      name="senha"
+                      value={formData.senha}
+                      onChange={handleChange}
+                      placeholder="Digite sua senha"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      <i className={`fi ${showPassword ? 'fi-rr-eye-crossed' : 'fi-rr-eye'}`}></i>
+                    </button>
+                  </div>
                 </div>
                 
                 <button type="submit" className="login-button" disabled={loading}>
@@ -137,16 +146,6 @@ const Login = () => {
                   <div className="button-glow"></div>
                 </button>
               </form>
-
-              <div className="login-divider">
-                <div className="divider-line"></div>
-                <span className="divider-text">
-                  <i className="fi fi-rr-menu-dots"></i>
-                  <span>ou continue com</span>
-                  <i className="fi fi-rr-menu-dots"></i>
-                </span>
-                <div className="divider-line"></div>
-              </div>
 
               <div className="login-footer">
                 <div className="footer-content">
@@ -171,22 +170,22 @@ const Login = () => {
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Botão voltar */}
-            <div className="login-back">
-              <button 
-                className="back-button"
-                onClick={() => navigate('/')}
-              >
-                <div className="back-icon">
-                  <i className="fi fi-rr-arrow-left"></i>
-                </div>
-                <div className="back-content">
-                  <span className="back-title">Voltar ao início</span>
-                  <span className="back-subtitle">Explorar sem cadastro</span>
-                </div>
-              </button>
+              {/* Botão voltar - mobile */}
+              <div className="login-back-mobile">
+                <button 
+                  className="back-button"
+                  onClick={() => navigate('/')}
+                >
+                  <div className="back-icon">
+                    <i className="fi fi-rr-arrow-left"></i>
+                  </div>
+                  <div className="back-content">
+                    <span className="back-title">Voltar ao início</span>
+                    <span className="back-subtitle">Explorar sem cadastro</span>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
         </div>

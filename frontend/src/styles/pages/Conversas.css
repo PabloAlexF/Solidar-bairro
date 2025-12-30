@@ -10,12 +10,12 @@
 }
 
 .conversas-main {
-  padding-top: 2rem;
+  padding-top: 1rem;
   padding-bottom: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 140px);
+  min-height: calc(100vh - 70px);
 }
 
 .conversas-main .container {
@@ -372,9 +372,9 @@
 /* Responsivo */
 @media (max-width: 768px) {
   .conversas-main {
-    padding-top: 1rem;
+    padding-top: 0.5rem;
     padding-bottom: 1rem;
-    min-height: calc(100vh - 120px);
+    min-height: calc(100vh - 60px);
     align-items: flex-start;
   }
   

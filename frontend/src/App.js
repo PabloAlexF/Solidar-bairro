@@ -24,6 +24,7 @@ import Chat from './pages/Chat';
 import './styles/index.css';
 import './styles/globals.css';
 import './styles/colors.css';
+import './styles/header-spacing.css';
 
 function App() {
   return (
