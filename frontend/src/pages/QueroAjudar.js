@@ -147,22 +147,21 @@ const QueroAjudar = () => {
             Encontre pessoas no seu bairro que precisam de uma mãozinha. 
             Cada gesto de solidariedade fortalece nossa comunidade.
           </p>
+          <div className="header-actions">
+            <span className="pedidos-count">{filteredPedidos.length} pedidos encontrados</span>
+            <button 
+              className="filter-toggle-btn"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <i className="fi fi-rr-filter"></i>
+              Filtrar
+            </button>
+          </div>
         </section>
 
           {/* Lista de Pedidos */}
           <section className="pedidos-section">
             <div className="section-header">
-              <h2>Pedidos próximos a você</h2>
-              <div className="header-actions">
-                <span className="pedidos-count">{filteredPedidos.length} pedidos encontrados</span>
-                <button 
-                  className="filter-toggle-btn"
-                  onClick={() => setShowFilters(!showFilters)}
-                >
-                  <i className="fi fi-rr-filter"></i>
-                  Filtrar
-                </button>
-              </div>
             </div>
 
             {/* Dropdown de Filtros */}

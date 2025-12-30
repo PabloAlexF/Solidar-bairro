@@ -83,11 +83,43 @@ main.min-h-screen {
   background: rgba(255, 248, 245, 0.95) !important;
 }
 
-.border-orange-500.bg-orange-50 {
-  border-color: #f97316 !important;
-  background: linear-gradient(135deg, #fff7ed, #fed7aa) !important;
+/* Mix de cores para animações - FORCE OVERRIDE */
+.grid.grid-cols-2.sm\:grid-cols-3 .flex.flex-col.items-center.justify-center:hover {
+  border-color: #2563eb !important;
   transform: translateY(-4px) scale(1.02) !important;
-  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.2) !important;
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.15), 0 4px 16px rgba(16, 185, 129, 0.1) !important;
+  background: linear-gradient(135deg, #eff6ff, #ecfdf5) !important;
+  filter: brightness(1.05) saturate(1.1) !important;
+}
+
+.border-orange-500.bg-orange-50 {
+  border-color: #2563eb !important;
+  background: linear-gradient(135deg, #eff6ff, #d1fae5) !important;
+  transform: translateY(-4px) scale(1.02) !important;
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.2), 0 6px 20px rgba(16, 185, 129, 0.15) !important;
+  filter: brightness(1.1) saturate(1.2) !important;
+}
+
+.space-y-4 > .w-full.p-6.rounded-2xl.border-2:hover {
+  border-color: #10b981 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.15), 0 4px 12px rgba(37, 99, 235, 0.1) !important;
+  background: linear-gradient(135deg, #ecfdf5, #eff6ff) !important;
+}
+
+.border-orange-500.bg-orange-50.shadow-lg {
+  border-color: #10b981 !important;
+  background: linear-gradient(135deg, #d1fae5, #dbeafe) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2), 0 4px 16px rgba(37, 99, 235, 0.15) !important;
+  filter: brightness(1.1) saturate(1.15) !important;
+}
+
+.rounded-xl.px-8.py-3:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.3), 0 6px 20px rgba(16, 185, 129, 0.2) !important;
+  background: linear-gradient(135deg, #2563eb, #059669) !important;
+  filter: brightness(1.1) hue-rotate(15deg) !important;
 }
 
 /* Force textarea styling */
@@ -202,18 +234,66 @@ main.min-h-screen {
   transform: translateY(-2px) !important;
   box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2) !important;
 }
-/* Force help text background styling */
-.bg-blue-50.border.border-blue-200 {
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
+/* Force help text background styling - IMPROVED READABILITY */
+.bg-blue-50.border-2.border-blue-200.rounded-xl,
+.bg-blue-50.border-l-4.border-blue-400.rounded-r-xl {
+  background: rgba(255, 255, 255, 0.95) !important;
   border: 2px solid #3b82f6 !important;
   border-radius: 1rem !important;
-  padding: 1rem !important;
+  padding: 0.75rem 1rem !important;
   box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15) !important;
   backdrop-filter: blur(10px) !important;
+  max-width: fit-content !important;
+  margin: 1rem auto 2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  white-space: nowrap !important;
 }
 
-.bg-blue-50.border.border-blue-200 .text-blue-800 {
-  color: #1e40af !important;
+/* Seção de visibilidade - melhor espaçamento */
+.w-full.p-6.rounded-2xl.border-2.flex.items-center.justify-between {
+  padding: 2rem !important;
+  margin-bottom: 2rem !important;
+}
+
+.text-lg.font-medium.text-zinc-700.block {
+  font-size: 1.125rem !important;
   font-weight: 600 !important;
-  font-size: 1rem !important;
+  color: #374151 !important;
+  margin-bottom: 2rem !important;
+  line-height: 1.4 !important;
+}
+
+.text-sm.text-zinc-500 {
+  font-size: 0.875rem !important;
+  color: #6b7280 !important;
+  line-height: 1.5 !important;
+  margin-top: 1.5rem !important;
+  text-align: right !important;
+  font-style: italic !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid #e5e7eb !important;
+}
+
+@media (max-width: 768px) {
+  .text-sm.text-zinc-500 {
+    display: none !important;
+  }
+}
+/* Ocultar mensagens de descrição dos botões de visibilidade */
+.text-sm.text-zinc-500 {
+  display: none !important;
+}
+/* Centralizar título e subtítulo da seção de visibilidade */
+.space-y-2.mb-8 h2 {
+  text-align: center !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.space-y-2.mb-8 p {
+  text-align: center !important;
+  max-width: 500px !important;
+  margin: 0 auto 2rem !important;
 }

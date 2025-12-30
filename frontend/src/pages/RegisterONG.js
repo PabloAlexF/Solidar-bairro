@@ -89,8 +89,27 @@ const RegisterONG = () => {
     try {
       const response = await apiService.createONG(formData);
       console.log('Cadastro ONG realizado:', response);
-      alert('Cadastro enviado para verificação. Você receberá um e-mail em até 48h.');
-      navigate('/');
+      
+      if (response.success) {
+        // Fazer login automático após cadastro
+        try {
+          const loginResponse = await apiService.login(formData.email, formData.senha);
+          if (loginResponse.success) {
+            // Salvar usuário no localStorage
+            localStorage.setItem('solidar-user', JSON.stringify(loginResponse.data.user));
+            // Disparar evento para atualizar header
+            window.dispatchEvent(new CustomEvent('userUpdated'));
+            alert('Cadastro enviado para verificação. Você receberá um e-mail em até 48h.');
+            navigate('/');
+          } else {
+            alert('Cadastro enviado para verificação. Você receberá um e-mail em até 48h.');
+            navigate('/');
+          }
+        } catch (loginError) {
+          alert('Cadastro enviado para verificação. Você receberá um e-mail em até 48h.');
+          navigate('/');
+        }
+      }
     } catch (error) {
       console.error('Erro ao cadastrar ONG:', error);
       setError(error.message || 'Erro ao realizar cadastro. Tente novamente.');

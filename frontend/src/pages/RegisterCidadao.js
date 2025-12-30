@@ -94,8 +94,24 @@ const RegisterCidadao = () => {
       const response = await ApiService.createCidadao(cidadaoData);
       
       if (response.success) {
-        alert('Cadastro realizado com sucesso!');
-        navigate('/login');
+        // Fazer login automático após cadastro
+        try {
+          const loginResponse = await ApiService.login(formData.email, formData.password);
+          if (loginResponse.success) {
+            // Salvar usuário no localStorage
+            localStorage.setItem('solidar-user', JSON.stringify(loginResponse.data.user));
+            // Disparar evento para atualizar header
+            window.dispatchEvent(new CustomEvent('userUpdated'));
+            alert('Cadastro realizado com sucesso!');
+            navigate('/');
+          } else {
+            alert('Cadastro realizado! Faça login para continuar.');
+            navigate('/login');
+          }
+        } catch (loginError) {
+          alert('Cadastro realizado! Faça login para continuar.');
+          navigate('/login');
+        }
       }
     } catch (error) {
       setError(error.message || 'Erro ao cadastrar cidadão');

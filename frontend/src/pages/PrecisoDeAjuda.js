@@ -252,10 +252,10 @@ const PrecisoDeAjuda = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex flex-col items-center justify-center p-4 sm:p-8">
-      <div className="w-full max-w-5xl lg:max-w-6xl bg-white rounded-3xl shadow-2xl shadow-slate-300/30 overflow-hidden flex flex-col animate-fade-in-up border border-slate-200">
+    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-8">
+      <div className="w-full max-w-5xl lg:max-w-6xl bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden flex flex-col animate-fade-in-up">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
+        <div className="p-6 border-b border-slate-200 bg-white">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
               <svg className="w-6 h-6 text-orange-500 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
@@ -270,17 +270,17 @@ const PrecisoDeAjuda = () => {
           </div>
           <div className="w-full bg-slate-200 rounded-full h-4 shadow-inner relative">
             <div 
-              className="bg-gradient-to-r from-orange-500 to-orange-600 h-4 rounded-full transition-all duration-500 ease-out shadow-sm"
+              className="bg-blue-500 h-3 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
             <div className="absolute top-1/2 left-0 transform -translate-y-1/2 flex justify-between w-full px-2">
               {Array.from({ length: totalSteps }, (_, i) => (
                 <div 
                   key={i}
-                  className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
+                  className={`w-2 h-2 rounded-full border transition-all duration-300 ${
                     i + 1 <= step 
-                      ? 'bg-white border-orange-600 shadow-md' 
-                      : 'bg-slate-200 border-slate-400'
+                      ? 'bg-blue-500 border-blue-500' 
+                      : 'bg-slate-200 border-slate-300'
                   }`}
                 />
               ))}
@@ -314,8 +314,8 @@ const PrecisoDeAjuda = () => {
                       onClick={() => handleCategorySelect(cat.id)}
                       className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 gap-3 group hover:shadow-lg transform hover:scale-105 animate-slide-in ${
                         formData.category === cat.id
-                          ? 'border-orange-500 bg-orange-50 text-slate-800 shadow-lg scale-105'
-                          : 'border-slate-200 hover:border-orange-300 hover:bg-slate-50 text-slate-700'
+                          ? 'border-orange-500 bg-gradient-to-br from-orange-50 to-orange-100 text-slate-800 shadow-xl shadow-orange-200/50 scale-105'
+                          : 'border-slate-200 hover:border-orange-300 hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100 text-slate-700'
                       }`}
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
@@ -334,24 +334,21 @@ const PrecisoDeAjuda = () => {
             {step === 2 && getCategoryHasDetails(formData.category) && (
               <div className="space-y-6 animate-fade-in-up">
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold text-slate-800">
-                    {formData.category === 'clothes' && 'Que tipo de roupa você precisa?'}
-                    {formData.category === 'food' && 'Que tipo de alimento você precisa?'}
-                    {formData.category === 'hygiene' && 'Que produtos de higiene você precisa?'}
-                    {formData.category === 'meds' && 'Que tipo de ajuda médica você precisa?'}
-                    {formData.category === 'bills' && 'Que tipo de conta você precisa pagar?'}
-                    {formData.category === 'work' && 'Que tipo de ajuda profissional você precisa?'}
+                  <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                    Que tipo de alimento você precisa?
                   </h2>
-                  <p className="text-slate-600">
+                  <p className="text-slate-600 text-lg mb-1">
                     Selecione as opções que melhor descrevem sua necessidade.
                   </p>
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-2 flex items-start gap-2 max-w-md mb-8">
-                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                  </svg>
-                  <p className="text-blue-800 text-xs font-medium">
+                <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-2xl p-4 flex items-start gap-3 max-w-2xl mb-8 shadow-sm">
+                  <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                    </svg>
+                  </div>
+                  <p className="text-orange-800 text-sm font-medium leading-relaxed">
                     Você pode escolher mais de uma opção para facilitar as doações.
                   </p>
                 </div>
@@ -392,7 +389,7 @@ const PrecisoDeAjuda = () => {
                         </div>
                         <div className="text-left">
                           <span className="text-lg font-semibold text-slate-800">{type.label}</span>
-                          <p className="text-sm text-slate-600 font-medium">{type.desc}</p>
+                          <p className="text-sm text-slate-700 font-semibold leading-relaxed bg-white/60 px-3 py-1 rounded-lg">{type.desc}</p>
                         </div>
                       </div>
                     </div>
@@ -445,8 +442,8 @@ const PrecisoDeAjuda = () => {
                         onClick={() => toggleCategorySize(size.id)}
                         className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-md transform hover:scale-105 animate-slide-in ${
                           formData.categoryDetails.sizes.includes(size.id)
-                            ? 'border-orange-500 bg-orange-50 shadow-md scale-105'
-                            : 'border-slate-200 hover:border-orange-300 bg-white hover:bg-slate-50'
+                            ? 'border-orange-500 bg-gradient-to-br from-orange-50 to-orange-100 shadow-xl shadow-orange-200/50 scale-105'
+                            : 'border-slate-200 hover:border-orange-300 bg-white hover:bg-gradient-to-br hover:from-orange-50 hover:to-orange-100'
                         }`}
                         style={{ animationDelay: `${(index + 1) * 80}ms` }}
                       >
@@ -517,8 +514,8 @@ const PrecisoDeAjuda = () => {
                       onClick={() => setFormData({ ...formData, urgency: level.id })}
                       className={`w-full p-6 rounded-2xl border-2 flex items-center justify-between transition-all duration-300 hover:shadow-lg transform hover:scale-102 animate-slide-in ${
                         formData.urgency === level.id
-                          ? 'border-orange-500 bg-orange-50 shadow-lg scale-102'
-                          : 'border-slate-200 hover:border-orange-300 bg-white hover:bg-slate-50'
+                          ? 'border-orange-500 bg-gradient-to-r from-orange-50 to-orange-100 shadow-xl shadow-orange-200/50 scale-102'
+                          : 'border-slate-200 hover:border-orange-300 bg-white hover:bg-gradient-to-r hover:from-orange-50 hover:to-orange-100'
                       }`}
                       style={{ animationDelay: `${index * 150}ms` }}
                     >
@@ -552,12 +549,12 @@ const PrecisoDeAjuda = () => {
                   </p>
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-2 flex items-start gap-2 max-w-md mb-8">
-                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                  </svg>
-                  <p className="text-blue-800 text-xs font-medium">
-                    Você pode escolher mais de uma opção para facilitar o contato.
+                <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-xl p-3 flex items-center gap-3 max-w-fit mb-8 shadow-sm">
+                  <div className="text-blue-500 text-lg">
+                    🚀
+                  </div>
+                  <p className="text-blue-800 text-sm font-semibold">
+                    Escolha múltiplas opções para que mais pessoas possam te ajudar rapidamente!
                   </p>
                 </div>
                 
@@ -782,7 +779,7 @@ const PrecisoDeAjuda = () => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-gradient-to-r from-slate-50 to-blue-50 border-t border-slate-200 flex items-center justify-between gap-4">
+        <div className="p-6 bg-white border-t border-slate-200 flex items-center justify-between gap-4">
           <button
             onClick={prevStep}
             disabled={step === 1}
@@ -797,10 +794,10 @@ const PrecisoDeAjuda = () => {
           <button
             onClick={step === totalSteps ? handlePublish : nextStep}
             disabled={!isStepValid() && step < totalSteps}
-            className={`rounded-xl px-8 py-3 h-auto text-lg font-semibold shadow-lg transition-all duration-300 flex items-center gap-2 hover:scale-105 hover:shadow-xl ${
+            className={`rounded-xl px-8 py-3 h-auto text-lg font-semibold transition-all duration-300 flex items-center gap-2 hover:scale-105 ${
               step === totalSteps 
-                ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-orange-200/50' 
-                : 'bg-gradient-to-r from-zinc-900 to-zinc-800 hover:from-zinc-800 hover:to-zinc-700 text-white'
+                ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
             } ${isSubmitting ? 'opacity-50 cursor-not-allowed scale-95' : ''}`}
           >
             {isSubmitting ? (
