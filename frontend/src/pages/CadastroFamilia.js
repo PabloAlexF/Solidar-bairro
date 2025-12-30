@@ -650,7 +650,7 @@ const CadastroFamilia = () => {
               {currentStep === 5 && (
                 <div className="step-content">
                   <h3><img src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="necessidades" width="32" height="32" style={{marginRight: '8px'}} /> Necessidades principais</h3>
-                  <p>Selecione o que essa família mais precisa agora:</p>
+                  <p style={{marginBottom: '24px'}}>Selecione o que essa família mais precisa agora:</p>
                   
                   <div className="necessidades-grid">
                     {necessidadesOptions.map(necessidade => {

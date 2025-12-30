@@ -18,7 +18,7 @@
 .register-header {
   text-align: center;
   margin-bottom: 48px;
-  padding-top: 60px;
+  padding-top: 120px;
 }
 
 .register-header h1 {
@@ -322,6 +322,12 @@
 }
 
 /* Responsive Design */
+@media (min-width: 1025px) {
+  .register-header {
+    padding-top: 160px;
+  }
+}
+
 @media (max-width: 768px) {
   .register {
     padding: 20px 0;
@@ -383,4 +389,7 @@
     font-size: 11px;
     padding: 6px 12px;
   }
+}
+.brand-name {
+  margin-top: 40px;
 }

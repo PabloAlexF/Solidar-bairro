@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/pages/PrecisoDeAjudaModern.css';
+import '../styles/pages/PrecisoDeAjudaDesktop.css';
 const categories = [
   { id: 'food', label: 'Alimentos', icon: <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="alimentos" width="32" height="32" />, desc: 'Comida, cesta básica' },
   { id: 'clothes', label: 'Roupas', icon: <img src="https://cdn-icons-png.flaticon.com/512/892/892458.png" alt="roupas" width="32" height="32" />, desc: 'Roupas, calçados' },
@@ -346,11 +347,11 @@ const PrecisoDeAjuda = () => {
                   </p>
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-                  <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-2 flex items-start gap-2 max-w-md mb-8">
+                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                   </svg>
-                  <p className="text-blue-800 text-sm font-medium">
+                  <p className="text-blue-800 text-xs font-medium">
                     Você pode escolher mais de uma opção para facilitar as doações.
                   </p>
                 </div>
@@ -411,11 +412,11 @@ const PrecisoDeAjuda = () => {
                   </p>
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-                  <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-2 flex items-start gap-2 max-w-md mb-8">
+                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                   </svg>
-                  <p className="text-blue-800 text-sm font-medium">
+                  <p className="text-blue-800 text-xs font-medium">
                     Você pode escolher vários tamanhos ou marcar "Não tenho preferência".
                   </p>
                 </div>
@@ -486,12 +487,12 @@ const PrecisoDeAjuda = () => {
                     </span>
                   </div>
                   
-                  <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-start gap-3 mt-4">
-                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-2 flex items-start gap-2 mt-4 max-w-md">
+                    <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                       <path d="M11 7h2v6h-2zm0 8h2v2h-2z"/>
                     </svg>
-                    <p className="text-blue-800 text-sm font-medium">
+                    <p className="text-blue-800 text-xs font-medium">
                       Seja claro sobre o que você precisa para que os vizinhos possam agir rápido.
                     </p>
                   </div>
@@ -551,11 +552,11 @@ const PrecisoDeAjuda = () => {
                   </p>
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-                  <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-2 flex items-start gap-2 max-w-md mb-8">
+                  <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                   </svg>
-                  <p className="text-blue-800 text-sm font-medium">
+                  <p className="text-blue-800 text-xs font-medium">
                     Você pode escolher mais de uma opção para facilitar o contato.
                   </p>
                 </div>
@@ -602,7 +603,7 @@ const PrecisoDeAjuda = () => {
 
             {((step === 5 && !getCategoryHasDetails(formData.category)) || (step === 6 && getCategoryHasDetails(formData.category) && formData.category !== 'clothes') || (step === 7 && formData.category === 'clothes')) && (
               <div className="space-y-6 animate-fade-in-up">
-                <div className="space-y-2">
+                <div className="space-y-2 mb-8">
                   <h2 className="text-xl font-semibold text-zinc-900">
                     Quem pode ver seu pedido?
                   </h2>

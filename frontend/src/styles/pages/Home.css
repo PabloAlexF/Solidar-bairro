@@ -94,7 +94,7 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   max-width: 700px;
-  margin: 0 auto;
+  margin: 0 auto 60px;
   align-items: stretch;
 }
 
@@ -311,7 +311,8 @@
 .info-section {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   padding: 80px 0;
-  margin-top: 60px;
+  margin-top: 80px;
+  margin-bottom: 60px;
   position: relative;
 }
 
@@ -474,6 +475,7 @@
 .about-section {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   padding: 100px 0;
+  margin-top: 80px;
   text-align: center;
   position: relative;
 }
