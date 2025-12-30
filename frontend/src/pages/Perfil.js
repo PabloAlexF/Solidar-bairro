@@ -8,40 +8,41 @@ const Perfil = () => {
   const [error, setError] = useState(null);
   
   useEffect(() => {
-    // Simular busca de dados do usuário
-    const fetchUserData = async () => {
+    const loadUserData = () => {
       try {
         setLoading(true);
-        // Aqui seria a chamada real para a API
-        // const response = await fetch('/api/user/profile');
-        // const userData = await response.json();
+        const savedUser = localStorage.getItem('solidar-user');
         
-        // Simulando dados não encontrados no banco
-        setTimeout(() => {
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
           setUser({
-            name: "Usuário não identificado",
-            email: "Não informado",
-            memberSince: "Data não disponível",
-            location: "Localização não informada",
+            name: userData.nomeCompleto || userData.name || userData.nome || 'Usuário não identificado',
+            email: userData.email || 'Email não informado',
+            memberSince: userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível',
+            location: userData.endereco ? `${userData.endereco.cidade}, ${userData.endereco.estado}` : 'Localização não informada',
+            phone: userData.telefone || userData.phone || 'Telefone não informado',
             avatar: null,
-            bio: "Biografia não cadastrada",
+            bio: userData.bio || 'Biografia não cadastrada',
+            userType: userData.userType || 'Tipo não definido',
             stats: {
-              helpsGiven: 0,
-              requestsMade: 0,
-              impactPoints: 0
+              helpsGiven: userData.helpedCount || 0,
+              requestsMade: userData.receivedHelpCount || 0,
+              impactPoints: (userData.helpedCount || 0) * 10 + (userData.receivedHelpCount || 0) * 5
             },
-            isVerified: false
+            isVerified: userData.isVerified || false
           });
-          setLoading(false);
-        }, 1000);
+        } else {
+          navigate('/login');
+        }
+        setLoading(false);
       } catch (err) {
         setError('Erro ao carregar dados do perfil');
         setLoading(false);
       }
     };
     
-    fetchUserData();
-  }, []);
+    loadUserData();
+  }, [navigate]);
   
   if (loading) {
     return (
@@ -137,7 +138,10 @@ const Perfil = () => {
             </div>
             
             <div className="perfil-type-badge">
-              Tipo de conta não definido
+              {user.userType === 'cidadao' ? 'Cidadão' : 
+               user.userType === 'comercio' ? 'Comércio' :
+               user.userType === 'ong' ? 'ONG' :
+               user.userType === 'familia' ? 'Família' : 'Tipo não definido'}
             </div>
             
             {/* Contact Info */}
@@ -151,9 +155,16 @@ const Perfil = () => {
               
               <div className="perfil-contact-item">
                 <svg className="perfil-contact-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <span className="perfil-contact-text">{user.phone}</span>
+              </div>
+              
+              <div className="perfil-contact-item">
+                <svg className="perfil-contact-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0h6m-6 0l-2 2m8-2l2 2m-2-2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V9" />
                 </svg>
-                <span className="perfil-contact-text">{user.memberSince}</span>
+                <span className="perfil-contact-text">Membro desde {user.memberSince}</span>
               </div>
               
               <div className="perfil-contact-item">

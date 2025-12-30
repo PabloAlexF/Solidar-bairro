@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
+import apiService from '../services/apiService';
+
 const Login = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     senha: ''
@@ -15,11 +19,30 @@ const Login = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aqui seria a lógica de login
-    console.log('Login:', formData);
-    navigate('/home');
+    setError('');
+    setLoading(true);
+    
+    try {
+      const response = await apiService.login(formData.email, formData.senha);
+      
+      if (response.success) {
+        // Salvar dados do usuário no localStorage
+        localStorage.setItem('solidar-user', JSON.stringify(response.data.user));
+        
+        // Disparar evento para atualizar outros componentes
+        window.dispatchEvent(new CustomEvent('userUpdated'));
+        
+        console.log('Login realizado:', response.data.user);
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Erro no login:', error);
+      setError(error.message || 'Erro ao fazer login. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,6 +63,11 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
+            {error && (
+              <div className="error-message" style={{marginBottom: '20px', padding: '10px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33'}}>
+                {error}
+              </div>
+            )}
             <div className="form-group">
               <label>E-mail ou telefone</label>
               <input
@@ -60,8 +88,8 @@ const Login = () => {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-primary">
-              Entrar
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 

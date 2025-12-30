@@ -74,7 +74,63 @@ class ApiService {
     return errors;
   }
 
-  // Sanitizar dados
+  // Validar dados de ONG
+  validateONGData(data) {
+    const errors = [];
+    if (!data.nomeEntidade?.trim()) errors.push('Nome da entidade é obrigatório');
+    if (!data.cnpj?.trim()) errors.push('CNPJ é obrigatório');
+    if (!data.razaoSocial?.trim()) errors.push('Razão social é obrigatória');
+    if (!data.areaTrabalho?.trim()) errors.push('Área de trabalho é obrigatória');
+    if (!data.descricaoAtuacao?.trim()) errors.push('Descrição da atuação é obrigatória');
+    if (!data.responsavelNome?.trim()) errors.push('Nome do responsável é obrigatório');
+    if (!data.responsavelCpf?.trim()) errors.push('CPF do responsável é obrigatório');
+    if (!data.telefone?.trim()) errors.push('Telefone é obrigatório');
+    if (!data.email?.trim()) errors.push('Email é obrigatório');
+    if (!data.endereco?.trim()) errors.push('Endereço é obrigatório');
+    if (!data.bairro?.trim()) errors.push('Bairro é obrigatório');
+    if (!data.cidade?.trim()) errors.push('Cidade é obrigatória');
+    if (!data.cep?.trim()) errors.push('CEP é obrigatório');
+    if (!data.senha || data.senha.length < VALIDATION_CONFIG.PASSWORD_MIN_LENGTH) errors.push(`Senha deve ter pelo menos ${VALIDATION_CONFIG.PASSWORD_MIN_LENGTH} caracteres`);
+    if (data.senha !== data.confirmarSenha) errors.push('Senhas não coincidem');
+    
+    // Validar CNPJ básico
+    const cnpjNumbers = data.cnpj?.replace(/\D/g, '');
+    if (cnpjNumbers && cnpjNumbers.length !== VALIDATION_CONFIG.CNPJ_LENGTH) {
+      errors.push(`CNPJ deve ter ${VALIDATION_CONFIG.CNPJ_LENGTH} dígitos`);
+    }
+    
+    // Validar email
+    if (data.email && !VALIDATION_CONFIG.EMAIL_PATTERN.test(data.email)) {
+      errors.push('Email inválido');
+    }
+    
+    // Validar cidade (apenas Lagoa Santa)
+    const normalizedCidade = data.cidade?.toLowerCase().trim();
+    if (normalizedCidade && normalizedCidade !== 'lagoa santa') {
+      errors.push('Atualmente atendemos apenas Lagoa Santa - MG');
+    }
+    
+    return errors;
+  }
+
+  // Validar dados de família
+  validateFamiliaData(data) {
+    const errors = [];
+    if (!data.nomeCompleto?.trim()) errors.push('Nome do responsável é obrigatório');
+    if (!data.telefone?.trim()) errors.push('Telefone é obrigatório');
+    if (!data.tipoCadastro?.trim()) errors.push('Tipo de cadastro é obrigatório');
+    if (!data.endereco?.trim()) errors.push('Endereço é obrigatório');
+    if (!data.bairro?.trim()) errors.push('Bairro é obrigatório');
+    if (!data.numeroPessoas || parseInt(data.numeroPessoas) < 1) errors.push('Número de pessoas deve ser pelo menos 1');
+    if (!data.rendaFamiliar?.trim()) errors.push('Renda familiar é obrigatória');
+    
+    // Validar email se fornecido
+    if (data.email && !VALIDATION_CONFIG.EMAIL_PATTERN.test(data.email)) {
+      errors.push('Email inválido');
+    }
+    
+    return errors;
+  }
   sanitizeData(data) {
     const sanitized = {};
     for (const [key, value] of Object.entries(data)) {
@@ -131,29 +187,79 @@ class ApiService {
   // Métodos para ONGs
   async createONG(ongData) {
     const sanitizedData = this.sanitizeData(ongData);
+    const errors = this.validateONGData(sanitizedData);
+    
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+
     return this.request('/ongs', {
       method: 'POST',
       body: JSON.stringify(sanitizedData),
     });
   }
 
+  async getONGs() {
+    return this.request('/ongs');
+  }
+
+  async getONGById(uid) {
+    if (!uid?.trim()) {
+      throw new Error('ID da ONG é obrigatório');
+    }
+    return this.request(`/ongs/${encodeURIComponent(uid)}`);
+  }
+
   // Métodos para famílias
   async createFamilia(familiaData) {
     const sanitizedData = this.sanitizeData(familiaData);
+    const errors = this.validateFamiliaData(sanitizedData);
+    
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+
     return this.request('/familias', {
       method: 'POST',
       body: JSON.stringify(sanitizedData),
     });
   }
 
-  // Métodos legados (manter compatibilidade)
+  async getFamilias() {
+    return this.request('/familias');
+  }
+
+  async getFamiliaById(id) {
+    if (!id?.toString().trim()) {
+      throw new Error('ID da família é obrigatório');
+    }
+    return this.request(`/familias/${encodeURIComponent(id)}`);
+  }
+
+  // Métodos de autenticação
   async login(email, password) {
     if (!email?.trim() || !password?.trim()) {
       throw new Error('Email e senha são obrigatórios');
     }
+    
     return this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email: email.trim(), password }),
+    });
+  }
+
+  async verifyToken(token) {
+    return this.request('/auth/verify', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  }
+
+  async logout() {
+    return this.request('/auth/logout', {
+      method: 'POST'
     });
   }
 

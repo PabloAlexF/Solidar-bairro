@@ -4,6 +4,7 @@ const familiaRoutes = require('./routes/familiaRoutes');
 const cidadaoRoutes = require('./routes/cidadaoRoutes');
 const comercioRoutes = require('./routes/comercioRoutes');
 const ongRoutes = require('./routes/ongRoutes');
+const authRoutes = require('./routes/authRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -33,6 +34,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/familias', familiaRoutes);
 app.use('/api/cidadaos', cidadaoRoutes);
 app.use('/api/comercios', comercioRoutes);

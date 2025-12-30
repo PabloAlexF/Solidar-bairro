@@ -1,4 +1,4 @@
-const { auth } = require('../config/firebase');
+const authService = require('../services/authService');
 
 const authenticateToken = async (req, res, next) => {
   try {
@@ -8,7 +8,7 @@ const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ error: 'Token não fornecido' });
     }
 
-    const decodedToken = await auth.verifyIdToken(token);
+    const decodedToken = await authService.verifyToken(token);
     req.user = decodedToken;
     next();
   } catch (error) {

@@ -48,10 +48,13 @@ const Home = () => {
     const currentUser = localStorage.getItem('solidar-user');
     const userData = currentUser ? JSON.parse(currentUser) : null;
     
-    if (userData && userData.isVerified) {
+    console.log('handleCardClick - userData:', userData);
+    
+    if (userData) {
       navigate(route);
     } else {
-      setIsAuthOpen(true);
+      console.log('Redirecionando para login');
+      navigate('/login');
     }
   };
 

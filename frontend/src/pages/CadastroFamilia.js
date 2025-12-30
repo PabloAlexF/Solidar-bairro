@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
+import apiService from '../services/apiService';
 import '../styles/pages/CadastroFamilia.css';
 const CadastroFamilia = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const totalSteps = 5;
   const [formData, setFormData] = useState({
     // Dados do responsável
@@ -75,18 +78,27 @@ const CadastroFamilia = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const familias = JSON.parse(localStorage.getItem('familias') || '[]');
-    const novaFamilia = {
-      ...formData,
-      id: Date.now(),
-      dataCadastro: new Date().toISOString(),
-      vulnerabilidade: calcularVulnerabilidade(formData)
-    };
-    familias.push(novaFamilia);
-    localStorage.setItem('familias', JSON.stringify(familias));
-    navigate('/painel-social');
+    setError('');
+    setLoading(true);
+    
+    try {
+      const dadosEnvio = {
+        ...formData,
+        vulnerabilidade: calcularVulnerabilidade(formData)
+      };
+      
+      const response = await apiService.createFamilia(dadosEnvio);
+      console.log('Cadastro família realizado:', response);
+      
+      navigate('/painel-social');
+    } catch (error) {
+      console.error('Erro ao cadastrar família:', error);
+      setError(error.message || 'Erro ao realizar cadastro. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calcularVulnerabilidade = (data) => {
@@ -134,6 +146,11 @@ const CadastroFamilia = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="wizard-form">
+              {error && (
+                <div className="error-message" style={{marginBottom: '20px', padding: '10px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33'}}>
+                  {error}
+                </div>
+              )}
               {/* Step 1: Dados do responsável */}
               {currentStep === 1 && (
                 <div className="step-content">
@@ -710,8 +727,9 @@ const CadastroFamilia = () => {
                   <button 
                     type="submit"
                     className="btn btn-primary btn-large"
+                    disabled={loading}
                   >
-                    Salvar cadastro
+                    {loading ? 'Salvando...' : 'Salvar cadastro'}
                   </button>
                 )}
               </div>

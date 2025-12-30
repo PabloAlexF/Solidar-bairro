@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
+import apiService from '../services/apiService';
+import '../styles/components/progress-steps.css';
+
 const RegisterONG = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const totalSteps = 6;
   const [formData, setFormData] = useState({
     nomeEntidade: '',
@@ -64,8 +69,9 @@ const RegisterONG = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     
     const normalizedCidade = formData.cidade.toLowerCase().trim();
     if (normalizedCidade !== 'lagoa santa') {
@@ -73,9 +79,24 @@ const RegisterONG = () => {
       return;
     }
     
-    console.log('Cadastro ONG:', formData);
-    alert('Cadastro enviado para verificação. Você receberá um e-mail em até 48h.');
-    navigate('/');
+    if (!formData.aceitaTermos || !formData.aceitaPrivacidade || !formData.aceitaPoliticaOng || !formData.declaracaoVeracidade) {
+      setError('Você deve aceitar todos os termos e declarações');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const response = await apiService.createONG(formData);
+      console.log('Cadastro ONG realizado:', response);
+      alert('Cadastro enviado para verificação. Você receberá um e-mail em até 48h.');
+      navigate('/');
+    } catch (error) {
+      console.error('Erro ao cadastrar ONG:', error);
+      setError(error.message || 'Erro ao realizar cadastro. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const areasTrabalho = [
@@ -108,11 +129,17 @@ const RegisterONG = () => {
                   {step === 5 && 'Senha'}
                   {step === 6 && 'Termos'}
                 </div>
+                {step < 6 && <div className={`progress-line ${currentStep > step ? 'completed' : ''}`}></div>}
               </div>
             ))}
           </div>
 
           <form onSubmit={handleSubmit} className="wizard-form">
+            {error && (
+              <div className="error-message" style={{marginBottom: '20px', padding: '10px', backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: '4px', color: '#c33'}}>
+                {error}
+              </div>
+            )}
             {currentStep === 1 && (
               <div className="step-content">
                 <h3><img src="https://cdn-icons-png.flaticon.com/512/3079/3079652.png" alt="entidade" width="32" height="32" style={{marginRight: '8px'}} /> Dados da Entidade</h3>
@@ -204,18 +231,7 @@ const RegisterONG = () => {
             {currentStep === 4 && (
               <div className="step-content">
                 <h3><img src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="documentos" width="32" height="32" style={{marginRight: '8px'}} /> Documentos Obrigatórios</h3>
-                <div className="form-group">
-                  <label>Estatuto social *</label>
-                  <input type="file" name="estatutoSocial" onChange={handleChange} accept=".pdf,.doc,.docx" required />
-                </div>
-                <div className="form-group">
-                  <label>Ata de nomeação da diretoria *</label>
-                  <input type="file" name="ataDiretoria" onChange={handleChange} accept=".pdf,.doc,.docx" required />
-                </div>
-                <div className="form-group">
-                  <label>Certidões negativas *</label>
-                  <input type="file" name="certidoesNegativas" onChange={handleChange} accept=".pdf,.doc,.docx" required />
-                </div>
+                <p style={{color: '#666', marginBottom: '20px'}}>Os documentos serão solicitados após a aprovação inicial.</p>
               </div>
             )}
 
@@ -264,7 +280,9 @@ const RegisterONG = () => {
               {currentStep < totalSteps ? (
                 <button type="button" onClick={nextStep} className="btn btn-primary">Próximo</button>
               ) : (
-                <button type="submit" className="btn btn-primary btn-large">Enviar para verificação</button>
+                <button type="submit" className="btn btn-primary btn-large" disabled={loading}>
+                  {loading ? 'Enviando...' : 'Enviar para verificação'}
+                </button>
               )}
             </div>
           </form>

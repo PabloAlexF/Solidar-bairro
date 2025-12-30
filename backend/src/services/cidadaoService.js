@@ -28,6 +28,7 @@ class CidadaoService {
       email: cidadao.email,
       telefone: cidadao.telefone,
       endereco: cidadao.endereco,
+      senha: data.password, // Salvar senha no Firestore
       tipo: cidadao.tipo,
       ativo: cidadao.ativo,
       criadoEm: new Date(),

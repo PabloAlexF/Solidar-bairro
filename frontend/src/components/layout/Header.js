@@ -20,7 +20,13 @@ const Header = ({ showLoginButton = true }) => {
   useEffect(() => {
     const savedUser = localStorage.getItem('solidar-user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Erro ao parsear usuário do localStorage:', error);
+        localStorage.removeItem('solidar-user');
+      }
     }
 
     // Load notifications from localStorage
@@ -159,7 +165,7 @@ const Header = ({ showLoginButton = true }) => {
               </div>
             )}
 
-            {user && (
+            {user && (user.nome || user.nomeCompleto || user.name) && (
               <div className="user-section">
                 {/* Notificações */}
                 <div className="notification-wrapper">
@@ -238,7 +244,7 @@ const Header = ({ showLoginButton = true }) => {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                   >
                     <div className="user-avatar">
-                      {user.name.substring(0, 2).toUpperCase()}
+                      {user.name ? user.name.substring(0, 2).toUpperCase() : user.nomeCompleto ? user.nomeCompleto.substring(0, 2).toUpperCase() : '??'}
                     </div>
                     {user.isVerified && <span className="verified-badge">✓</span>}
                   </button>
@@ -247,16 +253,16 @@ const Header = ({ showLoginButton = true }) => {
                     <div className="user-dropdown">
                       <div className="user-info">
                         <div className="user-avatar-large">
-                          {user.name.substring(0, 2).toUpperCase()}
+                          {user.name ? user.name.substring(0, 2).toUpperCase() : user.nomeCompleto ? user.nomeCompleto.substring(0, 2).toUpperCase() : '??'}
                         </div>
                         <div className="user-details">
                           <div className="user-name">
-                            {user.name}
+                            {user.name || user.nomeCompleto || 'Usuário'}
                             {user.isVerified && (
                               <span className="verified-text">Verificado</span>
                             )}
                           </div>
-                          <div className="user-phone">{user.phone}</div>
+                          <div className="user-phone">{user.phone || user.telefone || 'Telefone não informado'}</div>
                         </div>
                       </div>
 

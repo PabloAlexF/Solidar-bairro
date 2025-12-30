@@ -34,6 +34,7 @@ class ComercioService {
       responsavel: comercio.responsavel,
       contato: comercio.contato,
       endereco: comercio.endereco,
+      senha: data.senha, // Salvar senha no Firestore
       tipo: comercio.tipo,
       ativo: comercio.ativo,
       verificado: comercio.verificado,

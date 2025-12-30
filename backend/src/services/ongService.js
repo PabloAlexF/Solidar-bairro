@@ -32,6 +32,7 @@ class ONGService {
       responsavel: ong.responsavel,
       contato: ong.contato,
       endereco: ong.endereco,
+      senha: data.senha, // Salvar senha no Firestore
       tipo: ong.tipo,
       ativo: ong.ativo,
       verificado: ong.verificado,
