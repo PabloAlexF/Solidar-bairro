@@ -134,15 +134,32 @@ const PrecisoDeAjuda = () => {
   };
 
   const toggleCategorySize = (id) => {
-    setFormData(prev => ({
-      ...prev,
-      categoryDetails: {
-        ...prev.categoryDetails,
-        sizes: prev.categoryDetails.sizes.includes(id)
-          ? prev.categoryDetails.sizes.filter(s => s !== id)
-          : [...prev.categoryDetails.sizes, id]
+    setFormData(prev => {
+      const currentSizes = prev.categoryDetails.sizes;
+      
+      if (id === 'no-preference') {
+        // Se selecionou "não tenho preferência", remove todos os outros e adiciona apenas este
+        return {
+          ...prev,
+          categoryDetails: {
+            ...prev.categoryDetails,
+            sizes: currentSizes.includes('no-preference') ? [] : ['no-preference']
+          }
+        };
+      } else {
+        // Se selecionou um tamanho específico, remove "não tenho preferência" se estiver selecionado
+        const sizesWithoutNoPreference = currentSizes.filter(s => s !== 'no-preference');
+        return {
+          ...prev,
+          categoryDetails: {
+            ...prev.categoryDetails,
+            sizes: sizesWithoutNoPreference.includes(id)
+              ? sizesWithoutNoPreference.filter(s => s !== id)
+              : [...sizesWithoutNoPreference, id]
+          }
+        };
       }
-    }));
+    });
   };
 
   const toggleCategoryPreference = (id) => {
@@ -235,33 +252,45 @@ const PrecisoDeAjuda = () => {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-zinc-50 to-orange-50/30 flex flex-col items-center justify-start p-4 sm:p-8 pt-16">
-      <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl shadow-zinc-200/50 overflow-hidden flex flex-col min-h-[600px] animate-fade-in-up mt-8">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex flex-col items-center justify-center p-4 sm:p-8">
+      <div className="w-full max-w-5xl lg:max-w-6xl bg-white rounded-3xl shadow-2xl shadow-slate-300/30 overflow-hidden flex flex-col animate-fade-in-up border border-slate-200">
         {/* Header */}
-        <div className="p-6 border-b border-zinc-100 bg-gradient-to-r from-white to-orange-50/30">
+        <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-zinc-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
               <svg className="w-6 h-6 text-orange-500 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14"/>
                 <path d="m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h11c1.1 0 2.1-.4 2.8-1.2l5.1-5.1c.4-.4.4-1 0-1.4s-1-.4-1.4 0L15 15"/>
               </svg>
               Preciso de Ajuda
             </h1>
-            <span className="text-sm font-medium text-zinc-500 bg-zinc-100 px-3 py-1 rounded-full">
+            <span className="text-sm font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
               Etapa {step} de {totalSteps}
             </span>
           </div>
-          <div className="w-full bg-zinc-100 rounded-full h-3 shadow-inner">
+          <div className="w-full bg-slate-200 rounded-full h-4 shadow-inner relative">
             <div 
-              className="bg-gradient-to-r from-orange-400 to-orange-500 h-3 rounded-full transition-all duration-500 ease-out shadow-sm"
+              className="bg-gradient-to-r from-orange-500 to-orange-600 h-4 rounded-full transition-all duration-500 ease-out shadow-sm"
               style={{ width: `${progress}%` }}
             />
+            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 flex justify-between w-full px-2">
+              {Array.from({ length: totalSteps }, (_, i) => (
+                <div 
+                  key={i}
+                  className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
+                    i + 1 <= step 
+                      ? 'bg-white border-orange-600 shadow-md' 
+                      : 'bg-slate-200 border-slate-400'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 relative overflow-hidden">
-          <div className={`p-8 h-full flex flex-col transition-all duration-500 ease-out transform ${
+        <div className="flex-1 relative overflow-hidden min-h-[500px]">
+          <div className={`p-6 sm:p-8 lg:p-12 h-full flex flex-col transition-all duration-500 ease-out transform ${
             step === 1 ? 'opacity-100 translate-x-0' : 
             step === 2 ? 'opacity-100 translate-x-0' :
             step === 3 ? 'opacity-100 translate-x-0' :
@@ -271,10 +300,10 @@ const PrecisoDeAjuda = () => {
             {step === 1 && (
               <div className="space-y-6 animate-fade-in-up">
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold text-zinc-900">
+                  <h2 className="text-xl font-semibold text-slate-800">
                     Qual tipo de ajuda você precisa?
                   </h2>
-                  <p className="text-zinc-500">
+                  <p className="text-slate-600">
                     Selecione a categoria que melhor descreve seu pedido.
                   </p>
                 </div>
@@ -285,8 +314,8 @@ const PrecisoDeAjuda = () => {
                       onClick={() => handleCategorySelect(cat.id)}
                       className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 gap-3 group hover:shadow-lg transform hover:scale-105 animate-slide-in ${
                         formData.category === cat.id
-                          ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-lg scale-105'
-                          : 'border-zinc-100 hover:border-orange-200 hover:bg-zinc-50 text-zinc-600'
+                          ? 'border-orange-500 bg-orange-50 text-slate-800 shadow-lg scale-105'
+                          : 'border-slate-200 hover:border-orange-300 hover:bg-slate-50 text-slate-700'
                       }`}
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
@@ -305,7 +334,7 @@ const PrecisoDeAjuda = () => {
             {step === 2 && getCategoryHasDetails(formData.category) && (
               <div className="space-y-6 animate-fade-in-up">
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold text-zinc-900">
+                  <h2 className="text-xl font-semibold text-slate-800">
                     {formData.category === 'clothes' && 'Que tipo de roupa você precisa?'}
                     {formData.category === 'food' && 'Que tipo de alimento você precisa?'}
                     {formData.category === 'hygiene' && 'Que produtos de higiene você precisa?'}
@@ -313,7 +342,7 @@ const PrecisoDeAjuda = () => {
                     {formData.category === 'bills' && 'Que tipo de conta você precisa pagar?'}
                     {formData.category === 'work' && 'Que tipo de ajuda profissional você precisa?'}
                   </h2>
-                  <p className="text-zinc-500">
+                  <p className="text-slate-600">
                     Selecione as opções que melhor descrevem sua necessidade.
                   </p>
                 </div>
@@ -340,7 +369,7 @@ const PrecisoDeAjuda = () => {
                       className={`p-6 rounded-2xl border-2 flex items-center gap-4 cursor-pointer transition-all duration-300 hover:shadow-lg transform hover:scale-102 animate-slide-in ${
                         formData.categoryDetails.types.includes(type.id)
                           ? 'border-orange-500 bg-orange-50 shadow-lg scale-102'
-                          : 'border-zinc-200 hover:border-zinc-300 bg-white'
+                          : 'border-slate-200 hover:border-orange-300 bg-white hover:bg-slate-50'
                       }`}
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
@@ -362,8 +391,8 @@ const PrecisoDeAjuda = () => {
                           {type.icon}
                         </div>
                         <div className="text-left">
-                          <span className="text-lg font-semibold text-zinc-800">{type.label}</span>
-                          <p className="text-sm text-zinc-500 font-medium">{type.desc}</p>
+                          <span className="text-lg font-semibold text-slate-800">{type.label}</span>
+                          <p className="text-sm text-slate-600 font-medium">{type.desc}</p>
                         </div>
                       </div>
                     </div>
@@ -375,10 +404,10 @@ const PrecisoDeAjuda = () => {
             {step === 3 && formData.category === 'clothes' && (
               <div className="space-y-6 animate-fade-in-up">
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold text-zinc-900">
+                  <h2 className="text-xl font-semibold text-slate-800">
                     Qual o tamanho das roupas?
                   </h2>
-                  <p className="text-zinc-500">
+                  <p className="text-slate-600">
                     Selecione os tamanhos que você precisa ou se não tem preferência.
                   </p>
                 </div>
@@ -392,71 +421,78 @@ const PrecisoDeAjuda = () => {
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {clothingSizes.map((size, index) => (
-                    <div
-                      key={size.id}
-                      onClick={() => toggleCategorySize(size.id)}
-                      className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 cursor-pointer transition-all duration-300 hover:shadow-lg transform hover:scale-105 animate-slide-in ${
-                        formData.categoryDetails.sizes.includes(size.id)
-                          ? 'border-orange-500 bg-orange-50 shadow-lg scale-105'
-                          : 'border-zinc-200 hover:border-zinc-300 bg-white'
-                      }`}
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <div className={`w-6 h-6 border-2 rounded-full flex items-center justify-center transition-all duration-300 ${
-                        formData.categoryDetails.sizes.includes(size.id)
-                          ? 'bg-orange-500 border-orange-500 scale-110'
-                          : 'border-zinc-300 hover:border-orange-300'
-                      }`}>
-                        {formData.categoryDetails.sizes.includes(size.id) && (
-                          <svg className="w-4 h-4 text-white animate-bounce-in" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="text-center">
-                        <span className="text-lg font-bold text-zinc-800">{size.label}</span>
-                        <p className="text-xs text-zinc-500 font-medium">{size.desc}</p>
-                      </div>
+                <div className="max-w-4xl mx-auto space-y-4">
+                  {/* Opção sem preferência - linha completa */}
+                  <div
+                    onClick={() => toggleCategorySize('no-preference')}
+                    className={`w-full p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-md transform hover:scale-102 animate-slide-in ${
+                      formData.categoryDetails.sizes.includes('no-preference')
+                        ? 'border-orange-500 bg-orange-50 shadow-md scale-102'
+                        : 'border-slate-200 hover:border-orange-300 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <span className="text-lg font-semibold text-slate-800">Não tenho preferência</span>
+                      <p className="text-sm text-slate-600 mt-1">Qualquer tamanho serve</p>
                     </div>
-                  ))}
+                  </div>
+                  
+                  {/* Tamanhos específicos em grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {clothingSizes.filter(size => size.id !== 'no-preference').map((size, index) => (
+                      <button
+                        key={size.id}
+                        onClick={() => toggleCategorySize(size.id)}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:shadow-md transform hover:scale-105 animate-slide-in ${
+                          formData.categoryDetails.sizes.includes(size.id)
+                            ? 'border-orange-500 bg-orange-50 shadow-md scale-105'
+                            : 'border-slate-200 hover:border-orange-300 bg-white hover:bg-slate-50'
+                        }`}
+                        style={{ animationDelay: `${(index + 1) * 80}ms` }}
+                      >
+                        <div className="text-center">
+                          <span className="text-lg font-bold text-slate-800">{size.label}</span>
+                          <p className="text-xs text-slate-500">{size.desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
             {((step === 2 && !getCategoryHasDetails(formData.category)) || (step === 3 && getCategoryHasDetails(formData.category) && formData.category !== 'clothes') || (step === 4 && formData.category === 'clothes')) && (
-              <div className="space-y-6 animate-fade-in-up">
+              <div className="space-y-6 animate-fade-in-up flex flex-col justify-center h-full">
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold text-zinc-900">
+                  <h2 className="text-xl font-semibold text-slate-800">
                     Explique sua necessidade
                   </h2>
-                  <p className="text-zinc-500">
+                  <p className="text-slate-600">
                     Sua mensagem será vista por vizinhos dispostos a ajudar.
                   </p>
                 </div>
-                <div className="space-y-2 flex-1 flex flex-col">
+                <div className="space-y-2 flex flex-col max-w-3xl mx-auto w-full">
                   <textarea
                     placeholder="Ex: Estou passando por um momento difícil e precisaria de uma cesta básica para este mês..."
-                    className="flex-1 min-h-[200px] resize-none border border-zinc-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 rounded-2xl p-4 text-lg transition-all duration-300 hover:shadow-md focus:shadow-lg"
+                    className="min-h-[200px] resize-none border-2 border-slate-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 rounded-2xl p-4 text-lg transition-all duration-300 hover:shadow-md focus:shadow-lg bg-slate-50/30"
                     maxLength={500}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                   <div className="flex justify-end">
                     <span className={`text-xs font-medium transition-colors duration-300 ${
-                      formData.description.length > 450 ? 'text-orange-500' : 'text-zinc-400'
+                      formData.description.length > 450 ? 'text-orange-600' : 'text-slate-500'
                     }`}>
                       {formData.description.length}/500 caracteres
                     </span>
                   </div>
                   
-                  <div className="bg-orange-100 border border-orange-200 rounded-xl p-4 flex items-start gap-3 mt-4">
-                    <svg className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 flex items-start gap-3 mt-4">
+                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                       <path d="M11 7h2v6h-2zm0 8h2v2h-2z"/>
                     </svg>
-                    <p className="text-orange-800 text-sm font-medium">
+                    <p className="text-blue-800 text-sm font-medium">
                       Seja claro sobre o que você precisa para que os vizinhos possam agir rápido.
                     </p>
                   </div>
@@ -467,10 +503,10 @@ const PrecisoDeAjuda = () => {
             {((step === 3 && !getCategoryHasDetails(formData.category)) || (step === 4 && getCategoryHasDetails(formData.category) && formData.category !== 'clothes') || (step === 5 && formData.category === 'clothes')) && (
               <div className="space-y-6 animate-fade-in-up">
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold text-zinc-900">
+                  <h2 className="text-xl font-semibold text-slate-800">
                     Qual a urgência do pedido?
                   </h2>
-                  <p className="text-zinc-500">
+                  <p className="text-slate-600">
                     Isso ajuda a comunidade a priorizar os atendimentos.
                   </p>
                 </div>
@@ -482,7 +518,7 @@ const PrecisoDeAjuda = () => {
                       className={`w-full p-6 rounded-2xl border-2 flex items-center justify-between transition-all duration-300 hover:shadow-lg transform hover:scale-102 animate-slide-in ${
                         formData.urgency === level.id
                           ? 'border-orange-500 bg-orange-50 shadow-lg scale-102'
-                          : 'border-zinc-100 hover:border-zinc-200'
+                          : 'border-slate-200 hover:border-orange-300 bg-white hover:bg-slate-50'
                       }`}
                       style={{ animationDelay: `${index * 150}ms` }}
                     >
@@ -490,7 +526,7 @@ const PrecisoDeAjuda = () => {
                         <div className={`w-4 h-4 rounded-full transition-all duration-300 ${level.dot} ${
                           formData.urgency === level.id ? 'scale-125 shadow-lg' : ''
                         }`} />
-                        <span className="text-lg font-medium text-zinc-700">{level.label}</span>
+                        <span className="text-lg font-medium text-slate-800">{level.label}</span>
                       </div>
                       {formData.urgency === level.id && (
                         <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center animate-bounce-in">
@@ -612,22 +648,22 @@ const PrecisoDeAjuda = () => {
             )}
 
             {((step === 6 && !getCategoryHasDetails(formData.category)) || (step === 7 && getCategoryHasDetails(formData.category) && formData.category !== 'clothes') || (step === 8 && formData.category === 'clothes')) && (
-              <div className="space-y-6 overflow-y-auto max-h-[400px] pr-2 animate-fade-in-up">
+              <div className="space-y-4 animate-fade-in-up">
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold text-zinc-900">
+                  <h2 className="text-xl font-semibold text-orange-900">
                     Revisão do seu pedido
                   </h2>
-                  <p className="text-zinc-500">
+                  <p className="text-orange-700">
                     Verifique se está tudo correto antes de publicar.
                   </p>
                 </div>
                 
-                <div className="space-y-6 bg-gradient-to-br from-zinc-50 to-orange-50/30 p-6 rounded-3xl border border-zinc-100 shadow-inner animate-slide-in">
-                  <div className="grid gap-6">
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-2xl border-2 border-orange-200 shadow-inner animate-slide-in">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     <div className="animate-slide-in" style={{ animationDelay: '100ms' }}>
-                      <label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">Categoria</label>
-                      <p className="text-zinc-900 font-medium capitalize mt-1 text-lg">
-                        <span className="inline-flex items-center gap-2">
+                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Categoria</label>
+                      <p className="text-orange-900 font-medium mt-2 text-lg">
+                        <span className="inline-flex items-center gap-3">
                           {categories.find(c => c.id === formData.category)?.icon}
                           {categories.find(c => c.id === formData.category)?.label}
                         </span>
@@ -635,115 +671,98 @@ const PrecisoDeAjuda = () => {
                     </div>
                     
                     {getCategoryHasDetails(formData.category) && (
-                      <>
-                        <div className="animate-slide-in" style={{ animationDelay: '150ms' }}>
-                          <label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">
-                            {formData.category === 'clothes' && 'Tipos de Roupas'}
-                            {formData.category === 'food' && 'Tipos de Alimentos'}
-                            {formData.category === 'hygiene' && 'Produtos de Higiene'}
-                            {formData.category === 'meds' && 'Tipo de Ajuda Médica'}
-                            {formData.category === 'bills' && 'Tipos de Contas'}
-                            {formData.category === 'work' && 'Ajuda Profissional'}
-                          </label>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {formData.categoryDetails.types.map((t, index) => {
-                              const typesList = formData.category === 'clothes' ? clothingTypes :
-                                               formData.category === 'food' ? foodTypes :
-                                               formData.category === 'hygiene' ? hygieneTypes :
-                                               formData.category === 'meds' ? medicineTypes :
-                                               formData.category === 'bills' ? billTypes :
-                                               formData.category === 'work' ? workTypes : [];
-                              const typeObj = typesList.find(ct => ct.id === t);
-                              return (
-                                <span key={t} className="text-zinc-600 text-sm bg-white border border-zinc-200 px-3 py-1 rounded-lg shadow-sm animate-bounce-in inline-flex items-center gap-2" style={{ animationDelay: `${200 + index * 100}ms` }}>
-                                  {typeObj?.icon}
-                                  {typeObj?.label}
-                                </span>
-                              );
-                            })}
-                          </div>
+                      <div className="animate-slide-in" style={{ animationDelay: '150ms' }}>
+                        <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">
+                          {formData.category === 'clothes' && 'Tipos de Roupas'}
+                          {formData.category === 'food' && 'Tipos de Alimentos'}
+                          {formData.category === 'hygiene' && 'Produtos de Higiene'}
+                          {formData.category === 'meds' && 'Tipo de Ajuda Médica'}
+                          {formData.category === 'bills' && 'Tipos de Contas'}
+                          {formData.category === 'work' && 'Ajuda Profissional'}
+                        </label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {formData.categoryDetails.types.map((t, index) => {
+                            const typesList = formData.category === 'clothes' ? clothingTypes :
+                                             formData.category === 'food' ? foodTypes :
+                                             formData.category === 'hygiene' ? hygieneTypes :
+                                             formData.category === 'meds' ? medicineTypes :
+                                             formData.category === 'bills' ? billTypes :
+                                             formData.category === 'work' ? workTypes : [];
+                            const typeObj = typesList.find(ct => ct.id === t);
+                            return (
+                              <span key={t} className="text-orange-700 text-sm bg-white border border-orange-200 px-3 py-2 rounded-lg shadow-sm animate-bounce-in inline-flex items-center gap-2" style={{ animationDelay: `${200 + index * 50}ms` }}>
+                                <span className="w-4 h-4">{typeObj?.icon}</span>
+                                {typeObj?.label}
+                              </span>
+                            );
+                          })}
                         </div>
-                        
-                        {formData.category === 'clothes' && (
-                          <div className="animate-slide-in" style={{ animationDelay: '200ms' }}>
-                            <label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">Tamanhos</label>
-                            <div className="flex flex-wrap gap-2 mt-1">
-                              {formData.categoryDetails.sizes.map((s, index) => (
-                                <span key={s} className="text-zinc-600 text-sm bg-white border border-zinc-200 px-3 py-1 rounded-lg shadow-sm animate-bounce-in" style={{ animationDelay: `${250 + index * 100}ms` }}>
-                                  {clothingSizes.find(cs => cs.id === s)?.label}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
+                      </div>
                     )}
                     
-                    <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '300ms' : getCategoryHasDetails(formData.category) ? '250ms' : '200ms'}` }}>
-                      <label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">Descrição</label>
-                      <p className="text-zinc-700 mt-1 leading-relaxed bg-white p-4 rounded-xl border border-zinc-100 whitespace-pre-wrap break-words">
+                    {formData.category === 'clothes' && (
+                      <div className="animate-slide-in" style={{ animationDelay: '200ms' }}>
+                        <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Tamanhos</label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {formData.categoryDetails.sizes.map((s, index) => (
+                            <span key={s} className="text-orange-700 text-sm bg-white border border-orange-200 px-3 py-2 rounded-lg shadow-sm animate-bounce-in" style={{ animationDelay: `${250 + index * 50}ms` }}>
+                              {clothingSizes.find(cs => cs.id === s)?.label}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="animate-slide-in lg:col-span-2 xl:col-span-3" style={{ animationDelay: `${formData.category === 'clothes' ? '250ms' : getCategoryHasDetails(formData.category) ? '200ms' : '150ms'}` }}>
+                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Descrição</label>
+                      <p className="text-orange-800 mt-2 leading-relaxed bg-white p-4 rounded-lg border border-orange-200 text-base">
                         {formData.description}
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '400ms' : getCategoryHasDetails(formData.category) ? '350ms' : '500ms'}` }}>
-                        <label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">Urgência</label>
-                        <div className="mt-1">
-                          <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm ${
-                            urgencyLevels.find(u => u.id === formData.urgency)?.color
-                          }`}>
-                            {urgencyLevels.find(u => u.id === formData.urgency)?.label}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '500ms' : getCategoryHasDetails(formData.category) ? '450ms' : '600ms'}` }}>
-                        <label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">Visibilidade</label>
-                        <div className="mt-1">
-                          <span className="inline-flex items-center px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wide bg-blue-100 text-blue-700 border-blue-200 shadow-sm">
-                            {visibilityOptions.find(v => v.id === formData.visibility)?.label}
-                          </span>
-                        </div>
+                    <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '300ms' : getCategoryHasDetails(formData.category) ? '250ms' : '200ms'}` }}>
+                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Urgência</label>
+                      <div className="mt-2">
+                        <span className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-sm ${
+                          urgencyLevels.find(u => u.id === formData.urgency)?.color
+                        }`}>
+                          {urgencyLevels.find(u => u.id === formData.urgency)?.label}
+                        </span>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '600ms' : getCategoryHasDetails(formData.category) ? '550ms' : '700ms'}` }}>
-                        <label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">Privacidade</label>
-                        <div className="mt-1">
-                          <span className={`inline-flex items-center px-3 py-2 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm ${
-                            formData.anonymous ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-green-100 text-green-700 border-green-200'
-                          }`}>
-                            {formData.anonymous ? 'Anônimo' : 'Público'}
-                          </span>
-                        </div>
+                    <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '350ms' : getCategoryHasDetails(formData.category) ? '300ms' : '250ms'}` }}>
+                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Visibilidade</label>
+                      <div className="mt-2">
+                        <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-bold uppercase tracking-wide bg-blue-100 text-blue-700 border-blue-200 shadow-sm">
+                          {visibilityOptions.find(v => v.id === formData.visibility)?.label}
+                        </span>
                       </div>
-                      
-                      <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '700ms' : getCategoryHasDetails(formData.category) ? '650ms' : '800ms'}` }}>
-                        <label className="text-zinc-400 text-xs uppercase tracking-wider font-bold">Contatos</label>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {formData.contacts.map((c, index) => (
-                            <span key={c} className="text-zinc-600 text-sm bg-white border border-zinc-200 px-3 py-1 rounded-lg shadow-sm animate-bounce-in inline-flex items-center gap-2" style={{ animationDelay: `${500 + index * 100}ms` }}>
-                              {contactMethods.find(m => m.id === c)?.icon}
-                              {contactMethods.find(m => m.id === c)?.label}
-                            </span>
-                          ))}
-                        </div>
+                    </div>
+                    
+                    <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '400ms' : getCategoryHasDetails(formData.category) ? '350ms' : '300ms'}` }}>
+                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Contatos</label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {formData.contacts.map((c, index) => (
+                          <span key={c} className="text-orange-700 text-sm bg-white border border-orange-200 px-3 py-2 rounded-lg shadow-sm animate-bounce-in inline-flex items-center gap-2" style={{ animationDelay: `${400 + index * 50}ms` }}>
+                            <span className="w-4 h-4">{contactMethods.find(m => m.id === c)?.icon}</span>
+                            {contactMethods.find(m => m.id === c)?.label}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-orange-50 p-6 rounded-2xl border-3 border-orange-400 shadow-lg animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '800ms' : getCategoryHasDetails(formData.category) ? '750ms' : '600ms'}` }}>
+                <div className="bg-orange-100 p-5 rounded-2xl border-2 border-orange-300 shadow-lg animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '450ms' : getCategoryHasDetails(formData.category) ? '400ms' : '350ms'}` }}>
                   <div 
                     onClick={() => setFormData({ ...formData, anonymous: !formData.anonymous })}
-                    className="flex items-center gap-4 cursor-pointer transition-all duration-300 hover:bg-white p-3 rounded-xl"
+                    className="flex items-center gap-4 cursor-pointer transition-all duration-300 hover:bg-white p-3 rounded-lg"
                   >
-                    <div className={`w-7 h-7 border-3 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm ${
+                    <div className={`w-7 h-7 border-2 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm ${
                       formData.anonymous
                         ? 'bg-orange-500 border-orange-500 scale-110 shadow-orange-200'
-                        : 'bg-white border-zinc-400 hover:border-orange-400 hover:shadow-md'
+                        : 'bg-white border-orange-400 hover:border-orange-500 hover:shadow-md'
                     }`}>
                       {formData.anonymous && (
                         <svg className="w-5 h-5 text-white animate-bounce-in" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
@@ -753,10 +772,10 @@ const PrecisoDeAjuda = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <img src="https://cdn-icons-png.flaticon.com/512/1828/1828490.png" alt="anônimo" width="24" height="24" />
-                      <span className="text-lg font-semibold text-zinc-800">Manter publicação anônima</span>
+                      <span className="text-lg font-semibold text-orange-900">Manter publicação anônima</span>
                     </div>
                   </div>
-                  <p className="text-sm text-zinc-600 ml-12 mt-2 font-medium">Seu nome não aparecerá publicamente na solicitação</p>
+                  <p className="text-base text-orange-700 ml-14 mt-2 font-medium">Seu nome não aparecerá publicamente na solicitação</p>
                 </div>
               </div>
             )}
@@ -764,11 +783,11 @@ const PrecisoDeAjuda = () => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-gradient-to-r from-zinc-50/50 to-orange-50/30 border-t border-zinc-100 flex items-center justify-between gap-4">
+        <div className="p-6 bg-gradient-to-r from-slate-50 to-blue-50 border-t border-slate-200 flex items-center justify-between gap-4">
           <button
             onClick={prevStep}
             disabled={step === 1}
-            className="rounded-xl px-6 py-3 h-auto text-zinc-500 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all duration-300 flex items-center gap-2 hover:scale-105"
+            className="rounded-xl px-6 py-3 h-auto text-slate-600 hover:bg-white hover:shadow-md disabled:opacity-30 transition-all duration-300 flex items-center gap-2 hover:scale-105 border border-slate-200"
           >
             <svg className="w-5 h-5 transition-transform duration-300 hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
