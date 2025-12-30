@@ -19,6 +19,8 @@ import PerfilFamilia from './pages/PerfilFamilia';
 import AtualizarStatus from './pages/AtualizarStatus';
 import PainelSocial from './pages/PainelSocial';
 import Perfil from './pages/Perfil';
+import Conversas from './pages/Conversas';
+import Chat from './pages/Chat';
 import './styles/index.css';
 import './styles/globals.css';
 import './styles/colors.css';
@@ -45,6 +47,8 @@ function App() {
         <Route path="/atualizar-status/:id" element={<Layout><AtualizarStatus /></Layout>} />
         <Route path="/painel-social" element={<Layout><PainelSocial /></Layout>} />
         <Route path="/perfil" element={<Layout><Perfil /></Layout>} />
+        <Route path="/conversas" element={<Layout><Conversas /></Layout>} />
+        <Route path="/chat/:conversaId" element={<Layout><Chat /></Layout>} />
       </Routes>
     </Router>
   );

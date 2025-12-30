@@ -143,6 +143,48 @@ const DetalhesNecessidade = () => {
     window.open(whatsappUrl, '_blank');
   };
 
+  const handleIniciarConversa = () => {
+    const user = JSON.parse(localStorage.getItem('solidar-user') || '{}');
+    
+    if (!user.id) {
+      // Se não estiver logado, abrir modal de login
+      window.dispatchEvent(new CustomEvent('openLogin'));
+      return;
+    }
+
+    // Criar nova conversa
+    const novaConversa = {
+      id: `conv_${Date.now()}`,
+      tipoAjuda: necessidade.tipo,
+      bairro: necessidade.bairro,
+      status: 'ativa',
+      doadorId: user.id,
+      participantes: [
+        { id: user.id, nome: user.name || user.nomeCompleto || 'Você', tipo: 'doador' },
+        { id: `user_${necessidade.id}`, nome: necessidade.usuario, tipo: 'recebedor' }
+      ],
+      ultimaMensagem: 'Conversa iniciada',
+      ultimaAtividade: new Date().toISOString(),
+      mensagens: [
+        {
+          id: '1',
+          texto: `Olá! Vi seu pedido sobre "${necessidade.titulo}" e gostaria de ajudar. Como posso contribuir?`,
+          remetente: user.id,
+          timestamp: new Date().toISOString(),
+          lida: false
+        }
+      ]
+    };
+
+    // Salvar conversa
+    const conversas = JSON.parse(localStorage.getItem('solidar-conversas') || '[]');
+    conversas.push(novaConversa);
+    localStorage.setItem('solidar-conversas', JSON.stringify(conversas));
+
+    // Navegar para o chat
+    navigate(`/chat/${novaConversa.id}`);
+  };
+
   const handleShare = (platform) => {
     const url = window.location.href;
     const text = `Ajude esta família: ${necessidade.titulo} - SolidarBairro`;
@@ -296,9 +338,14 @@ const DetalhesNecessidade = () => {
                 </div>
                 
                 <div className="contact-section">
-                  <button className="contact-btn" onClick={handleContato}>
+                  <button className="contact-btn primary" onClick={handleIniciarConversa}>
+                    <i className="fi fi-rr-comment"></i>
+                    <span>Iniciar conversa</span>
+                  </button>
+                  
+                  <button className="contact-btn secondary" onClick={handleContato}>
                     <i className="fi fi-brands-whatsapp"></i>
-                    <span>Conversar no WhatsApp</span>
+                    <span>WhatsApp externo</span>
                   </button>
                   
                   <div className="safety-notice">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ChatDemo from '../components/ChatDemo';
 import '../styles/pages/Home.css';
 const Home = () => {
   const navigate = useNavigate();
@@ -277,6 +278,9 @@ const Home = () => {
           <p>© 2025 SolidarBairro. Criando impacto social perto de casa.</p>
         </div>
       </footer>
+
+      {/* Demo do Chat - apenas para desenvolvimento */}
+      <ChatDemo />
 
       {/* Modal de Login */}
       {isAuthOpen && (

@@ -9,7 +9,6 @@
   backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid rgba(226, 232, 240, 0.3);
   box-shadow: 0 1px 40px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  height: 88px;
   overflow: visible !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
