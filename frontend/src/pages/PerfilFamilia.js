@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import Header from '../components/layout/Header';
 import { useNavigate, useParams } from 'react-router-dom';
-import '../styles/pages/PerfilFamilia.css';
-
 const PerfilFamilia = () => {
   const navigate = useNavigate();
   const { id } = useParams();

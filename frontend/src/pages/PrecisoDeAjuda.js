@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/pages/PrecisoDeAjudaModern.css';
-
 const categories = [
   { id: 'food', label: 'Alimentos', icon: <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="alimentos" width="32" height="32" />, desc: 'Comida, cesta básica' },
   { id: 'clothes', label: 'Roupas', icon: <img src="https://cdn-icons-png.flaticon.com/512/892/892458.png" alt="roupas" width="32" height="32" />, desc: 'Roupas, calçados' },
@@ -754,28 +753,27 @@ const PrecisoDeAjuda = () => {
                   </div>
                 </div>
                 
-                <div className="bg-orange-100 p-5 rounded-2xl border-2 border-orange-300 shadow-lg animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '450ms' : getCategoryHasDetails(formData.category) ? '400ms' : '350ms'}` }}>
-                  <div 
-                    onClick={() => setFormData({ ...formData, anonymous: !formData.anonymous })}
-                    className="flex items-center gap-4 cursor-pointer transition-all duration-300 hover:bg-white p-3 rounded-lg"
-                  >
-                    <div className={`w-7 h-7 border-2 rounded-lg flex items-center justify-center transition-all duration-300 shadow-sm ${
+                <div 
+                  className="bg-orange-100 p-5 rounded-2xl border-2 border-orange-300 shadow-lg animate-slide-in cursor-pointer" 
+                  style={{ animationDelay: `${formData.category === 'clothes' ? '450ms' : getCategoryHasDetails(formData.category) ? '400ms' : '350ms'}` }}
+                  onClick={() => setFormData({ ...formData, anonymous: !formData.anonymous })}
+                >
+                  <div className="flex items-center gap-3 transition-all duration-300 hover:bg-white p-3 rounded-lg">
+                    <div className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all duration-300 shadow-sm flex-shrink-0 ${
                       formData.anonymous
                         ? 'bg-orange-500 border-orange-500 scale-110 shadow-orange-200'
                         : 'bg-white border-orange-400 hover:border-orange-500 hover:shadow-md'
                     }`}>
                       {formData.anonymous && (
-                        <svg className="w-5 h-5 text-white animate-bounce-in" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                        <svg className="w-3 h-3 text-white animate-bounce-in" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={4}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <img src="https://cdn-icons-png.flaticon.com/512/1828/1828490.png" alt="anônimo" width="24" height="24" />
-                      <span className="text-lg font-semibold text-orange-900">Manter publicação anônima</span>
-                    </div>
+                    <img src="https://cdn-icons-png.flaticon.com/512/1828/1828490.png" alt="anônimo" width="20" height="20" className="flex-shrink-0" />
+                    <span className="text-lg font-semibold text-orange-900">Manter publicação anônima</span>
                   </div>
-                  <p className="text-base text-orange-700 ml-14 mt-2 font-medium">Seu nome não aparecerá publicamente na solicitação</p>
+                  <p className="text-sm text-orange-700 mt-3 px-3 font-medium cursor-pointer">Seu nome não aparecerá publicamente na solicitação</p>
                 </div>
               </div>
             )}

@@ -1,8 +1,6 @@
 import React from 'react';
 import Header from '../components/layout/Header';
 import { useNavigate } from 'react-router-dom';
-import '../styles/pages/PedidoPublicado.css';
-
 const PedidoPublicado = () => {
   const navigate = useNavigate();
 

@@ -1,6 +1,4 @@
 import React from 'react';
-import '../styles/components/UserImpact.css';
-
 const UserImpact = () => {
   return (
     <section className="user-impact">

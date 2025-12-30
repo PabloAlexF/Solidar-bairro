@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import '../styles/pages/Landing.css';
-
 const Landing = () => {
   const navigate = useNavigate();
 

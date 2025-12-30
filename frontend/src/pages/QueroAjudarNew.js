@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
-import '../styles/pages/QueroAjudar.css';
-
 const QueroAjudar = () => {
   const navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState('Todos');

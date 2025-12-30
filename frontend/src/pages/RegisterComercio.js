@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ApiService from '../services/apiService';
 import Header from '../components/layout/Header';
-import '../styles/pages/CadastroFamilia.css';
-
 const RegisterComercio = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Header.css';
-import '../../styles/dropdown-clean.css';
+import '../../styles/responsive/header-responsive.css';
+
 
 const Header = ({ showLoginButton = true }) => {
   const navigate = useNavigate();

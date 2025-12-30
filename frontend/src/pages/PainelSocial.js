@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import MapaInterativo from '../components/MapaInterativo';
-import '../styles/pages/PainelSocial.css';
-
 const PainelSocial = () => {
   const navigate = useNavigate();
   const [familias, setFamilias] = useState([]);

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import '../styles/pages/CadastroFamilia.css';
-
 const CadastroFamilia = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);

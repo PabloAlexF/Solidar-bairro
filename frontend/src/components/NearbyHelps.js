@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import '../styles/components/NearbyHelps.css';
-
 const NearbyHelps = () => {
   const [activeFilter, setActiveFilter] = useState('Todos');
   

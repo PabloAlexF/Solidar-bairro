@@ -1,8 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../components/layout/Header';
-import '../styles/pages/DetalhesNecessidade.css';
-
 const DetalhesNecessidade = () => {
   const navigate = useNavigate();
   const { id } = useParams();

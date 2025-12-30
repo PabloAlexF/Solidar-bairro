@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
-import '../styles/pages/Login.css';
-
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({

@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import '../styles/components/BottomNav.css';
-
 const BottomNav = () => {
   const [activeTab, setActiveTab] = useState('inicio');
   

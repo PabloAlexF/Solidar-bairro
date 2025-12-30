@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/pages/QueroAjudar.css';
-import '../styles/section-titles.css';
-import '../styles/section-override.css';
-import '../styles/emprego-form.css';
+
 
 const QueroAjudar = () => {
   const navigate = useNavigate();

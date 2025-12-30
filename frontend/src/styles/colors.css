@@ -1,0 +1,55 @@
+/* CSS Variables */
+:root {
+  /* Colors */
+  --primary: #f97316;
+  --primary-dark: #ea580c;
+  --accent: #ff7a33;
+  --accent-2: #fbbf24;
+  --accent-3: #7c3aed;
+  --accent-1: #8b5cf6;
+  --ls-blue: #0f7490;
+  --ls-green: #16a34a;
+  --ls-accent-1: #f97316;
+  --ls-accent-2: #fbbf24;
+  --ls-accent-3: #7c3aed;
+  --home-accent-gradient: linear-gradient(135deg, #f97316, #16a34a);
+  
+  /* Text Colors */
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --text-muted-strong: #64748b;
+  
+  /* Background Colors */
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --border: #e2e8f0;
+  
+  /* Status Colors */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  /* Transitions */
+  --transition: all 0.3s ease;
+}

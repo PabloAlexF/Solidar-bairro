@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import '../styles/pages/Register.css';
 
+
 const Register = () => {
   const [userType, setUserType] = useState('');
   const navigate = useNavigate();

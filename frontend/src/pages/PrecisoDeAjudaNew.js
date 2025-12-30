@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/pages/PrecisoDeAjudaModern.css';
-
 const categories = [
   { id: 'food', label: 'Alimentos', icon: '🍽️', desc: 'Comida, cesta básica' },
   { id: 'clothes', label: 'Roupas', icon: '👕', desc: 'Roupas, calçados' },

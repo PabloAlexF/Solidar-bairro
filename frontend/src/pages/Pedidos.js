@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/pages/Pedidos.css';
-
 // Função para obter cores de categoria
 const getCategoryColor = (category) => {
   const colors = {
