@@ -1,4 +1,5 @@
 @import './globals.css';
+@import './modal-fixes.css';
 
 body {
   margin: 0;

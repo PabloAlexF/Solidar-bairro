@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/pages/PrecisoDeAjudaModern.css';
 import '../styles/pages/PrecisoDeAjudaDesktop.css';
+import '../styles/pages/ConfirmationScreen.css';
+import '../styles/pages/PublishedSuccess.css';
 const categories = [
   { id: 'food', label: 'Alimentos', icon: <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="alimentos" width="32" height="32" />, desc: 'Comida, cesta básica' },
   { id: 'clothes', label: 'Roupas', icon: <img src="https://cdn-icons-png.flaticon.com/512/892/892458.png" alt="roupas" width="32" height="32" />, desc: 'Roupas, calçados' },
@@ -217,34 +219,97 @@ const PrecisoDeAjuda = () => {
 
   if (isPublished) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-zinc-50 to-orange-50/30 flex flex-col items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl shadow-zinc-200/50 p-8 text-center animate-fade-in-up">
-          <div className="success-animation mb-6">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-in shadow-lg">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-green-600 animate-draw-check" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          </div>
+      <main className="published-success-main">
+        <div className="published-success-card">
+          {/* Barra superior colorida */}
+          <div style={{ height: '8px', backgroundColor: '#10b981' }} />
           
-          <h2 className="text-3xl font-bold text-zinc-900 mb-4 animate-slide-in" style={{ animationDelay: '200ms' }}>Seu pedido foi publicado!</h2>
-          <p className="text-zinc-500 mb-8 text-lg animate-slide-in" style={{ animationDelay: '300ms' }}>
-            As pessoas do seu bairro agora podem ver sua necessidade. Fique atento às notificações ou ao seu WhatsApp.
-          </p>
+          <div className="published-success-content">
+            {/* Header Section */}
+            <div className="published-success-header">
+              <div className="published-success-icon-container">
+                <div className="published-success-icon-wrapper">
+                  <div className="published-success-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="published-success-emoji">
+                    🎉
+                  </div>
+                </div>
+              </div>
+              <h1 className="published-success-title">
+                Seu pedido foi publicado!
+              </h1>
+              <p className="published-success-subtitle">
+                Pronto! Sua solicitação já está visível para vizinhos próximos.
+              </p>
+            </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 animate-slide-in" style={{ animationDelay: '400ms' }}>
-            <button 
-              className="flex-1 py-4 px-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-xl shadow-lg"
-              onClick={() => navigate('/quero-ajudar')}
-            >
-              Ver ajudas disponíveis perto de mim
-            </button>
-            <button 
-              className="flex-1 py-4 px-6 border-2 border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 text-zinc-700 rounded-2xl font-medium transition-all duration-300 hover:scale-105 hover:shadow-md"
-              onClick={() => navigate('/')}
-            >
-              Voltar para o início
-            </button>
+            {/* Info Card */}
+            <div className="published-success-info-card">
+              <div className="published-success-info-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="published-success-info-text">
+                Você receberá notificações quando alguém quiser ajudar
+              </p>
+            </div>
+
+            {/* Call to Action Section */}
+            <div className="published-success-cta">
+              <div className="published-success-cta-header">
+                <div className="published-success-cta-icon">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <span className="published-success-cta-label">
+                  Enquanto isso
+                </span>
+              </div>
+              
+              <div>
+                <p className="published-success-cta-text">
+                  Que tal retribuir ajudando outras pessoas da sua comunidade? 🤝
+                </p>
+                
+                <button 
+                  onClick={() => navigate('/quero-ajudar')}
+                  className="published-success-button"
+                >
+                  <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                  Descobrir como posso ajudar
+                </button>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div>
+              <div className="published-success-footer">
+                <button 
+                  onClick={() => navigate('/')}
+                  className="published-success-back-button"
+                >
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Voltar ao início
+                </button>
+              </div>
+
+              <div className="published-success-security">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>Suas informações estão 100% seguras. Apenas os contatos escolhidos serão compartilhados.</span>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -645,40 +710,56 @@ const PrecisoDeAjuda = () => {
             )}
 
             {((step === 6 && !getCategoryHasDetails(formData.category)) || (step === 7 && getCategoryHasDetails(formData.category) && formData.category !== 'clothes') || (step === 8 && formData.category === 'clothes')) && (
-              <div className="space-y-4 animate-fade-in-up">
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold text-orange-900">
-                    Revisão do seu pedido
-                  </h2>
-                  <p className="text-orange-700">
-                    Verifique se está tudo correto antes de publicar.
+              <div className="confirmation-screen max-w-5xl mx-auto space-y-6">
+                {/* 1. RESUMO PRINCIPAL - Hero Section */}
+                <div className="hero-summary bg-gradient-to-br from-blue-50 via-white to-green-50 border-2 border-blue-200 rounded-3xl p-8 text-center relative overflow-hidden shadow-lg">
+                  <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-green-500"></div>
+                  
+                  <h1 className="text-3xl font-bold text-slate-800 mb-3">Tudo pronto para publicar!</h1>
+                  <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                    Sua solicitação será vista por <strong>vizinhos próximos</strong> que podem te ajudar. 
+                    Revise os detalhes abaixo antes de confirmar.
                   </p>
+                  
+                  {/* Urgência em Destaque */}
+                  <div className="urgency-highlight mt-6 inline-flex items-center gap-3 px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all duration-300">
+                    <div className={`urgency-pulse w-4 h-4 rounded-full animate-ping ${
+                      formData.urgency === 'alta' ? 'bg-red-500' :
+                      formData.urgency === 'media' ? 'bg-orange-500' : 'bg-green-500'
+                    }`}></div>
+                    <div className={`urgency-dot w-4 h-4 rounded-full ${
+                      formData.urgency === 'alta' ? 'bg-red-500' :
+                      formData.urgency === 'media' ? 'bg-orange-500' : 'bg-green-500'
+                    }`}></div>
+                    <span className={`font-bold text-lg ${
+                      formData.urgency === 'alta' ? 'text-red-700' :
+                      formData.urgency === 'media' ? 'text-orange-700' : 'text-green-700'
+                    }`}>
+                      {urgencyLevels.find(u => u.id === formData.urgency)?.label}
+                    </span>
+                  </div>
                 </div>
-                
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-6 rounded-2xl border-2 border-orange-200 shadow-inner animate-slide-in">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <div className="animate-slide-in" style={{ animationDelay: '100ms' }}>
-                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Categoria</label>
-                      <p className="text-orange-900 font-medium mt-2 text-lg">
-                        <span className="inline-flex items-center gap-3">
-                          {categories.find(c => c.id === formData.category)?.icon}
-                          {categories.find(c => c.id === formData.category)?.label}
-                        </span>
-                      </p>
+
+                {/* 2. CARDS PRINCIPAIS - Categoria e Detalhes */}
+                <div className="main-cards grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Card da Categoria */}
+                  <div className="category-card bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-orange-600"></div>
+                    
+                    {/* Header com ícone e título */}
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="category-icon text-4xl transform hover:scale-110 transition-transform duration-300">
+                        {categories.find(c => c.id === formData.category)?.icon}
+                      </div>
+                      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">O que você precisa</h3>
                     </div>
                     
-                    {getCategoryHasDetails(formData.category) && (
-                      <div className="animate-slide-in" style={{ animationDelay: '150ms' }}>
-                        <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">
-                          {formData.category === 'clothes' && 'Tipos de Roupas'}
-                          {formData.category === 'food' && 'Tipos de Alimentos'}
-                          {formData.category === 'hygiene' && 'Produtos de Higiene'}
-                          {formData.category === 'meds' && 'Tipo de Ajuda Médica'}
-                          {formData.category === 'bills' && 'Tipos de Contas'}
-                          {formData.category === 'work' && 'Ajuda Profissional'}
-                        </label>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {formData.categoryDetails.types.map((t, index) => {
+                    {/* Tipos Específicos */}
+                    {getCategoryHasDetails(formData.category) && formData.categoryDetails.types.length > 0 && (
+                      <div className="types-section mt-12">
+                        <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tipos específicos</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {formData.categoryDetails.types.map(t => {
                             const typesList = formData.category === 'clothes' ? clothingTypes :
                                              formData.category === 'food' ? foodTypes :
                                              formData.category === 'hygiene' ? hygieneTypes :
@@ -687,8 +768,8 @@ const PrecisoDeAjuda = () => {
                                              formData.category === 'work' ? workTypes : [];
                             const typeObj = typesList.find(ct => ct.id === t);
                             return (
-                              <span key={t} className="text-orange-700 text-sm bg-white border border-orange-200 px-3 py-2 rounded-lg shadow-sm animate-bounce-in inline-flex items-center gap-2" style={{ animationDelay: `${200 + index * 50}ms` }}>
-                                <span className="w-4 h-4">{typeObj?.icon}</span>
+                              <span key={t} className="type-tag bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1 shadow-sm">
+                                <span className="w-3 h-3">{typeObj?.icon}</span>
                                 {typeObj?.label}
                               </span>
                             );
@@ -697,81 +778,196 @@ const PrecisoDeAjuda = () => {
                       </div>
                     )}
                     
-                    {formData.category === 'clothes' && (
-                      <div className="animate-slide-in" style={{ animationDelay: '200ms' }}>
-                        <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Tamanhos</label>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {formData.categoryDetails.sizes.map((s, index) => (
-                            <span key={s} className="text-orange-700 text-sm bg-white border border-orange-200 px-3 py-2 rounded-lg shadow-sm animate-bounce-in" style={{ animationDelay: `${250 + index * 50}ms` }}>
+                    {/* Tamanhos (para roupas) */}
+                    {formData.category === 'clothes' && formData.categoryDetails.sizes.length > 0 && (
+                      <div className="sizes-section mt-3">
+                        <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Tamanhos</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {formData.categoryDetails.sizes.map(s => (
+                            <span key={s} className="size-tag bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium">
                               {clothingSizes.find(cs => cs.id === s)?.label}
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
+                  </div>
+                  
+                  {/* Card da Mensagem */}
+                  <div className="message-card bg-white border-2 border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
                     
-                    <div className="animate-slide-in lg:col-span-2 xl:col-span-3" style={{ animationDelay: `${formData.category === 'clothes' ? '250ms' : getCategoryHasDetails(formData.category) ? '200ms' : '150ms'}` }}>
-                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Descrição</label>
-                      <p className="text-orange-800 mt-2 leading-relaxed bg-white p-4 rounded-lg border border-orange-200 text-base">
-                        {formData.description}
-                      </p>
+                    {/* Header com ícone e título */}
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="message-icon w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Sua mensagem</h3>
                     </div>
+                    
+                    {/* Conteúdo da mensagem */}
+                    <div className="message-content bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-dashed border-slate-300 rounded-xl p-4 relative min-h-[120px] max-h-[300px] lg:min-h-[180px] lg:max-h-[400px] overflow-y-auto">
+                      <div className="quote-mark absolute -top-2 left-3 bg-white px-1 text-2xl text-purple-500 font-bold">&ldquo;</div>
+                      <p className="text-slate-700 leading-relaxed italic break-words">{formData.description}</p>
+                    </div>
+                  </div>
+                </div>
 
-                    <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '300ms' : getCategoryHasDetails(formData.category) ? '250ms' : '200ms'}` }}>
-                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Urgência</label>
-                      <div className="mt-2">
-                        <span className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-sm ${
-                          urgencyLevels.find(u => u.id === formData.urgency)?.color
-                        }`}>
-                          {urgencyLevels.find(u => u.id === formData.urgency)?.label}
-                        </span>
+                {/* 3. CONTATO E ALCANCE - Seção Crítica */}
+                <div className="contact-reach-section bg-white border-2 border-blue-200 rounded-2xl p-6 shadow-md relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                  
+                  {/* Header simplificado */}
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="header-icon w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-800">Como as pessoas vão te encontrar</h2>
+                  </div>
+                  
+                  <div className="contact-reach-grid grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Formas de Contato */}
+                    <div className="contact-methods">
+                      <h3 className="text-sm font-bold text-blue-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        Formas de contato
+                      </h3>
+                      <div className="contact-list space-y-2">
+                        {formData.contacts.map(c => {
+                          const method = contactMethods.find(m => m.id === c);
+                          return (
+                            <div key={c} className="contact-item flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                              <span className="contact-icon w-6 h-6 flex-shrink-0">{method?.icon}</span>
+                              <div>
+                                <span className="font-semibold text-blue-800">{method?.label}</span>
+                                <p className="text-xs text-blue-600">{method?.desc}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                     
-                    <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '350ms' : getCategoryHasDetails(formData.category) ? '300ms' : '250ms'}` }}>
-                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Visibilidade</label>
-                      <div className="mt-2">
-                        <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-bold uppercase tracking-wide bg-blue-100 text-blue-700 border-blue-200 shadow-sm">
-                          {visibilityOptions.find(v => v.id === formData.visibility)?.label}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="animate-slide-in" style={{ animationDelay: `${formData.category === 'clothes' ? '400ms' : getCategoryHasDetails(formData.category) ? '350ms' : '300ms'}` }}>
-                      <label className="text-orange-600 text-sm uppercase tracking-wider font-bold">Contatos</label>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {formData.contacts.map((c, index) => (
-                          <span key={c} className="text-orange-700 text-sm bg-white border border-orange-200 px-3 py-2 rounded-lg shadow-sm animate-bounce-in inline-flex items-center gap-2" style={{ animationDelay: `${400 + index * 50}ms` }}>
-                            <span className="w-4 h-4">{contactMethods.find(m => m.id === c)?.icon}</span>
-                            {contactMethods.find(m => m.id === c)?.label}
-                          </span>
-                        ))}
+                    {/* Alcance/Visibilidade */}
+                    <div className="visibility-section">
+                      <h3 className="text-sm font-bold text-blue-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Quem pode ver
+                      </h3>
+                      <div className="visibility-card p-4 bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="visibility-icon w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="font-bold text-blue-800 text-lg">{visibilityOptions.find(v => v.id === formData.visibility)?.label}</p>
+                            <p className="text-sm text-blue-600">{visibilityOptions.find(v => v.id === formData.visibility)?.desc}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                <div 
-                  className="bg-orange-100 p-5 rounded-2xl border-2 border-orange-300 shadow-lg animate-slide-in cursor-pointer" 
-                  style={{ animationDelay: `${formData.category === 'clothes' ? '450ms' : getCategoryHasDetails(formData.category) ? '400ms' : '350ms'}` }}
-                  onClick={() => setFormData({ ...formData, anonymous: !formData.anonymous })}
-                >
-                  <div className="flex items-center gap-3 transition-all duration-300 hover:bg-white p-3 rounded-lg">
-                    <div className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-all duration-300 shadow-sm flex-shrink-0 ${
-                      formData.anonymous
-                        ? 'bg-orange-500 border-orange-500 scale-110 shadow-orange-200'
-                        : 'bg-white border-orange-400 hover:border-orange-500 hover:shadow-md'
-                    }`}>
-                      {formData.anonymous && (
-                        <svg className="w-3 h-3 text-white animate-bounce-in" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={4}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
+
+                {/* 4. PRIVACIDADE E PUBLICAÇÃO - Seção Final */}
+                <div className="privacy-publish-section space-y-6">
+                  {/* Toggle de Privacidade */}
+                  <div 
+                    className={`privacy-toggle p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 hover:shadow-lg relative overflow-hidden ${
+                      formData.anonymous 
+                        ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-md' 
+                        : 'bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-300 hover:border-amber-400'
+                    }`}
+                    onClick={() => setFormData({ ...formData, anonymous: !formData.anonymous })}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${
+                      formData.anonymous ? 'from-green-500 to-emerald-500' : 'from-amber-500 to-yellow-500'
+                    }`}></div>
+                    
+                    <div className="privacy-content flex items-center gap-4">
+                      {/* Ícone e Texto */}
+                      <div className="privacy-info flex items-center gap-3 flex-1">
+                        <div className={`privacy-avatar w-12 h-12 rounded-full flex items-center justify-center ${
+                          formData.anonymous ? 'bg-green-100' : 'bg-amber-100'
+                        }`}>
+                          <svg className={`w-6 h-6 ${
+                            formData.anonymous ? 'text-green-600' : 'text-amber-600'
+                          }`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className={`text-lg font-bold ${
+                            formData.anonymous ? 'text-green-800' : 'text-amber-800'
+                          }`}>Manter anonimato</h3>
+                          <p className={`text-sm ${
+                            formData.anonymous ? 'text-green-700' : 'text-amber-700'
+                          }`}>
+                            {formData.anonymous 
+                              ? 'Seu nome ficará oculto na publicação' 
+                              : 'Clique para ocultar seu nome na publicação'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Checkbox Visual */}
+                      <div className={`privacy-checkbox w-12 h-12 lg:w-16 lg:h-16 border-2 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                        formData.anonymous
+                          ? 'bg-green-500 border-green-500 scale-110 shadow-lg'
+                          : 'bg-white border-amber-400 hover:border-amber-500 hover:scale-105'
+                      }`}>
+                        {formData.anonymous && (
+                          <svg className="w-7 h-7 lg:w-9 lg:h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
                     </div>
-                    <img src="https://cdn-icons-png.flaticon.com/512/1828/1828490.png" alt="anônimo" width="20" height="20" className="flex-shrink-0" />
-                    <span className="text-lg font-semibold text-orange-900">Manter publicação anônima</span>
                   </div>
-                  <p className="text-sm text-orange-700 mt-3 px-3 font-medium cursor-pointer">Seu nome não aparecerá publicamente na solicitação</p>
+                  
+                  {/* Botão de Publicação */}
+                  <div className="text-center">
+                    <button 
+                      onClick={handlePublish}
+                      disabled={isSubmitting}
+                      className={`publish-button bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-8 py-4 lg:px-10 lg:py-4 rounded-2xl font-bold text-lg lg:text-xl flex items-center justify-center gap-3 mx-auto transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl min-w-[240px] lg:min-w-[280px] ${
+                        isSubmitting ? 'opacity-70 cursor-not-allowed scale-95' : 'hover:shadow-blue-500/25'
+                      }`}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="loading-spinner w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Publicando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                          <span>Publicar Pedido de Ajuda</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    {/* Texto de Segurança */}
+                    <p className="security-text text-xs text-slate-500 mt-4 max-w-md mx-auto">
+                      🔒 Suas informações pessoais estão protegidas. Apenas os métodos de contato escolhidos serão compartilhados.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -791,36 +987,19 @@ const PrecisoDeAjuda = () => {
             Voltar
           </button>
           
-          <button
-            onClick={step === totalSteps ? handlePublish : nextStep}
-            disabled={!isStepValid() && step < totalSteps}
-            className={`rounded-xl px-8 py-3 h-auto text-lg font-semibold transition-all duration-300 flex items-center gap-2 hover:scale-105 ${
-              step === totalSteps 
-                ? 'bg-blue-500 hover:bg-blue-600 text-white' 
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-            } ${isSubmitting ? 'opacity-50 cursor-not-allowed scale-95' : ''}`}
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Publicando...
-              </>
-            ) : step === totalSteps ? (
-              <>
-                Publicar Pedido
-                <svg className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </>
-            ) : (
-              <>
-                Continuar
-                <svg className="w-5 h-5 transition-transform duration-300 hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </>
-            )}
-          </button>
+          {/* Só mostrar o botão Continuar se não estiver no step final */}
+          {step < totalSteps && (
+            <button
+              onClick={nextStep}
+              disabled={!isStepValid()}
+              className="rounded-xl px-8 py-3 h-auto text-lg font-semibold transition-all duration-300 flex items-center gap-2 hover:scale-105 bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Continuar
+              <svg className="w-5 h-5 transition-transform duration-300 hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     </main>
