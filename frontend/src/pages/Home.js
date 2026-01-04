@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
 import { useAuth } from '../contexts/AuthContext';
-=======
 import ChatDemo from '../components/ChatDemo';
->>>>>>> 6b0da75c83e9a93419d03a9c3635f4aa32574169
 import '../styles/pages/Home.css';
 
 const Home = () => {

@@ -9,89 +9,80 @@ const PedidoPublicado = () => {
   return (
     <>
       <Header />
-      <main className="success-page">
-        <div className="success-container">
-          <div className="success-content">
-            
-            {/* Coluna Esquerda */}
-            <div className="success-left">
-              <div className="success-icon">
-                <span>✓</span>
-              </div>
-              
-              <h1 className="success-title">
-                Seu pedido foi <span className="highlight">publicado!</span>
-              </h1>
-              
-              <p className="success-description">
-                Pronto! Sua solicitação já está visível para vizinhos próximos 
-                que estão prontos para ajudar.
-              </p>
-
-              <div className="notification-card">
-                <div className="card-icon">📱</div>
-                <div className="card-content">
-                  <h3>Notificações em tempo real</h3>
-                  <p>Fique atento ao seu celular. Você receberá um aviso assim que alguém se candidatar para te ajudar.</p>
-                </div>
-              </div>
+      <div className="container">
+        <div className="subdiv">
+          <div className="line">
+            <div className="border">
+              <div id="ico">🎉</div>
+              <img src="/assets/icons/verifica.png" alt="" />
             </div>
 
-            {/* Coluna Direita */}
-            <div className="success-right">
-              <div className="cta-section">
-                <div className="cta-header">
-                  <div className="cta-icon">⚡</div>
-                  <span className="cta-label">ENQUANTO ESPERA</span>
-                </div>
-                
-                <h2 className="cta-title">
-                  Que tal retribuir ajudando alguém? 🤝
-                </h2>
-                
-                <p className="cta-text">
-                  Fortalecemos nossa comunidade quando nos ajudamos mutuamente. 
-                  Existem vizinhos precisando de você agora!
-                </p>
-
-                <button 
-                  className="btn-primary"
-                  onClick={() => navigate('/quero-ajudar')}
-                >
-                  <span className="btn-icon">⭐</span>
-                  Descobrir como posso ajudar
-                </button>
-
-                <button 
-                  className="btn-secondary"
-                  onClick={() => navigate('/')}
-                >
-                  <span className="btn-arrow">←</span>
-                  Voltar ao início
-                </button>
-              </div>
-
-              <div className="impact-cards">
-                <div className="impact-card">
-                  <div className="mini-icon">❤️</div>
-                  <div className="mini-content">
-                    <h4>IMPACTO</h4>
-                    <p>Pequenos gestos mudam o dia de alguém</p>
-                  </div>
-                </div>
-                <div className="impact-card">
-                  <div className="mini-icon">👥</div>
-                  <div className="mini-content">
-                    <h4>UNIÃO</h4>
-                    <p>Mais de 500 ajudas esta semana</p>
-                  </div>
-                </div>
-              </div>
+            <div className="glass">
+              <span className="circle"></span>
+              <p>Pedido Ativo</p>
             </div>
-            
+          </div>
+
+          <div className="text">
+            <h1>Seu pedido foi <br /> <span style={{color: '#00BC7D'}}>publicado!</span></h1>
+            <p id="text2">Pronto! Sua solicitação já está visível para vizinhos <br /> próximos que estão prontos para ajudar.</p>
+          </div>
+
+          <div className="notifications">
+            <div className="arround">
+              <img src="/assets/icons/iphone.png" alt="" />
+            </div>
+            <div className="text-notifications">
+              <h2>Notificações em tempo real</h2>
+              <p>Fique atento ao seu celular. Você receberá um aviso <br /> assim que alguém se candidatar para te ajudar.</p>
+            </div>
           </div>
         </div>
-      </main>
+
+        <div className="divleft">
+          <span className="waiting">
+            <span className="orangeborder">
+              <img src="/assets/icons/contorno-da-forma-desenhada-a-mao-do-thunder-bolt.png" alt="" />
+              <p>Enquanto espera</p>
+            </span>
+          </span>
+
+          <div className="helpdiv">
+            <h2>Que tal retribuir <br />ajudando alguém? 🤝</h2>
+          </div>
+
+          <div>
+            <p>Fortalecemos nossa comunidade quando <br /> nos ajudamos. Existem vizinhos <br /> precisando de você agora!</p>
+          </div>
+
+          <div>
+            <button onClick={() => navigate('/quero-ajudar')}>
+              <img src="/assets/icons/hollywood-star.png" alt="" /> Descobrir como ajudar
+            </button>
+            <button onClick={() => navigate('/')}>
+              <img src="/assets/icons/seta-esquerda.png" alt="" /> Voltar ao inicio
+            </button>
+          </div>
+
+          <div className="cards">
+            <article className="card card--success" aria-label="Impacto: Pequenos gestos">
+              <div className="card__icon">
+                <img src="/assets/icons/amor-verde.png" alt="Coração" />
+              </div>
+              <h3 className="card__title">IMPACTO</h3>
+              <p className="card__text">Pequenos gestos<br />mudam o dia de<br />alguém.</p>
+            </article>
+
+            <article className="card card--union" aria-label="União: Mais de 500 ajudas">
+              <div className="card__icon">
+                <img src="/assets/icons/grupo-de-usuarios.png" alt="Pessoas" />
+              </div>
+              <h3 className="card__title">União</h3>
+              <p className="card__text">Mais de 500 ajudas<br />esta semana.</p>
+            </article>
+          </div>
+        </div>
+      </div>
     </>
   );
 };
