@@ -4,21 +4,9 @@
 
 /* ===== ESTILOS ESPECÍFICOS DO PROJETO ===== */
 
-/* Ajustes para o layout com header fixo */
+/* Remover padding-top do body já que o Layout cuida disso */
 body {
-  padding-top: 70px; /* Altura do header */
-}
-
-@media (max-width: 768px) {
-  body {
-    padding-top: 60px;
-  }
-}
-
-@media (max-width: 480px) {
-  body {
-    padding-top: 56px;
-  }
+  padding-top: 0;
 }
 
 /* Estilos para código */
