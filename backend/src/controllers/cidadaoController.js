@@ -1,8 +1,15 @@
 const cidadaoService = require('../services/cidadaoService');
+const authService = require('../services/authService');
 
 class CidadaoController {
   async createCidadao(req, res) {
     try {
+      // Hash da senha antes de passar para o service
+      if (req.body.password) {
+        req.body.senha = await authService.hashPassword(req.body.password);
+        delete req.body.password;
+      }
+      
       const cidadao = await cidadaoService.createCidadao(req.body);
       res.status(201).json({ success: true, data: cidadao });
     } catch (error) {

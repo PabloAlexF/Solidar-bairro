@@ -1,4 +1,5 @@
 const firebase = require('../config/firebase');
+const authService = require('./authService');
 const Cidadao = require('../models/cidadaoModel');
 
 class CidadaoService {
@@ -16,28 +17,25 @@ class CidadaoService {
       throw new Error(`Dados inválidos: ${errors.join(', ')}`);
     }
 
-    const userRecord = await this.auth.createUser({
-      email: data.email,
-      password: data.password,
-      displayName: data.nome
-    });
-
     // Converter para objeto simples
     const cidadaoData = {
       nome: cidadao.nome,
       email: cidadao.email,
       telefone: cidadao.telefone,
       endereco: cidadao.endereco,
-      senha: data.password, // Salvar senha no Firestore
+      senha: data.senha, // Senha já vem hasheada do controller
       tipo: cidadao.tipo,
       ativo: cidadao.ativo,
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };
 
-    await this.db.collection(this.collection).doc(userRecord.uid).set(cidadaoData);
+    const docRef = await this.db.collection(this.collection).add(cidadaoData);
 
-    return { uid: userRecord.uid, ...cidadaoData };
+    return { 
+      success: true,
+      data: { uid: docRef.id, ...cidadaoData }
+    };
   }
 
   async getCidadaos() {

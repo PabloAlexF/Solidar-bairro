@@ -1,6 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import QueroAjudar from './pages/QueroAjudar';
 import PrecisoDeAjuda from './pages/PrecisoDeAjuda';
@@ -28,30 +29,31 @@ import './styles/header-spacing.css';
 
 function App() {
   return (
-    <Router basename={process.env.PUBLIC_URL}>
-      <Routes>
-        <Route path="/" element={<Layout><Home /></Layout>} />
-        <Route path="/quero-ajudar" element={<Layout><QueroAjudar /></Layout>} />
-        <Route path="/preciso-de-ajuda" element={<Layout><PrecisoDeAjuda /></Layout>} />
-        <Route path="/pedidos" element={<Layout><Pedidos /></Layout>} />
-        <Route path="/necessidade/:id" element={<Layout><DetalhesNecessidade /></Layout>} />
-        <Route path="/pedido-publicado" element={<Layout><PedidoPublicado /></Layout>} />
-        <Route path="/landing" element={<Layout showHeader={false}><Landing /></Layout>} />
-        <Route path="/cadastro" element={<Layout><Register /></Layout>} />
-        <Route path="/sobre-tipos" element={<Layout><SobreTipos /></Layout>} />
-        <Route path="/cadastro/cidadao" element={<Layout><RegisterCidadao /></Layout>} />
-        <Route path="/cadastro/ong" element={<Layout><RegisterONG /></Layout>} />
-        <Route path="/cadastro/comercio" element={<Layout><RegisterComercio /></Layout>} />
-        <Route path="/login" element={<Layout><Login /></Layout>} />
-        <Route path="/cadastro-familia" element={<Layout><CadastroFamilia /></Layout>} />
-        <Route path="/perfil-familia/:id" element={<Layout><PerfilFamilia /></Layout>} />
-        <Route path="/atualizar-status/:id" element={<Layout><AtualizarStatus /></Layout>} />
-        <Route path="/painel-social" element={<Layout><PainelSocial /></Layout>} />
-        <Route path="/perfil" element={<Layout><Perfil /></Layout>} />
-        <Route path="/conversas" element={<Layout><Conversas /></Layout>} />
-        <Route path="/chat/:conversaId" element={<Layout><Chat /></Layout>} />
-      </Routes>
-    </Router>
+    <Routes>
+      {/* Rotas públicas */}
+      <Route path="/" element={<Layout><Home /></Layout>} />
+      <Route path="/landing" element={<Layout showHeader={false}><Landing /></Layout>} />
+      <Route path="/cadastro" element={<Layout><Register /></Layout>} />
+      <Route path="/sobre-tipos" element={<Layout><SobreTipos /></Layout>} />
+      <Route path="/cadastro/cidadao" element={<Layout><RegisterCidadao /></Layout>} />
+      <Route path="/cadastro/ong" element={<Layout><RegisterONG /></Layout>} />
+      <Route path="/cadastro/comercio" element={<Layout><RegisterComercio /></Layout>} />
+      <Route path="/login" element={<Layout><Login /></Layout>} />
+      <Route path="/cadastro-familia" element={<Layout><CadastroFamilia /></Layout>} />
+      
+      {/* Rotas protegidas */}
+      <Route path="/quero-ajudar" element={<Layout><ProtectedRoute><QueroAjudar /></ProtectedRoute></Layout>} />
+      <Route path="/preciso-de-ajuda" element={<Layout><ProtectedRoute><PrecisoDeAjuda /></ProtectedRoute></Layout>} />
+      <Route path="/pedidos" element={<Layout><ProtectedRoute><Pedidos /></ProtectedRoute></Layout>} />
+      <Route path="/necessidade/:id" element={<Layout><ProtectedRoute><DetalhesNecessidade /></ProtectedRoute></Layout>} />
+      <Route path="/pedido-publicado" element={<Layout><ProtectedRoute><PedidoPublicado /></ProtectedRoute></Layout>} />
+      <Route path="/perfil-familia/:id" element={<Layout><ProtectedRoute><PerfilFamilia /></ProtectedRoute></Layout>} />
+      <Route path="/atualizar-status/:id" element={<Layout><ProtectedRoute><AtualizarStatus /></ProtectedRoute></Layout>} />
+      <Route path="/painel-social" element={<Layout><ProtectedRoute><PainelSocial /></ProtectedRoute></Layout>} />
+      <Route path="/perfil" element={<Layout><ProtectedRoute><Perfil /></ProtectedRoute></Layout>} />
+      <Route path="/conversas" element={<Layout><ProtectedRoute><Conversas /></ProtectedRoute></Layout>} />
+      <Route path="/chat/:conversaId" element={<Layout><ProtectedRoute><Chat /></ProtectedRoute></Layout>} />
+    </Routes>
   );
 }
 

@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs');
+const jwtUtils = require('../utils/jwt');
 const firebase = require('../config/firebase');
 
 class AuthService {
@@ -10,46 +12,52 @@ class AuthService {
     try {
       console.log('AuthService login:', { email, password: '***' });
       
-      // Em desenvolvimento, fazer login simplificado
-      if (firebase.isDevelopmentMode()) {
-        console.log('Development mode login');
-        const userData = await this.getUserData('mock-user');
-        return {
-          uid: 'mock-user',
-          email: email,
-          ...userData
-        };
-      }
-      
-      // Buscar dados do usuário no Firestore primeiro
+      // Buscar dados do usuário no Firestore
       const userData = await this.getUserDataByEmail(email);
       console.log('User data found:', userData ? 'Yes' : 'No');
-      console.log('Full user data:', userData);
       
       if (!userData) {
         throw new Error('Usuário não encontrado');
       }
 
-      console.log('Comparing passwords:', {
-        provided: password,
-        stored_senha: userData.senha,
-        stored_password: userData.password
-      });
+      // Verificar senha
+      let isValidPassword = false;
+      if (userData.senha) {
+        // Tentar comparar com hash
+        try {
+          isValidPassword = await bcrypt.compare(password, userData.senha);
+        } catch (error) {
+          // Se falhar, comparar diretamente (senha não hasheada)
+          isValidPassword = userData.senha === password;
+        }
+      } else if (userData.password) {
+        isValidPassword = userData.password === password;
+      }
 
-      // Verificar senha (comparação simples - em produção usar hash)
-      if (userData.senha !== password && userData.password !== password) {
+      if (!isValidPassword) {
         throw new Error('Senha incorreta');
       }
 
-      console.log('Password match successful');
+      // Gerar tokens JWT
+      const payload = {
+        id: userData.uid,
+        email: userData.email,
+        type: userData.tipo,
+        nome: userData.nome || userData.nomeEstabelecimento || userData.nomeEntidade
+      };
 
-      // Retornar dados do usuário sem a senha
+      const { accessToken, refreshToken } = jwtUtils.generateTokens(payload);
+
+      // Remover senha dos dados
       const { senha, password: pwd, ...userWithoutPassword } = userData;
       
       return {
-        uid: userData.uid,
-        email: email,
-        ...userWithoutPassword
+        success: true,
+        data: {
+          user: userWithoutPassword,
+          token: accessToken,
+          refreshToken
+        }
       };
     } catch (error) {
       console.log('AuthService error:', error.message);
@@ -57,25 +65,41 @@ class AuthService {
     }
   }
 
-  async getUserData(uid) {
-    // Buscar em todas as coleções possíveis
-    const collections = ['cidadaos', 'comercios', 'ongs', 'familias'];
-    
-    for (const collection of collections) {
-      try {
-        const doc = await this.db.collection(collection).doc(uid).get();
-        if (doc.exists) {
-          return {
-            ...doc.data(),
-            tipo: collection.slice(0, -1)
-          };
+  async refreshToken(refreshToken) {
+    try {
+      const decoded = jwtUtils.verifyRefreshToken(refreshToken);
+      
+      const payload = {
+        id: decoded.id,
+        email: decoded.email,
+        type: decoded.type,
+        nome: decoded.nome
+      };
+
+      const { accessToken, refreshToken: newRefreshToken } = jwtUtils.generateTokens(payload);
+
+      return {
+        success: true,
+        data: {
+          token: accessToken,
+          refreshToken: newRefreshToken
         }
-      } catch (error) {
-        console.log(`Erro ao buscar em ${collection}:`, error.message);
-      }
+      };
+    } catch (error) {
+      throw new Error('Refresh token inválido');
     }
-    
-    return null;
+  }
+
+  async verifyToken(token) {
+    try {
+      const decoded = jwtUtils.verifyAccessToken(token);
+      return {
+        success: true,
+        data: decoded
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
   async getUserDataByEmail(email) {
@@ -104,18 +128,8 @@ class AuthService {
     return null;
   }
 
-  async verifyToken(token) {
-    try {
-      // Em desenvolvimento, aceitar qualquer token
-      if (firebase.isDevelopmentMode()) {
-        return { uid: 'mock-user', email: 'test@example.com' };
-      }
-      
-      const decodedToken = await this.auth.verifyIdToken(token);
-      return decodedToken;
-    } catch (error) {
-      throw new Error('Token inválido');
-    }
+  async hashPassword(password) {
+    return await bcrypt.hash(password, 10);
   }
 }
 

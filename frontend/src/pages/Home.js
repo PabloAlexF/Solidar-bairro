@@ -1,60 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
+import { useAuth } from '../contexts/AuthContext';
+=======
 import ChatDemo from '../components/ChatDemo';
+>>>>>>> 6b0da75c83e9a93419d03a9c3635f4aa32574169
 import '../styles/pages/Home.css';
+
 const Home = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user, isAuthenticated, logout } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const totalSlides = 4; // 6 cards - 2 visible = 4 positions
+  const totalSlides = 4;
   const [mobileScrollIndex, setMobileScrollIndex] = useState(0);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('solidar-user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-
-    // Listen for user state changes
-    const handleUserChange = () => {
-      const updatedUser = localStorage.getItem('solidar-user');
-      if (updatedUser) {
-        setUser(JSON.parse(updatedUser));
-      } else {
-        setUser(null);
-      }
-    };
-
     // Auto-slide carousel
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % totalSlides);
     }, 3000);
 
-    // Listen for storage changes
-    window.addEventListener('storage', handleUserChange);
-    
-    // Listen for custom user update events
-    window.addEventListener('userUpdated', handleUserChange);
-    
     return () => {
       clearInterval(interval);
-      window.removeEventListener('storage', handleUserChange);
-      window.removeEventListener('userUpdated', handleUserChange);
     };
   }, [totalSlides]);
 
   const handleCardClick = (route) => {
-    // Always check fresh user data from localStorage
-    const currentUser = localStorage.getItem('solidar-user');
-    const userData = currentUser ? JSON.parse(currentUser) : null;
-    
-    console.log('handleCardClick - userData:', userData);
-    
-    if (userData) {
+    if (isAuthenticated()) {
       navigate(route);
     } else {
-      console.log('Redirecionando para login');
       navigate('/login');
     }
   };

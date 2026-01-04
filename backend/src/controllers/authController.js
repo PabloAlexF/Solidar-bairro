@@ -13,16 +13,10 @@ class AuthController {
         });
       }
 
-      const user = await authService.login(email, password);
+      const result = await authService.login(email, password);
       console.log('Login successful for:', email);
       
-      res.json({
-        success: true,
-        data: {
-          user,
-          message: 'Login realizado com sucesso'
-        }
-      });
+      res.json(result);
     } catch (error) {
       console.log('Login error:', error.message);
       res.status(401).json({
@@ -32,28 +26,37 @@ class AuthController {
     }
   }
 
-  async verifyToken(req, res) {
+  async refresh(req, res) {
     try {
-      const token = req.headers.authorization?.replace('Bearer ', '');
+      const { refreshToken } = req.body;
       
-      if (!token) {
-        return res.status(401).json({
+      if (!refreshToken) {
+        return res.status(400).json({
           success: false,
-          error: 'Token não fornecido'
+          error: 'Refresh token é obrigatório'
         });
       }
 
-      const decoded = await authService.verifyToken(token);
-      const userData = await authService.getUserData(decoded.uid);
-      
+      const result = await authService.refreshToken(refreshToken);
+      res.json(result);
+    } catch (error) {
+      console.error('Erro no refresh:', error);
+      res.status(401).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async verify(req, res) {
+    try {
+      // Token já foi verificado pelo middleware
       res.json({
         success: true,
-        data: {
-          user: userData,
-          uid: decoded.uid
-        }
+        data: req.user
       });
     } catch (error) {
+      console.error('Erro na verificação:', error);
       res.status(401).json({
         success: false,
         error: error.message
@@ -62,10 +65,19 @@ class AuthController {
   }
 
   async logout(req, res) {
-    res.json({
-      success: true,
-      message: 'Logout realizado com sucesso'
-    });
+    try {
+      // JWT é stateless, logout é feito no frontend
+      res.json({
+        success: true,
+        message: 'Logout realizado com sucesso'
+      });
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
   }
 }
 

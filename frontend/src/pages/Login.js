@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import Header from '../components/layout/Header';
 import apiService from '../services/apiService';
 import '../styles/pages/Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -13,6 +15,12 @@ const Login = () => {
     email: '',
     senha: ''
   });
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -27,18 +35,8 @@ const Login = () => {
     setLoading(true);
     
     try {
-      const response = await apiService.login(formData.email, formData.senha);
-      
-      if (response.success) {
-        // Salvar dados do usuário no localStorage
-        localStorage.setItem('solidar-user', JSON.stringify(response.data.user));
-        
-        // Disparar evento para atualizar outros componentes
-        window.dispatchEvent(new CustomEvent('userUpdated'));
-        
-        console.log('Login realizado:', response.data.user);
-        navigate('/');
-      }
+      await login(formData.email, formData.senha);
+      navigate('/');
     } catch (error) {
       console.error('Erro no login:', error);
       setError(error.message || 'Erro ao fazer login. Tente novamente.');

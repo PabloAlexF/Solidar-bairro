@@ -1,8 +1,14 @@
 const ongService = require('../services/ongService');
+const authService = require('../services/authService');
 
 class ONGController {
   async createONG(req, res) {
     try {
+      // Hash da senha antes de passar para o service
+      if (req.body.senha) {
+        req.body.senha = await authService.hashPassword(req.body.senha);
+      }
+      
       const ong = await ongService.createONG(req.body);
       res.status(201).json({ success: true, data: ong });
     } catch (error) {
