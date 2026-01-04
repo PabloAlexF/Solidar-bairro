@@ -1,0 +1,35 @@
+/* Espaçamento global para header fixo */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Páginas com header fixo */
+.home main,
+.conversas-main,
+.chat-page,
+.main-content,
+.painel-main {
+  padding-top: 70px;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .home main,
+  .conversas-main,
+  .chat-page,
+  .main-content,
+  .painel-main {
+    padding-top: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home main,
+  .conversas-main,
+  .chat-page,
+  .main-content,
+  .painel-main {
+    padding-top: 56px;
+  }
+}

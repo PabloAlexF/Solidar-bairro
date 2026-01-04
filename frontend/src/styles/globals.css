@@ -1,4 +1,16 @@
 /* Global Styles */
+:root {
+  --accent: #FF7A33;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
 * {
   margin: 0;
   padding: 0;

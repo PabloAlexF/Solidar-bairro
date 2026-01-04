@@ -20,9 +20,12 @@ import PerfilFamilia from './pages/PerfilFamilia';
 import AtualizarStatus from './pages/AtualizarStatus';
 import PainelSocial from './pages/PainelSocial';
 import Perfil from './pages/Perfil';
+import Conversas from './pages/Conversas';
+import Chat from './pages/Chat';
 import './styles/index.css';
 import './styles/globals.css';
 import './styles/colors.css';
+import './styles/header-spacing.css';
 
 function App() {
   return (
@@ -48,6 +51,8 @@ function App() {
       <Route path="/atualizar-status/:id" element={<Layout><ProtectedRoute><AtualizarStatus /></ProtectedRoute></Layout>} />
       <Route path="/painel-social" element={<Layout><ProtectedRoute><PainelSocial /></ProtectedRoute></Layout>} />
       <Route path="/perfil" element={<Layout><ProtectedRoute><Perfil /></ProtectedRoute></Layout>} />
+      <Route path="/conversas" element={<Layout><ProtectedRoute><Conversas /></ProtectedRoute></Layout>} />
+      <Route path="/chat/:conversaId" element={<Layout><ProtectedRoute><Chat /></ProtectedRoute></Layout>} />
     </Routes>
   );
 }

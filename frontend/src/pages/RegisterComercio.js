@@ -102,8 +102,24 @@ const RegisterComercio = () => {
       const response = await ApiService.createComercio(comercioData);
       
       if (response.success) {
-        alert('Cadastro de comércio realizado com sucesso! Aguarde verificação.');
-        navigate('/login');
+        // Fazer login automático após cadastro
+        try {
+          const loginResponse = await ApiService.login(formData.email, formData.senha);
+          if (loginResponse.success) {
+            // Salvar usuário no localStorage
+            localStorage.setItem('solidar-user', JSON.stringify(loginResponse.data.user));
+            // Disparar evento para atualizar header
+            window.dispatchEvent(new CustomEvent('userUpdated'));
+            alert('Cadastro de comércio realizado com sucesso!');
+            navigate('/');
+          } else {
+            alert('Cadastro de comércio realizado com sucesso! Aguarde verificação.');
+            navigate('/login');
+          }
+        } catch (loginError) {
+          alert('Cadastro de comércio realizado com sucesso! Aguarde verificação.');
+          navigate('/login');
+        }
       }
     } catch (error) {
       setError(error.message || 'Erro ao cadastrar comércio');

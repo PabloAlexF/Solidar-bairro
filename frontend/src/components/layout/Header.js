@@ -28,6 +28,23 @@ const Header = ({ showLoginButton = true }) => {
       loadNotifications();
     };
     
+    // Listen for user updates
+    const handleUserUpdated = () => {
+      const savedUser = localStorage.getItem('solidar-user');
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
+        } catch (error) {
+          console.error('Erro ao parsear usuário do localStorage:', error);
+          localStorage.removeItem('solidar-user');
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+    
     // Close dropdowns when clicking outside
     const handleClickOutside = (event) => {
       if (showUserMenu || showNotifications) {
@@ -45,10 +62,12 @@ const Header = ({ showLoginButton = true }) => {
     };
     
     window.addEventListener('notificationAdded', handleNotificationAdded);
+    window.addEventListener('userUpdated', handleUserUpdated);
     document.addEventListener('mousedown', handleClickOutside);
     
     return () => {
       window.removeEventListener('notificationAdded', handleNotificationAdded);
+      window.removeEventListener('userUpdated', handleUserUpdated);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showUserMenu, showNotifications]);

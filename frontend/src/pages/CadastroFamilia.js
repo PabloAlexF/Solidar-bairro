@@ -697,6 +697,117 @@ const CadastroFamilia = () => {
                     })}
                   </div>
 
+                  {/* Seção específica de alimentos */}
+                  {formData.necessidades.includes('Alimentos') && (
+                    <div className="alimentos-section">
+                      <div className="alimentos-header">
+                        <h4>Que tipo de alimento você precisa?</h4>
+                        <p>Selecione as opções que melhor descrevem sua necessidade.</p>
+                        <p className="alimentos-subtitle">Você pode escolher mais de uma opção para facilitar as doações.</p>
+                      </div>
+
+                      <div className="alimentos-spacing"></div>
+
+                      <div className="alimentos-grid">
+                        <label className={`alimento-card ${formData.tipoAlimentos?.includes('cesta') ? 'checked' : ''}`}>
+                          <input
+                            type="checkbox"
+                            value="cesta"
+                            checked={formData.tipoAlimentos?.includes('cesta') || false}
+                            onChange={(e) => {
+                              const tipos = formData.tipoAlimentos || [];
+                              const newTipos = e.target.checked 
+                                ? [...tipos, 'cesta']
+                                : tipos.filter(t => t !== 'cesta');
+                              handleInputChange('tipoAlimentos', newTipos);
+                            }}
+                          />
+                          <div className="alimento-content">
+                            <div className="alimento-icon">
+                              <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="cesta básica" width="32" height="32" />
+                            </div>
+                            <div className="alimento-info">
+                              <h5>Cesta Básica</h5>
+                              <p>Arroz, feijão, óleo, açúcar</p>
+                            </div>
+                          </div>
+                        </label>
+
+                        <label className={`alimento-card ${formData.tipoAlimentos?.includes('frescos') ? 'checked' : ''}`}>
+                          <input
+                            type="checkbox"
+                            value="frescos"
+                            checked={formData.tipoAlimentos?.includes('frescos') || false}
+                            onChange={(e) => {
+                              const tipos = formData.tipoAlimentos || [];
+                              const newTipos = e.target.checked 
+                                ? [...tipos, 'frescos']
+                                : tipos.filter(t => t !== 'frescos');
+                              handleInputChange('tipoAlimentos', newTipos);
+                            }}
+                          />
+                          <div className="alimento-content">
+                            <div className="alimento-icon">
+                              <img src="https://cdn-icons-png.flaticon.com/512/1625/1625048.png" alt="alimentos frescos" width="32" height="32" />
+                            </div>
+                            <div className="alimento-info">
+                              <h5>Alimentos Frescos</h5>
+                              <p>Frutas, verduras, carnes</p>
+                            </div>
+                          </div>
+                        </label>
+
+                        <label className={`alimento-card ${formData.tipoAlimentos?.includes('infantil') ? 'checked' : ''}`}>
+                          <input
+                            type="checkbox"
+                            value="infantil"
+                            checked={formData.tipoAlimentos?.includes('infantil') || false}
+                            onChange={(e) => {
+                              const tipos = formData.tipoAlimentos || [];
+                              const newTipos = e.target.checked 
+                                ? [...tipos, 'infantil']
+                                : tipos.filter(t => t !== 'infantil');
+                              handleInputChange('tipoAlimentos', newTipos);
+                            }}
+                          />
+                          <div className="alimento-content">
+                            <div className="alimento-icon">
+                              <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="alimentação infantil" width="32" height="32" />
+                            </div>
+                            <div className="alimento-info">
+                              <h5>Alimentação Infantil</h5>
+                              <p>Leite, papinha, fralda</p>
+                            </div>
+                          </div>
+                        </label>
+
+                        <label className={`alimento-card ${formData.tipoAlimentos?.includes('prontas') ? 'checked' : ''}`}>
+                          <input
+                            type="checkbox"
+                            value="prontas"
+                            checked={formData.tipoAlimentos?.includes('prontas') || false}
+                            onChange={(e) => {
+                              const tipos = formData.tipoAlimentos || [];
+                              const newTipos = e.target.checked 
+                                ? [...tipos, 'prontas']
+                                : tipos.filter(t => t !== 'prontas');
+                              handleInputChange('tipoAlimentos', newTipos);
+                            }}
+                          />
+                          <div className="alimento-content">
+                            <div className="alimento-icon">
+                              <img src="https://cdn-icons-png.flaticon.com/512/3480/3480618.png" alt="refeições prontas" width="32" height="32" />
+                            </div>
+                            <div className="alimento-info">
+                              <h5>Refeições Prontas</h5>
+                              <p>Marmitas, lanches</p>
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="form-group">
                     <label>Outros</label>
                     <input

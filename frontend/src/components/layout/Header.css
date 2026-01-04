@@ -4,12 +4,12 @@
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
+  height: 70px !important;
   z-index: 1000 !important;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(24px) saturate(180%);
   border-bottom: 1px solid rgba(226, 232, 240, 0.3);
   box-shadow: 0 1px 40px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  height: 88px;
   overflow: visible !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -136,9 +136,15 @@
 
 /* Responsivo */
 @media (max-width: 768px) {
+<<<<<<< HEAD
   .auth-buttons {
     flex-direction: row !important;
     gap: 8px !important;
+=======
+  .header {
+    height: 60px !important;
+    backdrop-filter: blur(20px) saturate(160%);
+>>>>>>> 6b0da75c83e9a93419d03a9c3635f4aa32574169
   }
   
   .auth-buttons .btn {
@@ -149,7 +155,7 @@
 
 @media (max-width: 480px) {
   .header {
-    height: 64px;
+    height: 56px !important;
   }
   
   .header-content {

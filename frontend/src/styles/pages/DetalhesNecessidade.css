@@ -335,7 +335,7 @@
 .contact-section {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .contact-btn {
@@ -345,7 +345,6 @@
   justify-content: center;
   gap: 1rem;
   padding: 1.25rem 2rem;
-  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
   border: none;
   border-radius: 16px;
   color: white;
@@ -353,10 +352,25 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.contact-btn.primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+}
+
+.contact-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.5);
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+.contact-btn.secondary {
+  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
   box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
 }
 
-.contact-btn:hover {
+.contact-btn.secondary:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 32px rgba(37, 211, 102, 0.5);
   background: linear-gradient(135deg, #128c7e 0%, #075e54 100%);
