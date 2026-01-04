@@ -7,9 +7,12 @@ class ApiService {
   }
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+    const token = localStorage.getItem('solidar-token');
+    
     const config = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -17,6 +20,20 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
+      
+      // Se token expirou, tentar refresh
+      if (response.status === 401 && token && !endpoint.includes('/auth/')) {
+        const refreshed = await this.refreshToken();
+        if (refreshed) {
+          // Tentar novamente com novo token
+          config.headers.Authorization = `Bearer ${localStorage.getItem('solidar-token')}`;
+          return await fetch(url, config);
+        } else {
+          // Refresh falhou, redirecionar para login
+          this.handleAuthError();
+          throw new Error('Sessão expirada. Faça login novamente.');
+        }
+      }
       
       // Verificar se a resposta é JSON
       const contentType = response.headers.get('content-type');
@@ -242,10 +259,45 @@ class ApiService {
       throw new Error('Email e senha são obrigatórios');
     }
     
-    return this.request('/auth/login', {
+    const response = await this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email: email.trim(), password }),
     });
+    
+    // Salvar tokens se login bem-sucedido
+    if (response.success && response.data?.token) {
+      localStorage.setItem('solidar-token', response.data.token);
+      if (response.data.refreshToken) {
+        localStorage.setItem('solidar-refresh-token', response.data.refreshToken);
+      }
+    }
+    
+    return response;
+  }
+
+  async refreshToken() {
+    try {
+      const refreshToken = localStorage.getItem('solidar-refresh-token');
+      if (!refreshToken) return false;
+      
+      const response = await this.request('/auth/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken }),
+      });
+      
+      if (response.success && response.data?.token) {
+        localStorage.setItem('solidar-token', response.data.token);
+        if (response.data.refreshToken) {
+          localStorage.setItem('solidar-refresh-token', response.data.refreshToken);
+        }
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Erro ao renovar token:', error);
+      return false;
+    }
   }
 
   async verifyToken(token) {
@@ -258,9 +310,23 @@ class ApiService {
   }
 
   async logout() {
-    return this.request('/auth/logout', {
-      method: 'POST'
-    });
+    try {
+      await this.request('/auth/logout', {
+        method: 'POST'
+      });
+    } finally {
+      // Sempre limpar tokens locais
+      localStorage.removeItem('solidar-token');
+      localStorage.removeItem('solidar-refresh-token');
+      localStorage.removeItem('solidar-user');
+    }
+  }
+  
+  handleAuthError() {
+    localStorage.removeItem('solidar-token');
+    localStorage.removeItem('solidar-refresh-token');
+    localStorage.removeItem('solidar-user');
+    window.dispatchEvent(new CustomEvent('authError'));
   }
 
   async register(userData) {

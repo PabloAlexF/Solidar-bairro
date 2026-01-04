@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ApiService from '../services/apiService';
 import Header from '../components/layout/Header';
+import { useToast } from '../contexts/ToastContext';
+
 const RegisterCidadao = () => {
   const navigate = useNavigate();
+  const { success, error: showError } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
   const [loading, setLoading] = useState(false);
@@ -94,10 +97,11 @@ const RegisterCidadao = () => {
       const response = await ApiService.createCidadao(cidadaoData);
       
       if (response.success) {
-        alert('Cadastro realizado com sucesso!');
-        navigate('/login');
+        success('Cadastro realizado com sucesso! Redirecionando para login...');
+        setTimeout(() => navigate('/login'), 2000);
       }
     } catch (error) {
+      showError(error.message || 'Erro ao cadastrar cidadão');
       setError(error.message || 'Erro ao cadastrar cidadão');
     } finally {
       setLoading(false);
