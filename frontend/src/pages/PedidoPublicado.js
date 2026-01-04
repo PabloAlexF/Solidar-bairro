@@ -7,7 +7,7 @@ const PedidoPublicado = () => {
   const navigate = useNavigate();
 
   return (
-    <>
+    <div className="pedido-publicado">
       <Header />
       <div className="container">
         <div className="subdiv">
@@ -83,7 +83,7 @@ const PedidoPublicado = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

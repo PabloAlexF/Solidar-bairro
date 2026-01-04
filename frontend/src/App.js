@@ -26,6 +26,7 @@ import './styles/index.css';
 import './styles/globals.css';
 import './styles/colors.css';
 import './styles/header-spacing.css';
+import './styles/header-fix.css';
 
 function App() {
   return (

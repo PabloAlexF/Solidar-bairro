@@ -1,4 +1,5 @@
-* {
+/* CSS isolado para PedidoPublicado */
+.pedido-publicado * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -6,7 +7,7 @@
 }
 
 /* Corpo */
-body {
+.pedido-publicado {
     min-height: 100vh;
     background-color: #E7F6F1;
     display: flex;
@@ -15,7 +16,7 @@ body {
 }
 
 /* Container principal */
-.container { 
+.pedido-publicado .container { 
     background-color: #FFFFFF;
     width: 100%;
     max-width: 1200px;
@@ -32,7 +33,7 @@ body {
 }
 
 /* Lado esquerdo */
-.subdiv {
+.pedido-publicado .subdiv {
     flex: 1;
     padding: 60px 80px;
     display: flex;
@@ -40,7 +41,7 @@ body {
 }
 
 
-.line {
+.pedido-publicado .line {
     display: flex;
     align-items: center;
     gap: 20px;
@@ -48,7 +49,7 @@ body {
 }
 
 
-.border {
+.pedido-publicado .border {
     display: flex;
     align-items: center;
     justify-content: center;
