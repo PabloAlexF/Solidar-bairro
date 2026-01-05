@@ -1,408 +1,319 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import '../styles/pages/QueroAjudar.css';
 
+const CATEGORIES = ["Alimentos", "Roupas", "Calçados", "Contas", "Emprego", "Higiene", "Medicamentos", "Móveis", "Eletrodomésticos", "Material Escolar", "Transporte"];
+const URGENCIES = ["Alta", "Média", "Baixa"];
+
+const INITIAL_PEDIDOS = [
+  {
+    id: 1,
+    userName: "Maria Silva",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maria",
+    distance: "450m de distância",
+    helpType: "Cesta básica",
+    category: "Alimentos",
+    familyInfo: "Família com 2 crianças",
+    urgency: "Alta",
+    description: "Estou desempregada há 3 meses, preciso de alimentos para meus filhos. Qualquer ajuda é bem-vinda.",
+    history: [
+      { date: "15/10/2023", help: "Recebeu agasalhos" },
+      { date: "02/09/2023", help: "Recebeu kit higiene" }
+    ]
+  },
+  {
+    id: 2,
+    userName: "João Santos",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Joao",
+    distance: "1,2km",
+    helpType: "Conta de luz atrasada",
+    category: "Contas",
+    familyInfo: "Situação: Sem renda fixa",
+    urgency: "Alta",
+    description: "Preciso de ajuda com a conta de luz deste mês para não cortar. O valor é R$ 145,00.",
+    history: []
+  },
+  {
+    id: 3,
+    userName: "Carla Menezes",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carla",
+    distance: "800m",
+    helpType: "Roupas de inverno",
+    category: "Roupas",
+    familyInfo: "1 idoso e 1 adulto",
+    urgency: "Média",
+    description: "Estamos precisando de cobertores e casacos para o frio que está chegando.",
+    history: [
+      { date: "12/11/2023", help: "Recebeu cesta básica" }
+    ]
+  },
+  {
+    id: 4,
+    userName: "Pedro Costa",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro",
+    distance: "600m",
+    helpType: "Sapatos para trabalho",
+    category: "Calçados",
+    familyInfo: "Adulto desempregado",
+    urgency: "Alta",
+    description: "Consegui uma entrevista de emprego mas não tenho sapatos adequados. Preciso urgente para não perder a oportunidade.",
+    history: []
+  },
+  {
+    id: 5,
+    userName: "Ana Souza",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana",
+    distance: "1,5km",
+    helpType: "Material escolar",
+    category: "Material Escolar",
+    familyInfo: "Mãe de 2 estudantes",
+    urgency: "Média",
+    description: "Meus filhos vão voltar às aulas e preciso de cadernos, lápis e mochila para eles.",
+    history: [
+      { date: "20/01/2024", help: "Recebeu uniforme escolar" }
+    ]
+  }
+];
+
 const QueroAjudar = () => {
-  const navigate = useNavigate();
-  const [selectedFilter, setSelectedFilter] = useState('Todos');
-  const [selectedUrgencies, setSelectedUrgencies] = useState([]);
-  const [pedidos, setPedidos] = useState([]);
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
-  const [showCategoryDetails, setShowCategoryDetails] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedUrgencies, setSelectedUrgencies] = useState([]);
 
-  const filters = ['Todos', 'Alimentos', 'Roupas', 'Medicamentos', 'Contas', 'Trabalho', 'Higiene', 'Serviços', 'Outros'];
+  const filteredPedidos = INITIAL_PEDIDOS.filter(pedido => {
+    const advancedCategoryMatch = selectedCategories.length === 0 || selectedCategories.includes(pedido.category);
+    const urgencyMatch = selectedUrgencies.length === 0 || selectedUrgencies.includes(pedido.urgency);
+    return advancedCategoryMatch && urgencyMatch;
+  });
 
-  // Category-specific options
-  const categoryOptions = {
-    'Roupas': {
-      title: 'Detalhes da Roupa Necessária',
-      fields: [
-        { type: 'select', name: 'tamanho', label: 'Tamanho', options: ['PP', 'P', 'M', 'G', 'GG', 'XG'] },
-        { type: 'select', name: 'tipo', label: 'Tipo de Peça', options: ['Camiseta', 'Calça', 'Vestido', 'Sapato', 'Casaco', 'Roupa Íntima', 'Uniforme'] },
-        { type: 'select', name: 'idade', label: 'Para quem?', options: ['Adulto', 'Criança (0-5 anos)', 'Criança (6-12 anos)', 'Adolescente'] },
-        { type: 'select', name: 'genero', label: 'Gênero', options: ['Masculino', 'Feminino', 'Unissex'] },
-        { type: 'select', name: 'condicao', label: 'Condição', options: ['Nova', 'Seminova', 'Usada (bom estado)'] }
-      ]
-    },
-    'Alimentos': {
-      title: 'Detalhes dos Alimentos',
-      fields: [
-        { type: 'select', name: 'tipo', label: 'Tipo de Alimento', options: ['Cesta Básica', 'Alimentos Infantis', 'Dieta Específica', 'Produtos Frescos'] },
-        { type: 'select', name: 'quantidade', label: 'Quantidade', options: ['Para 1 pessoa', 'Para 2-3 pessoas', 'Para 4-5 pessoas', 'Para família grande (6+)'] },
-        { type: 'section', name: 'preferencias_section', label: 'Preferências de entrega' },
-        { type: 'textarea', name: 'observacoes', placeholder: 'Ex: Sem glúten, diabético, etc.' }
-      ]
-    },
-    'Higiene': {
-      title: 'Itens de Higiene Necessários',
-      fields: [
-        { type: 'checkbox', name: 'itens', label: 'Itens Necessários', options: ['Fraldas', 'Sabonete', 'Shampoo', 'Pasta de dente', 'Absorvente', 'Papel higiênico', 'Desodorante'] },
-        { type: 'select', name: 'urgencia', label: 'Urgência', options: ['Imediata', 'Esta semana', 'Este mês'] }
-      ]
-    },
-    'Medicamentos': {
-      title: 'Informações do Medicamento',
-      fields: [
-        { type: 'text', name: 'nome', label: 'Nome do Medicamento', placeholder: 'Ex: Paracetamol' },
-        { type: 'text', name: 'dosagem', label: 'Dosagem', placeholder: 'Ex: 500mg' },
-        { type: 'select', name: 'uso', label: 'Tipo de Uso', options: ['Uso Contínuo', 'Emergencial', 'Tratamento Temporário'] },
-        { type: 'textarea', name: 'observacoes', label: 'Observações', placeholder: 'Prescrição médica, alergias, etc.' }
-      ]
-    },
-    'Contas': {
-      title: 'Detalhes da Conta',
-      fields: [
-        { type: 'select', name: 'tipo', label: 'Tipo de Conta', options: ['Água', 'Luz', 'Aluguel', 'Gás', 'Internet', 'Telefone'] },
-        { type: 'text', name: 'valor', label: 'Valor Aproximado', placeholder: 'Ex: R$ 150,00' },
-        { type: 'select', name: 'urgencia', label: 'Urgência', options: ['Vencida', 'Vence esta semana', 'Vence este mês'] }
-      ]
-    },
-    'Trabalho': {
-      title: 'Oportunidade de Emprego',
-      fields: [
-        { type: 'select', name: 'tipo', label: 'Tipo de Vaga', options: ['CLT', 'Freelancer', 'Meio Período', 'Temporário', 'Estágio'] },
-        { type: 'section', name: 'area_section', label: 'Área de Interesse' },
-        { type: 'text', name: 'area', placeholder: 'Ex: Vendas, Limpeza, Cozinha, Atendimento, Construção' },
-        { type: 'section', name: 'horario_section', label: 'Horário' },
-        { type: 'select', name: 'disponibilidade', label: 'Disponibilidade', options: ['Manhã (6h-12h)', 'Tarde (12h-18h)', 'Noite (18h-24h)', 'Fins de semana', 'Período integral', 'Horário flexível'] }
-      ]
-    },
-    'Serviços': {
-      title: 'Tipo de Serviço',
-      fields: [
-        { type: 'select', name: 'tipo', label: 'Tipo de Serviço', options: ['Reforma/Reparo', 'Transporte', 'Cuidado (idoso/criança)', 'Limpeza', 'Jardinagem', 'Técnico'] },
-        { type: 'textarea', name: 'descricao', label: 'Descrição do Serviço', placeholder: 'Descreva o que precisa ser feito' },
-        { type: 'select', name: 'urgencia', label: 'Urgência', options: ['Imediata', 'Esta semana', 'Este mês', 'Flexível'] }
-      ]
-    },
-    'Outros': {
-      title: 'Outras Necessidades',
-      fields: [
-        { type: 'textarea', name: 'descricao', label: 'Descreva sua necessidade', placeholder: 'Conte-nos o que você precisa' },
-        { type: 'select', name: 'urgencia', label: 'Urgência', options: ['Alta', 'Média', 'Baixa'] }
-      ]
-    }
+  const handleConfirmHelp = () => {
+    setIsSuccess(true);
   };
 
-  useEffect(() => {
-    // Carregar pedidos reais do localStorage
-    const loadPedidos = () => {
-      const savedPedidos = localStorage.getItem('solidar-pedidos');
-      if (savedPedidos) {
-        setPedidos(JSON.parse(savedPedidos));
-      }
-    };
-    
-    loadPedidos();
-    
-    // Escutar por novos pedidos
-    const handleNewPedido = () => {
-      loadPedidos();
-    };
-    
-    window.addEventListener('pedidoAdded', handleNewPedido);
-    
-    return () => {
-      window.removeEventListener('pedidoAdded', handleNewPedido);
-    };
-  }, []);
-
-  const filteredPedidos = selectedFilter === 'Todos' 
-    ? pedidos 
-    : pedidos.filter(p => {
-        const matchesCategory = p.tipo === selectedFilter;
-        const matchesUrgency = selectedUrgencies.length === 0 || selectedUrgencies.includes(p.urgencia);
-        return matchesCategory && matchesUrgency;
-      });
-
-  const getUrgencyColor = (urgencia) => {
-    switch(urgencia) {
-      case 'Alta': return '#ef4444';
-      case 'Média': return '#f59e0b';
-      case 'Baixa': return '#22c55e';
-      default: return '#64748b';
-    }
+  const closeSuccess = () => {
+    setIsSuccess(false);
+    setSelectedPedido(null);
   };
 
-  const getCategoryIcon = (tipo) => {
-    switch(tipo) {
-      case 'Alimentos': return <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" alt="alimentos" width="20" height="20" />;
-      case 'Roupas': return <img src="https://cdn-icons-png.flaticon.com/512/892/892458.png" alt="roupas" width="20" height="20" />;
-      case 'Medicamentos': return <img src="https://cdn-icons-png.flaticon.com/512/883/883356.png" alt="medicamentos" width="20" height="20" />;
-      case 'Contas': return <img src="https://cdn-icons-png.flaticon.com/512/1611/1611179.png" alt="contas" width="20" height="20" />;
-      case 'Trabalho': return <img src="https://cdn-icons-png.flaticon.com/512/1077/1077976.png" alt="trabalho" width="20" height="20" />;
-      default: return <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="outros" width="20" height="20" />;
+  const toggleCategory = (category) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const toggleUrgency = (urgency) => {
+    setSelectedUrgencies(prev => 
+      prev.includes(urgency) 
+        ? prev.filter(u => u !== urgency)
+        : [...prev, urgency]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setSelectedUrgencies([]);
+  };
+
+  const getCategoryIcon = (category) => {
+    switch(category) {
+      case 'Alimentos': return <i className="fi fi-rr-shopping-basket"></i>;
+      case 'Roupas': return <i className="fi fi-rr-shirt"></i>;
+      case 'Calçados': return <i className="fi fi-rr-shoe-prints"></i>;
+      case 'Contas': return <i className="fi fi-rr-lightbulb"></i>;
+      case 'Emprego': return <i className="fi fi-rr-briefcase"></i>;
+      case 'Higiene': return <i className="fi fi-rr-soap"></i>;
+      case 'Medicamentos': return <i className="fi fi-rr-pills"></i>;
+      case 'Móveis': return <i className="fi fi-rr-chair"></i>;
+      case 'Eletrodomésticos': return <i className="fi fi-rr-tv"></i>;
+      case 'Material Escolar': return <i className="fi fi-rr-book"></i>;
+      case 'Transporte': return <i className="fi fi-rr-bus"></i>;
+      default: return <i className="fi fi-rr-heart"></i>;
     }
   };
 
   return (
-    <div className="quero-ajudar">
+    <div className="pedidos-wrapper">
       <div className="container">
-        {/* Hero Section */}
-        <section className="hero-section">
-          <h1 className="hero-title">Como você gostaria de ajudar?</h1>
-          <p className="hero-subtitle">
-            Encontre pessoas no seu bairro que precisam de uma mãozinha. 
-            Cada gesto de solidariedade fortalece nossa comunidade.
-          </p>
-          <div className="header-actions">
-            <span className="pedidos-count">{filteredPedidos.length} pedidos encontrados</span>
-            <button 
-              className="filter-toggle-btn"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <i className="fi fi-rr-filter"></i>
-              Filtrar
-            </button>
-          </div>
-        </section>
+        <header className="pedidos-header">
+          <h1>Pedidos perto de você</h1>
+          <p>Veja quem está precisando no seu bairro e escolha quem ajudar.</p>
+        </header>
 
-          {/* Lista de Pedidos */}
-          <section className="pedidos-section">
-            <div className="section-header">
-            </div>
+        {/* Filters */}
+        <div className="filters-bar">
+          <button 
+            className={`filter-toggle-btn ${showFilters || selectedCategories.length > 0 || selectedUrgencies.length > 0 ? 'active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <i className="fi fi-rr-settings-sliders"></i>
+            Filtrar
+            {(selectedCategories.length > 0 || selectedUrgencies.length > 0) && (
+              <span className="filter-count">
+                {selectedCategories.length + selectedUrgencies.length}
+              </span>
+            )}
+          </button>
+        </div>
 
-            {/* Dropdown de Filtros */}
-            {showFilters && (
-              <div className="filters-dropdown">
-                <div className="filters-grid">
-                  {filters.map((filter) => (
-                    <button
-                      key={filter}
-                      className={`filter-option ${selectedFilter === filter ? 'active' : ''}`}
-                      onClick={() => {
-                        setSelectedFilter(filter);
-                        setSelectedUrgencies([]);
-                        if (filter === 'Todos') {
-                          setShowFilters(false);
-                        }
-                      }}
+        {/* Advanced Filters Panel */}
+        {showFilters && (
+          <div className="filters-panel">
+            <div className="filters-content">
+              <div className="filter-group">
+                <h3>Categorias</h3>
+                <div className="filter-options">
+                  {CATEGORIES.map(cat => (
+                    <button 
+                      key={cat}
+                      className={`chip-btn ${selectedCategories.includes(cat) ? 'active' : ''}`}
+                      onClick={() => toggleCategory(cat)}
                     >
-                      {filter}
+                      {cat}
                     </button>
                   ))}
                 </div>
-                
-                {/* Filtros de Urgência */}
-                {selectedFilter !== 'Todos' && (
-                  <div className="urgency-filters">
-                    <h4>Nível de urgência:</h4>
-                    <div className="urgency-options">
-                      {['Alta', 'Média', 'Baixa'].map((urgency) => (
-                        <button
-                          key={urgency}
-                          className={`urgency-option ${urgency.toLowerCase()} ${selectedUrgencies.includes(urgency) ? 'active' : ''}`}
-                          onClick={() => {
-                            setSelectedUrgencies(prev => 
-                              prev.includes(urgency)
-                                ? prev.filter(u => u !== urgency)
-                                : [...prev, urgency]
-                            );
-                          }}
-                        >
-                          {urgency}
-                          <span className={`urgency-dot ${urgency.toLowerCase()}`}></span>
-                        </button>
-                      ))}
+              </div>
+
+              <div className="filter-group">
+                <h3>Nível de Urgência</h3>
+                <div className="filter-options">
+                  {URGENCIES.map(urg => (
+                    <button 
+                      key={urg}
+                      className={`chip-btn urgency-chip-${urg.toLowerCase()} ${selectedUrgencies.includes(urg) ? 'active' : ''}`}
+                      onClick={() => toggleUrgency(urg)}
+                    >
+                      {urg}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="filters-actions">
+                <button className="clear-filters-btn" onClick={clearFilters}>Limpar Filtros</button>
+                <button className="apply-filters-btn" onClick={() => setShowFilters(false)}>Aplicar</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Results Info */}
+        <div className="results-info">
+          Mostrando {filteredPedidos.length} pedido{filteredPedidos.length !== 1 ? 's' : ''} de ajuda
+        </div>
+
+        {/* Grid */}
+        <div className="pedidos-grid">
+          {filteredPedidos.length === 0 ? (
+            <div className="no-results">
+              <i className="fi fi-rr-search no-results-icon"></i>
+              <h3>Nenhum pedido encontrado</h3>
+              <p>Tente ajustar os filtros ou verificar novamente mais tarde.</p>
+            </div>
+          ) : (
+            filteredPedidos.map((pedido) => (
+              <div key={pedido.id} className="pedido-card">
+                <div className="card-header">
+                  <div className="user-meta">
+                    <img src={pedido.avatar} alt={pedido.userName} className="user-avatar" />
+                    <div>
+                      <span className="user-name">{pedido.userName}</span>
+                      <span className="distance">{pedido.distance}</span>
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                  <span className={`urgency-badge urgency-${pedido.urgency.toLowerCase()}`}>
+                    Urgência: {pedido.urgency}
+                  </span>
+                </div>
 
-            <div className="pedidos-grid">
-              {filteredPedidos.length === 0 ? (
-                <div className="no-pedidos">
-                  <div className="no-pedidos-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="sem pedidos" width="64" height="64" />
+                <div className="card-body">
+                  <div className="help-type">
+                    {getCategoryIcon(pedido.category)}
+                    {pedido.helpType}
                   </div>
-                  <h3>Nenhum pedido de ajuda ainda</h3>
-                  <p>Quando alguém precisar de ajuda na sua região, os pedidos aparecerão aqui.</p>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => navigate('/preciso-de-ajuda')}
-                  >
-                    Fazer um pedido
+                  <div className="family-info">
+                    <i className="fi fi-rr-users"></i> {pedido.familyInfo}
+                  </div>
+                  <p className="description">{pedido.description}</p>
+                </div>
+
+                <div className="card-footer">
+                  <button className="btn btn-secondary" onClick={() => setSelectedPedido(pedido)}>
+                    <i className="fi fi-rr-eye"></i> Ver detalhes
+                  </button>
+                  <button className="btn btn-primary" onClick={() => setSelectedPedido(pedido)}>
+                    <i className="fi fi-rr-hand-heart"></i> Ajudar agora
                   </button>
                 </div>
-              ) : (
-                filteredPedidos.map((pedido) => (
-                  <div key={pedido.id} className="pedido-card">
-                    <div className="card-header">
-                      <div className="category-badge">
-                        <span className="category-icon">{getCategoryIcon(pedido.tipo)}</span>
-                        <span className="category-text">{pedido.tipo}</span>
-                      </div>
-                      <div className="urgency-badge" style={{ backgroundColor: getUrgencyColor(pedido.urgencia) }}>
-                        {pedido.urgencia}
-                      </div>
-                    </div>
-
-                    <div className="card-content">
-                      <h3 className="pedido-titulo">{pedido.titulo}</h3>
-                      <p className="pedido-descricao">{pedido.descricao}</p>
-                      
-                      <div className="pedido-meta">
-                        <div className="meta-item">
-                          <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="localização" width="16" height="16" className="meta-icon" />
-                          <span>{pedido.distancia}</span>
-                        </div>
-                        <div className="meta-item">
-                          <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="tempo" width="16" height="16" className="meta-icon" />
-                          <span>{pedido.tempo}</span>
-                        </div>
-                        <div className="meta-item">
-                          <img src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" alt="usuário" width="16" height="16" className="meta-icon" />
-                          <span>{pedido.usuario}</span>
-                          {pedido.verificado && <span className="verified-icon">✓</span>}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="card-actions">
-                      <button 
-                        className="btn-secondary"
-                        onClick={() => {
-                          setSelectedPedido(pedido);
-                          setShowCategoryDetails(true);
-                        }}
-                      >
-                        Ver detalhes
-                      </button>
-                      <button 
-                        className="btn-primary"
-                        onClick={() => navigate(`/necessidade/${pedido.id}`)}
-                      >
-                        Quero ajudar
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* Call to Action */}
-          <section className="cta-section">
-            <div className="cta-card">
-              <h3>Não encontrou como ajudar?</h3>
-              <p>Cadastre-se para receber notificações de novos pedidos na sua região.</p>
-              <button className="btn-cta">Receber notificações</button>
-            </div>
-          </section>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
-      {/* Category Details Modal */}
-      {showCategoryDetails && selectedPedido && (
-        <div className="modal-overlay" onClick={() => setShowCategoryDetails(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Detalhes da Necessidade</h3>
-              <button 
-                className="modal-close"
-                onClick={() => setShowCategoryDetails(false)}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="modal-body">
-              <div className="need-summary">
-                <div className="need-category">
-                  <span className="category-icon">{getCategoryIcon(selectedPedido.tipo)}</span>
-                  <span className="category-name">{selectedPedido.tipo}</span>
-                </div>
-                <h4>{selectedPedido.titulo}</h4>
-                <p>{selectedPedido.descricao}</p>
-              </div>
+      {/* Modal Details */}
+      {selectedPedido && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            {!isSuccess ? (
+              <>
+                <button className="modal-close" onClick={() => setSelectedPedido(null)}>
+                  <i className="fi fi-rr-cross"></i>
+                </button>
 
-              {categoryOptions[selectedPedido.tipo] && (
-                <div className="category-details">
-                  <h5>{categoryOptions[selectedPedido.tipo].title}</h5>
-                  <div className="details-form">
-                    {categoryOptions[selectedPedido.tipo].fields.map((field, index) => (
-                      <div key={index} className="detail-field">
-                        {field.type === 'section' && (
-                          <h6 className="section-title">{field.label}</h6>
-                        )}
-                        {field.type !== 'section' && field.label && (
-                          <label>{field.label}</label>
-                        )}
-                        {field.type === 'select' && (
-                          <select className="form-select">
-                            <option value="">Selecione uma opção</option>
-                            {field.options.map((option, optIndex) => (
-                              <option key={optIndex} value={option}>{option}</option>
-                            ))}
-                          </select>
-                        )}
-                        {field.type === 'text' && (
-                          <input 
-                            type="text" 
-                            className="form-input" 
-                            placeholder={field.placeholder}
-                          />
-                        )}
-                        {field.type === 'textarea' && (
-                          <textarea 
-                            className="form-textarea" 
-                            placeholder={field.placeholder}
-                            rows="3"
-                          />
-                        )}
-                        {field.type === 'checkbox' && (
-                          <div className="checkbox-group">
-                            {field.options.map((option, optIndex) => (
-                              <label key={optIndex} className="checkbox-item">
-                                <input type="checkbox" />
-                                <span>{option}</span>
-                              </label>
-                            ))}
-                          </div>
-                        )}
+                <div className="modal-section" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+                  <img src={selectedPedido.avatar} alt="" className="user-avatar" style={{ width: 64, height: 64 }} />
+                  <div>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{selectedPedido.userName}</h2>
+                    <span className="distance">{selectedPedido.distance} • {selectedPedido.familyInfo}</span>
+                  </div>
+                </div>
+
+                <div className="modal-section" style={{ background: 'var(--sb-teal-soft)', padding: 20, borderRadius: 20 }}>
+                  <h3>Necessidade Específica</h3>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <i className="fi fi-rr-exclamation text-teal" style={{ marginTop: 2 }}></i>
+                    <p style={{ fontWeight: 600, color: 'var(--sb-text)' }}>
+                      {selectedPedido.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="modal-section">
+                  <h3>Histórico de Apoio</h3>
+                  {selectedPedido.history.length > 0 ? (
+                    selectedPedido.history.map((h, i) => (
+                      <div key={i} className="history-item">
+                        <i className="fi fi-rr-time-past"></i>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{h.date} — {h.help}</span>
                       </div>
-                    ))}
-                  </div>
+                    ))
+                  ) : (
+                    <p style={{ fontSize: '0.9rem', color: 'var(--sb-text-light)' }}>Nenhuma ajuda anterior registrada.</p>
+                  )}
                 </div>
-              )}
 
-              <div className="contact-info">
-                <h5>Informações de Contato</h5>
-                <div className="contact-details">
-                  <div className="contact-item">
-                    <span className="contact-label">Distância:</span>
-                    <span>{selectedPedido.distancia}</span>
-                  </div>
-                  <div className="contact-item">
-                    <span className="contact-label">Publicado:</span>
-                    <span>{selectedPedido.tempo}</span>
-                  </div>
-                  <div className="contact-item">
-                    <span className="contact-label">Usuário:</span>
-                    <span>{selectedPedido.usuario} {selectedPedido.verificado && '✓'}</span>
-                  </div>
+                <button className="btn btn-primary" style={{ width: '100%', padding: '18px', fontSize: '1.1rem' }} onClick={handleConfirmHelp}>
+                  Confirmar ajuda a esta pessoa
+                </button>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ width: 80, height: 80, background: '#f0fdfa', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                  <i className="fi fi-rr-check-circle" style={{ fontSize: '48px', color: 'var(--sb-teal)' }}></i>
                 </div>
+                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 12 }}>Iniciando Ajuda!</h2>
+                <p style={{ color: 'var(--sb-text-light)', marginBottom: 24 }}>
+                  Obrigado por se voluntariar! Você será conectado com {selectedPedido.userName} para finalizar os detalhes.
+                </p>
+                <button className="btn btn-primary" style={{ width: '100%' }} onClick={closeSuccess}>
+                  Voltar para a lista
+                </button>
               </div>
-            </div>
-
-            <div className="modal-footer">
-              <button 
-                className="btn-secondary"
-                onClick={() => setShowCategoryDetails(false)}
-              >
-                Fechar
-              </button>
-              <button 
-                className="btn-primary"
-                onClick={() => {
-                  setShowCategoryDetails(false);
-                  navigate(`/necessidade/${selectedPedido.id}`);
-                }}
-              >
-                Quero ajudar
-              </button>
-            </div>
+            )}
           </div>
         </div>
       )}
