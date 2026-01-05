@@ -5,8 +5,8 @@
 
 /* Hero Section */
 .hero {
-  background: linear-gradient(135deg, var(--primary) 0%, #1a3a52 100%);
-  color: white;
+  background: #ffffff;
+  color: var(--text-primary);
   padding: 100px 0 80px;
   position: relative;
   overflow: hidden;
@@ -384,8 +384,8 @@
 /* Stats Section */
 .stats-section {
   padding: 80px 0;
-  background: linear-gradient(135deg, var(--primary) 0%, #1a3a52 100%);
-  color: white;
+  background: #ffffff;
+  color: var(--text-primary);
   opacity: 0;
   transform: translateY(50px);
   transition: all 0.8s ease;

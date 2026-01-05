@@ -143,7 +143,7 @@ a:hover {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: var(--primary);
   color: white;
   box-shadow: var(--shadow-sm);
 }

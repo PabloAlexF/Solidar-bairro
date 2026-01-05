@@ -127,11 +127,14 @@
 
 /* Hero */
 .hero {
-  min-height: 100vh;
+  background: #ffffff;
+  color: var(--sb-text);
+  padding: 100px 0 80px;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  padding-top: 100px;
-  position: relative;
+  min-height: 100vh;
 }
 
 .hero-container {
@@ -151,13 +154,13 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: white;
+  background: var(--sb-teal-soft);
   color: var(--sb-teal);
-  border: 1px solid var(--sb-teal-soft);
+  border: 1px solid var(--sb-teal);
   border-radius: 100px;
   font-weight: 700;
   font-size: 0.9rem;
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.05);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
   margin-bottom: 32px;
 }
 
@@ -174,7 +177,7 @@
 .hero-title-sub {
   font-size: 3rem;
   font-weight: 700;
-  color: var(--sb-teal);
+  color: var(--sb-text-light);
   margin-bottom: 32px;
   letter-spacing: -0.04em;
 }

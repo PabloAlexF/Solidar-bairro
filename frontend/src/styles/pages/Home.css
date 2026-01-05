@@ -239,12 +239,12 @@
 }
 
 .option-icon.primary {
-  background: linear-gradient(135deg, var(--ls-accent-2) 0%, rgba(255,255,255,0.6) 100%);
+  background: var(--ls-accent-2);
   color: var(--ls-accent-1);
 }
 
 .option-icon.secondary {
-  background: linear-gradient(135deg, var(--ls-green) 0%, rgba(255,255,255,0.85) 100%);
+  background: var(--ls-green);
   color: white;
 }
 
@@ -305,7 +305,7 @@
 }
 
 .option-button.primary {
-  background: linear-gradient(135deg, var(--ls-blue) 0%, var(--ls-green) 100%);
+  background: var(--ls-blue);
   color: white;
   box-shadow: 0 8px 24px rgba(15,116,144,0.14);
 }
@@ -317,7 +317,7 @@
 }
 
 .option-button.secondary {
-  background: linear-gradient(135deg, var(--ls-accent-3) 0%, var(--ls-accent-1) 100%);
+  background: var(--ls-accent-3);
   color: white;
   box-shadow: 0 8px 24px rgba(124,58,237,0.12);
 }
