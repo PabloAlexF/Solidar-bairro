@@ -291,7 +291,6 @@ const LandingPage = () => {
           <div className="hero-content">
             <div className="hero-badge">
               <div className="badge-pulse"></div>
-              <i className="fi fi-rr-star"></i>
               <span>Conectando Vizinhos Próximos</span>
             </div>
             
@@ -388,7 +387,7 @@ const LandingPage = () => {
                 <span className="card-subtitle">Solidariedade</span>
                 <h2>Quero ajudar</h2>
                 <p>Descubra pessoas próximas que precisam da sua ajuda. Seja a diferença na vida de alguém com pequenos gestos.</p>
-                <button className="btn-card" onClick={() => navigate('/painel-social')}>
+                <button className="btn-card" onClick={() => navigate('/quero-ajudar')}>
                   Ver oportunidades <i className="fi fi-rr-angle-right"></i>
                 </button>
               </div>
@@ -401,7 +400,7 @@ const LandingPage = () => {
                 <span className="card-subtitle">Comunidade</span>
                 <h2>Preciso de Ajuda</h2>
                 <p>Compartilhe sua necessidade com vizinhos dispostos a ajudar. Você não está sozinho nesta jornada.</p>
-                <button className="btn-card btn-card-alt" onClick={() => navigate('/painel-social')}>
+                <button className="btn-card btn-card-alt" onClick={() => navigate('/preciso-de-ajuda')}>
                   Acessar plataforma <i className="fi fi-rr-angle-right"></i>
                 </button>
               </div>

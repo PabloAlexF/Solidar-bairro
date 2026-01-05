@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import LogoutButton from '../components/LogoutButton';
 import '../styles/pages/QueroAjudar.css';
 
 const CATEGORIES = ["Alimentos", "Roupas", "Calçados", "Contas", "Emprego", "Higiene", "Medicamentos", "Móveis", "Eletrodomésticos", "Material Escolar", "Transporte"];
@@ -75,11 +78,74 @@ const INITIAL_PEDIDOS = [
 ];
 
 const QueroAjudar = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedUrgencies, setSelectedUrgencies] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  useEffect(() => {
+    // Load notifications
+    const loadNotifications = () => {
+      const savedNotifications = localStorage.getItem('solidar-notifications');
+      if (savedNotifications) {
+        setNotifications(JSON.parse(savedNotifications));
+      }
+    };
+    
+    loadNotifications();
+
+    // Close dropdowns when clicking outside
+    const handleClickOutside = (event) => {
+      if (showUserMenu || showNotifications) {
+        const userMenuElement = document.querySelector('.user-menu-wrapper');
+        const notificationElement = document.querySelector('.notification-wrapper');
+        
+        if (userMenuElement && !userMenuElement.contains(event.target)) {
+          setShowUserMenu(false);
+        }
+        
+        if (notificationElement && !notificationElement.contains(event.target)) {
+          setShowNotifications(false);
+        }
+      }
+    };
+    
+    window.addEventListener('notificationAdded', loadNotifications);
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      window.removeEventListener('notificationAdded', loadNotifications);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu, showNotifications]);
+
+  const markAllAsRead = () => {
+    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updatedNotifications);
+    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    localStorage.removeItem('solidar-notifications');
+  };
+
+  const markAsRead = (notificationId) => {
+    const updatedNotifications = notifications.map(n => 
+      n.id === notificationId ? { ...n, read: true } : n
+    );
+    setNotifications(updatedNotifications);
+    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial;
 
   const filteredPedidos = INITIAL_PEDIDOS.filter(pedido => {
     const advancedCategoryMatch = selectedCategories.length === 0 || selectedCategories.includes(pedido.category);
@@ -136,6 +202,169 @@ const QueroAjudar = () => {
 
   return (
     <div className="pedidos-wrapper">
+      {/* Navigation */}
+      <nav className="landing-nav">
+        <div className="section-container nav-container">
+          <div className="logo" onClick={() => navigate('/')}>
+            <i className="fi fi-rr-heart logo-icon"></i>
+            <span>SolidarBairro</span>
+          </div>
+          <div className="nav-links">
+            {!isAuthenticated() ? (
+              <div className="auth-buttons">
+                <button className="btn-nav-secondary" onClick={() => navigate('/login')}>
+                  Entrar
+                </button>
+                <button className="btn-nav" onClick={() => navigate('/cadastro')}>
+                  Cadastrar
+                </button>
+              </div>
+            ) : (
+              <div className="user-section">
+                {/* Notificações */}
+                <div className="notification-wrapper">
+                  <button 
+                    className="notification-btn"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                  >
+                    🔔
+                    {unreadCount > 0 && (
+                      <span className="notification-badge">{unreadCount}</span>
+                    )}
+                  </button>
+                  
+                  {showNotifications && (
+                    <div className="notification-dropdown">
+                      <div className="notification-header">
+                        <h3>Notificações</h3>
+                        {notifications.length > 0 && (
+                          <div className="notification-actions">
+                            {unreadCount > 0 && (
+                              <button 
+                                className="action-btn mark-read-btn"
+                                onClick={markAllAsRead}
+                                title="Marcar todas como lidas"
+                              >
+                                ✓
+                              </button>
+                            )}
+                            <button 
+                              className="action-btn clear-btn"
+                              onClick={clearAllNotifications}
+                              title="Limpar todas"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="notification-list">
+                        {notifications.length === 0 ? (
+                          <div className="no-notifications">
+                            Nenhuma notificação ainda
+                          </div>
+                        ) : (
+                          notifications.map((notification) => (
+                            <div 
+                              key={notification.id} 
+                              className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                              onClick={() => !notification.read && markAsRead(notification.id)}
+                            >
+                              <div className="notification-content">
+                                <p className="notification-title">{notification.title}</p>
+                                <p className="notification-message">{notification.message}</p>
+                                <span className="notification-time">
+                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                              {!notification.read && <div className="unread-dot"></div>}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Menu do usuário */}
+                <div className="user-menu-wrapper">
+                  <button 
+                    className="user-btn"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                  >
+                    <div className="user-avatar">
+                      {userName?.substring(0, 2).toUpperCase()}
+                    </div>
+                    {user?.isVerified && <span className="verified-badge">✓</span>}
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="user-dropdown">
+                      <div className="user-info">
+                        <div className="user-avatar-large">
+                          {userName?.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="user-details">
+                          <div className="user-name">
+                            {userName}
+                            {user?.isVerified && (
+                              <span className="verified-text">Verificado</span>
+                            )}
+                          </div>
+                          <div className="user-phone">{user?.phone || user?.telefone || user?.email}</div>
+                        </div>
+                      </div>
+
+                      <div className="user-stats">
+                        <div className="stat">
+                          <div className="stat-number">{user?.helpedCount || 0}</div>
+                          <div className="stat-label">Pessoas ajudadas</div>
+                        </div>
+                        <div className="stat">
+                          <div className="stat-number">{user?.receivedHelpCount || 0}</div>
+                          <div className="stat-label">Ajudas recebidas</div>
+                        </div>
+                      </div>
+
+                      <div className="user-actions">
+                        <button 
+                          className="menu-item profile-btn"
+                          onClick={() => {
+                            navigate('/perfil');
+                            setShowUserMenu(false);
+                          }}
+                        >
+                          👤 Ver perfil
+                        </button>
+                        
+                        <button 
+                          className="menu-item"
+                          onClick={() => {
+                            navigate('/conversas');
+                            setShowUserMenu(false);
+                          }}
+                        >
+                          💬 Minhas conversas
+                        </button>
+                        
+                        <LogoutButton className="menu-item logout-btn">
+                          🚪 Sair
+                        </LogoutButton>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
+
       <div className="container">
         <header className="pedidos-header">
           <h1>Pedidos perto de você</h1>
