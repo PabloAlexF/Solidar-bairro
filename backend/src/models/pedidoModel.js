@@ -1,8 +1,31 @@
 const { db } = require('../config/firebase');
+const authService = require('../services/authService');
 
 class PedidoModel {
   constructor() {
     this.collection = db.collection('pedidos');
+  }
+
+  async getUserData(userId) {
+    try {
+      const collections = ['cidadaos', 'comercios', 'ongs', 'familias'];
+      
+      for (const collection of collections) {
+        const doc = await db.collection(collection).doc(userId).get();
+        if (doc.exists) {
+          const userData = doc.data();
+          return {
+            nome: userData.nome || userData.nomeEstabelecimento || userData.nomeEntidade || userData.nomeCompleto || 'Usuário',
+            tipo: collection.slice(0, -1)
+          };
+        }
+      }
+      
+      return { nome: 'Usuário', tipo: 'cidadao' };
+    } catch (error) {
+      console.error('Erro ao buscar dados do usuário:', error);
+      return { nome: 'Usuário', tipo: 'cidadao' };
+    }
   }
 
   async create(pedidoData) {
@@ -27,10 +50,19 @@ class PedidoModel {
     try {
       const snapshot = await this.collection.get();
       
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const pedidos = [];
+      for (const doc of snapshot.docs) {
+        const pedidoData = doc.data();
+        const userData = await this.getUserData(pedidoData.userId);
+        
+        pedidos.push({
+          id: doc.id,
+          ...pedidoData,
+          usuario: userData
+        });
+      }
+      
+      return pedidos;
     } catch (error) {
       throw new Error(`Erro ao buscar pedidos: ${error.message}`);
     }
@@ -44,9 +76,13 @@ class PedidoModel {
         return null;
       }
       
+      const pedidoData = doc.data();
+      const userData = await this.getUserData(pedidoData.userId);
+      
       return {
         id: doc.id,
-        ...doc.data()
+        ...pedidoData,
+        usuario: userData
       };
     } catch (error) {
       throw new Error(`Erro ao buscar pedido: ${error.message}`);
@@ -59,10 +95,19 @@ class PedidoModel {
         .where('userId', '==', userId)
         .get();
       
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const pedidos = [];
+      for (const doc of snapshot.docs) {
+        const pedidoData = doc.data();
+        const userData = await this.getUserData(pedidoData.userId);
+        
+        pedidos.push({
+          id: doc.id,
+          ...pedidoData,
+          usuario: userData
+        });
+      }
+      
+      return pedidos;
     } catch (error) {
       throw new Error(`Erro ao buscar pedidos do usuário: ${error.message}`);
     }
