@@ -30,10 +30,26 @@ const Pedidos = () => {
   const [filter, setFilter] = useState('Todos');
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [step, setStep] = useState(1);
   const [acceptedRules, setAcceptedRules] = useState(false);
 
-  const filters = ['Todos', 'Alimentos', 'Roupas', 'Contas', 'Servicos'];
+  const filters = ['Todos', 'Alimentos', 'Roupas', 'Contas', 'Servicos', 'Outros'];
+  
+  const allCategories = [
+    { name: 'Alimentos', icon: '🛒', color: '#ff6b35' },
+    { name: 'Roupas', icon: '👕', color: '#8b5cf6' },
+    { name: 'Calçados', icon: '👟', color: '#06b6d4' },
+    { name: 'Contas', icon: '🧾', color: '#f59e0b' },
+    { name: 'Servicos', icon: '🔧', color: '#3b82f6' },
+    { name: 'Higiene', icon: '🧼', color: '#10b981' },
+    { name: 'Medicamentos', icon: '💊', color: '#ef4444' },
+    { name: 'Móveis', icon: '🪑', color: '#84cc16' },
+    { name: 'Eletrodomésticos', icon: '📺', color: '#6366f1' },
+    { name: 'Material Escolar', icon: '📚', color: '#ec4899' },
+    { name: 'Transporte', icon: '🚌', color: '#14b8a6' },
+    { name: 'Outros', icon: '❤️', color: '#64748b' }
+  ];
 
   const pedidos = [
     {
@@ -76,15 +92,21 @@ const Pedidos = () => {
     : pedidos.filter(p => p.category === filter);
 
   const getCategoryIcon = (category) => {
-    switch(category) {
-      case 'Alimentos': return '🛒';
-      case 'Roupas': return '👕';
-      case 'Contas': return '🧾';
-      case 'Servicos': return '🔧';
-      case 'Higiene': return '🧼';
-      case 'Medicamentos': return '💊';
-      default: return '❤️';
+    const categoryData = allCategories.find(cat => cat.name === category);
+    return categoryData ? categoryData.icon : '❤️';
+  };
+
+  const handleFilterClick = (filterName) => {
+    if (filterName === 'Outros') {
+      setShowCategoriesModal(true);
+    } else {
+      setFilter(filterName);
     }
+  };
+
+  const handleCategorySelect = (categoryName) => {
+    setFilter(categoryName);
+    setShowCategoriesModal(false);
   };
 
   const handleAjudar = (pedido) => {
@@ -129,7 +151,7 @@ const Pedidos = () => {
               <button
                 key={f}
                 className={`filter-btn ${filter === f ? 'active' : ''}`}
-                onClick={() => setFilter(f)}
+                onClick={() => handleFilterClick(f)}
                 style={{
                   backgroundColor: filter === f ? getCategoryColor(f) : 'white',
                   borderColor: filter === f ? getCategoryColor(f) : '#e2e8f0',
@@ -194,6 +216,51 @@ const Pedidos = () => {
           </div>
         </div>
       </main>
+
+      {showCategoriesModal && (
+        <div className="modal-overlay" onClick={() => setShowCategoriesModal(false)}>
+          <div className="categories-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="categories-header">
+              <div>
+                <h3>Escolha uma categoria</h3>
+                <p>Selecione a categoria que melhor descreve sua necessidade.</p>
+              </div>
+              <button className="close-btn" onClick={() => setShowCategoriesModal(false)}>
+                ×
+              </button>
+            </div>
+            
+            <div className="categories-grid">
+              {allCategories.map((category) => (
+                <button
+                  key={category.name}
+                  className={`category-option ${filter === category.name ? 'active' : ''}`}
+                  onClick={() => handleCategorySelect(category.name)}
+                  style={{
+                    borderColor: filter === category.name ? category.color : '#f4f4f5',
+                    backgroundColor: filter === category.name ? `${category.color}10` : 'white'
+                  }}
+                >
+                  <div 
+                    className="category-icon"
+                    style={{ 
+                      backgroundColor: filter === category.name ? category.color : '#f8f9fa',
+                      color: filter === category.name ? 'white' : '#6b7280'
+                    }}
+                  >
+                    {category.icon}
+                  </div>
+                  <span style={{
+                    color: filter === category.name ? category.color : '#18181b'
+                  }}>
+                    {category.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && selectedPedido && (
         <div className="modal-overlay" onClick={closeModal}>

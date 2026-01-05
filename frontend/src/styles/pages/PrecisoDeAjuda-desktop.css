@@ -1,0 +1,343 @@
+/* CSS Desktop Otimizado - PrecisoDeAjuda */
+
+@media (min-width: 1024px) {
+  
+  /* Container principal desktop - FULLSCREEN */
+  .wizard-card {
+    max-width: none;
+    width: 100vw;
+    min-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Header desktop */
+  .wizard-header {
+    padding: 48px 64px;
+  }
+
+  .brand-title h1 {
+    font-size: 2rem;
+    font-weight: 900;
+  }
+
+  .progress-dots {
+    gap: 12px;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .dot.active {
+    width: 32px;
+    border-radius: 6px;
+  }
+
+  /* Content area desktop */
+  .wizard-content {
+    padding: 40px 32px;
+    min-height: 500px;
+  }
+
+  .step-title {
+    font-size: 1.875rem;
+    line-height: 0.9;
+    margin-bottom: 16px;
+  }
+
+  .step-subtitle {
+    font-size: 1.125rem;
+    max-width: 600px;
+  }
+
+  /* Categories grid desktop */
+  .category-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    margin-top: 64px;
+    max-width: none;
+  }
+
+  .category-card {
+    padding: 24px 20px;
+    border-radius: 20px;
+    min-height: 140px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .category-card:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 32px 64px rgba(0,0,0,0.12);
+  }
+
+  .category-card.selected {
+    transform: translateY(-16px) scale(1.08);
+    box-shadow: 0 40px 80px rgba(249, 115, 22, 0.2);
+  }
+
+  /* Modal desktop - OTIMIZADO */
+  .modal-overlay {
+    padding: 60px;
+    backdrop-filter: blur(16px);
+    background-color: rgba(9, 9, 11, 0.8);
+  }
+
+  .modal-content {
+    max-width: 1200px;
+    width: 90vw;
+    border-radius: 24px;
+    box-shadow: 0 80px 160px rgba(0,0,0,0.6);
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 40px 48px;
+  }
+
+  .modal-title-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+  }
+
+  .modal-title-text h3 {
+    font-size: 2.5rem;
+    font-weight: 900;
+  }
+
+  .modal-subtitle {
+    font-size: 1rem;
+    margin-top: 8px;
+  }
+
+  /* Modal body - GRID OTIMIZADO PARA DESKTOP */
+  .modal-body {
+    padding: 32px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+
+  .modal-option {
+    padding: 24px;
+    border-radius: 20px;
+    gap: 16px;
+    min-height: 80px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .modal-option:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 16px 32px rgba(0,0,0,0.15);
+    border-color: var(--primary-orange);
+  }
+
+  .modal-option.selected {
+    transform: translateY(-6px) scale(1.05);
+    box-shadow: 0 20px 40px rgba(249, 115, 22, 0.3);
+  }
+
+  .option-label {
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+
+  .btn-close {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  /* Footer desktop */
+  .wizard-footer {
+    padding: 32px 64px;
+  }
+
+  .btn-prev {
+    padding: 20px 40px;
+    border-radius: 20px;
+    font-size: 1.1rem;
+  }
+
+  .btn-next {
+    padding: 20px 48px;
+    border-radius: 20px;
+    font-size: 1.3rem;
+    box-shadow: 0 24px 48px rgba(249, 115, 22, 0.3);
+  }
+
+  .btn-next:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 32px 64px rgba(249, 115, 22, 0.4);
+  }
+
+  .btn-confirm {
+    padding: 20px 48px;
+    border-radius: 20px;
+    font-size: 1.3rem;
+  }
+
+  /* Items grid desktop */
+  .items-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+    max-width: 1200px;
+  }
+
+  .item-card {
+    padding: 48px;
+    border-radius: 56px;
+  }
+
+  /* Selection groups desktop */
+  .selection-group {
+    margin-top: 64px;
+    padding-top: 64px;
+    gap: 48px;
+  }
+
+  .selection-title {
+    font-size: 2rem;
+    margin-bottom: 32px;
+  }
+
+  .pill-btn {
+    padding: 20px 40px;
+    border-radius: 20px;
+    font-size: 1.25rem;
+  }
+
+  /* Textarea desktop */
+  .custom-textarea {
+    min-height: 400px;
+    padding: 64px;
+    font-size: 1.75rem;
+    border-radius: 56px;
+  }
+
+  /* Urgency cards desktop */
+  .urgency-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+    max-width: 1200px;
+  }
+
+  .urgency-card {
+    padding: 64px 48px;
+    border-radius: 64px;
+  }
+
+  .urgency-card.selected {
+    transform: translateY(-20px) scale(1.08);
+    box-shadow: 0 48px 96px rgba(0,0,0,0.15);
+  }
+
+  /* Review page desktop */
+  .review-container {
+    max-width: 1400px;
+    gap: 100px;
+  }
+
+  .review-section h2 {
+    font-size: 2.75rem;
+    margin-bottom: 48px;
+  }
+
+  .info-cards {
+    gap: 40px;
+  }
+
+  .info-card {
+    min-width: 300px;
+    height: 120px;
+    padding: 0 48px;
+  }
+
+  .items-pills {
+    gap: 32px;
+  }
+
+  .item-pill {
+    padding: 32px 48px;
+    font-size: 1.5rem;
+  }
+
+  .message-box {
+    padding: 64px;
+    border-radius: 64px;
+  }
+
+  .message-quote {
+    font-size: 1.75rem;
+  }
+
+  .profile-card {
+    padding: 48px;
+    border-radius: 56px;
+  }
+
+  /* Animações suaves para desktop */
+  * {
+    transition-duration: 0.3s;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Scrollbar customizada para modal */
+  .modal-body::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .modal-body::-webkit-scrollbar-track {
+    background: var(--zinc-100);
+    border-radius: 4px;
+  }
+
+  .modal-body::-webkit-scrollbar-thumb {
+    background: var(--primary-orange);
+    border-radius: 4px;
+  }
+
+  .modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-orange-hover);
+  }
+
+}
+
+/* Extra large screens */
+@media (min-width: 1440px) {
+  
+  .modal-content {
+    max-width: 1800px;
+  }
+
+  .modal-body {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 32px;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .step-title {
+    font-size: 6rem;
+  }
+
+}
+
+/* Ultra wide screens */
+@media (min-width: 1920px) {
+  
+  .modal-body {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 40px;
+  }
+
+  .category-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+}

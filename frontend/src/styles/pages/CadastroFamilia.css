@@ -113,7 +113,6 @@
 
 /* Step Content */
 .step-content {
-  min-height: 400px;
   animation: fadeInSlide 0.5s ease-out;
 }
 
