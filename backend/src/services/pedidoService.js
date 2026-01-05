@@ -1,0 +1,120 @@
+const pedidoModel = require('../models/pedidoModel');
+
+class PedidoService {
+  validatePedidoData(data) {
+    const errors = [];
+    
+    if (!data.category?.trim()) {
+      errors.push('Categoria é obrigatória');
+    }
+    
+    if (!data.description?.trim() || data.description.length < 10) {
+      errors.push('Descrição deve ter pelo menos 10 caracteres');
+    }
+    
+    if (!data.urgency?.trim()) {
+      errors.push('Urgência é obrigatória');
+    }
+    
+    if (!data.contactPreferences || !Array.isArray(data.contactPreferences) || data.contactPreferences.length === 0) {
+      errors.push('Pelo menos uma preferência de contato é obrigatória');
+    }
+    
+    if (!data.visibility || !Array.isArray(data.visibility) || data.visibility.length === 0) {
+      errors.push('Pelo menos uma opção de visibilidade é obrigatória');
+    }
+    
+    if (!data.userId?.trim()) {
+      errors.push('ID do usuário é obrigatório');
+    }
+    
+    return errors;
+  }
+
+  sanitizePedidoData(data) {
+    return {
+      userId: data.userId?.trim(),
+      category: data.category?.trim(),
+      items: Array.isArray(data.items) ? data.items : [],
+      clothingSize: data.clothingSize?.trim() || null,
+      clothingPreference: data.clothingPreference?.trim() || null,
+      shoeSize: data.shoeSize?.trim() || null,
+      description: data.description?.trim(),
+      urgency: data.urgency?.trim(),
+      contactPreferences: Array.isArray(data.contactPreferences) ? data.contactPreferences : [],
+      visibility: Array.isArray(data.visibility) ? data.visibility : [],
+      location: data.location?.trim() || 'São Paulo, SP - Bairro Jardins'
+    };
+  }
+
+  async createPedido(pedidoData) {
+    const sanitizedData = this.sanitizePedidoData(pedidoData);
+    const errors = this.validatePedidoData(sanitizedData);
+    
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    
+    return await pedidoModel.create(sanitizedData);
+  }
+
+  async getAllPedidos() {
+    return await pedidoModel.findAll();
+  }
+
+  async getPedidoById(id) {
+    if (!id?.trim()) {
+      throw new Error('ID do pedido é obrigatório');
+    }
+    
+    const pedido = await pedidoModel.findById(id);
+    if (!pedido) {
+      throw new Error('Pedido não encontrado');
+    }
+    
+    return pedido;
+  }
+
+  async getPedidosByUserId(userId) {
+    if (!userId?.trim()) {
+      throw new Error('ID do usuário é obrigatório');
+    }
+    
+    return await pedidoModel.findByUserId(userId);
+  }
+
+  async updatePedido(id, updateData) {
+    if (!id?.trim()) {
+      throw new Error('ID do pedido é obrigatório');
+    }
+    
+    const existingPedido = await pedidoModel.findById(id);
+    if (!existingPedido) {
+      throw new Error('Pedido não encontrado');
+    }
+    
+    const sanitizedData = this.sanitizePedidoData(updateData);
+    const errors = this.validatePedidoData(sanitizedData);
+    
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+    
+    return await pedidoModel.update(id, sanitizedData);
+  }
+
+  async deletePedido(id) {
+    if (!id?.trim()) {
+      throw new Error('ID do pedido é obrigatório');
+    }
+    
+    const existingPedido = await pedidoModel.findById(id);
+    if (!existingPedido) {
+      throw new Error('Pedido não encontrado');
+    }
+    
+    return await pedidoModel.delete(id);
+  }
+}
+
+module.exports = new PedidoService();
