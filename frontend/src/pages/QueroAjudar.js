@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../hooks/useToast';
+import apiService from '../services/apiService';
 import '../styles/pages/QueroAjudar.css';
 
 const QueroAjudar = () => {
@@ -7,6 +10,9 @@ const QueroAjudar = () => {
   const [selectedFilter, setSelectedFilter] = useState('Todos');
   const [selectedUrgencies, setSelectedUrgencies] = useState([]);
   const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [showFilters, setShowFilters] = useState(false);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [showCategoryDetails, setShowCategoryDetails] = useState(false);
@@ -86,27 +92,64 @@ const QueroAjudar = () => {
   };
 
   useEffect(() => {
-    // Carregar pedidos reais do localStorage
-    const loadPedidos = () => {
-      const savedPedidos = localStorage.getItem('solidar-pedidos');
-      if (savedPedidos) {
-        setPedidos(JSON.parse(savedPedidos));
-      }
-    };
-    
     loadPedidos();
-    
-    // Escutar por novos pedidos
-    const handleNewPedido = () => {
-      loadPedidos();
-    };
-    
-    window.addEventListener('pedidoAdded', handleNewPedido);
-    
-    return () => {
-      window.removeEventListener('pedidoAdded', handleNewPedido);
-    };
   }, []);
+
+  const loadPedidos = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await apiService.getPedidos();
+      
+      if (response.success) {
+        // Mapear dados da API para o formato esperado pelo componente
+        const mappedPedidos = response.data.map(pedido => ({
+          id: pedido.id,
+          tipo: pedido.category,
+          titulo: `${pedido.category} - ${pedido.urgency === 'urgente' ? 'Urgente' : pedido.urgency === 'moderada' ? 'Moderada' : 'Flexível'}`,
+          descricao: pedido.description,
+          distancia: '0.5 km', // Placeholder - implementar cálculo real depois
+          urgencia: pedido.urgency === 'urgente' ? 'Alta' : pedido.urgency === 'moderada' ? 'Média' : 'Baixa',
+          tempo: formatTimeAgo(pedido.criadoEm),
+          usuario: pedido.usuario?.nome || 'Usuário',
+          verificado: true,
+          items: pedido.items || [],
+          contactPreferences: pedido.contactPreferences || [],
+          visibility: pedido.visibility || [],
+          location: pedido.location || ''
+        }));
+        setPedidos(mappedPedidos);
+      } else {
+        showToast('Erro ao carregar pedidos', 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+      showToast('Erro ao carregar pedidos', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatTimeAgo = (date) => {
+    if (!date) return 'Agora';
+    try {
+      const now = new Date();
+      const pedidoDate = new Date(date._seconds ? date._seconds * 1000 : date);
+      const diffMs = now - pedidoDate;
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffHours / 24);
+      
+      if (diffDays > 0) return `${diffDays}d atrás`;
+      if (diffHours > 0) return `${diffHours}h atrás`;
+      return 'Agora';
+    } catch {
+      return 'Agora';
+    }
+  };
 
   const filteredPedidos = selectedFilter === 'Todos' 
     ? pedidos 
@@ -212,13 +255,17 @@ const QueroAjudar = () => {
             )}
 
             <div className="pedidos-grid">
-              {filteredPedidos.length === 0 ? (
+              {loading ? (
+                <div className="loading-state">
+                  <p>Carregando pedidos...</p>
+                </div>
+              ) : filteredPedidos.length === 0 ? (
                 <div className="no-pedidos">
                   <div className="no-pedidos-icon">
                     <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="sem pedidos" width="64" height="64" />
                   </div>
-                  <h3>Nenhum pedido de ajuda ainda</h3>
-                  <p>Quando alguém precisar de ajuda na sua região, os pedidos aparecerão aqui.</p>
+                  <h3>Nenhum pedido de ajuda encontrado</h3>
+                  <p>{user ? 'Quando alguém precisar de ajuda na sua região, os pedidos aparecerão aqui.' : 'Faça login para ver os pedidos de ajuda da sua região.'}</p>
                   <button 
                     className="btn-primary"
                     onClick={() => navigate('/preciso-de-ajuda')}
