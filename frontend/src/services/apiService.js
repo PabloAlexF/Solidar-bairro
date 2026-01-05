@@ -348,6 +348,24 @@ class ApiService {
       body: JSON.stringify(sanitizedData),
     });
   }
+
+  async getMeusPedidos() {
+    return this.request('/pedidos/meus');
+  }
+
+  async updatePedido(id, pedidoData) {
+    const sanitizedData = this.sanitizeData(pedidoData);
+    return this.request(`/pedidos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(sanitizedData),
+    });
+  }
+
+  async deletePedido(id) {
+    return this.request(`/pedidos/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export default new ApiService();

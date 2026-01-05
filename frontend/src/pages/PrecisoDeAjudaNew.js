@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import FlatIcon from '../components/FlatIcon';
 import '../styles/pages/PrecisoDeAjuda.css';
 
@@ -12,7 +13,7 @@ const INITIAL_DATA = {
   urgency: "",
   contactPreferences: [],
   visibility: [],
-  location: "São Paulo, SP - Bairro Jardins",
+  location: "",
 };
 
 const CATEGORY_CONFIG = {
@@ -143,7 +144,16 @@ export default function PrecisoDeAjuda() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(INITIAL_DATA);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user } = useAuth();
   const totalSteps = 7;
+
+  // Atualizar localização com base no usuário logado
+  useEffect(() => {
+    if (user && user.endereco && user.endereco.cidade && user.endereco.bairro) {
+      const userLocation = `${user.endereco.cidade}, ${user.endereco.estado || 'MG'} - Bairro ${user.endereco.bairro}`;
+      setFormData(prev => ({ ...prev, location: userLocation }));
+    }
+  }, [user]);
 
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -712,6 +722,27 @@ function Step6({ formData, updateData }) {
 }
 
 function Step7({ formData }) {
+  const { user } = useAuth();
+  
+  const formatMemberSince = (date) => {
+    if (!date) return '2024';
+    try {
+      let year;
+      if (date._seconds) {
+        year = new Date(date._seconds * 1000).getFullYear();
+      } else if (date.seconds) {
+        year = new Date(date.seconds * 1000).getFullYear();
+      } else if (date.toDate) {
+        year = date.toDate().getFullYear();
+      } else {
+        year = new Date(date).getFullYear();
+      }
+      return isNaN(year) ? '2024' : year.toString();
+    } catch (error) {
+      return '2024';
+    }
+  };
+
   return (
     <div className="review-container">
       
@@ -785,7 +816,7 @@ function Step7({ formData }) {
           </div>
           <div className="location-details">
             <span className="location-label">Localização da Ajuda</span>
-            <p className="location-text">{formData.location}</p>
+            <p className="location-text">{formData.location || "Localização não definida"}</p>
             <div className="location-status">
               <FlatIcon type="check" size={16} color="#4ade80" />
               Área com alta atividade de vizinhos
@@ -814,10 +845,9 @@ function Step7({ formData }) {
               <FlatIcon type="userCircle" size={48} color="rgba(255,255,255,0.8)" />
             </div>
             <div>
-              <p className="profile-name">Maria da Silva</p>
+              <p className="profile-name">{user?.nome || 'Usuário'}</p>
               <div className="flex items-center gap-2">
                 <div className="bg-green-400 text-green-900 font-black text-[10px] px-2 py-1 rounded">VERIFICADO</div>
-                <span className="profile-since">Membro desde 2023</span>
               </div>
             </div>
           </div>

@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../hooks/useToast';
+import apiService from '../services/apiService';
 import FlatIcon from '../components/FlatIcon';
 import '../styles/pages/PrecisoDeAjuda.css';
 import '../styles/pages/PrecisoDeAjuda-desktop.css';
@@ -13,7 +16,7 @@ const INITIAL_DATA = {
   urgency: "",
   contactPreferences: [],
   visibility: [],
-  location: "São Paulo, SP - Bairro Jardins",
+  location: "",
 };
 
 const CATEGORY_CONFIG = {
@@ -144,7 +147,18 @@ export default function PrecisoDeAjuda() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(INITIAL_DATA);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const totalSteps = 7;
+
+  // Atualizar localização com base no usuário logado
+  useEffect(() => {
+    if (user && user.endereco && user.endereco.cidade && user.endereco.bairro) {
+      const userLocation = `${user.endereco.cidade}, ${user.endereco.estado || 'MG'} - Bairro ${user.endereco.bairro}`;
+      setFormData(prev => ({ ...prev, location: userLocation }));
+    }
+  }, [user]);
 
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -170,6 +184,32 @@ export default function PrecisoDeAjuda() {
 
   const updateData = (data) => {
     setFormData((prev) => ({ ...prev, ...data }));
+  };
+
+  const handleSubmit = async () => {
+    if (!user) {
+      showToast('Você precisa estar logado para fazer um pedido', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const response = await apiService.createPedido(formData);
+      
+      if (response.success) {
+        showToast('Seu pedido foi publicado com sucesso!', 'success');
+        setFormData(INITIAL_DATA);
+        setStep(1);
+      } else {
+        throw new Error(response.error || 'Erro ao criar pedido');
+      }
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+      showToast(error.message || 'Erro ao publicar pedido. Tente novamente.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -242,9 +282,10 @@ export default function PrecisoDeAjuda() {
             ) : (
               <button
                 className="btn-confirm"
-                onClick={() => alert("Seu pedido está sendo processado pela nossa rede!")}
+                onClick={handleSubmit}
+                disabled={isSubmitting}
               >
-                CONFIRMAR E PUBLICAR
+                {isSubmitting ? 'PUBLICANDO...' : 'CONFIRMAR E PUBLICAR'}
                 <FlatIcon type="check" size={24} />
               </button>
             )}
@@ -683,6 +724,25 @@ function Step6({ formData, updateData }) {
 }
 
 function Step7({ formData }) {
+  const { user } = useAuth();
+  
+  const formatMemberSince = (date) => {
+    if (!date) return '2023';
+    try {
+      let year;
+      if (date.seconds) {
+        year = new Date(date.seconds * 1000).getFullYear();
+      } else if (date.toDate) {
+        year = date.toDate().getFullYear();
+      } else {
+        year = new Date(date).getFullYear();
+      }
+      return isNaN(year) ? '2023' : year.toString();
+    } catch {
+      return '2023';
+    }
+  };
+
   return (
     <div className="review-container">
       
@@ -747,7 +807,7 @@ function Step7({ formData }) {
           </div>
           <div className="location-details">
             <span className="location-label">Localização da Ajuda</span>
-            <p className="location-text">{formData.location}</p>
+            <p className="location-text">{formData.location || "Localização não definida"}</p>
             <div className="location-status">
               <FlatIcon type="check" size={16} color="#4ade80" />
               Área com alta atividade de vizinhos
@@ -773,8 +833,7 @@ function Step7({ formData }) {
               <FlatIcon type="userCircle" size={48} color="rgba(255,255,255,0.8)" />
             </div>
             <div>
-              <p className="profile-name">Maria da Silva</p>
-              <span className="profile-since">Membro desde 2023</span>
+              <p className="profile-name">{user?.nome || 'Usuário'}</p>
             </div>
           </div>
 

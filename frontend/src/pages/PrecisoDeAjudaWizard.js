@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   ChevronLeft, 
   ArrowRight, 
@@ -42,7 +43,7 @@ const INITIAL_DATA = {
   urgency: "",
   contactPreferences: [],
   visibility: [],
-  location: "São Paulo, SP - Bairro Jardins",
+  location: "",
 };
 
 const CATEGORY_CONFIG = {
@@ -173,7 +174,16 @@ const CATEGORY_CONFIG = {
 export default function WizardPage() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(INITIAL_DATA);
+  const { user } = useAuth();
   const totalSteps = 7;
+
+  // Atualizar localização com base no usuário logado
+  useEffect(() => {
+    if (user && user.endereco && user.endereco.cidade && user.endereco.bairro) {
+      const userLocation = `${user.endereco.cidade}, ${user.endereco.estado || 'MG'} - Bairro ${user.endereco.bairro}`;
+      setFormData(prev => ({ ...prev, location: userLocation }));
+    }
+  }, [user]);
 
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -734,6 +744,27 @@ function Step6({ formData, updateData }) {
 
 // Step 7 - Review
 function Step7({ formData }) {
+  const { user } = useAuth();
+  
+  const formatMemberSince = (date) => {
+    if (!date) return '2024';
+    try {
+      let year;
+      if (date._seconds) {
+        year = new Date(date._seconds * 1000).getFullYear();
+      } else if (date.seconds) {
+        year = new Date(date.seconds * 1000).getFullYear();
+      } else if (date.toDate) {
+        year = date.toDate().getFullYear();
+      } else {
+        year = new Date(date).getFullYear();
+      }
+      return isNaN(year) ? '2024' : year.toString();
+    } catch (error) {
+      return '2024';
+    }
+  };
+
   return (
     <div className="step7-container">
       
@@ -813,7 +844,7 @@ function Step7({ formData }) {
             </div>
             <div className="location-content">
               <span className="location-label">Localização da Ajuda</span>
-              <p className="location-value">{formData.location}</p>
+              <p className="location-value">{formData.location || "Localização não definida"}</p>
               <div className="location-status">
                 <Check className="icon-xs" />
                 Área com alta atividade de vizinhos
@@ -844,10 +875,9 @@ function Step7({ formData }) {
                 <UserCircle className="icon-large" />
               </div>
               <div className="profile-info">
-                <p className="profile-name">Maria da Silva</p>
+                <p className="profile-name">{user?.nome || 'Usuário'}</p>
                 <div className="profile-badges">
                   <div className="verified-badge">VERIFICADO</div>
-                  <span className="member-since">Membro desde 2023</span>
                 </div>
               </div>
             </div>
