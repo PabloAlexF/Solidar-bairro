@@ -5,9 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import QueroAjudar from './pages/QueroAjudar';
 import PrecisoDeAjuda from './pages/PrecisoDeAjuda';
-import Pedidos from './pages/Pedidos';
 import DetalhesNecessidade from './pages/DetalhesNecessidade';
-import PedidoPublicado from './pages/PedidoPublicado';
 import Landing from './pages/Landing';
 import Register from './pages/Register';
 import SobreTipos from './pages/SobreTipos';
@@ -45,9 +43,7 @@ function App() {
       {/* Rotas protegidas */}
       <Route path="/quero-ajudar" element={<Layout><ProtectedRoute><QueroAjudar /></ProtectedRoute></Layout>} />
       <Route path="/preciso-de-ajuda" element={<Layout><ProtectedRoute><PrecisoDeAjuda /></ProtectedRoute></Layout>} />
-      <Route path="/pedidos" element={<Layout><ProtectedRoute><Pedidos /></ProtectedRoute></Layout>} />
       <Route path="/necessidade/:id" element={<Layout><ProtectedRoute><DetalhesNecessidade /></ProtectedRoute></Layout>} />
-      <Route path="/pedido-publicado" element={<Layout><ProtectedRoute><PedidoPublicado /></ProtectedRoute></Layout>} />
       <Route path="/perfil-familia/:id" element={<Layout><ProtectedRoute><PerfilFamilia /></ProtectedRoute></Layout>} />
       <Route path="/atualizar-status/:id" element={<Layout><ProtectedRoute><AtualizarStatus /></ProtectedRoute></Layout>} />
       <Route path="/painel-social" element={<Layout><ProtectedRoute><PainelSocial /></ProtectedRoute></Layout>} />
