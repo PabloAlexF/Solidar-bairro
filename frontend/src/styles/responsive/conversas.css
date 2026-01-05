@@ -1,0 +1,126 @@
+/* ===== RESPONSIVIDADE - CONVERSAS ===== */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .conv-page-container {
+    padding: 30px 16px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .conv-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .conv-title-group h1 {
+    font-size: 1.75rem;
+  }
+
+  .conv-title-group p {
+    font-size: 1rem;
+  }
+
+  .conv-icon-bg {
+    width: 50px;
+    height: 50px;
+  }
+
+  .conv-search-box {
+    width: 100%;
+  }
+
+  .conv-tabs {
+    gap: 0;
+  }
+
+  .conv-tab {
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .conv-card {
+    padding: 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .conv-card-left {
+    gap: 16px;
+  }
+
+  .conv-avatar {
+    width: 56px;
+    height: 56px;
+  }
+
+  .conv-user-name {
+    font-size: 1.15rem;
+  }
+
+  .conv-card-right {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 12px;
+  }
+
+  .conv-meta-top {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .conv-arrow {
+    display: none;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .conv-page-container {
+    padding: 20px 12px;
+  }
+
+  .conv-title-group {
+    gap: 12px;
+  }
+
+  .conv-title-group h1 {
+    font-size: 1.5rem;
+  }
+
+  .conv-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  .conv-user-name {
+    font-size: 1.05rem;
+  }
+
+  .conv-subject-row {
+    font-size: 0.85rem;
+  }
+
+  .conv-last-msg {
+    font-size: 0.9rem;
+  }
+
+  .conv-status-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+  }
+
+  .conv-time {
+    font-size: 0.8rem;
+  }
+}

@@ -1,3 +1,5 @@
+@import '../responsive/conversas.css';
+
 /* Lista de Conversas */
 .conversas-page {
   min-height: 100vh;

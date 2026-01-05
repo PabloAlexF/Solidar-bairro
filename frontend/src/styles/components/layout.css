@@ -10,6 +10,20 @@
   z-index: 100;
 }
 
+/* Landing Page Header Override */
+.landing-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 24px 0;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+}
+
 .header-content {
   display: flex;
   align-items: center;
@@ -103,6 +117,11 @@
 .main-content {
   min-height: calc(100vh - 80px);
   padding-bottom: 80px;
+}
+
+.app-layout {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
 }
 
 .page-header {

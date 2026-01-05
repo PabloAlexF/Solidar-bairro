@@ -1,0 +1,70 @@
+/* ===== RESPONSIVIDADE - PAINEL SOCIAL ===== */
+
+/* Large Desktop */
+@media (max-width: 1200px) {
+  .indicators-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+  .painel-header h1 {
+    font-size: 2.5rem;
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .container {
+    padding: 0 20px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .indicators-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .family-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  .family-actions {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .family-actions button {
+    flex: 1;
+  }
+
+  .map-section {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .map-container-wrapper {
+    height: 400px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .painel-header h1 {
+    font-size: 2rem;
+  }
+
+  .indicator-card {
+    padding: 20px;
+  }
+
+  .indicator-card .value {
+    font-size: 2.5rem;
+  }
+}

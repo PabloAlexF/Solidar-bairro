@@ -1,5 +1,49 @@
 /* Wizard Styles - Pure CSS */
 
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* Landing Page Header for Preciso de Ajuda */
+.landing-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 24px 0;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(13, 148, 136, 0.1);
+}
+
+.nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Syne', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+}
+
 :root {
   --primary-orange: #f97316;
   --primary-orange-hover: #ea580c;
@@ -25,20 +69,24 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60px 16px;
+  padding: 100px 0 0 0;
+  margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .wizard-card {
   width: 100%;
   max-width: 1200px;
   background-color: var(--white);
-  border-radius: 32px;
-  box-shadow: var(--shadow-premium);
+  border-radius: 0;
+  box-shadow: none;
   overflow: hidden;
   position: relative;
   display: flex;
   flex-direction: column;
+  margin: 0;
 }
 
 /* Header */
