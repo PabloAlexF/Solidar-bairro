@@ -289,11 +289,6 @@ const LandingPage = () => {
         
         <div className="section-container hero-container">
           <div className="hero-content">
-            <div className="hero-badge">
-              <div className="badge-pulse"></div>
-              <span>Conectando Vizinhos Próximos</span>
-            </div>
-            
             <div className="hero-text-wrapper">
               <h1>
                 Solidar<span className="text-gradient">Bairro</span>

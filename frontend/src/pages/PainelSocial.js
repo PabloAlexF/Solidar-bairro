@@ -1,411 +1,392 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/layout/Header';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 import MapaInterativo from '../components/MapaInterativo';
 import '../styles/pages/PainelSocial.css';
 
+const BAIRROS_SANTA_LUZIA = [
+  "Adeodato", "Alto das Maravilhas", "Alto do Tanque", "Amazonas", "Ana Lúcia", "Asteca", 
+  "Baronesa", "Belo Vale", "Bicas", "Boa Esperança", "Bom Destino", "Bonanza", "Camelos", 
+  "Capitão Eduardo", "Carreira Comprida", "Casa Branca", "Castanheira", "Chácara de Lazer San Remo", 
+  "Chácaras Del Rey", "Chácaras Gervásio Lara", "Chácaras Santa Inês", "Colorado", 
+  "Condomínio Estância do Lago", "Conjunto Habitacional Maria Antonieta Mello Azevedo", 
+  "Córrego das Calçadas", "Córrego Frio", "Cristina", "Cuité", "Dona Rosarinha", "Duquesa", 
+  "Esplanada", "Frimisa", "Gameleira", "Gávea", "Idulipê", "Imperial", "Industrial Americano", 
+  "Itamaraty", "Jardim Alvorada", "Jardim das Acácias", "Jardim Europa", "Kennedy", 
+  "Liberdade", "Londrina", "Luxemburgo", "Maria Antonieta", "Monte Carlo", "Morada do Rio", 
+  "Morada do Vale", "Morena Rosa", "Nossa Senhora da Paz", "Nossa Senhora das Graças", 
+  "Nossa Senhora do Carmo", "Nova Conquista", "Nova Esperança", "Novo Centro", "Novo Esplanada", 
+  "Padre Miguel", "Palmital", "Palmital A", "Palmital B", "Pantanal", "Parque Mutirão", 
+  "Pedra Branca", "Petrópolis", "Pinhões", "Ponte Grande", "Portal das Águas", "Portal Santa Luzia", 
+  "Pousada de Santo Antônio", "Quarenta e Dois", "Quinta das Flores", "Recanto do Sabiá", 
+  "Retiro do Recreio", "Rio das Velhas", "Rio Manso", "Rosarinho", "Santa Catarina", 
+  "Santa Matilde", "Santa Rita", "São Benedito", "São Cosme", "São Geraldo", "São João Batista", 
+  "São Judas Tadeu", "São Luíz", "São Sebastião", "Vale das Acácias", "Vale do Amanhecer", 
+  "Vila Ferraz", "Vila Iris", "Vila Olga", "Vila Pinho", "Vila Real", "Vila Santa Rita"
+];
+
 const PainelSocial = () => {
   const navigate = useNavigate();
+  const [selectedBairro, setSelectedBairro] = useState("São Benedito");
+  const [isBairroDropdownOpen, setIsBairroDropdownOpen] = useState(false);
+  const [bairroSearch, setBairroSearch] = useState("");
+  const [filter, setFilter] = useState("Todas");
   const [familias, setFamilias] = useState([]);
-  const [bairroSelecionado, setBairroSelecionado] = useState('todos');
-  const [filtroVulnerabilidade, setFiltroVulnerabilidade] = useState('todas');
+  const dropdownRef = useRef(null);
 
-  const bairros = ['São Lucas', 'Centro', 'Vila Nova', 'Jardim América', 'Santa Rita'];
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsBairroDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const familiasData = JSON.parse(localStorage.getItem('familias') || '[]');
     setFamilias(familiasData);
   }, []);
 
-  const familiasFiltradas = familias.filter(familia => {
-    const bairroMatch = bairroSelecionado === 'todos' || familia.bairro === bairroSelecionado;
-    const vulnerabilidadeMatch = filtroVulnerabilidade === 'todas' || familia.vulnerabilidade === filtroVulnerabilidade;
-    return bairroMatch && vulnerabilidadeMatch;
+  const filteredBairros = useMemo(() => {
+    return BAIRROS_SANTA_LUZIA.filter(b => 
+      b.toLowerCase().includes(bairroSearch.toLowerCase())
+    );
+  }, [bairroSearch]);
+
+  const indicators = [
+    { label: "Crianças", value: 128, icon: "👶", color: "#0ea5e9" },
+    { label: "Idosos", value: 47, icon: "👴", color: "#8b5cf6" },
+    { label: "Gestantes", value: 12, icon: "🤱", color: "#ec4899" },
+    { label: "PCDs", value: 19, icon: "♿", color: "#f59e0b" },
+  ];
+
+  const mockFamilies = [
+    { 
+      id: 1, 
+      name: "Família Silva", 
+      vulnerability: "Alta", 
+      urgency: "Alta",
+      members: 5, 
+      children: 2, 
+      elderly: 1, 
+      income: "Sem renda", 
+      bairro: selectedBairro,
+      lat: -19.7680,
+      lng: -43.8500,
+      color: "#ef4444"
+    },
+    { 
+      id: 2, 
+      name: "Família Santos", 
+      vulnerability: "Média", 
+      urgency: "Média",
+      members: 3, 
+      children: 1, 
+      elderly: 0, 
+      income: "1 salário", 
+      bairro: selectedBairro,
+      lat: -19.7700,
+      lng: -43.8520,
+      color: "#f97316"
+    },
+    { 
+      id: 3, 
+      name: "Família Oliveira", 
+      vulnerability: "Baixa", 
+      urgency: "Baixa",
+      members: 4, 
+      children: 2, 
+      elderly: 0, 
+      income: "2 salários", 
+      bairro: selectedBairro,
+      lat: -19.7720,
+      lng: -43.8480,
+      color: "#22c55e"
+    },
+    { 
+      id: 4, 
+      name: "Família Pereira", 
+      vulnerability: "Alta", 
+      urgency: "Crítica",
+      members: 6, 
+      children: 3, 
+      elderly: 1, 
+      income: "Auxílio", 
+      bairro: selectedBairro,
+      lat: -19.7660,
+      lng: -43.8540,
+      color: "#ef4444"
+    },
+  ];
+
+  const filteredFamilies = mockFamilies.filter(f => {
+    if (filter === "Todas") return true;
+    if (filter === "Com crianças") return f.children > 0;
+    if (filter === "Com idosos") return f.elderly > 0;
+    if (filter === "Alta vulnerabilidade") return f.vulnerability === "Alta";
+    return true;
   });
 
-  const calcularIndicadores = () => {
-    const total = familiasFiltradas.length;
-    const criancas = familiasFiltradas.reduce((acc, f) => acc + parseInt(f.criancas || 0), 0);
-    const idosos = familiasFiltradas.reduce((acc, f) => acc + parseInt(f.idosos || 0), 0);
-    const gestantes = familiasFiltradas.filter(f => f.gestantes).length;
-    const deficiencia = familiasFiltradas.filter(f => f.pessoasDeficiencia).length;
-    const baixaRenda = familiasFiltradas.filter(f => f.rendaFamiliar === 'sem-renda' || f.rendaFamiliar === 'ate-1-salario').length;
-    const altaVulnerabilidade = familiasFiltradas.filter(f => f.vulnerabilidade === 'alta').length;
+  // Chart Data
+  const vulnerabilityData = [
+    { name: "Alta", value: 34, color: "#ef4444" },
+    { name: "Média", value: 45, color: "#f97316" },
+    { name: "Baixa", value: 62, color: "#22c55e" },
+  ];
 
-    return { total, criancas, idosos, gestantes, deficiencia, baixaRenda, altaVulnerabilidade };
-  };
-
-  const indicadores = calcularIndicadores();
-
-  const getVulnerabilidadeColor = (vulnerabilidade) => {
-    switch (vulnerabilidade) {
-      case 'alta': return '#ef4444';
-      case 'media': return '#f59e0b';
-      case 'baixa': return '#22c55e';
-      default: return '#6b7280';
-    }
-  };
-
-  const getVulnerabilidadeLabel = (vulnerabilidade) => {
-    switch (vulnerabilidade) {
-      case 'alta': return 'Alta vulnerabilidade';
-      case 'media': return 'Média vulnerabilidade';
-      case 'baixa': return 'Baixa vulnerabilidade';
-      default: return 'Não definida';
-    }
-  };
+  const zonaData = [
+    { name: "Norte", crianças: 45, idosos: 12 },
+    { name: "Sul", crianças: 82, idosos: 28 },
+    { name: "Leste", crianças: 56, idosos: 15 },
+    { name: "Oeste", crianças: 38, idosos: 22 },
+  ];
 
   return (
-    <div className="painel-social">
-      <Header showLoginButton={false} />
-      
-      <main className="painel-main">
-        <div className="container">
-          <div className="painel-header">
-            <div className="header-hero">
-              <div className="hero-badge">
-                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135673.png" alt="dashboard" width="16" height="16" className="badge-icon" />
-                <span>Dashboard Social</span>
-              </div>
-              
-              <div className="hero-title">
-                <h1>
-                  <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" alt="painel" width="42" height="42" className="title-icon" />
-                  Painel Social
-                  <span className="title-location">- {bairroSelecionado === 'todos' ? 'Todos os Bairros' : bairroSelecionado}</span>
-                </h1>
-                <p className="hero-subtitle">Monitoramento social em tempo real da comunidade SolidarBairro</p>
-              </div>
-              
-              <div className="hero-stats">
-                <div className="stat-quick">
-                  <span className="stat-number">{indicadores.total}</span>
-                  <span className="stat-label">Famílias</span>
-                </div>
-                <div className="stat-quick">
-                  <span className="stat-number">{indicadores.criancas + indicadores.idosos}</span>
-                  <span className="stat-label">Pessoas</span>
-                </div>
-                <div className="stat-quick">
-                  <span className="stat-number">{bairros.length}</span>
-                  <span className="stat-label">Bairros</span>
-                </div>
-              </div>
+    <div className="painel-wrapper">
+      <div className="container">
+        {/* Topo */}
+        <header className="painel-header">
+          <div>
+            <div 
+              className="logo"
+              style={{ marginBottom: '24px', cursor: 'pointer' }}
+              onClick={() => navigate('/')}
+            >
+              <i className="fi fi-rr-heart logo-icon"></i>
+              <span>SolidarBairro</span>
             </div>
+            <h1>Painel Social</h1>
+            <p>Gestão estratégica e mapa social: {selectedBairro}</p>
+          </div>
+          
+          <div className="header-actions" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <button className="btn-back" onClick={() => navigate('/')}>
+              <i className="fi fi-rr-arrow-left"></i>
+              <span>Voltar</span>
+            </button>
             
-            <div className="header-controls">
-              <div className="controls-group">
-                <div className="control-item">
-                  <label className="control-label">
-                    <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="localização" width="16" height="16" className="label-icon" />
-                    Filtrar por bairro
-                  </label>
-                  <div className="select-wrapper">
-                    <select
-                      value={bairroSelecionado}
-                      onChange={(e) => setBairroSelecionado(e.target.value)}
-                      className="control-select"
-                    >
-                      <option value="todos">Todos os bairros</option>
-                      {bairros.map(bairro => (
-                        <option key={bairro} value={bairro}>{bairro}</option>
-                      ))}
-                    </select>
+            <div className="bairro-selector-container" ref={dropdownRef}>
+              <div 
+                className={`bairro-filter ${isBairroDropdownOpen ? 'active' : ''}`}
+                onClick={() => setIsBairroDropdownOpen(!isBairroDropdownOpen)}
+              >
+                <i className="fi fi-rr-marker" style={{ color: 'var(--sb-teal)' }}></i>
+                <span>{selectedBairro}</span>
+                <i className={`fi fi-rr-angle-down chevron ${isBairroDropdownOpen ? 'rotate' : ''}`}></i>
+              </div>
+
+              {isBairroDropdownOpen && (
+                <div className="bairro-dropdown">
+                  <div className="dropdown-search">
+                    <i className="fi fi-rr-search"></i>
+                    <input 
+                      type="text" 
+                      placeholder="Buscar bairro..." 
+                      value={bairroSearch}
+                      onChange={(e) => setBairroSearch(e.target.value)}
+                      autoFocus
+                    />
+                    {bairroSearch && (
+                      <i 
+                        className="fi fi-rr-cross clear-search" 
+                        onClick={() => setBairroSearch("")} 
+                      ></i>
+                    )}
+                  </div>
+                  <div className="dropdown-list">
+                    {filteredBairros.length > 0 ? (
+                      filteredBairros.map(b => (
+                        <div 
+                          key={b} 
+                          className={`dropdown-item ${selectedBairro === b ? 'selected' : ''}`}
+                          onClick={() => {
+                            setSelectedBairro(b);
+                            setIsBairroDropdownOpen(false);
+                            setBairroSearch("");
+                          }}
+                        >
+                          {b}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="dropdown-empty">Nenhum bairro encontrado</div>
+                    )}
                   </div>
                 </div>
-                
-                <div className="control-actions">
-                  <button
-                    className="btn-action btn-secondary"
-                    onClick={() => window.print()}
-                  >
-                    <img src="https://cdn-icons-png.flaticon.com/512/3039/3039386.png" alt="relatório" width="18" height="18" className="btn-icon" />
-                    Relatório
-                  </button>
-                  
-                  <button
-                    className="btn-action btn-primary"
-                    onClick={() => navigate('/cadastro-familia')}
-                  >
-                    <img src="https://cdn-icons-png.flaticon.com/512/1828/1828925.png" alt="adicionar" width="18" height="18" className="btn-icon" />
-                    Nova Família
-                  </button>
-                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Bloco 1 – Indicadores principais */}
+        <div className="indicators-grid">
+          {indicators.map((ind, i) => (
+            <div key={i} className="indicator-card">
+              <div className="icon-box" style={{ background: `${ind.color}15`, color: ind.color }}>
+                <span style={{ fontSize: '28px' }}>{ind.icon}</span>
               </div>
+              <h3>{ind.label}</h3>
+              <div className="value">{ind.value}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="sub-indicators">
+          <div className="sub-card warning">
+            <div className="label">
+              <i className="fi fi-rr-trending-down" style={{ marginRight: 12, verticalAlign: 'middle', color: 'var(--sb-orange)' }}></i>
+              Famílias abaixo da linha de renda
+            </div>
+            <div className="value">86</div>
+          </div>
+          
+          <div className="sub-card warning">
+            <div className="label">
+              <i className="fi fi-rr-triangle-warning" style={{ marginRight: 12, verticalAlign: 'middle', color: 'var(--sb-orange)' }}></i>
+              Famílias em risco social alto
+            </div>
+            <div className="value">34</div>
+          </div>
+        </div>
+
+        {/* Bloco 2 – Mapa do bairro */}
+        <section className="map-section">
+          <div className="section-title">
+            <h2>🗺️ Mapa do bairro</h2>
+            <div className="map-legend">
+               <div className="layer-item"><div className="dot-red"></div> Alta</div>
+               <div className="layer-item"><div className="dot-orange"></div> Média</div>
+               <div className="layer-item"><div className="dot-green"></div> Baixa</div>
+            </div>
+          </div>
+          
+          <div className="map-container-wrapper">
+            <MapaInterativo 
+              familias={filteredFamilies} 
+              pedidos={JSON.parse(localStorage.getItem('solidar-pedidos') || '[]')} 
+            />
+
+            <div className="map-layers-float">
+              <div className="layer-item"><i className="fi fi-rr-check-circle" style={{ color: 'var(--sb-teal)' }}></i> Famílias vulneráveis</div>
+              <div className="layer-item"><i className="fi fi-rr-shop"></i> Comércios parceiros</div>
+              <div className="layer-item"><i className="fi fi-rr-building"></i> ONGs</div>
+              <div className="layer-item"><i className="fi fi-rr-trash"></i> Pontos de coleta</div>
+            </div>
+          </div>
+        </section>
+
+        {/* Bloco 3 – Lista de famílias filtradas */}
+        <section className="list-section">
+          <div className="section-title">
+            <h2>📋 Lista de famílias</h2>
+            <div className="list-filters">
+              {["Todas", "Com crianças", "Com idosos", "Alta vulnerabilidade"].map(f => (
+                <button 
+                  key={f} 
+                  className={`filter-chip ${filter === f ? 'active' : ''}`}
+                  onClick={() => setFilter(f)}
+                >
+                  {f}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Indicadores principais */}
-          <section className="indicadores">
-            <div className="indicadores-header">
-              <h2 className="section-title">
-                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135673.png" alt="indicadores" width="32" height="32" className="title-icon" />
-                Indicadores Demográficos
-              </h2>
-              <p className="section-subtitle">Panorama populacional da comunidade</p>
-            </div>
-            
-            <div className="indicadores-grid">
-              <div className="indicador-card-clean">
-                <div className="card-icon">
-                  <img src="https://cdn-icons-png.flaticon.com/512/2784/2784403.png" alt="crianças" width="24" height="24" />
-                </div>
-                <div className="card-info">
-                  <div className="card-meta">
-                    <span className="card-title">Crianças</span>
-                    <span className="card-subtitle">0-12 anos</span>
-                  </div>
-                  <div className="card-stats">
-                    <span className="card-number">{indicadores.criancas}</span>
-                    <span className="card-label">Cadastradas</span>
+          <div className="family-list">
+            {filteredFamilies.map((f, i) => (
+              <div key={f.id} className="family-card">
+                <div className="family-info">
+                  <h4>
+                    {f.name} 
+                    <span className={`vulnerability-badge vul-${f.vulnerability === 'Alta' ? 'high' : f.vulnerability === 'Média' ? 'med' : 'low'}`}>
+                      {f.vulnerability} vulnerabilidade
+                    </span>
+                  </h4>
+                  <div className="family-details">
+                    <span><i className="fi fi-rr-users"></i> {f.members} pessoas</span>
+                    <span><i className="fi fi-rr-baby"></i> {f.children} crianças</span>
+                    <span>{f.elderly > 0 ? `👵 ${f.elderly} idoso` : ''}</span>
+                    <span>💸 {f.income}</span>
+                    <span>📍 {f.bairro}</span>
                   </div>
                 </div>
-              </div>
-              
-              <div className="indicador-card-clean">
-                <div className="card-icon">
-                  <img src="https://cdn-icons-png.flaticon.com/512/1077/1077035.png" alt="idosos" width="24" height="24" />
-                </div>
-                <div className="card-info">
-                  <div className="card-meta">
-                    <span className="card-title">Idosos</span>
-                    <span className="card-subtitle">60+ anos</span>
-                  </div>
-                  <div className="card-stats">
-                    <span className="card-number">{indicadores.idosos}</span>
-                    <span className="card-label">Cadastrados</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="indicador-card-clean">
-                <div className="card-icon">
-                  <img src="https://cdn-icons-png.flaticon.com/512/3468/3468377.png" alt="gestantes" width="24" height="24" />
-                </div>
-                <div className="card-info">
-                  <div className="card-meta">
-                    <span className="card-title">Gestantes</span>
-                    <span className="card-subtitle">Gestação</span>
-                  </div>
-                  <div className="card-stats">
-                    <span className="card-number">{indicadores.gestantes}</span>
-                    <span className="card-label">Cadastradas</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="indicador-card-clean">
-                <div className="card-icon">
-                  <img src="https://cdn-icons-png.flaticon.com/512/2913/2913465.png" alt="pessoas com deficiência" width="24" height="24" />
-                </div>
-                <div className="card-info">
-                  <div className="card-meta">
-                    <span className="card-title">PcD</span>
-                    <span className="card-subtitle">Deficiência</span>
-                  </div>
-                  <div className="card-stats">
-                    <span className="card-number">{indicadores.deficiencia}</span>
-                    <span className="card-label">Pessoas</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="indicadores-secundarios">
-              <div className="indicador-card-clean">
-                <div className="card-icon">
-                  <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="baixa renda" width="24" height="24" />
-                </div>
-                <div className="card-info">
-                  <div className="card-meta">
-                    <span className="card-title">Baixa Renda</span>
-                    <span className="card-subtitle">Famílias</span>
-                  </div>
-                  <div className="card-stats">
-                    <span className="card-number">{indicadores.baixaRenda}</span>
-                    <span className="card-label">Abaixo da linha</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="indicador-card-clean">
-                <div className="card-icon">
-                  <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" alt="vulnerabilidade" width="24" height="24" />
-                </div>
-                <div className="card-info">
-                  <div className="card-meta">
-                    <span className="card-title">Risco Alto</span>
-                    <span className="card-subtitle">Vulnerabilidade</span>
-                  </div>
-                  <div className="card-stats">
-                    <span className="card-number">{indicadores.altaVulnerabilidade}</span>
-                    <span className="card-label">Famílias</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Mapa interativo */}
-          <section className="mapa-section">
-            <h2>
-              <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" alt="mapa" width="24" height="24" style={{marginRight: '8px', verticalAlign: 'middle'}} />
-              Mapa do bairro
-            </h2>
-            <MapaInterativo 
-              familias={familiasFiltradas} 
-              pedidos={JSON.parse(localStorage.getItem('solidar-pedidos') || '[]')} 
-            />
-            <div className="mapa-legenda">
-              <div className="legenda-item">
-                <div style={{width: '20px', height: '20px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'}}></div>
-                <span>Famílias - Alta vulnerabilidade</span>
-              </div>
-              <div className="legenda-item">
-                <div style={{width: '20px', height: '20px', backgroundColor: '#f59e0b', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'}}></div>
-                <span>Famílias - Média vulnerabilidade</span>
-              </div>
-              <div className="legenda-item">
-                <div style={{width: '20px', height: '20px', backgroundColor: '#22c55e', borderRadius: '50%', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px'}}></div>
-                <span>Famílias - Baixa vulnerabilidade</span>
-              </div>
-              <div className="legenda-item">
-                <div style={{width: '24px', height: '24px', background: 'linear-gradient(135deg, #FF7A33, #e66a2b)', borderRadius: '6px', border: '2px solid white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'white'}}>!</div>
-                <span>Pedidos de ajuda</span>
-              </div>
-            </div>
-          </section>
-
-          {/* Lista de famílias */}
-          <section className="familias-section">
-            <div className="familias-header">
-              <h2 className="section-title-minimal">
-                Famílias cadastradas
-                <span className="count-badge">{familiasFiltradas.length}</span>
-              </h2>
-              
-              <div className="filter-minimal">
-                <select
-                  value={filtroVulnerabilidade}
-                  onChange={(e) => setFiltroVulnerabilidade(e.target.value)}
-                  className="select-minimal"
-                >
-                  <option value="todas">Todas</option>
-                  <option value="alta">Alta vulnerabilidade</option>
-                  <option value="media">Média vulnerabilidade</option>
-                  <option value="baixa">Baixa vulnerabilidade</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="familias-grid">
-              {familiasFiltradas.length === 0 ? (
-                <div className="empty-state-minimal">
-                  <div className="empty-icon">
-                    <img src="https://cdn-icons-png.flaticon.com/512/4436/4436481.png" alt="família" width="40" height="40" style={{opacity: '0.5'}} />
-                  </div>
-                  <p>Nenhuma família encontrada</p>
-                  <button
-                    className="btn-minimal primary"
-                    onClick={() => navigate('/cadastro-familia')}
-                  >
-                    Cadastrar primeira família
-                  </button>
-                </div>
-              ) : (
-                familiasFiltradas.map(familia => (
-                  <div key={familia.id} className="familia-card-minimal">
-                    <div className="card-header-minimal">
-                      <div className="family-info">
-                        <h3 className="family-name">{familia.nomeCompleto}</h3>
-                        <span 
-                          className="status-dot"
-                          style={{ backgroundColor: getVulnerabilidadeColor(familia.vulnerabilidade) }}
-                        ></span>
-                      </div>
-                      <div className="family-meta">
-                        <span className="location">{familia.bairro}</span>
-                        <span className="separator">•</span>
-                        <span className="people-count">{familia.numeroPessoas} pessoas</span>
-                      </div>
-                    </div>
-                    
-                    <div className="card-content-minimal">
-                      <div className="info-grid-minimal">
-                        {familia.criancas > 0 && (
-                          <div className="info-item-minimal">
-                            <span className="info-value">{familia.criancas}</span>
-                            <span className="info-label">Crianças</span>
-                          </div>
-                        )}
-                        
-                        {familia.idosos > 0 && (
-                          <div className="info-item-minimal">
-                            <span className="info-value">{familia.idosos}</span>
-                            <span className="info-label">Idosos</span>
-                          </div>
-                        )}
-                        
-                        <div className="info-item-minimal">
-                          <span className="info-value">{familia.rendaFamiliar?.replace('-', ' ') || 'N/A'}</span>
-                          <span className="info-label">Renda</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="card-actions-minimal">
-                      <button
-                        className="btn-minimal secondary"
-                        onClick={() => navigate(`/perfil-familia/${familia.id}`)}
-                      >
-                        Ver detalhes
-                      </button>
-                      <button
-                        className="btn-minimal primary"
-                        onClick={() => navigate(`/atualizar-status/${familia.id}`)}
-                      >
-                        Atualizar
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* Gráfico simples */}
-          <section className="grafico-section">
-            <h2>
-              <img src="https://cdn-icons-png.flaticon.com/512/3135/3135673.png" alt="gráfico" width="24" height="24" style={{marginRight: '8px', verticalAlign: 'middle'}} />
-              Distribuição por vulnerabilidade
-            </h2>
-            <div className="grafico-barras">
-              {['alta', 'media', 'baixa'].map(nivel => {
-                const count = familiasFiltradas.filter(f => f.vulnerabilidade === nivel).length;
-                const percentage = familiasFiltradas.length > 0 ? (count / familiasFiltradas.length) * 100 : 0;
                 
-                return (
-                  <div key={nivel} className="barra-container">
-                    <div className="barra-label">
-                      {getVulnerabilidadeLabel(nivel)}
+                <div className="family-actions">
+                  <button className="btn-sm btn-secondary-sm">Atualizar status</button>
+                  <button className="btn-sm btn-primary-sm">Ver detalhes</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Bloco 4 – Gráficos Profissionais */}
+        <section className="charts-section">
+          <div className="charts-grid">
+            <div className="chart-card">
+              <h3>Vulnerabilidade por Nível</h3>
+              <div className="chart-container-recharts">
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={vulnerabilityData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {vulnerabilityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="pie-legend">
+                  {vulnerabilityData.map(d => (
+                    <div key={d.name} className="legend-item">
+                      <span className="legend-dot" style={{ backgroundColor: d.color }}></span>
+                      <span>{d.name}: {d.value}</span>
                     </div>
-                    <div className="barra-wrapper">
-                      <div
-                        className="barra"
-                        style={{
-                          width: `${percentage}%`,
-                          backgroundColor: getVulnerabilidadeColor(nivel)
-                        }}
-                      ></div>
-                      <span className="barra-valor">{count}</span>
-                    </div>
-                  </div>
-                );
-              })}
+                  ))}
+                </div>
+              </div>
             </div>
-          </section>
-        </div>
-      </main>
+            
+            <div className="chart-card">
+              <h3>Impacto por Zona</h3>
+              <div className="chart-container-recharts">
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={zonaData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                    <RechartsTooltip cursor={{ fill: '#f8fafc' }} />
+                    <Bar dataKey="crianças" fill="#0ea5e9" radius={[4, 4, 0, 0]} barSize={20} />
+                    <Bar dataKey="idosos" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

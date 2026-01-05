@@ -1,16 +1,170 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from 'react-router-dom';
-import "../styles/pages/Chat.css";
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../styles/pages/Chat.css';
 
-const formatTime = (date) => {
+type UserType = 'doador' | 'receptor';
+type MessageType = 'text' | 'image' | 'location' | 'system';
+type UrgencyLevel = 'high' | 'medium' | 'low';
+type DeliveryStatus = 'aguardando' | 'andamento' | 'entregue';
+
+interface Message {
+  id: string;
+  type: MessageType;
+  sender: UserType | 'system';
+  content: string;
+  timestamp: Date;
+  read?: boolean;
+  imageUrl?: string;
+  location?: {
+    name: string;
+    address: string;
+  };
+}
+
+interface ChatUser {
+  id: string;
+  name: string;
+  avatar?: string;
+  initials: string;
+  type: UserType;
+  distance: string;
+  online: boolean;
+  lastMessage?: string;
+  lastMessageTime?: string;
+  unreadCount?: number;
+}
+
+interface HelpInfo {
+  type: string;
+  urgency: UrgencyLevel;
+  bairro: string;
+  distance: string;
+  status: DeliveryStatus;
+}
+
+// Icons
+const SearchIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+const ArrowLeftIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5M12 19l-7-7 7-7" />
+  </svg>
+);
+
+const PhoneIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="8" x2="12" y2="12" />
+    <line x1="12" y1="16" x2="12.01" y2="16" />
+  </svg>
+);
+
+const MapPinIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </svg>
+);
+
+const HeartIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+);
+
+const PackageIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="16.5" y1="9.4" x2="7.5" y2="4.21" />
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+    <line x1="12" y1="22.08" x2="12" y2="12" />
+  </svg>
+);
+
+const ChevronRightIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
+
+const PaperclipIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+  </svg>
+);
+
+const MapIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+    <line x1="8" y1="2" x2="8" y2="18" />
+    <line x1="16" y1="6" x2="16" y2="22" />
+  </svg>
+);
+
+const SendIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13" />
+    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+  </svg>
+);
+
+const CheckDoubleIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="18 6 9 17 4 12" />
+    <polyline points="22 10 13 21 11 19" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
+const BanIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+  </svg>
+);
+
+const FlagIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+    <line x1="4" y1="22" x2="4" y2="15" />
+  </svg>
+);
+
+const BigCheckIcon = () => (
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const formatTime = (date: Date) => {
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
 
-const Chat = () => {
-  const { conversaId } = useParams();
+export default function Conversas() {
   const navigate = useNavigate();
-  
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     {
       id: "sys1",
       type: "system",
@@ -88,18 +242,18 @@ const Chat = () => {
   ]);
 
   const [inputValue, setInputValue] = useState("");
-  const [currentUser] = useState("receptor");
+  const [currentUser] = useState<UserType>("receptor");
   const [selectedChatId, setSelectedChatId] = useState("1");
   const [showReportModal, setShowReportModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [deliveryStatus, setDeliveryStatus] = useState("andamento");
+  const [deliveryStatus, setDeliveryStatus] = useState<DeliveryStatus>("andamento");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const contacts = [
+  const contacts: ChatUser[] = [
     {
       id: "1",
       name: "Ana Paula",
@@ -137,7 +291,7 @@ const Chat = () => {
 
   const currentContact = contacts.find(c => c.id === selectedChatId) || contacts[0];
 
-  const helpInfo = {
+  const helpInfo: HelpInfo = {
     type: "Doação de Cesta Básica",
     urgency: "high",
     bairro: "São Lucas",
@@ -156,7 +310,7 @@ const Chat = () => {
   const handleSend = () => {
     if (!inputValue.trim()) return;
 
-    const newMessage = {
+    const newMessage: Message = {
       id: Date.now().toString(),
       type: "text",
       sender: currentUser,
@@ -174,7 +328,7 @@ const Chat = () => {
     }, 2000);
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -199,11 +353,11 @@ const Chat = () => {
             <div className="sidebar-title-row">
               <h2>SolidarBairro</h2>
               <button className="new-chat-btn" title="Nova conversa">
-                <i className="fi fi-rr-heart"></i>
+                <HeartIcon />
               </button>
             </div>
             <div className="search-bar">
-              <i className="fi fi-rr-search"></i>
+              <SearchIcon />
               <input type="text" placeholder="Buscar conversas..." />
             </div>
           </div>
@@ -252,7 +406,7 @@ const Chat = () => {
           <header className="chat-header">
             <div className="chat-header-left">
               <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                <i className="fi fi-rr-arrow-left"></i>
+                <ArrowLeftIcon />
               </button>
               <div className="chat-user-info">
                 <div className="chat-avatar">
@@ -267,7 +421,7 @@ const Chat = () => {
                     </span>
                   </h3>
                   <p>
-                    <i className="fi fi-rr-marker"></i>
+                    <MapPinIcon />
                     {currentContact.distance}
                   </p>
                 </div>
@@ -275,20 +429,20 @@ const Chat = () => {
             </div>
             <div className="chat-header-right">
               <button className="header-icon-btn" title="Ligar">
-                <i className="fi fi-rr-phone-call"></i>
+                <PhoneIcon />
               </button>
               <button
                 className="header-icon-btn danger"
                 onClick={() => setShowReportModal(true)}
                 title="Segurança"
               >
-                <i className="fi fi-rr-triangle-warning"></i>
+                <AlertIcon />
               </button>
             </div>
           </header>
 
           <div className="header-connection">
-            <i className="fi fi-rr-heart"></i>
+            <HeartIcon />
             Conectados através do SolidarBairro
           </div>
 
@@ -297,7 +451,7 @@ const Chat = () => {
             <div className="chat-info-card desktop-card">
               <div className="info-card-left">
                 <div className="info-card-icon">
-                  <i className="fi fi-rr-box"></i>
+                  <PackageIcon />
                 </div>
                 <div className="info-card-details">
                   <h4>
@@ -311,7 +465,7 @@ const Chat = () => {
                       Urgência {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
                     </span>
                     <span className="meta-item">
-                      <i className="fi fi-rr-marker"></i>
+                      <MapPinIcon />
                       {helpInfo.bairro} • {helpInfo.distance}
                     </span>
                   </div>
@@ -338,7 +492,7 @@ const Chat = () => {
               <div className="info-card-right">
                 <button className="btn-details">
                   Ver detalhes
-                  <i className="fi fi-rr-angle-right"></i>
+                  <ChevronRightIcon />
                 </button>
               </div>
             </div>
@@ -354,7 +508,7 @@ const Chat = () => {
                   return (
                     <div key={message.id} className="message system-message">
                       <div className="message-bubble">
-                        <i className="fi fi-rr-shield-check"></i>
+                        <ShieldIcon />
                         {message.content}
                       </div>
                     </div>
@@ -366,7 +520,7 @@ const Chat = () => {
                     <div key={message.id} className={`message ${message.sender}`}>
                       <div className="message-location">
                         <div className="location-preview">
-                          <i className="fi fi-rr-marker"></i>
+                          <MapPinIcon />
                         </div>
                         <div className="location-info">
                           <h5>{message.location?.name}</h5>
@@ -377,7 +531,7 @@ const Chat = () => {
                         <span className="message-time">{formatTime(message.timestamp)}</span>
                         {message.sender === currentUser && (
                           <span className={`message-status ${message.read ? "read" : ""}`}>
-                            <i className="fi fi-rr-check-double"></i>
+                            <CheckDoubleIcon />
                           </span>
                         )}
                       </div>
@@ -392,7 +546,7 @@ const Chat = () => {
                       <span className="message-time">{formatTime(message.timestamp)}</span>
                       {message.sender === currentUser && (
                         <span className={`message-status ${message.read ? "read" : ""}`}>
-                          {message.read ? <i className="fi fi-rr-check-double"></i> : <i className="fi fi-rr-check"></i>}
+                          {message.read ? <CheckDoubleIcon /> : <CheckIcon />}
                         </span>
                       )}
                     </div>
@@ -422,7 +576,7 @@ const Chat = () => {
                 className="finish-delivery-btn-small"
                 onClick={() => setShowFinishModal(true)}
               >
-                <i className="fi fi-rr-heart"></i>
+                <HeartIcon />
                 Confirmar Entrega
               </button>
             </div>
@@ -433,10 +587,10 @@ const Chat = () => {
             <div className="input-row-desktop">
               <div className="input-actions-desktop">
                 <button className="input-action-btn-desktop" title="Anexar arquivo">
-                  <i className="fi fi-rr-paperclip"></i>
+                  <PaperclipIcon />
                 </button>
                 <button className="input-action-btn-desktop" title="Enviar localização">
-                  <i className="fi fi-rr-map"></i>
+                  <MapIcon />
                 </button>
               </div>
               <div className="input-field-wrapper-desktop">
@@ -454,7 +608,7 @@ const Chat = () => {
                 onClick={handleSend}
                 disabled={!inputValue.trim()}
               >
-                <i className="fi fi-rr-paper-plane"></i>
+                <SendIcon />
               </button>
             </div>
           </div>
@@ -467,7 +621,7 @@ const Chat = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-icon danger">
-                <i className="fi fi-rr-triangle-warning"></i>
+                <AlertIcon />
               </div>
               <h3>Segurança e Denúncia</h3>
             </div>
@@ -475,15 +629,15 @@ const Chat = () => {
               <p>O SolidarBairro preza pela sua segurança. O que ocorreu?</p>
               <div className="modal-options">
                 <button className="modal-option">
-                  <i className="fi fi-rr-flag"></i>
+                  <FlagIcon />
                   Denunciar comportamento inadequado
                 </button>
                 <button className="modal-option danger">
-                  <i className="fi fi-rr-ban"></i>
+                  <BanIcon />
                   Bloquear este usuário permanentemente
                 </button>
                 <button className="modal-option">
-                  <i className="fi fi-rr-shield-check"></i>
+                  <ShieldIcon />
                   Solicitar suporte da moderação
                 </button>
               </div>
@@ -506,7 +660,7 @@ const Chat = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div className="modal-icon success">
-                <i className="fi fi-rr-heart"></i>
+                <HeartIcon />
               </div>
               <h3>Concluir Doação</h3>
             </div>
@@ -537,7 +691,7 @@ const Chat = () => {
           <div className="modal-content">
             <div className="confirmation-animation">
               <div className="check-circle">
-                <i className="fi fi-rr-check" style={{ fontSize: '40px', color: 'white' }}></i>
+                <BigCheckIcon />
               </div>
               <h4>Missão Cumprida!</h4>
               <p>A união faz a força no SolidarBairro.</p>
@@ -547,6 +701,4 @@ const Chat = () => {
       )}
     </div>
   );
-};
-
-export default Chat;
+}
