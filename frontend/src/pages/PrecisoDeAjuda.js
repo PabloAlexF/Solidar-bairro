@@ -40,6 +40,7 @@ import {
   Volume2,
   Map as MapIcon
 } from 'lucide-react';
+import VisibilityMap from '../components/VisibilityMap';
 import './PrecisoDeAjuda.css';
 
 const CATEGORIES = [
@@ -329,7 +330,8 @@ const INITIAL_FORM_DATA = {
   urgency: '',
   visibility: [],
   isPublic: true,
-  radius: 5
+  radius: 5,
+  userLocation: null
 };
 
 const STORY_TEMPLATES = [
@@ -391,6 +393,10 @@ export default function PrecisoDeAjuda() {
   const toggleArrayItem = useCallback((array, item) => {
     return array.includes(item) ? array.filter(i => i !== item) : [...array, item];
   }, []);
+  const handleLocationChange = useCallback((location) => {
+    updateData({ userLocation: location });
+  }, [updateData]);
+
   // Initialize Speech Recognition
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -785,6 +791,12 @@ export default function PrecisoDeAjuda() {
             <div className="control-label">
               <strong>Alcance: {formData.radius}km</strong>
               <p>Defina o raio de busca para encontrar doadores</p>
+              {formData.userLocation && (
+                <div className="location-info">
+                  <MapPin size={14} />
+                  <span>Localização: {formData.userLocation.lat.toFixed(4)}, {formData.userLocation.lng.toFixed(4)}</span>
+                </div>
+              )}
             </div>
             <label className="switch-v2">
               <input 
@@ -805,12 +817,10 @@ export default function PrecisoDeAjuda() {
             className="range-input-v2" 
           />
           
-          <div className="map-placeholder-v2">
-            <div className="map-overlay-v2">
-              <MapIcon size={40} className="map-icon-v2" />
-              <p>O mapa será exibido aqui com seu local e raio de alcance</p>
-            </div>
-          </div>
+          <VisibilityMap 
+            radius={formData.radius}
+            onLocationChange={handleLocationChange}
+          />
         </div>
       </div>
     </div>
