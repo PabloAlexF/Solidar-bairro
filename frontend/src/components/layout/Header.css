@@ -31,8 +31,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  /* margin-bottom: 24px; */
   cursor: pointer;
-  text-decoration: none;
+  margin-bottom: 0 !important;
 }
 
 .logo-icon {

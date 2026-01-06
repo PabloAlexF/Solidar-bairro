@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
+import Header from '../components/layout/Header';
 import apiService from '../services/apiService';
 import FlatIcon from '../components/FlatIcon';
 import '../styles/pages/PrecisoDeAjuda.css';
@@ -214,6 +215,7 @@ export default function PrecisoDeAjuda() {
 
   return (
     <>
+      <Header />
       <div className="wizard-card">
           
           {/* Header */}

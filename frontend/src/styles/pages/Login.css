@@ -1,6 +1,6 @@
 /* Login - Modern Design baseado na Landing Page */
 .login {
-  height: calc(100vh - 70px);
+  min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
   display: flex;
   align-items: center;
@@ -720,7 +720,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .login {
-    height: calc(100vh - 60px);
+    min-height: 100vh;
     padding: 0.5rem;
   }
   
