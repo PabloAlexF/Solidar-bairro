@@ -40,6 +40,7 @@ import {
   Volume2,
   Map as MapIcon
 } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import VisibilityMap from '../components/VisibilityMap';
 import './PrecisoDeAjuda.css';
 
@@ -312,9 +313,10 @@ const URGENCY_OPTIONS = [
 ];
 
 const VISIBILITY_OPTIONS = [
-  { id: 'bairro', label: 'Meu Bairro', desc: 'Até 2km de distância', icon: <MapPin size={20} />, color: '#10b981' },
-  { id: 'proximos', label: 'Região Próxima', desc: 'Até 10km de distância', icon: <Users size={20} />, color: '#3b82f6' },
-  { id: 'ongs', label: 'ONGs Parceiras', desc: 'Visível para instituições', icon: <Building2 size={20} />, color: '#6366f1' },
+  { id: 'bairro', label: 'Meu Bairro', desc: 'Até 2km de distância', icon: <MapPin size={32} />, color: '#10b981' },
+  { id: 'proximos', label: 'Região Próxima', desc: 'Até 10km de distância', icon: <Users size={32} />, color: '#3b82f6' },
+  { id: 'todos', label: 'Toda a Cidade', desc: 'Visível para todos na cidade', icon: <Globe size={32} />, color: '#f97316' },
+  { id: 'ongs', label: 'ONGs Parceiras', desc: 'Visível para instituições', icon: <Building2 size={32} />, color: '#6366f1' },
 ];
 
 const STEP_LABELS = ['Categoria', 'Detalhes', 'História', 'Urgência', 'Visibilidade', 'Confirmação'];
