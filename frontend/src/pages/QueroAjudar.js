@@ -12,7 +12,7 @@ const URGENCIES = ["Alta", "Média", "Baixa"];
 const QueroAjudar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { showToast } = useToast();
+  const { success, error } = useToast();
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPedido, setSelectedPedido] = useState(null);
@@ -59,11 +59,11 @@ const QueroAjudar = () => {
       if (response.success) {
         setPedidos(response.data || []);
       } else {
-        showToast('Erro ao carregar pedidos', 'error');
+        error('Erro ao carregar pedidos');
       }
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error);
-      showToast('Erro ao conectar com o servidor', 'error');
+      error('Erro ao conectar com o servidor');
     } finally {
       setLoading(false);
     }
@@ -133,10 +133,10 @@ const QueroAjudar = () => {
       
       await apiService.createInteresse(interesseData);
       setIsSuccess(true);
-      showToast('Interesse registrado com sucesso!', 'success');
+      success('Interesse registrado com sucesso!');
     } catch (error) {
       console.error('Erro ao registrar interesse:', error);
-      showToast('Erro ao registrar interesse: ' + error.message, 'error');
+      error('Erro ao registrar interesse: ' + error.message);
     }
   };
 
