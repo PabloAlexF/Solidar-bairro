@@ -31,6 +31,7 @@ import {
   X
 } from 'lucide-react';
 import './PrecisoDeAjudaWizard.css';
+import '../styles/components/passo6-melhorado.css';
 
 // Constants
 const INITIAL_DATA = {
@@ -202,7 +203,8 @@ export default function WizardPage() {
       case 3: return formData.description.length >= 10;
       case 4: return formData.urgency !== "";
       case 5: return formData.contactPreferences.length > 0;
-      case 6: return formData.visibility.length > 0;
+      case 6: return true; // Confirmation step - always valid
+      case 7: return formData.visibility.length > 0;
       default: return true;
     }
   };
@@ -692,8 +694,147 @@ function Step5({ formData, updateData }) {
   );
 }
 
-// Step 6 - Visibility
+// Step 6 - Confirmation
 function Step6({ formData, updateData }) {
+  const selectedCategory = {
+    icon: formData.category === 'Alimentos' ? '🛒' : 
+          formData.category === 'Roupas' ? '👕' : 
+          formData.category === 'Calçados' ? '👟' : 
+          formData.category === 'Contas' ? '🧾' : 
+          formData.category === 'Emprego' ? '🔧' : 
+          formData.category === 'Higiene' ? '🧼' : 
+          formData.category === 'Medicamentos' ? '💊' : 
+          formData.category === 'Móveis' ? '🪑' : 
+          formData.category === 'Eletrodomésticos' ? '📺' : 
+          formData.category === 'Material Escolar' ? '📚' : 
+          formData.category === 'Transporte' ? '🚌' : '📦',
+    color: formData.category === 'Alimentos' ? '#f97316' : 
+           formData.category === 'Roupas' ? '#3b82f6' : 
+           formData.category === 'Calçados' ? '#f43f5e' : 
+           formData.category === 'Contas' ? '#10b981' : 
+           formData.category === 'Emprego' ? '#6366f1' : 
+           formData.category === 'Higiene' ? '#06b6d4' : 
+           formData.category === 'Medicamentos' ? '#ef4444' : 
+           formData.category === 'Móveis' ? '#f59e0b' : 
+           formData.category === 'Eletrodomésticos' ? '#64748b' : 
+           formData.category === 'Material Escolar' ? '#8b5cf6' : 
+           formData.category === 'Transporte' ? '#eab308' : '#6b7280'
+  };
+
+  const selectedUrgency = {
+    icon: formData.urgency === 'urgente' ? '🚨' : 
+          formData.urgency === 'moderada' ? '⏰' : '✅',
+    color: formData.urgency === 'urgente' ? '#ef4444' : 
+           formData.urgency === 'moderada' ? '#f97316' : '#3b82f6'
+  };
+
+  return (
+    <div className="compact-step">
+      <div className="finish-header-v2">
+        <div className="finish-check-v2">
+          <Check size={32} />
+        </div>
+        <h2>Revise e Publique</h2>
+        <p>Veja como seu pedido aparecerá para os vizinhos.</p>
+      </div>
+
+      <div className="review-card-v3">
+        <div className="review-main-v3">
+          
+          <div className="review-header-row">
+            <div className="review-cat-badge" style={{ background: selectedCategory.color + '15', color: selectedCategory.color }}>
+              <div className="cat-icon-v3" style={{ background: selectedCategory.color }}>{selectedCategory.icon}</div>
+              <span>{formData.category}</span>
+            </div>
+            
+            {formData.urgency && (
+              <div className="review-urg-badge" style={{ background: selectedUrgency.color + '15', color: selectedUrgency.color }}>
+                {selectedUrgency.icon}
+                <span>{formData.urgency.toUpperCase()}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="review-content-v3">
+            <div className="review-story-v3">
+              <div className="section-title-v3"><MessageSquare size={14} /> Sua História</div>
+              <p>&ldquo;{formData.description}&rdquo;</p>
+            </div>
+
+            {formData.items && formData.items.length > 0 && (
+              <div className="review-items-section">
+                <div className="section-title-v3"><Plus size={14} /> Itens Solicitados</div>
+                <div className="review-items-tags">
+                  {formData.items.map((item, index) => (
+                    <span key={index} className="review-item-tag">{item}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(formData.clothingSize || formData.shoeSize || formData.clothingPreference) && (
+              <div className="review-specs-section">
+                <div className="section-title-v3"><Check size={14} /> Detalhes Adicionais</div>
+                <div className="specs-grid-v3">
+                  {formData.clothingSize && (
+                    <div className="spec-pill-v3">
+                      <Check size={12} /> <span>Tamanho: <strong>{formData.clothingSize}</strong></span>
+                    </div>
+                  )}
+                  {formData.shoeSize && (
+                    <div className="spec-pill-v3">
+                      <Check size={12} /> <span>Número: <strong>{formData.shoeSize}</strong></span>
+                    </div>
+                  )}
+                  {formData.clothingPreference && (
+                    <div className="spec-pill-v3">
+                      <UserCircle size={12} /> <span>Preferência: <strong>{formData.clothingPreference}</strong></span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="review-sidebar-v3">
+          <div className="sidebar-section-v3">
+            <div className="section-title-v3"><MapPin size={14} /> Alcance</div>
+            <div className="alcance-preview-v3">
+              <div className="alcance-value-v3">
+                <strong>5km</strong>
+                <span>de raio</span>
+              </div>
+              <div className="alcance-viz-v3">
+                <div className="viz-dot" />
+                <div className="viz-circle" style={{ transform: 'scale(0.75)' }} />
+              </div>
+            </div>
+          </div>
+
+          <div className="sidebar-section-v3">
+            <div className="section-title-v3"><Users size={14} /> Privacidade</div>
+            <div className="privacy-toggle-body public">
+              <Users size={16} />
+              <span>Pedido Público</span>
+            </div>
+            <p className="privacy-hint-v3">
+              Aparece no mapa para todos.
+            </p>
+          </div>
+
+          <div className="review-trust-v3">
+            <ShieldCheck size={18} />
+            <span>Seus dados estão protegidos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Step 7 - Visibility
+function Step7({ formData, updateData }) {
   const options = [
     { id: "Apenas meu bairro", label: "MEU BAIRRO", desc: "Vizinhos mais próximos", icon: MapPin },
     { id: "Bairros próximos", label: "ENTORNO", desc: "Raio de 5km a 10km", icon: Users },
@@ -738,170 +879,6 @@ function Step6({ formData, updateData }) {
           </button>
         ))}
       </div>
-    </div>
-  );
-}
-
-// Step 7 - Review
-function Step7({ formData }) {
-  const { user } = useAuth();
-  
-  const formatMemberSince = (date) => {
-    if (!date) return '2024';
-    try {
-      let year;
-      if (date._seconds) {
-        year = new Date(date._seconds * 1000).getFullYear();
-      } else if (date.seconds) {
-        year = new Date(date.seconds * 1000).getFullYear();
-      } else if (date.toDate) {
-        year = date.toDate().getFullYear();
-      } else {
-        year = new Date(date).getFullYear();
-      }
-      return isNaN(year) ? '2024' : year.toString();
-    } catch (error) {
-      return '2024';
-    }
-  };
-
-  return (
-    <div className="step7-container">
-      
-      <div className="step7-content">
-        
-        {/* Left Side - Request Info */}
-        <div className="step7-left">
-          
-          <div className="info-section">
-            <h2 className="section-title">Informações do pedido</h2>
-            
-            <div className="info-cards">
-              {/* Category Card */}
-              <div className="info-card category-card">
-                <div className="card-content">
-                  <span className="card-label">Categoria</span>
-                  <p className="card-value">{formData.category}</p>
-                </div>
-                <div className="card-icon orange">
-                  <Plus className="icon-small" />
-                </div>
-              </div>
-
-              {/* Urgency Card */}
-              <div className="info-card urgency-card">
-                <div className="card-content">
-                  <span className="card-label">Urgência</span>
-                  <div className="urgency-display">
-                    <div className={`urgency-dot ${formData.urgency === 'urgente' ? 'red' : formData.urgency === 'moderada' ? 'orange' : 'blue'}`} />
-                    <p className="card-value">{formData.urgency}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Size Cards */}
-              {(formData.clothingSize || formData.shoeSize) && (
-                <div className="info-card size-card">
-                  <div className="card-content">
-                    <span className="card-label">Tamanho</span>
-                    <p className="card-value">
-                      {formData.category === "Roupas" ? formData.clothingSize : formData.shoeSize}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {formData.clothingPreference && (
-                <div className="info-card preference-card">
-                  <div className="card-content">
-                    <span className="card-label">Preferência</span>
-                    <p className="card-value">{formData.clothingPreference}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="items-section">
-            <h2 className="section-title">Itens Solicitados</h2>
-            <div className="items-display">
-              {formData.items.length > 0 ? formData.items.map(item => (
-                <div key={item} className="item-tag">
-                  <span>{item}</span>
-                </div>
-              )) : (
-                <div className="no-items">
-                  <p>Nenhum item específico</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Location Card */}
-          <div className="location-card">
-            <div className="location-bg-icon">
-              <MapPin className="icon-xl" />
-            </div>
-            <div className="location-content">
-              <span className="location-label">Localização da Ajuda</span>
-              <p className="location-value">{formData.location || "Localização não definida"}</p>
-              <div className="location-status">
-                <Check className="icon-xs" />
-                Área com alta atividade de vizinhos
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side - Message and Profile */}
-        <div className="step7-right">
-          
-          <div className="message-section">
-            <h2 className="section-title">Sua mensagem</h2>
-            <div className="message-card">
-              <div className="message-icon">
-                <MessageSquare className="icon-medium" />
-              </div>
-              <p className="message-text">
-                "{formData.description || "Nenhuma descrição fornecida..."}"
-              </p>
-            </div>
-          </div>
-
-          {/* Profile Card */}
-          <div className="profile-card">
-            <div className="profile-header">
-              <div className="profile-avatar">
-                <UserCircle className="icon-large" />
-              </div>
-              <div className="profile-info">
-                <p className="profile-name">{user?.nome || 'Usuário'}</p>
-                <div className="profile-badges">
-                  <div className="verified-badge">VERIFICADO</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="profile-details">
-              <div className="detail-row">
-                <span className="detail-label">Preferência:</span>
-                <span className="detail-value">{formData.contactPreferences.join(" • ") || "N/A"}</span>
-              </div>
-              <div className="detail-row">
-                <span className="detail-label">Alcance:</span>
-                <span className="detail-value">{formData.visibility.join(" • ") || "N/A"}</span>
-              </div>
-            </div>
-
-            <div className="security-notice">
-              <ShieldCheck className="icon-medium" />
-              <p>Seus dados estão protegidos pela nossa rede de segurança comunitária.</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
     </div>
   );
 }

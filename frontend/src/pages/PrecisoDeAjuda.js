@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -38,10 +39,10 @@ import {
   Mic,
   MicOff,
   Volume2,
-  Map as MapIcon
+  Map as MapIcon,
+  Globe
 } from 'lucide-react';
-import { Globe } from 'lucide-react';
-import VisibilityMap from '../components/VisibilityMap';
+import MapaAlcance from '../components/MapaAlcance';
 import './PrecisoDeAjuda.css';
 
 const CATEGORIES = [
@@ -57,6 +58,29 @@ const CATEGORIES = [
   { id: 'Transporte', label: 'Transporte', icon: <Car size={24} />, color: '#0ea5e9' },
   { id: 'Outros', label: 'Outros', icon: <Plus size={24} />, color: '#94a3b8' },
 ];
+
+const URGENCY_OPTIONS = [
+  { id: 'critico', label: 'CRÍTICO', desc: 'Risco imediato à saúde ou vida', icon: <AlertTriangle size={24} />, color: '#ef4444', time: 'Imediato' },
+  { id: 'urgente', label: 'URGENTE', desc: 'Necessário para as próximas 24h', icon: <Zap size={24} />, color: '#f97316', time: '24 horas' },
+  { id: 'moderada', label: 'MODERADA', desc: 'Pode aguardar alguns dias', icon: <Calendar size={24} />, color: '#f59e0b', time: '3-5 dias' },
+  { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem prazo rígido', icon: <Coffee size={24} />, color: '#10b981', time: 'Sem pressa' },
+  { id: 'recorrente', label: 'RECORRENTE', desc: 'Necessidade mensal constante', icon: <RefreshCcw size={24} />, color: '#6366f1', time: 'Mensal' },
+];
+
+const SPECIALISTS = [
+  { id: 'medicos', label: 'Médicos/Saúde', icon: <Pill size={16} />, color: '#10b981' },
+  { id: 'advogados', label: 'Advogados/Jurídico', icon: <ShieldCheck size={16} />, color: '#3b82f6' },
+  { id: 'psicologos', label: 'Psicólogos', icon: <Heart size={16} />, color: '#ec4899' },
+  { id: 'assistentes', label: 'Assistentes Sociais', icon: <Users size={16} />, color: '#8b5cf6' },
+];
+
+const VISIBILITY_OPTIONS = [
+  { id: 'bairro', label: 'Meu Bairro', desc: 'Até 2km de distância', icon: <MapPin size={32} />, color: '#10b981' },
+  { id: 'proximos', label: 'Região Próxima', desc: 'Até 10km de distância', icon: <Users size={32} />, color: '#3b82f6' },
+  { id: 'todos', label: 'Toda a Cidade', desc: 'Visível para todos na cidade', icon: <Globe size={32} />, color: '#f97316' },
+  { id: 'ongs', label: 'ONGs Parceiras', desc: 'Visível para instituições', icon: <Building2 size={32} />, color: '#6366f1' },
+];
+
 const CATEGORY_DETAILS = {
   Alimentos: {
     options: [
@@ -208,196 +232,215 @@ const CATEGORY_DETAILS = {
     options: [
       { id: 'blusas', label: 'Blusas/Camisetas', desc: 'Peças para o tronco.', color: '#3b82f6' },
       { id: 'calcas', label: 'Calças/Bermudas', desc: 'Peças para as pernas.', color: '#2563eb' },
-      { id: 'agasalhos', label: 'Agasalhos', desc: 'Casacos e blusas de frio.', color: '#1e40af' },
-      { id: 'intimas', label: 'Roupas Íntimas', desc: 'Peças básicas de higiene.', color: '#1d4ed8' },
-      { id: 'escolar', label: 'Uniforme Escolar', desc: 'Roupas para escola.', color: '#6366f1' },
-      { id: 'trabalho', label: 'Roupa de Trabalho', desc: 'EPIs ou roupas formais.', color: '#475569' },
-      { id: 'bebe_roupas', label: 'Enxoval de Bebê', desc: 'Bodies, pagãos e mantas.', color: '#ec4899' },
+      { id: 'agasalhos', label: 'Agasalhos', desc: 'Casacos e blusas de frio.', color: '#1e40af', contextInfo: 'Agasalhos de lã ou sintéticos ajudam muito em frentes frias.' },
+      { 
+        id: 'escolar', 
+        label: 'Uniforme Escolar', 
+        desc: 'Roupas para escola.', 
+        color: '#6366f1',
+        contextInfo: 'Estar uniformizado ajuda na integração da criança no ambiente escolar e evita o desgaste de roupas civis.',
+        subQuestions: [
+          { id: 'serie_escolar', label: 'Série/Idade?', type: 'input', placeholder: 'Ex: 3º ano / 8 anos' },
+          { id: 'escola_nome', label: 'Nome da Escola (se necessário)', type: 'input', placeholder: 'Ex: Escola Municipal...' }
+        ]
+      },
     ],
     sizes: ['PP', 'P', 'M', 'G', 'GG', 'EXG', 'Infantil'],
     styles: ['Masculino', 'Feminino', 'Unissex', 'Infantil']
   },
-  Calçados: {
-    options: [
-      { id: 'tenis', label: 'Tênis', desc: 'Uso diário e esportivo.', color: '#6366f1' },
-      { id: 'chinelo', label: 'Chinelos/Sandálias', desc: 'Uso casual.', color: '#4f46e5' },
-      { id: 'botas', label: 'Botas/Galochas', desc: 'Proteção e frio.', color: '#4338ca' },
-      { id: 'social', label: 'Sapato Social', desc: 'Trabalho e eventos.', color: '#3730a3' },
-      { id: 'escolar_calc', label: 'Tênis Escolar', desc: 'Branco ou padrão escolar.', color: '#1e40af' },
-      { id: 'esporte_calc', label: 'Chuteira/Esportivo', desc: 'Para atividades físicas.', color: '#10b981' },
-    ],
-    sizes: ['18-25', '26-33', '34-36', '37-39', '40-42', '43-45'],
-    styles: ['Masculino', 'Feminino', 'Unissex', 'Infantil']
-  },
   Medicamentos: {
     options: [
-      { id: 'analgesico', label: 'Analgésicos', desc: 'Para dor e febre.', color: '#10b981' },
-      { id: 'continuo', label: 'Uso Contínuo', desc: 'Pressão, diabetes, etc.', color: '#059669' },
-      { id: 'antibiotico', label: 'Antibióticos', desc: 'Necessário prescrição.', color: '#047857' },
-      { id: 'curativo', label: 'Curativos/Primeiros Socorros', desc: 'Gaze, álcool, etc.', color: '#065f46' },
-      { id: 'mental', label: 'Saúde Mental', desc: 'Ansiedade, depressão.', color: '#6366f1' },
-      { id: 'vitaminas', label: 'Vitaminas/Suplementos', desc: 'Vitamina C, Ferro, etc.', color: '#f59e0b' },
+      { 
+        id: 'analgesico', 
+        label: 'Analgésicos', 
+        desc: 'Para dor e febre.', 
+        color: '#10b981',
+        contextInfo: 'Sempre verifique a data de validade e nunca se automedique sem orientação básica.',
+        subQuestions: [
+          { id: 'medicamento_nome', label: 'Nome do Medicamento', type: 'input', placeholder: 'Ex: Paracetamol, Dipirona...' }
+        ]
+      },
+      { 
+        id: 'continuo', 
+        label: 'Uso Contínuo', 
+        desc: 'Pressão, diabetes, etc.', 
+        color: '#059669',
+        contextInfo: 'Atenção: A interrupção de tratamentos contínuos pode agravar doenças crônicas rapidamente.',
+        subQuestions: [
+          { id: 'receita', label: 'Possui receita médica?', type: 'select', options: ['Sim, atualizada', 'Sim, vencida', 'Não possuo'] },
+          { id: 'med_continuo', label: 'Qual o medicamento?', type: 'input', placeholder: 'Ex: Losartana, Metformina...' },
+          { id: 'dosagem', label: 'Dosagem (mg)?', type: 'input', placeholder: 'Ex: 50mg, 100mg...' }
+        ]
+      },
     ]
   },
   Higiene: {
     options: [
-      { id: 'banho', label: 'Banho & Corpo', desc: 'Sabonete, shampoo, etc.', color: '#14b8a6' },
+      { 
+        id: 'banho', 
+        label: 'Banho & Corpo', 
+        desc: 'Sabonete, shampoo, etc.', 
+        color: '#14b8a6',
+        contextInfo: 'A higiene corporal básica previne doenças de pele e contribui para o bem-estar mental.',
+        subQuestions: [
+          { id: 'itens_banho', label: 'O que falta?', type: 'chips', options: ['Sabonete', 'Shampoo', 'Condicionador', 'Desodorante', 'Papel Higiênico', 'Lâmina de Barbear'] }
+        ]
+      },
       { id: 'bucal', label: 'Higiene Bucal', desc: 'Pasta, escova, fio dental.', color: '#0d9488' },
-      { id: 'limpeza', label: 'Limpeza da Casa', desc: 'Detergente, sabão em pó.', color: '#0f766e' },
       { id: 'feminina', label: 'Saúde Feminina', desc: 'Absorventes e higiene.', color: '#ec4899' },
-      { id: 'hig_infantil', label: 'Higiene Infantil', desc: 'Fraldas e lenços.', color: '#3b82f6' },
-      { id: 'protecao', label: 'Proteção & Saúde', desc: 'Máscaras, álcool em gel.', color: '#475569' },
     ]
   },
   Contas: {
     options: [
-      { id: 'luz', label: 'Energia Elétrica', desc: 'Conta de luz atrasada.', color: '#ef4444' },
+      { 
+        id: 'luz', 
+        label: 'Energia Elétrica', 
+        desc: 'Conta de luz atrasada.', 
+        color: '#ef4444',
+        contextInfo: 'Se você recebe Bolsa Família ou tem baixa renda, pode ter direito a até 65% de desconto na luz (Tarifa Social).',
+        subQuestions: [
+          { id: 'valor_luz', label: 'Valor aproximado (R$)?', type: 'input', placeholder: 'Ex: 150,00' },
+          { id: 'atraso_luz', label: 'Meses em atraso?', type: 'select', options: ['1 mês', '2 meses', '3 ou mais', 'Aviso de corte'] }
+        ]
+      },
       { id: 'agua', label: 'Água / Saneamento', desc: 'Conta de água.', color: '#3b82f6' },
-      { id: 'aluguel', label: 'Auxílio Aluguel', desc: 'Moradia e abrigo.', color: '#10b981' },
       { id: 'gas', label: 'Botijão de Gás', desc: 'Para cozinhar alimentos.', color: '#f97316' },
-      { id: 'internet', label: 'Internet / Estudos', desc: 'Para escola ou trabalho.', color: '#6366f1' },
-      { id: 'farmacia_conta', label: 'Contas de Farmácia', desc: 'Remédios de emergência.', color: '#ec4899' },
     ]
   },
   Emprego: {
     options: [
-      { id: 'curriculo', label: 'Currículo Profissional', desc: 'Ajuda para criar ou imprimir.', color: '#8b5cf6' },
+      { 
+        id: 'curriculo', 
+        label: 'Currículo Profissional', 
+        desc: 'Ajuda para criar ou imprimir.', 
+        color: '#8b5cf6',
+        contextInfo: 'Destaque suas experiências, mesmo as informais. Um bom currículo abre portas inesperadas.',
+        subQuestions: [
+          { id: 'tipo_curr', label: 'Qual a ajuda exata?', type: 'select', options: ['Criar um do zero', 'Revisar o atual', 'Apenas imprimir'] }
+        ]
+      },
       { id: 'vagas', label: 'Busca de Vagas', desc: 'Indicação de oportunidades.', color: '#7c3aed' },
-      { id: 'ferramentas', label: 'Ferramentas de Trabalho', desc: 'Para autônomos.', color: '#f59e0b' },
-      { id: 'transporte_emp', label: 'Transporte p/ Busca', desc: 'Auxílio para se deslocar.', color: '#5b21b6' },
-      { id: 'cursos', label: 'Cursos & Qualificação', desc: 'Indicação de cursos grátis.', color: '#10b981' },
-      { id: 'entrevista_prep', label: 'Preparação p/ Entrevista', desc: 'Dicas de fala e vestimenta.', color: '#3b82f6' },
     ]
   },
   Móveis: {
     options: [
-      { id: 'cama', label: 'Cama/Colchão', desc: 'Para dormir com dignidade.', color: '#f59e0b' },
+      { 
+        id: 'cama', 
+        label: 'Cama/Colchão', 
+        desc: 'Para dormir com dignidade.', 
+        color: '#f59e0b',
+        contextInfo: 'Um sono de qualidade é essencial para a saúde física e mental de adultos e crianças.',
+        subQuestions: [
+          { id: 'tipo_cama', label: 'Qual o tipo?', type: 'select', options: ['Solteiro', 'Casal', 'Berço', 'Apenas Colchão'] }
+        ]
+      },
       { id: 'mesa', label: 'Mesa & Cadeiras', desc: 'Para refeições e estudo.', color: '#d97706' },
-      { id: 'armario', label: 'Armário/Cozinha', desc: 'Organização de itens.', color: '#b45309' },
-      { id: 'infantil_mov', label: 'Berço/Enxoval', desc: 'Segurança para o bebê.', color: '#92400e' },
-      { id: 'sofa', label: 'Sofá / Poltrona', desc: 'Para o descanso da família.', color: '#7c3aed' },
-      { id: 'estudo_mov', label: 'Mesa de Estudo', desc: 'Para crianças e jovens.', color: '#3b82f6' },
     ]
   },
   Eletrodomésticos: {
     options: [
-      { id: 'geladeira', label: 'Geladeira', desc: 'Conservação de alimentos.', color: '#475569' },
+      { 
+        id: 'geladeira', 
+        label: 'Geladeira', 
+        desc: 'Conservação de alimentos.', 
+        color: '#475569',
+        contextInfo: 'Evite abrir a geladeira sem necessidade para economizar energia e manter os alimentos frescos.',
+        subQuestions: [
+          { id: 'volts_geladeira', label: 'Qual a voltagem necessária?', type: 'select', options: ['110v', '220v', 'Bivolt'] }
+        ]
+      },
       { id: 'fogao', label: 'Fogão', desc: 'Para cozinhar refeições.', color: '#334155' },
-      { id: 'lavar', label: 'Máquina de Lavar', desc: 'Higiene das roupas.', color: '#1e293b' },
-      { id: 'ventilador', label: 'Ventilador', desc: 'Conforto térmico.', color: '#0ea5e9' },
-      { id: 'microondas', label: 'Micro-ondas', desc: 'Praticidade no aquecimento.', color: '#6366f1' },
-      { id: 'ferro', label: 'Ferro de Passar', desc: 'Apresentação das roupas.', color: '#f59e0b' },
     ]
   },
   Transporte: {
     options: [
-      { id: 'passagem', label: 'Passagem Urbana', desc: 'Ônibus, metrô ou trem.', color: '#0ea5e9' },
-      { id: 'viagem', label: 'Viagem Interestadual', desc: 'Para retorno ou saúde.', color: '#0284c7' },
-      { id: 'manutencao', label: 'Manutenção Veicular', desc: 'Conserto essencial.', color: '#0369a1' },
-      { id: 'frete', label: 'Frete/Mudança', desc: 'Transporte de carga.', color: '#075985' },
+      { 
+        id: 'passagem', 
+        label: 'Passagem Urbana', 
+        desc: 'Ônibus, metrô ou trem.', 
+        color: '#0ea5e9',
+        contextInfo: 'Muitos municípios oferecem gratuidade ou passe social para desempregados e estudantes.',
+        subQuestions: [
+          { id: 'tipo_transp', label: 'Tipo de transporte?', type: 'chips', options: ['Ônibus', 'Metrô', 'Trem', 'Uber/Taxi (Emergência)'] },
+          { id: 'freq_transp', label: 'Frequência da ajuda?', type: 'select', options: ['Única vez', 'Semanal', 'Mensal'] }
+        ]
+      },
       { id: 'bike', label: 'Bicicleta', desc: 'Para trabalho ou estudo.', color: '#10b981' },
     ]
   },
   Outros: {
     options: [
-      { id: 'outros_ajuda', label: 'Outro tipo de ajuda', desc: 'Algo que não está nas categorias.', color: '#94a3b8' }
+      { 
+        id: 'outros_ajuda', 
+        label: 'Outro tipo de ajuda', 
+        desc: 'Algo que não está nas categorias.', 
+        color: '#94a3b8',
+        subQuestions: [
+          { id: 'especifique', label: 'O que exatamente você precisa?', type: 'input', placeholder: 'Descreva brevemente aqui...' }
+        ]
+      }
     ]
   }
-};
-const URGENCY_OPTIONS = [
-  { id: 'critico', label: 'CRÍTICO', desc: 'Risco imediato à saúde ou vida', icon: <AlertTriangle size={24} />, color: '#ef4444', time: 'Imediato' },
-  { id: 'urgente', label: 'URGENTE', desc: 'Necessário para as próximas 24h', icon: <Zap size={24} />, color: '#f97316', time: '24 horas' },
-  { id: 'moderada', label: 'MODERADA', desc: 'Pode aguardar alguns dias', icon: <Calendar size={24} />, color: '#f59e0b', time: '3-5 dias' },
-  { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem prazo rígido', icon: <Coffee size={24} />, color: '#10b981', time: 'Sem pressa' },
-  { id: 'recorrente', label: 'RECORRENTE', desc: 'Necessidade mensal constante', icon: <RefreshCcw size={24} />, color: '#6366f1', time: 'Mensal' },
-];
-
-const VISIBILITY_OPTIONS = [
-  { id: 'bairro', label: 'Meu Bairro', desc: 'Até 2km de distância', icon: <MapPin size={32} />, color: '#10b981' },
-  { id: 'proximos', label: 'Região Próxima', desc: 'Até 10km de distância', icon: <Users size={32} />, color: '#3b82f6' },
-  { id: 'todos', label: 'Toda a Cidade', desc: 'Visível para todos na cidade', icon: <Globe size={32} />, color: '#f97316' },
-  { id: 'ongs', label: 'ONGs Parceiras', desc: 'Visível para instituições', icon: <Building2 size={32} />, color: '#6366f1' },
-];
-
-const STEP_LABELS = ['Categoria', 'Detalhes', 'História', 'Urgência', 'Visibilidade', 'Confirmação'];
-const TOTAL_STEPS = 6;
-
-const INITIAL_FORM_DATA = {
-  category: '',
-  subCategory: [],
-  size: '',
-  style: '',
-  subQuestionAnswers: {},
-  description: '',
-  urgency: '',
-  visibility: [],
-  isPublic: true,
-  radius: 5,
-  userLocation: null
 };
 
 const STORY_TEMPLATES = [
   {
     id: 'familia',
     label: 'Família',
+    icon: <Users size={14} />,
     text: 'Preciso de ajuda com alimentos para minha família de [X] pessoas. Estamos passando por um momento difícil e qualquer contribuição de cesta básica seria muito bem-vinda.'
   },
   {
     id: 'saude',
     label: 'Saúde',
+    icon: <Pill size={14} />,
     text: 'Estou precisando de ajuda para adquirir o medicamento [Nome] para uso contínuo. Não estou conseguindo arcar com os custos este mês devido a [Motivo].'
   },
   {
     id: 'emprego',
     label: 'Emprego',
+    icon: <Briefcase size={14} />,
     text: 'Estou em busca de recolocação profissional e precisaria de ajuda com passagens de ônibus para comparecer a entrevistas ou ajuda para imprimir currículos.'
   }
 ];
 
-const STORY_TIPS = [
-  { icon: <Sparkles size={16} />, text: 'Seja claro e objetivo sobre o que precisa.' },
-  { icon: <PenTool size={16} />, text: 'Explique brevemente o motivo da necessidade.' },
-  { icon: <Lightbulb size={16} />, text: 'Mencione se é para você ou para outra pessoa.' }
-];
+const STEP_LABELS = ['Categoria', 'Detalhes', 'História', 'Urgência', 'Visibilidade', 'Confirmação'];
+const TOTAL_STEPS = 6;
 
 export default function PrecisoDeAjuda() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [selectedSubModal, setSelectedSubModal] = useState(null);
   const [showSpecsModal, setShowSpecsModal] = useState(false);
-  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
-  
-  // Audio Recording State
-  const [isRecording, setIsRecording] = useState(false);
-  const [recognition, setRecognition] = useState(null);
-  
-  // Template verification state
+  const [subQuestionAnswers, setSubQuestionAnswers] = useState({});
   const [templateUsed, setTemplateUsed] = useState(null);
+  const [recognition, setRecognition] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
 
-  const nextStep = useCallback(() => setStep(s => Math.min(s + 1, TOTAL_STEPS)), []);
-  const prevStep = useCallback(() => setStep(s => Math.max(s - 1, 1)), []);
-
-  const updateData = useCallback((data) => {
-    setFormData(prev => ({ ...prev, ...data }));
+  // Get user location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          setLocationError('Não foi possível obter sua localização');
+          // Default to São Paulo center if location fails
+          setUserLocation({ lat: -23.5505, lng: -46.6333 });
+        }
+      );
+    } else {
+      setLocationError('Geolocalização não suportada');
+      setUserLocation({ lat: -23.5505, lng: -46.6333 });
+    }
   }, []);
-
-  const updateSubAnswer = useCallback((questionId, value) => {
-    setFormData(prev => ({
-      ...prev,
-      subQuestionAnswers: {
-        ...prev.subQuestionAnswers,
-        [questionId]: value
-      }
-    }));
-  }, []);
-
-  const toggleArrayItem = useCallback((array, item) => {
-    return array.includes(item) ? array.filter(i => i !== item) : [...array, item];
-  }, []);
-  const handleLocationChange = useCallback((location) => {
-    updateData({ userLocation: location });
-  }, [updateData]);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -438,17 +481,44 @@ export default function PrecisoDeAjuda() {
       setIsRecording(true);
     }
   };
+  const [formData, setFormData] = useState({
+    category: '',
+    subCategory: [],
+    size: '',
+    style: '',
+    subQuestionAnswers: {},
+    description: '',
+    urgency: '',
+    visibility: [],
+    specialists: [],
+    isPublic: true,
+    radius: 5
+  });
+
+  const nextStep = useCallback(() => setStep(s => Math.min(s + 1, TOTAL_STEPS)), []);
+  const prevStep = useCallback(() => setStep(s => Math.max(s - 1, 1)), []);
+
+  const updateData = useCallback((data) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  }, []);
+
+  const updateSubAnswer = useCallback((questionId, value) => {
+    setFormData(prev => ({
+      ...prev,
+      subQuestionAnswers: {
+        ...prev.subQuestionAnswers,
+        [questionId]: value
+      }
+    }));
+  }, []);
 
   const isDescriptionValid = useMemo(() => {
     if (formData.description.length < 10) return false;
-    
-    // Se usou template, verifica se alterou os colchetes [ ]
     if (templateUsed) {
       const hasBrackets = /\[.*?\]/.test(formData.description);
       const isIdentical = formData.description === templateUsed;
       if (hasBrackets || isIdentical) return false;
     }
-    
     return true;
   }, [formData.description, templateUsed]);
 
@@ -458,10 +528,7 @@ export default function PrecisoDeAjuda() {
       case 2: {
         const details = CATEGORY_DETAILS[formData.category];
         if (!details) return true;
-        if (formData.subCategory.length === 0) return false;
-        if (details.sizes && !formData.size) return false;
-        if (details.styles && !formData.style) return false;
-        return true;
+        return formData.subCategory.length > 0;
       }
       case 3: return isDescriptionValid;
       case 4: return formData.urgency !== '';
@@ -474,7 +541,7 @@ export default function PrecisoDeAjuda() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      navigate('/painel-social');
+      navigate('/painel');
     }, 2000);
   }, [navigate]);
 
@@ -487,6 +554,7 @@ export default function PrecisoDeAjuda() {
     URGENCY_OPTIONS.find(o => o.id === formData.urgency),
     [formData.urgency]
   );
+
   const renderCategoryStep = () => (
     <div className="compact-step">
       <div className="step-intro">
@@ -498,7 +566,7 @@ export default function PrecisoDeAjuda() {
         {CATEGORIES.map((cat) => (
           <button
             key={cat.id}
-            onClick={() => updateData({ category: cat.id, subCategory: [], size: '', style: '' })}
+            onClick={() => updateData({ category: cat.id, subCategory: [] })}
             className={`cat-item ${formData.category === cat.id ? 'active' : ''}`}
             style={{ '--cat-color': cat.color }}
           >
@@ -509,6 +577,10 @@ export default function PrecisoDeAjuda() {
       </div>
     </div>
   );
+
+  const toggleArrayItem = useCallback((array, item) => {
+    return array.includes(item) ? array.filter(i => i !== item) : [...array, item];
+  }, []);
 
   const renderDetailsStep = () => {
     const details = CATEGORY_DETAILS[formData.category];
@@ -528,9 +600,19 @@ export default function PrecisoDeAjuda() {
     }
 
     const handleToggleSub = (id) => {
+      const opt = details.options.find(o => o.id === id);
+      const isAlreadySelected = formData.subCategory.includes(id);
       const newSubCategory = toggleArrayItem(formData.subCategory, id);
       updateData({ subCategory: newSubCategory });
+      
+      if (!isAlreadySelected && opt?.subQuestions) {
+        setSelectedSubModal(id);
+      }
     };
+
+    const subOptModal = selectedSubModal 
+      ? details.options.find(o => o.id === selectedSubModal) 
+      : null;
 
     return (
       <div className="compact-step">
@@ -556,6 +638,14 @@ export default function PrecisoDeAjuda() {
                   <strong>{opt.label}</strong>
                   <span>{opt.desc}</span>
                 </div>
+                {opt.subQuestions && formData.subCategory.includes(opt.id) && (
+                  <div 
+                    className="opt-edit-badge" 
+                    onClick={(e) => { e.stopPropagation(); setSelectedSubModal(opt.id); }}
+                  >
+                    <PenTool size={10} /> Editar
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -578,13 +668,26 @@ export default function PrecisoDeAjuda() {
           )}
         </div>
 
-        {showSpecsModal && details.sizes && (
-          <div className="modal-overlay" onClick={() => setShowSpecsModal(false)}>
-            <div 
-              className="sub-modal-v3 specs-modal"
-              style={{ '--modal-color': selectedCategory?.color }}
-              onClick={(e) => e.stopPropagation()}
+        {/* Modal de Especificações */}
+        <AnimatePresence>
+          {showSpecsModal && (
+            <motion.div 
+              className="modal-overlay" 
+              onClick={() => setShowSpecsModal(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
+              <motion.div 
+                className="sub-modal-v3 specs-modal"
+                style={{ '--modal-color': selectedCategory?.color }}
+                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
               <div className="modal-header">
                 <div className="header-info">
                   <h3>Especificações Gerais</h3>
@@ -639,12 +742,123 @@ export default function PrecisoDeAjuda() {
                   Concluir <Check size={18} />
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Modal de Subperguntas */}
+        <AnimatePresence>
+          {selectedSubModal && subOptModal && (
+            <motion.div 
+              className="modal-overlay" 
+              onClick={() => setSelectedSubModal(null)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.div 
+                className="sub-modal-v3"
+                style={{ '--modal-color': subOptModal.color }}
+                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+              <div className="modal-header">
+                <div className="header-info">
+                  <h3>Detalhes: {subOptModal.label}</h3>
+                  <p>{subOptModal.desc}</p>
+                </div>
+                <button className="close-btn" onClick={() => setSelectedSubModal(null)}>
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="modal-body scrollable-modal-content">
+                {subOptModal.contextInfo && (
+                  <div className="modal-context-info">
+                    <Lightbulb size={20} className="info-icon" />
+                    <p>{subOptModal.contextInfo}</p>
+                  </div>
+                )}
+                <div className="sub-q-grid-layout">
+                  {subOptModal.subQuestions?.map((q) => (
+                    <div key={q.id} className="q-item">
+                      <label className="q-label">{q.label}</label>
+                      
+                      {q.type === 'chips' && q.options && (
+                        <div className="chips-grid">
+                          {q.options.map((opt) => {
+                            const currentAnswers = (formData.subQuestionAnswers[q.id] || []);
+                            const isActive = Array.isArray(currentAnswers) ? currentAnswers.includes(opt) : false;
+                            return (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => {
+                                  const current = formData.subQuestionAnswers[q.id] || [];
+                                  const next = isActive 
+                                    ? current.filter(a => a !== opt)
+                                    : [...current, opt];
+                                  updateSubAnswer(q.id, next);
+                                }}
+                                className={`chip-item ${isActive ? 'active' : ''}`}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {q.type === 'select' && q.options && (
+                        <div className="chips-grid">
+                          {q.options.map((opt) => (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => updateSubAnswer(q.id, opt)}
+                              className={`chip-item ${formData.subQuestionAnswers[q.id] === opt ? 'active' : ''}`}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {q.type === 'input' && (
+                        <input 
+                          type="text"
+                          placeholder={q.placeholder}
+                          value={formData.subQuestionAnswers[q.id] || ''}
+                          onChange={(e) => updateSubAnswer(q.id, e.target.value)}
+                          className="sub-input-v3"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button 
+                  className="btn-v3 btn-modal-done"
+                  onClick={() => setSelectedSubModal(null)}
+                >
+                  Concluir <Check size={18} />
+                </button>
+              </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   };
+
   const renderDescriptionStep = () => (
     <div className="compact-step">
       <div className="step-intro">
@@ -695,6 +909,7 @@ export default function PrecisoDeAjuda() {
                     setTemplateUsed(t.text);
                   }}
                 >
+                  {t.icon}
                   {t.label}
                 </button>
               ))}
@@ -709,12 +924,14 @@ export default function PrecisoDeAjuda() {
               <strong>Dicas de Ouro</strong>
             </div>
             <div className="tips-list-v3">
-              {STORY_TIPS.map((tip, i) => (
-                <div key={i} className="tip-item-v3">
-                  <div className="tip-bullet-v3">{tip.icon}</div>
-                  <p>{tip.text}</p>
-                </div>
-              ))}
+              <div className="tip-item-v3">
+                <div className="tip-bullet-v3"><Sparkles size={16} /></div>
+                <p>Seja claro e objetivo sobre o que precisa.</p>
+              </div>
+              <div className="tip-item-v3">
+                <div className="tip-bullet-v3"><PenTool size={16} /></div>
+                <p>Explique brevemente o motivo da necessidade.</p>
+              </div>
               <div className="tip-item-v3">
                 <div className="tip-bullet-v3"><Volume2 size={16} /></div>
                 <p>Idosos podem usar o botão de voz para facilitar a descrição.</p>
@@ -768,60 +985,30 @@ export default function PrecisoDeAjuda() {
       <div className="step-intro">
         <span className="step-badge">Passo 05</span>
         <h2>Quem deve ver seu pedido?</h2>
-        <p>Defina o alcance geográfico da sua solicitação.</p>
+        <p>Defina o alcance geográfico e o público-alvo da sua solicitação.</p>
       </div>
-      <div className="visibility-layout-v2">
-        <div className="vis-grid-v2">
+
+      <div className="visibility-layout-vertical-v4">
+        <div className="vis-grid-v4">
           {VISIBILITY_OPTIONS.map((opt) => (
             <button
               key={opt.id}
               onClick={() => updateData({ visibility: toggleArrayItem(formData.visibility, opt.id) })}
-              className={`vis-card-v2 ${formData.visibility.includes(opt.id) ? 'active' : ''}`}
+              className={`vis-card-v4 ${formData.visibility.includes(opt.id) ? 'active' : ''}`}
               style={{ '--vis-color': opt.color }}
             >
-              <div className="vis-icon-v2">{opt.icon}</div>
-              <div className="vis-text-v2">
+              <div className="vis-icon-v4">{opt.icon}</div>
+              <div className="vis-text-v4">
                 <strong>{opt.label}</strong>
-                <span>{opt.desc}</span>
               </div>
             </button>
           ))}
         </div>
 
-        <div className="radius-control-v2">
-          <div className="control-top">
-            <div className="control-label">
-              <strong>Alcance: {formData.radius}km</strong>
-              <p>Defina o raio de busca para encontrar doadores</p>
-              {formData.userLocation && (
-                <div className="location-info">
-                  <MapPin size={14} />
-                  <span>Localização: {formData.userLocation.lat.toFixed(4)}, {formData.userLocation.lng.toFixed(4)}</span>
-                </div>
-              )}
-            </div>
-            <label className="switch-v2">
-              <input 
-                type="checkbox" 
-                checked={formData.isPublic} 
-                onChange={(e) => updateData({ isPublic: e.target.checked })} 
-              />
-              <span className="slider-v2"></span>
-              <span className="label-text-v2">{formData.isPublic ? 'Público' : 'Privado'}</span>
-            </label>
-          </div>
-          <input 
-            type="range" 
-            min="1" 
-            max="20" 
-            value={formData.radius} 
-            onChange={(e) => updateData({ radius: parseInt(e.target.value) })}
-            className="range-input-v2" 
-          />
-          
-          <VisibilityMap 
-            radius={formData.radius}
-            onLocationChange={handleLocationChange}
+        <div className="vis-map-section-v4">
+          <MapaAlcance 
+            radius={formData.radius} 
+            onRadiusChange={(r) => updateData({ radius: r })} 
           />
         </div>
       </div>
@@ -835,9 +1022,7 @@ export default function PrecisoDeAjuda() {
     return (
       <div className="compact-step">
         <div className="finish-header-v2">
-          <div className="finish-check-v2">
-            <Check size={32} />
-          </div>
+          <div className="finish-check-v2"><Check size={32} /></div>
           <h2>Confirme seus dados</h2>
           <p>Veja como seu pedido aparecerá para os vizinhos.</p>
         </div>
@@ -845,53 +1030,37 @@ export default function PrecisoDeAjuda() {
         <div className="review-card-v2">
           <div className="review-main">
             <div className="review-tags">
-              <span className="tag-v2" style={{ background: catColor + '15', color: catColor }}>
-                {formData.category}
-              </span>
+              <span className="tag-v2" style={{ background: catColor + '15', color: catColor }}>{formData.category}</span>
               {selectedUrgency && (
                 <span className="tag-v2" style={{ background: selectedUrgency.color + '15', color: selectedUrgency.color }}>
                   {selectedUrgency.icon} {formData.urgency.toUpperCase()}
                 </span>
               )}
             </div>
-            <div className="review-quote">
-              <p>&ldquo;{formData.description}&rdquo;</p>
-            </div>
+            <div className="review-quote"><p>&ldquo;{formData.description}&rdquo;</p></div>
             {formData.subCategory.length > 0 && (
               <div className="review-details">
-                <div className="review-items-list">
-                  <strong>Itens:</strong> {formData.subCategory.map(id => {
-                    const opt = details?.options.find(o => o.id === id);
-                    return opt?.label;
-                  }).filter(Boolean).join(', ')}
-                </div>
-                {(formData.size || formData.style) && (
-                  <div className="review-specs">
-                    {formData.size && <span><strong>Tam:</strong> {formData.size}</span>}
-                    {formData.style && <span> • <strong>Estilo:</strong> {formData.style}</span>}
-                  </div>
-                )}
+                <strong>Itens:</strong> {formData.subCategory.map(id => details?.options.find(o => o.id === id)?.label).join(', ')}
               </div>
             )}
           </div>
           <div className="review-meta">
-            <div className="meta-item-v2">
-              <MessageSquare size={16} />
-              <span>Contato via Chat do App</span>
-            </div>
-            <div className="meta-item-v2">
-              <MapPin size={16} />
-              <span>{formData.radius}km de alcance</span>
-            </div>
-            <div className="trust-badge-v2">
-              <ShieldCheck size={16} />
-              <span>Ambiente Seguro</span>
+            <div className="meta-item-v2"><MapPin size={16} /> <span>{formData.radius}km de alcance</span></div>
+            <div className="meta-toggle-review">
+              <label className="vis-switch-v3">
+                <input type="checkbox" checked={formData.isPublic} onChange={(e) => updateData({ isPublic: e.target.checked })} />
+                <div className="vis-switch-body-v3">
+                  <div className="vis-switch-handle-v3">{formData.isPublic ? <Globe size={14} /> : <ShieldCheck size={14} />}</div>
+                  <span>{formData.isPublic ? 'Pedido Público' : 'Pedido Privado'}</span>
+                </div>
+              </label>
             </div>
           </div>
         </div>
       </div>
     );
   };
+
   const renderStepContent = () => {
     switch (step) {
       case 1: return renderCategoryStep();
@@ -952,7 +1121,18 @@ export default function PrecisoDeAjuda() {
         <div className="wizard-content-v2">
           <div className="content-body-v2">
             <div className="step-container-v2">
-              {renderStepContent()}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="step-motion-container"
+                >
+                  {renderStepContent()}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
 
