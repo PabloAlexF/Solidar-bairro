@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../hooks/useToast';
+import { useToast } from '../contexts/ToastContext';
 import Header from '../components/layout/Header';
 import apiService from '../services/apiService';
 import FlatIcon from '../components/FlatIcon';
@@ -150,7 +150,7 @@ export default function PrecisoDeAjuda() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
-  const { showToast } = useToast();
+  const { success: showToast, error: showError } = useToast();
   const totalSteps = 7;
 
   // Atualizar localização com base no usuário logado
@@ -189,7 +189,7 @@ export default function PrecisoDeAjuda() {
 
   const handleSubmit = async () => {
     if (!user) {
-      showToast('Você precisa estar logado para fazer um pedido', 'error');
+      showError('Você precisa estar logado para fazer um pedido');
       return;
     }
 
@@ -199,7 +199,7 @@ export default function PrecisoDeAjuda() {
       const response = await apiService.createPedido(formData);
       
       if (response.success) {
-        showToast('Seu pedido foi publicado com sucesso!', 'success');
+        showToast('Seu pedido foi publicado com sucesso!');
         setFormData(INITIAL_DATA);
         setStep(1);
       } else {
@@ -207,7 +207,7 @@ export default function PrecisoDeAjuda() {
       }
     } catch (error) {
       console.error('Erro ao criar pedido:', error);
-      showToast(error.message || 'Erro ao publicar pedido. Tente novamente.', 'error');
+      showError(error.message || 'Erro ao publicar pedido. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }

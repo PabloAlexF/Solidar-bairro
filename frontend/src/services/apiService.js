@@ -366,6 +366,26 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // Métodos para interesses
+  async createInteresse(interesseData) {
+    const sanitizedData = this.sanitizeData(interesseData);
+    return this.request('/interesses', {
+      method: 'POST',
+      body: JSON.stringify(sanitizedData),
+    });
+  }
+
+  async getInteressesByPedido(pedidoId) {
+    if (!pedidoId?.trim()) {
+      throw new Error('ID do pedido é obrigatório');
+    }
+    return this.request(`/interesses/pedido/${encodeURIComponent(pedidoId)}`);
+  }
+
+  async getMeusInteresses() {
+    return this.request('/interesses/meus');
+  }
 }
 
 export default new ApiService();
