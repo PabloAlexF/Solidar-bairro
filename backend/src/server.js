@@ -6,6 +6,7 @@ const comercioRoutes = require('./routes/comercioRoutes');
 const ongRoutes = require('./routes/ongRoutes');
 const authRoutes = require('./routes/authRoutes');
 const pedidoRoutes = require('./routes/pedidoRoutes');
+const interesseRoutes = require('./routes/interesseRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -41,6 +42,7 @@ app.use('/api/cidadaos', cidadaoRoutes);
 app.use('/api/comercios', comercioRoutes);
 app.use('/api/ongs', ongRoutes);
 app.use('/api/pedidos', pedidoRoutes);
+app.use('/api/interesses', interesseRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });

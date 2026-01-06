@@ -1,85 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../hooks/useToast';
 import LogoutButton from '../components/LogoutButton';
+import apiService from '../services/apiService';
 import '../styles/pages/QueroAjudar.css';
 
 const CATEGORIES = ["Alimentos", "Roupas", "Calçados", "Contas", "Emprego", "Higiene", "Medicamentos", "Móveis", "Eletrodomésticos", "Material Escolar", "Transporte"];
 const URGENCIES = ["Alta", "Média", "Baixa"];
 
-const INITIAL_PEDIDOS = [
-  {
-    id: 1,
-    userName: "Maria Silva",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Maria",
-    distance: "450m de distância",
-    helpType: "Cesta básica",
-    category: "Alimentos",
-    familyInfo: "Família com 2 crianças",
-    urgency: "Alta",
-    description: "Estou desempregada há 3 meses, preciso de alimentos para meus filhos. Qualquer ajuda é bem-vinda.",
-    history: [
-      { date: "15/10/2023", help: "Recebeu agasalhos" },
-      { date: "02/09/2023", help: "Recebeu kit higiene" }
-    ]
-  },
-  {
-    id: 2,
-    userName: "João Santos",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Joao",
-    distance: "1,2km",
-    helpType: "Conta de luz atrasada",
-    category: "Contas",
-    familyInfo: "Situação: Sem renda fixa",
-    urgency: "Alta",
-    description: "Preciso de ajuda com a conta de luz deste mês para não cortar. O valor é R$ 145,00.",
-    history: []
-  },
-  {
-    id: 3,
-    userName: "Carla Menezes",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carla",
-    distance: "800m",
-    helpType: "Roupas de inverno",
-    category: "Roupas",
-    familyInfo: "1 idoso e 1 adulto",
-    urgency: "Média",
-    description: "Estamos precisando de cobertores e casacos para o frio que está chegando.",
-    history: [
-      { date: "12/11/2023", help: "Recebeu cesta básica" }
-    ]
-  },
-  {
-    id: 4,
-    userName: "Pedro Costa",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Pedro",
-    distance: "600m",
-    helpType: "Sapatos para trabalho",
-    category: "Calçados",
-    familyInfo: "Adulto desempregado",
-    urgency: "Alta",
-    description: "Consegui uma entrevista de emprego mas não tenho sapatos adequados. Preciso urgente para não perder a oportunidade.",
-    history: []
-  },
-  {
-    id: 5,
-    userName: "Ana Souza",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana",
-    distance: "1,5km",
-    helpType: "Material escolar",
-    category: "Material Escolar",
-    familyInfo: "Mãe de 2 estudantes",
-    urgency: "Média",
-    description: "Meus filhos vão voltar às aulas e preciso de cadernos, lápis e mochila para eles.",
-    history: [
-      { date: "20/01/2024", help: "Recebeu uniforme escolar" }
-    ]
-  }
-];
-
 const QueroAjudar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
+  const [pedidos, setPedidos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPedido, setSelectedPedido] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -90,17 +25,9 @@ const QueroAjudar = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
-    // Load notifications
-    const loadNotifications = () => {
-      const savedNotifications = localStorage.getItem('solidar-notifications');
-      if (savedNotifications) {
-        setNotifications(JSON.parse(savedNotifications));
-      }
-    };
-    
+    loadPedidos();
     loadNotifications();
 
-    // Close dropdowns when clicking outside
     const handleClickOutside = (event) => {
       if (showUserMenu || showNotifications) {
         const userMenuElement = document.querySelector('.user-menu-wrapper');
@@ -125,6 +52,30 @@ const QueroAjudar = () => {
     };
   }, [showUserMenu, showNotifications]);
 
+  const loadPedidos = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getPedidos();
+      if (response.success) {
+        setPedidos(response.data || []);
+      } else {
+        showToast('Erro ao carregar pedidos', 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+      showToast('Erro ao conectar com o servidor', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadNotifications = () => {
+    const savedNotifications = localStorage.getItem('solidar-notifications');
+    if (savedNotifications) {
+      setNotifications(JSON.parse(savedNotifications));
+    }
+  };
+
   const markAllAsRead = () => {
     const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
     setNotifications(updatedNotifications);
@@ -147,14 +98,46 @@ const QueroAjudar = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial;
 
-  const filteredPedidos = INITIAL_PEDIDOS.filter(pedido => {
-    const advancedCategoryMatch = selectedCategories.length === 0 || selectedCategories.includes(pedido.category);
-    const urgencyMatch = selectedUrgencies.length === 0 || selectedUrgencies.includes(pedido.urgency);
-    return advancedCategoryMatch && urgencyMatch;
-  });
+  const formatPedidoForDisplay = (pedido) => {
+    const userName = pedido.usuario?.nome || 'Usuário';
+    const helpType = pedido.items?.length > 0 ? pedido.items.join(', ') : pedido.category;
+    const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`;
+    
+    return {
+      ...pedido,
+      userName,
+      avatar,
+      helpType,
+      distance: pedido.location || 'Localização não informada',
+      familyInfo: `Usuário ${pedido.usuario?.tipo || 'cidadão'}`,
+      history: []
+    };
+  };
 
-  const handleConfirmHelp = () => {
-    setIsSuccess(true);
+  const filteredPedidos = pedidos
+    .filter(pedido => pedido.status === 'ativo')
+    .map(formatPedidoForDisplay)
+    .filter(pedido => {
+      const advancedCategoryMatch = selectedCategories.length === 0 || selectedCategories.includes(pedido.category);
+      const urgencyMatch = selectedUrgencies.length === 0 || selectedUrgencies.includes(pedido.urgency);
+      return advancedCategoryMatch && urgencyMatch;
+    });
+
+  const handleConfirmHelp = async () => {
+    try {
+      const interesseData = {
+        pedidoId: selectedPedido.id,
+        mensagem: `Olá! Gostaria de ajudar com: ${selectedPedido.helpType}. Podemos conversar sobre os detalhes?`,
+        contato: user?.telefone || user?.email || 'Contato via plataforma'
+      };
+      
+      await apiService.createInteresse(interesseData);
+      setIsSuccess(true);
+      showToast('Interesse registrado com sucesso!', 'success');
+    } catch (error) {
+      console.error('Erro ao registrar interesse:', error);
+      showToast('Erro ao registrar interesse: ' + error.message, 'error');
+    }
   };
 
   const closeSuccess = () => {
@@ -431,12 +414,21 @@ const QueroAjudar = () => {
 
         {/* Results Info */}
         <div className="results-info">
-          Mostrando {filteredPedidos.length} pedido{filteredPedidos.length !== 1 ? 's' : ''} de ajuda
+          {loading ? (
+            'Carregando pedidos...'
+          ) : (
+            `Mostrando ${filteredPedidos.length} pedido${filteredPedidos.length !== 1 ? 's' : ''} de ajuda`
+          )}
         </div>
 
         {/* Grid */}
         <div className="pedidos-grid">
-          {filteredPedidos.length === 0 ? (
+          {loading ? (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Carregando pedidos de ajuda...</p>
+            </div>
+          ) : filteredPedidos.length === 0 ? (
             <div className="no-results">
               <i className="fi fi-rr-search no-results-icon"></i>
               <h3>Nenhum pedido encontrado</h3>
@@ -481,6 +473,15 @@ const QueroAjudar = () => {
             ))
           )}
         </div>
+
+        {/* Refresh Button */}
+        {!loading && (
+          <div className="refresh-section">
+            <button className="btn btn-secondary" onClick={loadPedidos}>
+              <i className="fi fi-rr-refresh"></i> Atualizar pedidos
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Modal Details */}
