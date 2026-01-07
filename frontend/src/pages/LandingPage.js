@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import createGlobe from 'cobe';
 import { 
@@ -134,15 +135,12 @@ const Globe = () => {
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [location, setLocation] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-
-  // Mock user and auth - replace with your actual auth context
-  const user = null; // Replace with actual user from context
-  const isAuthenticated = () => false; // Replace with actual auth check
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
