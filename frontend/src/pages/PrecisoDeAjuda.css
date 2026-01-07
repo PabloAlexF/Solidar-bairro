@@ -1154,6 +1154,8 @@ input:checked ~ .label-text-v2 {
   align-items: center;
   flex-shrink: 0;
   animation: fadeInUp 0.5s ease-out 0.4s both;
+  position: relative;
+  z-index: 10;
 }
 
 .btn-v2 {

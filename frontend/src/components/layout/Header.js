@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import LogoutButton from '../LogoutButton';
 import './Header.css';
 
-const Header = ({ showLoginButton = true }) => {
+const Header = ({ showLoginButton = false }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [notifications, setNotifications] = useState([]);
@@ -87,7 +87,7 @@ const Header = ({ showLoginButton = true }) => {
             </span>
           </div>
 
-          {showLoginButton && (
+          {!isAuthenticated() && showLoginButton && (
             <div className="auth-buttons">
               <button 
                 className="btn btn-secondary"
@@ -104,7 +104,7 @@ const Header = ({ showLoginButton = true }) => {
             </div>
           )}
 
-          {!showLoginButton && isAuthenticated() && userName && (
+          {isAuthenticated() && userName && (
             <div className="user-section">
               {/* Notificações */}
               <div className="notification-wrapper">

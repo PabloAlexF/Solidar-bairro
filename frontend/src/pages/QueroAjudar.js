@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import apiService from '../services/apiService';
 import { 
   MapPin, 
   Heart,
@@ -116,7 +117,7 @@ const MOCK_ORDERS = [
 function ModalDetalhes({ order, onClose, onHelp }) {
   if (!order) return null;
 
-  const urg = URGENCY_OPTIONS.find(u => u.id === order.urgency);
+  const urg = URGENCY_OPTIONS.find(u => u.id === (order.urgencia || order.urgency));
 
   return (
     <AnimatePresence>
@@ -135,15 +136,15 @@ function ModalDetalhes({ order, onClose, onHelp }) {
             <header className="modal-header-qa">
               <div className="modal-user-profile">
                 <div className="user-avatar-placeholder">
-                  {order.userName.charAt(0)}
+                  {(order.usuarioNome || order.nomeUsuario || order.userName || 'U').charAt(0)}
                 </div>
                 <div className="user-meta-qa">
-                  <h3>{order.userName}</h3>
+                  <h3>{order.usuarioNome || order.nomeUsuario || order.userName || 'Usuário'}</h3>
                   <div className="user-sub-meta">
-                    <span className="user-type-badge">{order.userType}</span>
+                    <span className="user-type-badge">{order.tipoUsuario || order.userType || 'Cidadão'}</span>
                     <span className="user-loc-modal">
                       <MapPin size={14} />
-                      {order.neighborhood}, {order.city}
+                      {order.endereco || order.bairro || order.neighborhood || 'Local'}, {order.cidade || order.city || 'Cidade'}
                     </span>
                   </div>
                 </div>
@@ -162,9 +163,9 @@ function ModalDetalhes({ order, onClose, onHelp }) {
               <div className="detail-section-qa">
                 <h4>A História</h4>
                 <div className="detail-story-qa">
-                  <span className="quote-mark">"</span>
-                  {order.description}
-                  <span className="quote-mark-end">"</span>
+                  <span className="quote-mark">“</span>
+                  {order.descricao || order.description || 'Sem descrição'}
+                  <span className="quote-mark-end">”</span>
                 </div>
               </div>
 
@@ -172,7 +173,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                 <div className="detail-section-qa">
                   <h4>Itens Solicitados</h4>
                   <div className="items-list-qa">
-                    {order.subCategories.map((item) => (
+                    {(order.subCategorias || order.subCategories || []).map((item) => (
                       <span key={item} className="item-badge-qa">
                         <Zap size={14} />
                         {item}
@@ -184,7 +185,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                 <div className="detail-section-qa">
                   <h4>Detalhes Específicos</h4>
                   <div className="specs-grid">
-                    {Object.entries(order.details).map(([key, val]) => (
+                    {Object.entries(order.detalhes || order.details || {}).map(([key, val]) => (
                       <div key={key} className="spec-item">
                         <span className="spec-key">{DETAIL_LABELS[key] || key}</span>
                         <span className="spec-val">{val}</span>
@@ -200,7 +201,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                 </div>
                 <div className="loc-content-modal">
                   <strong>Local de Retirada/Entrega</strong>
-                  <p>{order.neighborhood}, {order.city} - {order.state}</p>
+                  <p>{order.endereco || order.bairro || order.neighborhood || 'Local'}, {order.cidade || order.city || 'Cidade'} - {order.estado || order.state || 'SP'}</p>
                   <span>O endereço exato será compartilhado após o contato inicial.</span>
                 </div>
               </div>
@@ -232,15 +233,52 @@ export default function QueroAjudarPage() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderToHelp, setOrderToHelp] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
 
+  useEffect(() => {
+    const fetchPedidos = async () => {
+      try {
+        const response = await apiService.getPedidos();
+        console.log('Dados da API:', response); // Debug
+        if (response.success) {
+          // Buscar dados do usuário para cada pedido
+          const ordersWithUserData = await Promise.all(
+            (response.data || []).map(async (order) => {
+              try {
+                if (order.userId) {
+                  const userResponse = await apiService.getCidadaoById(order.userId);
+                  if (userResponse.success) {
+                    return { ...order, userName: userResponse.data.nome };
+                  }
+                }
+                return { ...order, userName: 'Usuário' };
+              } catch (error) {
+                return { ...order, userName: 'Usuário' };
+              }
+            })
+          );
+          setOrders(ordersWithUserData);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar pedidos:', error);
+        setOrders(MOCK_ORDERS);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPedidos();
+  }, []);
+
   const filteredOrders = useMemo(() => {
-    return MOCK_ORDERS.filter(order => {
+    return orders.filter(order => {
       const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
       const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
       return catMatch && urgMatch;
     });
-  }, [selectedCat, selectedUrgency]);
+  }, [orders, selectedCat, selectedUrgency]);
 
   const clearFilters = () => {
     setSelectedCat('Todas');
@@ -320,62 +358,66 @@ export default function QueroAjudarPage() {
       )}
 
       <div className="qa-stats">
-        Encontramos {filteredOrders.length} pedidos correspondentes
+        {loading ? 'Carregando pedidos...' : `Encontramos ${filteredOrders.length} pedidos correspondentes`}
       </div>
 
       <div className="orders-grid">
-        <AnimatePresence mode="popLayout">
-          {filteredOrders.map((order, idx) => (
-            <motion.div
-              key={order.id}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ delay: idx * 0.05 }}
-              className="order-card"
-            >
-              <div className="card-header">
-                <div className="user-info">
-                  <div className="user-header-row">
-                    <span className="user-name">{order.userName}</span>
-                    {order.isNew && <span className="new-badge">Novo</span>}
-                  </div>
-                  <div className="user-loc">
-                    <MapPin size={14} />
-                    <span>{order.neighborhood}, {order.city}</span>
-                  </div>
-                </div>
-                {(() => {
-                  const urg = URGENCY_OPTIONS.find(u => u.id === order.urgency);
-                  return (
-                    <div className="urgency-tag" style={{ background: urg?.color + '15', color: urg?.color }}>
-                      {urg?.label}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>Carregando...</div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {filteredOrders.map((order, idx) => (
+              <motion.div
+                key={order.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ delay: idx * 0.05 }}
+                className="order-card"
+              >
+                <div className="card-header">
+                  <div className="user-info">
+                    <div className="user-header-row">
+                      <span className="user-name">{order.userName || 'Usuário'}</span>
+                      {order.isNew && <span className="new-badge">Novo</span>}
                     </div>
-                  );
-                })()}
-              </div>
+                    <div className="user-loc">
+                      <MapPin size={14} />
+                      <span>{order.location || 'Localização não informada'}</span>
+                    </div>
+                  </div>
+                  {(() => {
+                    const urg = URGENCY_OPTIONS.find(u => u.id === order.urgency);
+                    return (
+                      <div className="urgency-tag" style={{ background: urg?.color + '15', color: urg?.color }}>
+                        {urg?.label || 'MODERADA'}
+                      </div>
+                    );
+                  })()}
+                </div>
 
-              <h3 className="card-title">{order.title}</h3>
+                <h3 className="card-title">{order.items?.join(', ') || order.category}</h3>
 
-              <div className="user-type-tag">
-                <User size={12} />
-                <span>Perfil: {order.userType}</span>
-              </div>
+                <div className="user-type-tag">
+                  <User size={12} />
+                  <span>Categoria: {order.category}</span>
+                </div>
 
-              <p className="card-desc">{order.description}</p>
+                <p className="card-desc">{order.description || 'Sem descrição'}</p>
 
-              <div className="card-footer">
-                <button className="btn-card-details" onClick={() => setSelectedOrder(order)}>
-                  Detalhes
-                </button>
-                <button className="btn-card-help" onClick={() => setOrderToHelp(order)}>
-                  Ajudar
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+                <div className="card-footer">
+                  <button className="btn-card-details" onClick={() => setSelectedOrder(order)}>
+                    Detalhes
+                  </button>
+                  <button className="btn-card-help" onClick={() => setOrderToHelp(order)}>
+                    Ajudar
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
       </div>
 
       <ModalDetalhes 
@@ -397,7 +439,7 @@ export default function QueroAjudarPage() {
               <div className="confirm-help-content">
                 <div className="confirm-icon-box"><Heart size={48} fill="currentColor" /></div>
                 <h2>Gesto de Solidariedade</h2>
-                <p>Você escolheu ajudar <strong>{orderToHelp.userName}</strong>. Deseja iniciar uma conversa para combinar os detalhes?</p>
+                <p>Você escolheu ajudar <strong>{orderToHelp.nomeUsuario || orderToHelp.userName || 'este usuário'}</strong>. Deseja iniciar uma conversa para combinar os detalhes?</p>
                 <div className="confirm-actions-stack">
                   <button className="btn-confirm-primary" onClick={() => { alert('Incrível! Abrindo chat...'); setOrderToHelp(null); }}>
                     Sim, vamos conversar!
