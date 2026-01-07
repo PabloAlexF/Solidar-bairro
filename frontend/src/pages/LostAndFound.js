@@ -202,6 +202,7 @@ export default function LostAndFound() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [locationScope, setLocationScope] = useState('city');
 
   // Form State
   const [formData, setFormData] = useState({
@@ -224,6 +225,7 @@ export default function LostAndFound() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchItems();
     
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -341,6 +343,10 @@ export default function LostAndFound() {
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 5));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
+  const userLocation = user?.endereco || user?.bairro || user?.cidade || "São Paulo, SP";
+
   const filteredItems = items.filter(item => {
     const title = item.title?.toLowerCase() || '';
     const desc = item.description?.toLowerCase() || '';
@@ -348,12 +354,10 @@ export default function LostAndFound() {
     const matchesSearch = title.includes(search) || desc.includes(search);
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
     const matchesType = typeFilter === 'all' || item.type === typeFilter;
-    return matchesSearch && matchesCategory && matchesType;
+    const matchesLocation = locationScope === 'global' || 
+                           item.location?.toLowerCase().includes(userLocation.toLowerCase());
+    return matchesSearch && matchesCategory && matchesType && matchesLocation;
   });
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
-  const userLocation = user?.endereco || user?.bairro || user?.cidade || "São Paulo, SP";
 
   const renderStep = () => {
     switch (currentStep) {
@@ -787,6 +791,20 @@ export default function LostAndFound() {
             <div className="lf-location-recommendation">
               <Sparkles size={20} className="text-orange" />
               <span>Recomendando itens na sua região</span>
+            </div>
+            <div className="lf-location-scope-toggle">
+              <button 
+                className={`lf-scope-btn ${locationScope === 'city' ? 'active' : ''}`} 
+                onClick={() => setLocationScope('city')}
+              >
+                Minha Cidade
+              </button>
+              <button 
+                className={`lf-scope-btn ${locationScope === 'global' ? 'active' : ''}`} 
+                onClick={() => setLocationScope('global')}
+              >
+                Brasil Inteiro
+              </button>
             </div>
           </motion.div>
           <div className="lf-filter-bar">
