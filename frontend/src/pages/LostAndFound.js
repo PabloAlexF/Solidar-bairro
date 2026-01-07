@@ -353,6 +353,7 @@ export default function LostAndFound() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
+  const userLocation = user?.endereco || user?.bairro || user?.cidade || "São Paulo, SP";
 
   const renderStep = () => {
     switch (currentStep) {
@@ -767,6 +768,27 @@ export default function LostAndFound() {
       {/* Filter & Search */}
       <section className="lf-filter-section">
         <div className="lf-container">
+          {/* Location Status Bar */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="lf-location-status-bar"
+            style={{ marginBottom: '2rem' }}
+          >
+            <div className="lf-location-info">
+              <div className="lf-location-icon-pulse">
+                <MapPin size={24} />
+              </div>
+              <div className="lf-location-text">
+                <span className="lf-location-label">Sua Localização Cadastrada</span>
+                <span className="lf-location-value">{userLocation}</span>
+              </div>
+            </div>
+            <div className="lf-location-recommendation">
+              <Sparkles size={20} className="text-orange" />
+              <span>Recomendando itens na sua região</span>
+            </div>
+          </motion.div>
           <div className="lf-filter-bar">
             <div className="lf-search-box">
               <Search className="lf-search-icon" size={20} />

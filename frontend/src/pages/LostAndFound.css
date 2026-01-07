@@ -189,6 +189,85 @@
   transform: scale(1.05);
 }
 
+/* Location Status Bar */
+.lf-location-status-bar {
+  background: white;
+  border: 1px solid var(--sb-border);
+  border-radius: 2rem;
+  padding: 1.5rem 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+  border-bottom: 4px solid var(--sb-teal);
+}
+
+.lf-location-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.lf-location-icon-pulse {
+  width: 50px;
+  height: 50px;
+  background: var(--sb-teal-soft);
+  color: var(--sb-teal);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.lf-location-icon-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 1.2rem;
+  border: 2px solid var(--sb-teal);
+  animation: location-pulse 2s infinite;
+}
+
+@keyframes location-pulse {
+  0% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.1); opacity: 0.1; }
+  100% { transform: scale(1); opacity: 0.3; }
+}
+
+.lf-location-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.lf-location-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--sb-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lf-location-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--sb-text);
+}
+
+.lf-location-recommendation {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--sb-text-light);
+}
+
+.text-orange {
+  color: var(--sb-orange);
+}
+
 /* LostAndFound Premium Styles */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
@@ -244,7 +323,7 @@
 
 /* Header */
 .lf-header {
-  padding: 10rem 0 3rem;
+  padding: 8rem 0 3rem;
   position: relative;
 }
 
@@ -1586,5 +1665,16 @@
   .lf-upload-options {
     flex-direction: column;
     gap: 1rem;
+  }
+  
+  .lf-location-status-bar {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+  }
+  
+  .lf-location-recommendation {
+    justify-content: center;
   }
 }
