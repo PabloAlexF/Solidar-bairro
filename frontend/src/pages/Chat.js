@@ -150,6 +150,12 @@ const Chat = () => {
   };
 
   useEffect(() => {
+    if (conversaId) {
+      setSelectedChatId(conversaId);
+    }
+  }, [conversaId]);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -251,7 +257,7 @@ const Chat = () => {
           {/* Header */}
           <header className="chat-header">
             <div className="chat-header-left">
-              <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <button className="sidebar-toggle" onClick={() => navigate('/conversas')}>
                 <i className="fi fi-rr-arrow-left"></i>
               </button>
               <div className="chat-user-info">
