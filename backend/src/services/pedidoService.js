@@ -16,10 +16,6 @@ class PedidoService {
       errors.push('Urgência é obrigatória');
     }
     
-    if (!data.contactPreferences || !Array.isArray(data.contactPreferences) || data.contactPreferences.length === 0) {
-      errors.push('Pelo menos uma preferência de contato é obrigatória');
-    }
-    
     if (!data.visibility || !Array.isArray(data.visibility) || data.visibility.length === 0) {
       errors.push('Pelo menos uma opção de visibilidade é obrigatória');
     }
@@ -35,14 +31,16 @@ class PedidoService {
     return {
       userId: data.userId?.trim(),
       category: data.category?.trim(),
-      items: Array.isArray(data.items) ? data.items : [],
-      clothingSize: data.clothingSize?.trim() || null,
-      clothingPreference: data.clothingPreference?.trim() || null,
-      shoeSize: data.shoeSize?.trim() || null,
+      subCategory: Array.isArray(data.subCategory) ? data.subCategory : [],
+      size: data.size?.trim() || null,
+      style: data.style?.trim() || null,
+      subQuestionAnswers: data.subQuestionAnswers || {},
       description: data.description?.trim(),
       urgency: data.urgency?.trim(),
-      contactPreferences: Array.isArray(data.contactPreferences) ? data.contactPreferences : [],
       visibility: Array.isArray(data.visibility) ? data.visibility : [],
+      specialists: Array.isArray(data.specialists) ? data.specialists : [],
+      isPublic: data.isPublic !== undefined ? data.isPublic : true,
+      radius: data.radius || 5,
       location: data.location?.trim() || 'São Paulo, SP - Bairro Jardins'
     };
   }

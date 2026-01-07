@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import apiService from '../services/apiService';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -574,13 +575,38 @@ export default function PrecisoDeAjuda() {
     }
   }, [step, formData, isDescriptionValid]);
 
-  const handlePublish = useCallback(() => {
+  const handlePublish = useCallback(async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      const pedidoData = {
+        category: formData.category,
+        subCategory: formData.subCategory,
+        size: formData.size,
+        style: formData.style,
+        subQuestionAnswers: formData.subQuestionAnswers,
+        description: formData.description,
+        urgency: formData.urgency,
+        visibility: formData.visibility,
+        specialists: formData.specialists,
+        isPublic: formData.isPublic,
+        radius: formData.radius
+      };
+      
+      const result = await apiService.createPedido(pedidoData);
+      
+      if (result.success) {
+        navigate('/painel');
+      } else {
+        throw new Error(result.error || 'Erro ao criar pedido');
+      }
+    } catch (error) {
+      console.error('Erro ao publicar pedido:', error);
+      alert('Erro ao publicar pedido: ' + error.message);
+    } finally {
       setIsSubmitting(false);
-      navigate('/painel');
-    }, 2000);
-  }, [navigate]);
+    }
+  }, [formData, navigate]);
 
   const selectedCategory = useMemo(() => 
     CATEGORIES.find(c => c.id === formData.category), 

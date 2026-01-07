@@ -241,24 +241,20 @@ export default function QueroAjudarPage() {
     const fetchPedidos = async () => {
       try {
         const response = await apiService.getPedidos();
-        console.log('Dados da API:', response); // Debug
+        console.log('Dados da API:', response);
         if (response.success) {
-          // Buscar dados do usuário para cada pedido
-          const ordersWithUserData = await Promise.all(
-            (response.data || []).map(async (order) => {
-              try {
-                if (order.userId) {
-                  const userResponse = await apiService.getCidadaoById(order.userId);
-                  if (userResponse.success) {
-                    return { ...order, userName: userResponse.data.nome };
-                  }
-                }
-                return { ...order, userName: 'Usuário' };
-              } catch (error) {
-                return { ...order, userName: 'Usuário' };
-              }
-            })
-          );
+          const ordersWithUserData = (response.data || []).map(order => ({
+            ...order,
+            userName: order.usuario?.nome || 'Usuário',
+            userType: order.usuario?.tipo || 'cidadao',
+            items: order.subCategory || [],
+            urgencia: order.urgency,
+            descricao: order.description,
+            categoria: order.category,
+            subCategorias: order.subCategory || [],
+            detalhes: order.subQuestionAnswers || {},
+            location: order.location || 'São Paulo, SP'
+          }));
           setOrders(ordersWithUserData);
         }
       } catch (error) {
@@ -397,7 +393,7 @@ export default function QueroAjudarPage() {
                   })()}
                 </div>
 
-                <h3 className="card-title">{order.items?.join(', ') || order.category}</h3>
+                <h3 className="card-title">{order.subCategory?.join(', ') || order.category}</h3>
 
                 <div className="user-type-tag">
                   <User size={12} />
