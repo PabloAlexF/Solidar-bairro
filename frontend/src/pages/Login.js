@@ -157,13 +157,19 @@ const Login = () => {
                   >
                     <div className="register-icon">
                       <i className="fi fi-rr-user-add"></i>
+                      <div className="register-icon-glow"></div>
                     </div>
                     <div className="register-content">
                       <span className="register-title">Criar conta gratuita</span>
                       <span className="register-subtitle">Junte-se à rede de solidariedade</span>
+                      <div className="register-benefits">
+                        <span className="benefit-item">✨ 100% gratuito</span>
+                        <span className="benefit-item">🚀 Cadastro em 2 minutos</span>
+                      </div>
                     </div>
                     <div className="register-arrow">
                       <i className="fi fi-rr-arrow-right"></i>
+                      <div className="register-pulse"></div>
                     </div>
                   </button>
                 </div>
