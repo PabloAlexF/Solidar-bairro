@@ -448,20 +448,43 @@ export default function PrecisoDeAjuda() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognitionInstance = new SpeechRecognition();
-        recognitionInstance.continuous = true;
-        recognitionInstance.interimResults = true;
+        recognitionInstance.continuous = false;
+        recognitionInstance.interimResults = false;
         recognitionInstance.lang = 'pt-BR';
+        recognitionInstance.maxAlternatives = 1;
 
-        recognitionInstance.onresult = (event) => {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-          }
-          setFormData(prev => ({ ...prev, description: (prev.description + ' ' + transcript).trim() }));
+        let finalTranscript = '';
+        let isProcessing = false;
+
+        recognitionInstance.onstart = () => {
+          finalTranscript = '';
+          isProcessing = false;
         };
 
-        recognitionInstance.onend = () => setIsRecording(false);
-        recognitionInstance.onerror = () => setIsRecording(false);
+        recognitionInstance.onresult = (event) => {
+          if (isProcessing) return;
+          isProcessing = true;
+          
+          const transcript = event.results[0][0].transcript.trim();
+          if (transcript && transcript !== finalTranscript) {
+            finalTranscript = transcript;
+            setFormData(prev => ({ 
+              ...prev, 
+              description: prev.description ? `${prev.description} ${transcript}` : transcript
+            }));
+          }
+        };
+
+        recognitionInstance.onend = () => {
+          setIsRecording(false);
+          isProcessing = false;
+        };
+        
+        recognitionInstance.onerror = (event) => {
+          setIsRecording(false);
+          isProcessing = false;
+          console.log('Erro na gravação de voz:', event.error);
+        };
 
         setRecognition(recognitionInstance);
       }
@@ -475,10 +498,24 @@ export default function PrecisoDeAjuda() {
     }
 
     if (isRecording) {
-      recognition.stop();
+      try {
+        recognition.stop();
+      } catch (error) {
+        console.log('Erro ao parar gravação:', error);
+      }
+      setIsRecording(false);
     } else {
-      recognition.start();
-      setIsRecording(true);
+      try {
+        // Garantir que não há gravação ativa
+        recognition.abort();
+        setTimeout(() => {
+          recognition.start();
+          setIsRecording(true);
+        }, 100);
+      } catch (error) {
+        console.log('Erro ao iniciar gravação:', error);
+        setIsRecording(false);
+      }
     }
   };
   const [formData, setFormData] = useState({
