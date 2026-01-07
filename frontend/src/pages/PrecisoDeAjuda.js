@@ -953,34 +953,6 @@ export default function PrecisoDeAjuda() {
             </div>
           </div>
         </div>
-
-        <div className="story-sidebar-v3">
-          <div className="tips-box-v3">
-            <div className="tips-header-v3">
-              <Lightbulb size={18} className="tip-icon-v3" />
-              <strong>Dicas de Ouro</strong>
-            </div>
-            <div className="tips-list-v3">
-              <div className="tip-item-v3">
-                <div className="tip-bullet-v3"><Sparkles size={16} /></div>
-                <p>Seja claro e objetivo sobre o que precisa.</p>
-              </div>
-              <div className="tip-item-v3">
-                <div className="tip-bullet-v3"><PenTool size={16} /></div>
-                <p>Explique brevemente o motivo da necessidade.</p>
-              </div>
-              <div className="tip-item-v3">
-                <div className="tip-bullet-v3"><Volume2 size={16} /></div>
-                <p>Idosos podem usar o botão de voz para facilitar a descrição.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="privacy-alert-v3">
-            <ShieldCheck size={18} />
-            <p>Seus dados sensíveis nunca são expostos publicamente.</p>
-          </div>
-        </div>
       </div>
     </div>
   );

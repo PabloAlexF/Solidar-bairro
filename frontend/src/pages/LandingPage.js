@@ -275,24 +275,148 @@ export default function LandingPage() {
               </div>
             ) : (
               <div className="user-section">
-                <button 
-                  className="notification-btn"
-                  onClick={() => setShowNotifications(!showNotifications)}
-                >
-                  <Bell size={24} />
-                  {unreadCount > 0 && (
-                    <span className="notification-badge">{unreadCount}</span>
+                <div className="notification-wrapper">
+                  <button 
+                    className="notification-btn"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                  >
+                    <Bell size={24} />
+                    {unreadCount > 0 && (
+                      <span className="notification-badge">{unreadCount}</span>
+                    )}
+                  </button>
+                  
+                  {showNotifications && (
+                    <div className="notification-dropdown">
+                      <div className="notification-header">
+                        <h3>Notificações</h3>
+                        {notifications.length > 0 && (
+                          <div className="notification-actions">
+                            {unreadCount > 0 && (
+                              <button 
+                                className="action-btn mark-read-btn"
+                                onClick={markAllAsRead}
+                                title="Marcar todas como lidas"
+                              >
+                                ✓
+                              </button>
+                            )}
+                            <button 
+                              className="action-btn clear-btn"
+                              onClick={clearAllNotifications}
+                              title="Limpar todas"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="notification-list">
+                        {notifications.length === 0 ? (
+                          <div className="no-notifications">
+                            Nenhuma notificação ainda
+                          </div>
+                        ) : (
+                          notifications.map((notification) => (
+                            <div 
+                              key={notification.id} 
+                              className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                              onClick={() => !notification.read && markAsRead(notification.id)}
+                            >
+                              <div className="notification-content">
+                                <p className="notification-title">{notification.title}</p>
+                                <p className="notification-message">{notification.message}</p>
+                                <span className="notification-time">
+                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                              {!notification.read && <div className="unread-dot"></div>}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   )}
-                </button>
+                </div>
                 
-                <button 
-                  className="user-btn"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                >
-                  <div className="user-avatar">
-                    {userName?.substring(0, 2).toUpperCase()}
-                  </div>
-                </button>
+                <div className="user-menu-wrapper">
+                  <button 
+                    className="user-btn"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                  >
+                    <div className="user-avatar">
+                      {userName?.substring(0, 2).toUpperCase()}
+                    </div>
+                  </button>
+                  
+                  {showUserMenu && (
+                    <div className="user-dropdown">
+                      <div className="user-info">
+                        <div className="user-avatar-large">
+                          {userName?.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div className="user-details">
+                          <div className="user-name">
+                            {userName}
+                            {user?.isVerified && (
+                              <span className="verified-text">Verificado</span>
+                            )}
+                          </div>
+                          <div className="user-phone">{user?.phone || user?.telefone || user?.email}</div>
+                        </div>
+                      </div>
+
+                      <div className="user-stats">
+                        <div className="stat">
+                          <div className="stat-number">{user?.helpedCount || 0}</div>
+                          <div className="stat-label">Pessoas ajudadas</div>
+                        </div>
+                        <div className="stat">
+                          <div className="stat-number">{user?.receivedHelpCount || 0}</div>
+                          <div className="stat-label">Ajudas recebidas</div>
+                        </div>
+                      </div>
+
+                      <div className="user-actions">
+                        <button 
+                          className="menu-item profile-btn"
+                          onClick={() => {
+                            navigate('/perfil');
+                            setShowUserMenu(false);
+                          }}
+                        >
+                          👤 Ver perfil
+                        </button>
+                        
+                        <button 
+                          className="menu-item"
+                          onClick={() => {
+                            navigate('/conversas');
+                            setShowUserMenu(false);
+                          }}
+                        >
+                          💬 Minhas conversas
+                        </button>
+                        
+                        <button 
+                          className="menu-item logout-btn"
+                          onClick={() => {
+                            // Implementar logout
+                            localStorage.removeItem('solidar-user');
+                            window.location.reload();
+                          }}
+                        >
+                          🚪 Sair
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

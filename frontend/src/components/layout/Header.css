@@ -326,6 +326,9 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin-top: 8px;
   z-index: 1001;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .user-info {
