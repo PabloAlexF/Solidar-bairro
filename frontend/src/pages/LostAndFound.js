@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { formatLocation } from '../utils/addressUtils';
 import { 
   Search, 
   Plus, 
@@ -345,7 +346,7 @@ export default function LostAndFound() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
-  const userLocation = user?.endereco || user?.bairro || user?.cidade || "São Paulo, SP";
+  const userLocation = formatLocation(user?.endereco, user?.cidade, user?.estado) || user?.bairro || "São Paulo, SP";
 
   const filteredItems = items.filter(item => {
     const title = item.title?.toLowerCase() || '';

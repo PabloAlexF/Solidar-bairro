@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { formatLocation } from '../utils/addressUtils';
 import FlatIcon from '../components/FlatIcon';
 import '../styles/pages/PrecisoDeAjuda.css';
 
@@ -149,8 +150,8 @@ export default function PrecisoDeAjuda() {
 
   // Atualizar localização com base no usuário logado
   useEffect(() => {
-    if (user && user.endereco && user.endereco.cidade && user.endereco.bairro) {
-      const userLocation = `${user.endereco.cidade}, ${user.endereco.estado || 'MG'} - Bairro ${user.endereco.bairro}`;
+    if (user && user.endereco) {
+      const userLocation = formatLocation(user.endereco, user.cidade, user.estado);
       setFormData(prev => ({ ...prev, location: userLocation }));
     }
   }, [user]);

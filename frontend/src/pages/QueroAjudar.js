@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import apiService from '../services/apiService';
+import { formatAddress, formatLocation, formatNeighborhood } from '../utils/addressUtils';
 import { 
   MapPin, 
   Heart,
@@ -144,7 +145,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                     <span className="user-type-badge">{order.tipoUsuario || order.userType || 'Cidadão'}</span>
                     <span className="user-loc-modal">
                       <MapPin size={14} />
-                      {order.endereco || order.bairro || order.neighborhood || 'Local'}, {order.cidade || order.city || 'Cidade'}
+                      {formatLocation(order.endereco, order.cidade || order.city, order.estado || order.state)}
                     </span>
                   </div>
                 </div>
@@ -201,7 +202,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                 </div>
                 <div className="loc-content-modal">
                   <strong>Local de Retirada/Entrega</strong>
-                  <p>{order.endereco || order.bairro || order.neighborhood || 'Local'}, {order.cidade || order.city || 'Cidade'} - {order.estado || order.state || 'SP'}</p>
+                  <p>{formatLocation(order.endereco, order.cidade || order.city, order.estado || order.state)}</p>
                   <span>O endereço exato será compartilhado após o contato inicial.</span>
                 </div>
               </div>
@@ -384,7 +385,7 @@ export default function QueroAjudarPage() {
                     </div>
                     <div className="user-loc">
                       <MapPin size={14} />
-                      <span>{order.location || 'Localização não informada'}</span>
+                      <span>{formatNeighborhood(order.endereco, order.bairro || order.neighborhood) || order.location || 'Localização não informada'}</span>
                     </div>
                   </div>
                   {(() => {

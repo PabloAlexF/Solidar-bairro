@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatLocation } from '../utils/addressUtils';
 import '../styles/pages/PerfilModern.css';
 const Perfil = () => {
   const navigate = useNavigate();
@@ -19,8 +20,7 @@ const Perfil = () => {
             name: userData.nomeCompleto || userData.name || userData.nome || userData.nomeFantasia || userData.razaoSocial || 'Usuário não identificado',
             email: userData.email || 'Email não informado',
             memberSince: userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível',
-            location: userData.endereco ? `${userData.endereco.cidade}, ${userData.endereco.estado}` : 
-                     userData.cidade ? `${userData.cidade}, ${userData.estado}` : 'Localização não informada',
+            location: formatLocation(userData.endereco, userData.cidade, userData.estado),
             phone: userData.telefone || userData.phone || userData.whatsapp || 'Telefone não informado',
             avatar: null,
             bio: userData.bio || userData.descricao || userData.missao || 'Biografia não cadastrada',

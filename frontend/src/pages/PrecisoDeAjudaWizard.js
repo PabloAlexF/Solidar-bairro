@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { formatLocation } from '../utils/addressUtils';
 import { 
   ChevronLeft, 
   ArrowRight, 
@@ -180,8 +181,8 @@ export default function WizardPage() {
 
   // Atualizar localização com base no usuário logado
   useEffect(() => {
-    if (user && user.endereco && user.endereco.cidade && user.endereco.bairro) {
-      const userLocation = `${user.endereco.cidade}, ${user.endereco.estado || 'MG'} - Bairro ${user.endereco.bairro}`;
+    if (user && user.endereco) {
+      const userLocation = formatLocation(user.endereco, user.cidade, user.estado);
       setFormData(prev => ({ ...prev, location: userLocation }));
     }
   }, [user]);

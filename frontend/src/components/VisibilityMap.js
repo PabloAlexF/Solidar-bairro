@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Circle, Marker, Popup } from 'react-leaflet';
 import { useAuth } from '../contexts/AuthContext';
+import { formatAddress } from '../utils/addressUtils';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -100,7 +101,7 @@ const VisibilityMap = ({ radius, onLocationChange }) => {
             <div style={{ textAlign: 'center' }}>
               <strong>Sua localização</strong>
               <br />
-              {user && user.endereco ? (
+              {user && user.endereco && typeof user.endereco === 'object' ? (
                 <small>Baseado no seu endereço cadastrado</small>
               ) : (
                 <small>Localização atual detectada</small>
