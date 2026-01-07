@@ -21,20 +21,6 @@ class ApiService {
     try {
       const response = await fetch(url, config);
       
-      // Se token expirou, tentar refresh
-      if (response.status === 401 && token && !endpoint.includes('/auth/')) {
-        const refreshed = await this.refreshToken();
-        if (refreshed) {
-          // Tentar novamente com novo token
-          config.headers.Authorization = `Bearer ${localStorage.getItem('solidar-token')}`;
-          return await fetch(url, config);
-        } else {
-          // Refresh falhou, redirecionar para login
-          this.handleAuthError();
-          throw new Error('Sessão expirada. Faça login novamente.');
-        }
-      }
-      
       // Verificar se a resposta é JSON
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {

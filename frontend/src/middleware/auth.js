@@ -33,12 +33,21 @@ export const setupApiInterceptors = () => {
     try {
       const response = await originalFetch(url, options);
       
-      // Se token expirou (401), fazer logout
+      // Se token expirou (401) E o usuário estava autenticado, fazer logout
+      // Mas não redirecionar automaticamente se estiver em página pública
       if (response.status === 401 && token) {
         localStorage.removeItem('solidar-token');
         localStorage.removeItem('solidar-user');
         window.dispatchEvent(new CustomEvent('tokenExpired'));
-        window.location.href = '/login';
+        
+        // Só redirecionar se estiver em rota protegida
+        const currentPath = window.location.pathname;
+        const protectedRoutes = ['/quero-ajudar', '/preciso-de-ajuda', '/necessidade', '/perfil-familia', '/atualizar-status', '/painel-social', '/perfil', '/conversas', '/chat'];
+        const isProtectedRoute = protectedRoutes.some(route => currentPath.startsWith(route));
+        
+        if (isProtectedRoute) {
+          window.location.href = '/login';
+        }
       }
       
       return response;

@@ -28,7 +28,7 @@ function App() {
   return (
     <Routes>
       {/* Rotas públicas */}
-      <Route path="/" element={<Layout><Home /></Layout>} />
+      <Route path="/" element={<Home />} />
       <Route path="/landing" element={<Landing />} />
       <Route path="/cadastro" element={<Layout><Register /></Layout>} />
       <Route path="/sobre-tipos" element={<Layout><SobreTipos /></Layout>} />

@@ -29,12 +29,18 @@ export const AuthProvider = ({ children }) => {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
         
-        // Verificar se token ainda é válido
-        try {
-          await apiService.verifyToken(savedToken);
-        } catch (error) {
-          // Token inválido, limpar dados
-          logout();
+        // Verificar se token ainda é válido apenas se não estiver em página pública
+        const currentPath = window.location.pathname;
+        const publicRoutes = ['/', '/landing', '/cadastro', '/sobre-tipos', '/login'];
+        const isPublicRoute = publicRoutes.includes(currentPath) || currentPath.startsWith('/cadastro/');
+        
+        if (!isPublicRoute) {
+          try {
+            await apiService.verifyToken(savedToken);
+          } catch (error) {
+            // Token inválido, limpar dados
+            logout();
+          }
         }
       }
     } catch (error) {
