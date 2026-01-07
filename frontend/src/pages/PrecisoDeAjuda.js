@@ -596,7 +596,7 @@ export default function PrecisoDeAjuda() {
       const result = await apiService.createPedido(pedidoData);
       
       if (result.success) {
-        navigate('/painel');
+        navigate('/quero-ajudar');
       } else {
         throw new Error(result.error || 'Erro ao criar pedido');
       }
