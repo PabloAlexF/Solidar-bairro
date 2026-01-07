@@ -1,18 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import LogoutButton from '../components/LogoutButton';
-import '../styles/pages/LandingPage.css';
+import { 
+  Heart, 
+  HandHelping, 
+  Search, 
+  MapPin, 
+  Navigation, 
+  Bell, 
+  User, 
+  MessageSquare, 
+  LogOut, 
+  ArrowRight, 
+  ChevronRight, 
+  ShieldCheck, 
+  Zap, 
+  Users 
+} from 'lucide-react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [location, setLocation] = useState(null);
-  const [locationError, setLocationError] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Mock user and auth - replace with your actual auth context
+  const user = null; // Replace with actual user from context
+  const isAuthenticated = () => false; // Replace with actual auth check
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -21,17 +36,20 @@ const LandingPage = () => {
   }, []);
 
   useEffect(() => {
-    // Load notifications
     const loadNotifications = () => {
-      const savedNotifications = localStorage.getItem('solidar-notifications');
+      const savedNotifications = typeof window !== 'undefined' ? localStorage.getItem('solidar-notifications') : null;
       if (savedNotifications) {
-        setNotifications(JSON.parse(savedNotifications));
+        try {
+          setNotifications(JSON.parse(savedNotifications));
+        } catch (error) {
+          console.error('Error parsing notifications:', error);
+          setNotifications([]);
+        }
       }
     };
     
     loadNotifications();
 
-    // Close dropdowns when clicking outside
     const handleClickOutside = (event) => {
       if (showUserMenu || showNotifications) {
         const userMenuElement = document.querySelector('.user-menu-wrapper');
@@ -56,7 +74,6 @@ const LandingPage = () => {
     };
   }, [showUserMenu, showNotifications]);
 
-  // Geolocalização
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -68,23 +85,16 @@ const LandingPage = () => {
           });
         },
         (error) => {
-          setLocationError(error.message);
           console.log('Erro de geolocalização:', error.message);
         },
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000 // 5 minutos
+          maximumAge: 300000
         }
       );
-    } else {
-      setLocationError('Geolocalização não suportada pelo navegador');
     }
   }, []);
-
-  const handleExploreRequests = () => {
-    navigate('/painel-social');
-  };
 
   const markAllAsRead = () => {
     const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
@@ -106,7 +116,7 @@ const LandingPage = () => {
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
-  const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial;
+  const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
 
   return (
     <div className="landing-wrapper">
@@ -115,8 +125,8 @@ const LandingPage = () => {
       {/* Navigation */}
       <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="section-container nav-container">
-          <div className="logo" onClick={() => navigate('/')}>
-            <i className="fi fi-rr-heart logo-icon"></i>
+          <div className="logo cursor-pointer" onClick={() => navigate('/')}>
+            <Heart className="logo-icon text-[#0d9488]" fill="#0d9488" size={28} />
             <span>SolidarBairro</span>
           </div>
           <div className="nav-links">
@@ -135,13 +145,12 @@ const LandingPage = () => {
               </div>
             ) : (
               <div className="user-section">
-                {/* Notificações */}
                 <div className="notification-wrapper">
                   <button 
                     className="notification-btn"
                     onClick={() => setShowNotifications(!showNotifications)}
                   >
-                    🔔
+                    <Bell size={24} />
                     {unreadCount > 0 && (
                       <span className="notification-badge">{unreadCount}</span>
                     )}
@@ -205,7 +214,6 @@ const LandingPage = () => {
                   )}
                 </div>
 
-                {/* Menu do usuário */}
                 <div className="user-menu-wrapper">
                   <button 
                     className="user-btn"
@@ -214,7 +222,6 @@ const LandingPage = () => {
                     <div className="user-avatar">
                       {userName?.substring(0, 2).toUpperCase()}
                     </div>
-                    {user?.isVerified && <span className="verified-badge">✓</span>}
                   </button>
 
                   {showUserMenu && (
@@ -226,11 +233,8 @@ const LandingPage = () => {
                         <div className="user-details">
                           <div className="user-name">
                             {userName}
-                            {user?.isVerified && (
-                              <span className="verified-text">Verificado</span>
-                            )}
                           </div>
-                          <div className="user-phone">{user?.phone || user?.telefone || user?.email}</div>
+                          <div className="user-phone">{user?.email || "Vizinho Solidário"}</div>
                         </div>
                       </div>
 
@@ -253,7 +257,7 @@ const LandingPage = () => {
                             setShowUserMenu(false);
                           }}
                         >
-                          👤 Ver perfil
+                          <User size={18} /> Ver perfil
                         </button>
                         
                         <button 
@@ -263,12 +267,12 @@ const LandingPage = () => {
                             setShowUserMenu(false);
                           }}
                         >
-                          💬 Minhas conversas
+                          <MessageSquare size={18} /> Minhas conversas
                         </button>
                         
-                        <LogoutButton className="menu-item logout-btn">
-                          🚪 Sair
-                        </LogoutButton>
+                        <button className="menu-item logout-btn">
+                          <LogOut size={18} /> Sair
+                        </button>
                       </div>
                     </div>
                   )}
@@ -308,10 +312,9 @@ const LandingPage = () => {
             <div className="hero-actions">
               <button 
                 className="btn-primary-lg" 
-                onClick={handleExploreRequests}
+                onClick={() => navigate('/painel-social')}
               >
-                <span className="btn-shine"></span>
-                Explorar Plataforma <i className="fi fi-rr-arrow-right arrow-icon"></i>
+                Explorar Plataforma <ArrowRight className="ml-2" />
               </button>
               
               <div className="hero-stats">
@@ -335,12 +338,11 @@ const LandingPage = () => {
                 alt="Comunidade unida" 
                 className="main-image-v2"
               />
-              <div className="image-overlay"></div>
             </div>
             
             <div className="glass-card floating-glass-1">
               <div className="glass-icon-box teal">
-                <i className="fi fi-rr-heart"></i>
+                <Heart size={20} />
               </div>
               <div className="glass-content">
                 <span className="glass-label">Impacto Social</span>
@@ -350,215 +352,140 @@ const LandingPage = () => {
 
             <div className="glass-card floating-glass-2">
               <div className="glass-icon-box orange">
-                <i className="fi fi-rr-navigation"></i>
+                <Navigation size={20} />
               </div>
               <div className="glass-content">
                 <span className="glass-label">{location ? 'Sua Localização' : 'Proximidade'}</span>
                 <span className="glass-value">{location ? 'Detectada' : 'Raio de 2km'}</span>
               </div>
             </div>
-
-            <div className="floating-blob"></div>
           </div>
-        </div>
-        
-        <div className="scroll-indicator">
-          <div className="mouse">
-            <div className="wheel"></div>
-          </div>
-          <span>Role para explorar</span>
         </div>
       </header>
 
-      {/* Main Action Cards */}
+      {/* Action Cards */}
       <section className="action-cards-section">
         <div className="section-container">
           <div className="cards-grid">
               <div className="action-card teal-theme">
-                <div className="card-decoration"></div>
                 <div className="card-icon-wrapper teal">
-                  <i className="fi fi-rr-heart"></i>
+                  <Heart size={40} />
                 </div>
-                <span className="card-subtitle">Solidariedade</span>
                 <h2>Quero ajudar</h2>
                 <p>Descubra pessoas próximas que precisam da sua ajuda. Seja a diferença na vida de alguém com pequenos gestos.</p>
                 <button className="btn-card" onClick={() => navigate('/quero-ajudar')}>
-                  Ver oportunidades <i className="fi fi-rr-angle-right"></i>
+                  Ver oportunidades <ChevronRight size={18} />
                 </button>
               </div>
 
               <div className="action-card orange-theme">
-                <div className="card-decoration"></div>
                 <div className="card-icon-wrapper orange">
-                  <i className="fi fi-rr-hand-holding-heart"></i>
+                  <HandHelping size={40} />
                 </div>
-                <span className="card-subtitle">Comunidade</span>
                 <h2>Preciso de Ajuda</h2>
                 <p>Compartilhe sua necessidade com vizinhos dispostos a ajudar. Você não está sozinho nesta jornada.</p>
-                <button className="btn-card btn-card-alt" onClick={() => navigate('/preciso-de-ajuda')}>
-                  Acessar plataforma <i className="fi fi-rr-angle-right"></i>
+                <button className="btn-card" onClick={() => navigate('/preciso-de-ajuda')}>
+                  Pedir ajuda <ChevronRight size={18} />
+                </button>
+              </div>
+
+              <div className="action-card purple-theme">
+                <div className="card-icon-wrapper purple">
+                  <Search size={40} />
+                </div>
+                <h2>Achados e Perdidos</h2>
+                <p>Localize documentos, veículos ou bens perdidos na sua vizinhança. Ajude a devolver o que foi perdido.</p>
+                <button className="btn-card" style={{ borderColor: '#8b5cf6', color: '#8b5cf6' }} onClick={() => navigate('/achados-e-perdidos')}>
+                  Ver itens <ChevronRight size={18} />
                 </button>
               </div>
           </div>
         </div>
       </section>
 
-      {/* Geolocation Showcase Section */}
+      {/* Geolocation Section */}
       <section className="geo-showcase">
         <div className="section-container geo-container">
           <div className="geo-visual">
-            <div className="map-mockup">
-              {/* Ondas de Radar (Pulse) */}
-              <div className="pulse-radius"></div>
-              <div className="pulse-radius delay-1"></div>
-              <div className="pulse-radius delay-2"></div>
-              
-              {/* Pin Central */}
-              <i className="fi fi-rr-marker center-pin"></i>
-              
-              {/* Vizinhos Detectados (Avatares) */}
-              <div className="neighbor-avatar av-1">
-                <img src="https://i.pravatar.cc/150?u=1" alt="Vizinho" />
-                <div className="help-bubble">Preciso de ajuda com compras</div>
-              </div>
-              
-              <div className="neighbor-avatar av-2">
-                <img src="https://i.pravatar.cc/150?u=2" alt="Vizinho" />
-                <div className="help-bubble bubble-right">Posso ajudar com pets</div>
-              </div>
-              
-              <div className="neighbor-avatar av-3">
-                <img src="https://i.pravatar.cc/150?u=3" alt="Vizinho" />
+            <div className="flex items-center justify-center h-full">
+              <MapPin size={100} className="text-[#0d9488]" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <div className="w-64 h-64 border-2 border-[#0d9488]/20 rounded-full animate-ping"></div>
               </div>
             </div>
           </div>
           
           <div className="geo-content">
-            <div className="icon-tag teal"><i className="fi fi-rr-marker"></i></div>
+            <div className="icon-tag teal"><MapPin size={32} /></div>
             <h2>Geolocalização Inteligente</h2>
-            <p>O SolidarBairro utiliza tecnologia de geofencing para garantir que você veja apenas o que realmente importa: <strong>sua vizinhança direta</strong>.</p>
+            <p>O SolidarBairro utiliza tecnologia para garantir que você veja apenas o que realmente importa: <strong>sua vizinhança direta</strong>.</p>
             
             <ul className="geo-list">
-              <li>
-                <div className="li-icon"><i className="fi fi-rr-search"></i></div>
-                <span>Busca automática por raio de distância (1km a 5km)</span>
-              </li>
-              <li>
-                <div className="li-icon"><i className="fi fi-rr-navigation"></i></div>
-                <span>Privacidade garantida: localização aproximada para segurança</span>
-              </li>
-              <li>
-                <div className="li-icon"><i className="fi fi-rr-map"></i></div>
-                <span>Filtros por bairro e proximidade imediata</span>
-              </li>
+              <li><div className="li-icon"><Search size={20} /></div><span>Busca por raio de até 5km</span></li>
+              <li><div className="li-icon"><Navigation size={20} /></div><span>Privacidade garantida</span></li>
+              <li><div className="li-icon"><MapPin size={20} /></div><span>Filtros por bairro</span></li>
             </ul>
           </div>
         </div>
       </section>
 
+      {/* How it Works */}
       <section id="how-it-works" className="how-it-works">
         <div className="section-container">
           <div className="section-header">
-            <div className="header-badge">O Caminho</div>
             <h2>Como o SolidarBairro funciona?</h2>
             <p>Uma jornada simples para fortalecer sua comunidade local.</p>
           </div>
           
           <div className="steps-grid">
-            <div className="flow-line"></div>
-            
-            <div className="step-card teal">
-              <div className="step-glass-bg"></div>
-              <div className="step-number-bg">01</div>
-              <div className="step-content">
-                <div className="step-icon-wrapper">
-                  <i className="fi fi-rr-marker"></i>
-                </div>
-                <div className="step-text">
-                  <h3>Localização</h3>
-                  <p>{location ? 
-                    'Sua localização foi detectada! Encontramos vizinhos em um raio de até 5km.' : 
-                    'O app identifica sua posição e encontra vizinhos em um raio de até 5km.'
-                  }</p>
-                </div>
-              </div>
+            <div className="step-card">
+              <div className="step-icon-wrapper"><MapPin size={32} /></div>
+              <h3>Localização</h3>
+              <p>O app identifica sua posição e encontra vizinhos próximos.</p>
             </div>
             
-            <div className="step-card orange">
-              <div className="step-glass-bg"></div>
-              <div className="step-number-bg">02</div>
-              <div className="step-content">
-                <div className="step-icon-wrapper">
-                  <i className="fi fi-rr-hand-holding-heart"></i>
-                </div>
-                <div className="step-text">
-                  <h3>Conexão</h3>
-                  <p>Você navega pelos pedidos de ajuda ou publica a sua própria necessidade.</p>
-                </div>
-              </div>
+            <div className="step-card">
+              <div className="step-icon-wrapper"><HandHelping size={32} /></div>
+              <h3>Conexão</h3>
+              <p>Você navega pelos pedidos de ajuda ou publica a sua própria necessidade.</p>
             </div>
             
-            <div className="step-card purple">
-              <div className="step-glass-bg"></div>
-              <div className="step-number-bg">03</div>
-              <div className="step-content">
-                <div className="step-icon-wrapper">
-                  <i className="fi fi-rr-users"></i>
-                </div>
-                <div className="step-text">
-                  <h3>Ação Real</h3>
-                  <p>A ajuda acontece no mundo físico. Vizinhos se encontram e se ajudam.</p>
-                </div>
-              </div>
+            <div className="step-card">
+              <div className="step-icon-wrapper"><Users size={32} /></div>
+              <h3>Ação Real</h3>
+              <p>A ajuda acontece no mundo físico. Vizinhos se encontram e se ajudam.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Why Choose Section */}
+      {/* Features */}
       <section id="features" className="features-section">
         <div className="section-container">
           <div className="section-header">
             <h2>Por que o SolidarBairro?</h2>
-            <p style={{ fontSize: '1.4rem', maxWidth: '800px', margin: '0 auto' }}>
-              Criamos uma plataforma que resgata o valor da vizinhança e do apoio mútuo em tempos digitais.
-            </p>
           </div>
-          
           <div className="features-grid">
             <div className="feature-item">
-              <div className="feature-icon"><i className="fi fi-rr-bolt"></i></div>
+              <Zap className="mb-4 text-[#0d9488]" />
               <h3>Simples</h3>
-              <p>Interface intuitiva e direta, pensada para que qualquer pessoa consiga usar sem dificuldades.</p>
+              <p>Interface intuitiva e direta para todos.</p>
             </div>
             <div className="feature-item">
-              <div className="feature-icon"><i className="fi fi-rr-marker"></i></div>
+              <MapPin className="mb-4 text-[#0d9488]" />
               <h3>Próximo</h3>
-              <p>Foque em quem está a poucos metros de você, transformando seu bairro em uma rede real.</p>
+              <p>Foque em quem está a poucos metros de você.</p>
             </div>
             <div className="feature-item">
-              <div className="feature-icon"><i className="fi fi-rr-shield-check"></i></div>
+              <ShieldCheck className="mb-4 text-[#0d9488]" />
               <h3>Seguro</h3>
-              <p>Ambiente moderado e focado exclusivamente em pedidos de ajuda e solidariedade local.</p>
+              <p>Ambiente focado em solidariedade local.</p>
             </div>
             <div className="feature-item">
-              <div className="feature-icon"><i className="fi fi-rr-users"></i></div>
+              <Users className="mb-4 text-[#0d9488]" />
               <h3>Humano</h3>
-              <p>Sem algoritmos de engajamento. Apenas conexões reais entre pessoas que moram perto.</p>
+              <p>Conexões reais entre vizinhos.</p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="section-container">
-          <div className="cta-card">
-            <h2>Pronto para ser um vizinho solidário?</h2>
-            <p>Junte-se a centenas de pessoas que já estão transformando seus bairros em comunidades mais unidas.</p>
-            <button className="btn-primary-lg" onClick={() => navigate('/painel-social')}>
-              Começar Agora Gratuitamente <i className="fi fi-rr-arrow-right"></i>
-            </button>
           </div>
         </div>
       </section>
@@ -569,40 +496,24 @@ const LandingPage = () => {
           <div className="footer-main">
             <div className="footer-brand">
               <div className="logo">
-                <i className="fi fi-rr-heart logo-icon"></i>
-                <span style={{ fontSize: '2.5rem' }}>SolidarBairro</span>
+                <Heart className="text-[#0d9488]" fill="#0d9488" size={32} />
+                <span>SolidarBairro</span>
               </div>
-              <p className="footer-tagline">
-                Transformando ruas em comunidades e vizinhos em amigos através da ajuda mútua.
-              </p>
+              <p className="footer-tagline">Transformando ruas em comunidades.</p>
             </div>
-            
             <div className="footer-grid">
               <div className="footer-col">
                 <h4>Nossa missão</h4>
-                <p>Conectamos vizinhos para criar uma rede de apoio mútuo local. Ajudamos moradores a encontrar e oferecer ajuda em suas comunidades, fortalecendo laços através da solidariedade.</p>
+                <p>Conectamos vizinhos para criar uma rede de apoio mútuo local.</p>
               </div>
               <div className="footer-col">
-                <h4>O que fazemos</h4>
-                <p>Conectamos necessidades reais com pessoas dispostas a ajudar. Nossa tecnologia serve apenas como ponte para o encontro humano.</p>
-              </div>
-              <div className="footer-col">
-                <h4>Para quem</h4>
-                <p>Moradores locais que querem fazer a diferença ou que precisam de um apoio em momentos de necessidade.</p>
-              </div>
-              <div className="footer-col">
-                <h4>Nossa visão</h4>
-                <p>Plataforma simples, segura e focada na sua vizinhança. Um bairro solidário é um bairro mais forte.</p>
+                <h4>Visão</h4>
+                <p>Um bairro solidário é um bairro mais forte e seguro.</p>
               </div>
             </div>
           </div>
-          
           <div className="footer-bottom">
             <p>&copy; 2024 SolidarBairro. Inspirando solidariedade local.</p>
-            <div style={{ display: 'flex', gap: '32px' }}>
-              <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Termos</a>
-              <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacidade</a>
-            </div>
           </div>
         </div>
       </footer>
