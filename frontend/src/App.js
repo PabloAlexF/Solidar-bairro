@@ -23,15 +23,13 @@ import Chat from './pages/Chat';
 import './styles/index.css';
 import './styles/globals.css';
 import './styles/colors.css';
-import './styles/header-spacing.css';
-import './styles/header-fix.css';
 
 function App() {
   return (
     <Routes>
       {/* Rotas públicas */}
       <Route path="/" element={<Layout><Home /></Layout>} />
-      <Route path="/landing" element={<Layout showHeader={false}><Landing /></Layout>} />
+      <Route path="/landing" element={<Landing />} />
       <Route path="/cadastro" element={<Layout><Register /></Layout>} />
       <Route path="/sobre-tipos" element={<Layout><SobreTipos /></Layout>} />
       <Route path="/cadastro/cidadao" element={<Layout><RegisterCidadao /></Layout>} />

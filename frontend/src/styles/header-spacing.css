@@ -1,20 +1,16 @@
-/* Espaçamento global para header fixo */
-body {
-  margin: 0;
-  padding: 0;
-}
+/* Espaçamento global para header fixo - APENAS para páginas com Layout */
 
 /* Garantir que o conteúdo não fique atrás do header */
-body.has-fixed-header {
+.app-layout body.has-fixed-header {
   padding-top: 70px;
 }
 
 /* Páginas com header fixo */
-.home main,
-.conversas-main,
-.chat-page,
-.main-content,
-.painel-main {
+.app-layout .home main,
+.app-layout .conversas-main,
+.app-layout .chat-page,
+.app-layout .main-content,
+.app-layout .painel-main {
   padding-top: 70px;
 }
 
@@ -26,29 +22,29 @@ body.has-fixed-header {
 
 /* Responsivo */
 @media (max-width: 768px) {
-  body.has-fixed-header {
+  .app-layout body.has-fixed-header {
     padding-top: 60px;
   }
   
-  .home main,
-  .conversas-main,
-  .chat-page,
-  .main-content,
-  .painel-main {
+  .app-layout .home main,
+  .app-layout .conversas-main,
+  .app-layout .chat-page,
+  .app-layout .main-content,
+  .app-layout .painel-main {
     padding-top: 60px;
   }
 }
 
 @media (max-width: 480px) {
-  body.has-fixed-header {
+  .app-layout body.has-fixed-header {
     padding-top: 56px;
   }
   
-  .home main,
-  .conversas-main,
-  .chat-page,
-  .main-content,
-  .painel-main {
+  .app-layout .home main,
+  .app-layout .conversas-main,
+  .app-layout .chat-page,
+  .app-layout .main-content,
+  .app-layout .painel-main {
     padding-top: 56px;
   }
 }

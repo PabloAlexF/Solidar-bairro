@@ -1,554 +1,416 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useToast } from '../hooks/useToast';
-import LogoutButton from '../components/LogoutButton';
-import apiService from '../services/apiService';
-import '../styles/pages/QueroAjudar.css';
+import React, { useState, useMemo, useRef } from 'react';
+import { 
+  MapPin, 
+  Heart,
+  User,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle, 
+  Zap, 
+  Calendar, 
+  Coffee, 
+  RefreshCcw,
+  X
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import './quero-ajudar.css';
 
-const CATEGORIES = ["Alimentos", "Roupas", "Calçados", "Contas", "Emprego", "Higiene", "Medicamentos", "Móveis", "Eletrodomésticos", "Material Escolar", "Transporte"];
-const URGENCIES = ["Alta", "Média", "Baixa"];
+// --- Constants ---
+const DETAIL_LABELS = {
+  tamanho: 'Tamanho',
+  restricao: 'Restrição',
+  medicamento: 'Medicamento',
+  dosagem: 'Dosagem',
+  estilo: 'Estilo',
+  itens: 'Itens',
+  quantidade: 'Quantidade'
+};
 
-const QueroAjudar = () => {
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
-  const { success, error } = useToast();
-  const [pedidos, setPedidos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedPedido, setSelectedPedido] = useState(null);
-  const [isSuccess, setIsSuccess] = useState(false);
+const URGENCY_OPTIONS = [
+  { id: 'critico', label: 'CRÍTICO', desc: 'Risco imediato', icon: <AlertTriangle size={20} />, color: '#ef4444' },
+  { id: 'urgente', label: 'URGENTE', desc: 'Necessidade urgente', icon: <Zap size={20} />, color: '#f97316' },
+  { id: 'moderada', label: 'MODERADA', desc: 'Próximos dias', icon: <Calendar size={20} />, color: '#f59e0b' },
+  { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem pressa', icon: <Coffee size={20} />, color: '#10b981' },
+  { id: 'recorrente', label: 'RECORRENTE', desc: 'Ajuda mensal', icon: <RefreshCcw size={20} />, color: '#6366f1' },
+];
+
+const CATEGORIES = [
+  { id: 'Todas', label: 'Todas Categorias' },
+  { id: 'Alimentos', label: 'Alimentos' },
+  { id: 'Roupas', label: 'Roupas' },
+  { id: 'Calçados', label: 'Calçados' },
+  { id: 'Medicamentos', label: 'Medicamentos' },
+  { id: 'Higiene', label: 'Higiene' },
+  { id: 'Contas', label: 'Contas' },
+  { id: 'Emprego', label: 'Emprego' },
+  { id: 'Móveis', label: 'Móveis' },
+  { id: 'Eletrodomésticos', label: 'Eletrodomésticos' },
+  { id: 'Transporte', label: 'Transporte' },
+  { id: 'Outros', label: 'Outros' },
+];
+
+// --- Mock Data ---
+const MOCK_ORDERS = [
+  {
+    id: '1',
+    userName: 'Maria Silva',
+    city: 'São Paulo',
+    state: 'SP',
+    neighborhood: 'Jardins',
+    urgency: 'urgente',
+    category: 'Alimentos',
+    title: 'Cesta Básica, Alimentos Frescos',
+    userType: 'Cidadão',
+    description: 'Somos uma família de 4 pessoas e meu marido está desempregado. Precisamos de ajuda com itens básicos de alimentação e hortifruti para as crianças.',
+    subCategories: ['Cesta Básica', 'Hortifruti', 'Proteínas'],
+    details: { tamanho: 'Família 4 pessoas', restricao: 'Sem açúcar' },
+    isNew: true
+  },
+  {
+    id: '2',
+    userName: 'João Pereira',
+    city: 'São Paulo',
+    state: 'SP',
+    neighborhood: 'Capão Redondo',
+    urgency: 'critico',
+    category: 'Medicamentos',
+    title: 'Insulina e Medidor de Glicemia',
+    userType: 'Cidadão',
+    description: 'Sou diabético e minha medicação acabou. Não estou conseguindo pelo posto este mês e não tenho condições de comprar agora.',
+    subCategories: ['Uso Contínuo'],
+    details: { medicamento: 'Insulina NPH', dosagem: '100 UI' },
+    isNew: true
+  },
+  {
+    id: '3',
+    userName: 'Ana Costa',
+    city: 'São Paulo',
+    state: 'SP',
+    neighborhood: 'Lapa',
+    urgency: 'moderada',
+    category: 'Roupas',
+    title: 'Roupas de Inverno para Crianças',
+    userType: 'Cidadão',
+    description: 'Meus filhos cresceram e as roupas de frio do ano passado não servem mais. Qualquer doação de agasalhos tamanho 8 e 10 ajudaria muito.',
+    subCategories: ['Agasalhos', 'Blusas'],
+    details: { tamanho: '8 e 10', estilo: 'Infantil' }
+  },
+  {
+    id: '4',
+    userName: 'Roberto Santos',
+    city: 'São Paulo',
+    state: 'SP',
+    neighborhood: 'Itaquera',
+    urgency: 'recorrente',
+    category: 'Higiene',
+    title: 'Fraldas G e Itens de Banho',
+    userType: 'Cidadão',
+    description: 'Tenho um bebê de 1 ano e as fraldas pesam muito no orçamento. Se alguém puder ajudar com pacotes G ou sabonete infantil.',
+    subCategories: ['Fraldas', 'Banho'],
+    details: { tamanho: 'G', itens: 'Sabonete, Lenço' }
+  },
+];
+
+// --- Subcomponents ---
+
+function ModalDetalhes({ order, onClose, onHelp }) {
+  if (!order) return null;
+
+  const urg = URGENCY_OPTIONS.find(u => u.id === order.urgency);
+
+  return (
+    <AnimatePresence>
+      <div className="qa-modal-overlay" onClick={onClose}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="qa-modal-content"
+          onClick={e => e.stopPropagation()}
+        >
+          <button className="modal-close-abs" onClick={onClose}><X size={20} /></button>
+          <div className="modal-hero-stripe" />
+          
+          <div className="modal-body-qa">
+            <header className="modal-header-qa">
+              <div className="modal-user-profile">
+                <div className="user-avatar-placeholder">
+                  {order.userName.charAt(0)}
+                </div>
+                <div className="user-meta-qa">
+                  <h3>{order.userName}</h3>
+                  <div className="user-sub-meta">
+                    <span className="user-type-badge">{order.userType}</span>
+                    <span className="user-loc-modal">
+                      <MapPin size={14} />
+                      {order.neighborhood}, {order.city}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="urgency-status-modal" style={{ '--urg-color': urg?.color }}>
+                <div className="urg-icon-modal">{urg?.icon}</div>
+                <div className="urg-text-modal">
+                  <span className="urg-label-modal">{urg?.label}</span>
+                  <span className="urg-desc-modal">{urg?.desc}</span>
+                </div>
+              </div>
+            </header>
+
+            <div className="details-grid-qa">
+              <div className="detail-section-qa">
+                <h4>A História</h4>
+                <div className="detail-story-qa">
+                  <span className="quote-mark">"</span>
+                  {order.description}
+                  <span className="quote-mark-end">"</span>
+                </div>
+              </div>
+
+              <div className="modal-info-columns">
+                <div className="detail-section-qa">
+                  <h4>Itens Solicitados</h4>
+                  <div className="items-list-qa">
+                    {order.subCategories.map((item) => (
+                      <span key={item} className="item-badge-qa">
+                        <Zap size={14} />
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="detail-section-qa">
+                  <h4>Detalhes Específicos</h4>
+                  <div className="specs-grid">
+                    {Object.entries(order.details).map(([key, val]) => (
+                      <div key={key} className="spec-item">
+                        <span className="spec-key">{DETAIL_LABELS[key] || key}</span>
+                        <span className="spec-val">{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="location-card-modal">
+                <div className="loc-icon-box">
+                  <MapPin size={24} />
+                </div>
+                <div className="loc-content-modal">
+                  <strong>Local de Retirada/Entrega</strong>
+                  <p>{order.neighborhood}, {order.city} - {order.state}</p>
+                  <span>O endereço exato será compartilhado após o contato inicial.</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer-actions">
+              <button 
+                className="btn-card-help-full" 
+                onClick={() => {
+                  onHelp(order);
+                  onClose();
+                }}
+              >
+                Quero Ajudar Agora
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}
+
+// --- Main Page ---
+
+export default function QueroAjudarPage() {
+  const [selectedCat, setSelectedCat] = useState('Todas');
+  const [selectedUrgency, setSelectedUrgency] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderToHelp, setOrderToHelp] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedUrgencies, setSelectedUrgencies] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
+  const scrollRef = useRef(null);
 
-  useEffect(() => {
-    loadPedidos();
-    loadNotifications();
-
-    const handleClickOutside = (event) => {
-      if (showUserMenu || showNotifications) {
-        const userMenuElement = document.querySelector('.user-menu-wrapper');
-        const notificationElement = document.querySelector('.notification-wrapper');
-        
-        if (userMenuElement && !userMenuElement.contains(event.target)) {
-          setShowUserMenu(false);
-        }
-        
-        if (notificationElement && !notificationElement.contains(event.target)) {
-          setShowNotifications(false);
-        }
-      }
-    };
-    
-    window.addEventListener('notificationAdded', loadNotifications);
-    document.addEventListener('mousedown', handleClickOutside);
-    
-    return () => {
-      window.removeEventListener('notificationAdded', loadNotifications);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showUserMenu, showNotifications]);
-
-  const loadPedidos = async () => {
-    try {
-      setLoading(true);
-      const response = await apiService.getPedidos();
-      if (response.success) {
-        setPedidos(response.data || []);
-      } else {
-        error('Erro ao carregar pedidos');
-      }
-    } catch (error) {
-      console.error('Erro ao carregar pedidos:', error);
-      error('Erro ao conectar com o servidor');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadNotifications = () => {
-    const savedNotifications = localStorage.getItem('solidar-notifications');
-    if (savedNotifications) {
-      setNotifications(JSON.parse(savedNotifications));
-    }
-  };
-
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
-
-  const clearAllNotifications = () => {
-    setNotifications([]);
-    localStorage.removeItem('solidar-notifications');
-  };
-
-  const markAsRead = (notificationId) => {
-    const updatedNotifications = notifications.map(n => 
-      n.id === notificationId ? { ...n, read: true } : n
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial;
-
-  const formatPedidoForDisplay = (pedido) => {
-    const userName = pedido.usuario?.nome || 'Usuário';
-    const helpType = pedido.items?.length > 0 ? pedido.items.join(', ') : pedido.category;
-    const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`;
-    
-    return {
-      ...pedido,
-      userName,
-      avatar,
-      helpType,
-      distance: pedido.location || 'Localização não informada',
-      familyInfo: `Usuário ${pedido.usuario?.tipo || 'cidadão'}`,
-      history: []
-    };
-  };
-
-  const filteredPedidos = pedidos
-    .filter(pedido => pedido.status === 'ativo')
-    .map(formatPedidoForDisplay)
-    .filter(pedido => {
-      const advancedCategoryMatch = selectedCategories.length === 0 || selectedCategories.includes(pedido.category);
-      const urgencyMatch = selectedUrgencies.length === 0 || selectedUrgencies.includes(pedido.urgency);
-      return advancedCategoryMatch && urgencyMatch;
+  const filteredOrders = useMemo(() => {
+    return MOCK_ORDERS.filter(order => {
+      const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
+      const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
+      return catMatch && urgMatch;
     });
-
-  const handleConfirmHelp = async () => {
-    try {
-      const interesseData = {
-        pedidoId: selectedPedido.id,
-        mensagem: `Olá! Gostaria de ajudar com: ${selectedPedido.helpType}. Podemos conversar sobre os detalhes?`,
-        contato: user?.telefone || user?.email || 'Contato via plataforma'
-      };
-      
-      await apiService.createInteresse(interesseData);
-      setIsSuccess(true);
-      success('Interesse registrado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao registrar interesse:', error);
-      error('Erro ao registrar interesse: ' + error.message);
-    }
-  };
-
-  const closeSuccess = () => {
-    setIsSuccess(false);
-    setSelectedPedido(null);
-  };
-
-  const toggleCategory = (category) => {
-    setSelectedCategories(prev => 
-      prev.includes(category) 
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
-    );
-  };
-
-  const toggleUrgency = (urgency) => {
-    setSelectedUrgencies(prev => 
-      prev.includes(urgency) 
-        ? prev.filter(u => u !== urgency)
-        : [...prev, urgency]
-    );
-  };
+  }, [selectedCat, selectedUrgency]);
 
   const clearFilters = () => {
-    setSelectedCategories([]);
-    setSelectedUrgencies([]);
+    setSelectedCat('Todas');
+    setSelectedUrgency(null);
   };
 
-  const getCategoryIcon = (category) => {
-    switch(category) {
-      case 'Alimentos': return <i className="fi fi-rr-shopping-basket"></i>;
-      case 'Roupas': return <i className="fi fi-rr-shirt"></i>;
-      case 'Calçados': return <i className="fi fi-rr-shoe-prints"></i>;
-      case 'Contas': return <i className="fi fi-rr-lightbulb"></i>;
-      case 'Emprego': return <i className="fi fi-rr-briefcase"></i>;
-      case 'Higiene': return <i className="fi fi-rr-soap"></i>;
-      case 'Medicamentos': return <i className="fi fi-rr-pills"></i>;
-      case 'Móveis': return <i className="fi fi-rr-chair"></i>;
-      case 'Eletrodomésticos': return <i className="fi fi-rr-tv"></i>;
-      case 'Material Escolar': return <i className="fi fi-rr-book"></i>;
-      case 'Transporte': return <i className="fi fi-rr-bus"></i>;
-      default: return <i className="fi fi-rr-heart"></i>;
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const { scrollLeft } = scrollRef.current;
+      const scrollTo = direction === 'left' ? scrollLeft - 200 : scrollLeft + 200;
+      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
     }
   };
 
   return (
-    <div className="pedidos-wrapper">
-      {/* Navigation */}
-      <nav className="landing-nav">
-        <div className="section-container nav-container">
-          <div className="logo" onClick={() => navigate('/')}>
-            <i className="fi fi-rr-heart logo-icon"></i>
-            <span>SolidarBairro</span>
-          </div>
-          <div className="nav-links">
-            {!isAuthenticated() ? (
-              <div className="auth-buttons">
-                <button className="btn-nav-secondary" onClick={() => navigate('/login')}>
-                  Entrar
-                </button>
-                <button className="btn-nav" onClick={() => navigate('/cadastro')}>
-                  Cadastrar
-                </button>
-              </div>
-            ) : (
-              <div className="user-section">
-                {/* Notificações */}
-                <div className="notification-wrapper">
-                  <button 
-                    className="notification-btn"
-                    onClick={() => setShowNotifications(!showNotifications)}
+    <div className="quero-ajudar-container">
+      <header className="qa-header">
+        <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          Pedidos perto de você
+        </motion.h1>
+        <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          Explore as necessidades da sua comunidade e transforme vidas com pequenos gestos.
+        </motion.p>
+        <button className="btn-filters" onClick={() => setShowFilters(!showFilters)}>
+          {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+        </button>
+      </header>
+
+      {showFilters && (
+        <section className="qa-filters-section">
+          <div className="filter-group">
+            <label className="filter-label">Categorias</label>
+            <div className="categories-wrapper">
+              <button className="scroll-btn left" onClick={() => scroll('left')}><ChevronLeft size={20} /></button>
+              <div className="categories-scroll" ref={scrollRef}>
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat.id}
+                    className={`filter-chip ${selectedCat === cat.id ? 'active' : ''}`}
+                    onClick={() => setSelectedCat(cat.id)}
                   >
-                    🔔
-                    {unreadCount > 0 && (
-                      <span className="notification-badge">{unreadCount}</span>
-                    )}
+                    {cat.label}
                   </button>
-                  
-                  {showNotifications && (
-                    <div className="notification-dropdown">
-                      <div className="notification-header">
-                        <h3>Notificações</h3>
-                        {notifications.length > 0 && (
-                          <div className="notification-actions">
-                            {unreadCount > 0 && (
-                              <button 
-                                className="action-btn mark-read-btn"
-                                onClick={markAllAsRead}
-                                title="Marcar todas como lidas"
-                              >
-                                ✓
-                              </button>
-                            )}
-                            <button 
-                              className="action-btn clear-btn"
-                              onClick={clearAllNotifications}
-                              title="Limpar todas"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div className="notification-list">
-                        {notifications.length === 0 ? (
-                          <div className="no-notifications">
-                            Nenhuma notificação ainda
-                          </div>
-                        ) : (
-                          notifications.map((notification) => (
-                            <div 
-                              key={notification.id} 
-                              className={`notification-item ${notification.read ? 'read' : 'unread'}`}
-                              onClick={() => !notification.read && markAsRead(notification.id)}
-                            >
-                              <div className="notification-content">
-                                <p className="notification-title">{notification.title}</p>
-                                <p className="notification-message">{notification.message}</p>
-                                <span className="notification-time">
-                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                              {!notification.read && <div className="unread-dot"></div>}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Menu do usuário */}
-                <div className="user-menu-wrapper">
-                  <button 
-                    className="user-btn"
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                  >
-                    <div className="user-avatar">
-                      {userName?.substring(0, 2).toUpperCase()}
-                    </div>
-                    {user?.isVerified && <span className="verified-badge">✓</span>}
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="user-dropdown">
-                      <div className="user-info">
-                        <div className="user-avatar-large">
-                          {userName?.substring(0, 2).toUpperCase()}
-                        </div>
-                        <div className="user-details">
-                          <div className="user-name">
-                            {userName}
-                            {user?.isVerified && (
-                              <span className="verified-text">Verificado</span>
-                            )}
-                          </div>
-                          <div className="user-phone">{user?.phone || user?.telefone || user?.email}</div>
-                        </div>
-                      </div>
-
-                      <div className="user-stats">
-                        <div className="stat">
-                          <div className="stat-number">{user?.helpedCount || 0}</div>
-                          <div className="stat-label">Pessoas ajudadas</div>
-                        </div>
-                        <div className="stat">
-                          <div className="stat-number">{user?.receivedHelpCount || 0}</div>
-                          <div className="stat-label">Ajudas recebidas</div>
-                        </div>
-                      </div>
-
-                      <div className="user-actions">
-                        <button 
-                          className="menu-item profile-btn"
-                          onClick={() => {
-                            navigate('/perfil');
-                            setShowUserMenu(false);
-                          }}
-                        >
-                          👤 Ver perfil
-                        </button>
-                        
-                        <button 
-                          className="menu-item"
-                          onClick={() => {
-                            navigate('/conversas');
-                            setShowUserMenu(false);
-                          }}
-                        >
-                          💬 Minhas conversas
-                        </button>
-                        
-                        <LogoutButton className="menu-item logout-btn">
-                          🚪 Sair
-                        </LogoutButton>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                ))}
               </div>
-            )}
-          </div>
-        </div>
-      </nav>
-
-      <div className="container">
-        <header className="pedidos-header">
-          <h1>Pedidos perto de você</h1>
-          <p>Veja quem está precisando no seu bairro e escolha quem ajudar.</p>
-        </header>
-
-        {/* Filters */}
-        <div className="filters-bar">
-          <button 
-            className={`filter-toggle-btn ${showFilters || selectedCategories.length > 0 || selectedUrgencies.length > 0 ? 'active' : ''}`}
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <i className="fi fi-rr-settings-sliders"></i>
-            Filtrar
-            {(selectedCategories.length > 0 || selectedUrgencies.length > 0) && (
-              <span className="filter-count">
-                {selectedCategories.length + selectedUrgencies.length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Advanced Filters Panel */}
-        {showFilters && (
-          <div className="filters-panel">
-            <div className="filters-content">
-              <div className="filter-group">
-                <h3>Categorias</h3>
-                <div className="filter-options">
-                  {CATEGORIES.map(cat => (
-                    <button 
-                      key={cat}
-                      className={`chip-btn ${selectedCategories.includes(cat) ? 'active' : ''}`}
-                      onClick={() => toggleCategory(cat)}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="filter-group">
-                <h3>Nível de Urgência</h3>
-                <div className="filter-options">
-                  {URGENCIES.map(urg => (
-                    <button 
-                      key={urg}
-                      className={`chip-btn urgency-chip-${urg.toLowerCase()} ${selectedUrgencies.includes(urg) ? 'active' : ''}`}
-                      onClick={() => toggleUrgency(urg)}
-                    >
-                      {urg}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="filters-actions">
-                <button className="clear-filters-btn" onClick={clearFilters}>Limpar Filtros</button>
-                <button className="apply-filters-btn" onClick={() => setShowFilters(false)}>Aplicar</button>
-              </div>
+              <button className="scroll-btn right" onClick={() => scroll('right')}><ChevronRight size={20} /></button>
             </div>
           </div>
-        )}
 
-        {/* Results Info */}
-        <div className="results-info">
-          {loading ? (
-            'Carregando pedidos...'
-          ) : (
-            `Mostrando ${filteredPedidos.length} pedido${filteredPedidos.length !== 1 ? 's' : ''} de ajuda`
-          )}
-        </div>
-
-        {/* Grid */}
-        <div className="pedidos-grid">
-          {loading ? (
-            <div className="loading-state">
-              <div className="loading-spinner"></div>
-              <p>Carregando pedidos de ajuda...</p>
+          <div className="filter-group">
+            <label className="filter-label">Nível de Urgência</label>
+            <div className="urgency-grid">
+              {URGENCY_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  className={`urgency-card-filter ${selectedUrgency === opt.id ? 'active' : ''}`}
+                  style={{ 
+                    '--accent-color': opt.color,
+                  }}
+                  onClick={() => setSelectedUrgency(selectedUrgency === opt.id ? null : opt.id)}
+                >
+                  <div className="urgency-icon">{opt.icon}</div>
+                  <div className="urgency-info">
+                    <span className="urgency-title">{opt.label}</span>
+                    <span className="urgency-desc">{opt.desc}</span>
+                  </div>
+                </button>
+              ))}
             </div>
-          ) : filteredPedidos.length === 0 ? (
-            <div className="no-results">
-              <i className="fi fi-rr-search no-results-icon"></i>
-              <h3>Nenhum pedido encontrado</h3>
-              <p>Tente ajustar os filtros ou verificar novamente mais tarde.</p>
-            </div>
-          ) : (
-            filteredPedidos.map((pedido) => (
-              <div key={pedido.id} className="pedido-card">
-                <div className="card-header">
-                  <div className="user-meta">
-                    <img src={pedido.avatar} alt={pedido.userName} className="user-avatar" />
-                    <div>
-                      <span className="user-name">{pedido.userName}</span>
-                      <span className="distance">{pedido.distance}</span>
-                    </div>
-                  </div>
-                  <span className={`urgency-badge urgency-${pedido.urgency.toLowerCase()}`}>
-                    Urgência: {pedido.urgency}
-                  </span>
-                </div>
-
-                <div className="card-body">
-                  <div className="help-type">
-                    {getCategoryIcon(pedido.category)}
-                    {pedido.helpType}
-                  </div>
-                  <div className="family-info">
-                    <i className="fi fi-rr-users"></i> {pedido.familyInfo}
-                  </div>
-                  <p className="description">{pedido.description}</p>
-                </div>
-
-                <div className="card-footer">
-                  <button className="btn btn-secondary" onClick={() => setSelectedPedido(pedido)}>
-                    <i className="fi fi-rr-eye"></i> Ver detalhes
-                  </button>
-                  <button className="btn btn-primary" onClick={() => setSelectedPedido(pedido)}>
-                    <i className="fi fi-rr-hand-heart"></i> Ajudar agora
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Refresh Button */}
-        {!loading && (
-          <div className="refresh-section">
-            <button className="btn btn-secondary" onClick={loadPedidos}>
-              <i className="fi fi-rr-refresh"></i> Atualizar pedidos
-            </button>
           </div>
-        )}
+
+          <div className="filter-actions">
+            <button className="btn-qa-clear" onClick={clearFilters}>Limpar Filtros</button>
+            <button className="btn-qa-apply">Filtrar Pedidos</button>
+          </div>
+        </section>
+      )}
+
+      <div className="qa-stats">
+        Encontramos {filteredOrders.length} pedidos correspondentes
       </div>
 
-      {/* Modal Details */}
-      {selectedPedido && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            {!isSuccess ? (
-              <>
-                <button className="modal-close" onClick={() => setSelectedPedido(null)}>
-                  <i className="fi fi-rr-cross"></i>
-                </button>
-
-                <div className="modal-section" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-                  <img src={selectedPedido.avatar} alt="" className="user-avatar" style={{ width: 64, height: 64 }} />
-                  <div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{selectedPedido.userName}</h2>
-                    <span className="distance">{selectedPedido.distance} • {selectedPedido.familyInfo}</span>
+      <div className="orders-grid">
+        <AnimatePresence mode="popLayout">
+          {filteredOrders.map((order, idx) => (
+            <motion.div
+              key={order.id}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ delay: idx * 0.05 }}
+              className="order-card"
+            >
+              <div className="card-header">
+                <div className="user-info">
+                  <div className="user-header-row">
+                    <span className="user-name">{order.userName}</span>
+                    {order.isNew && <span className="new-badge">Novo</span>}
+                  </div>
+                  <div className="user-loc">
+                    <MapPin size={14} />
+                    <span>{order.neighborhood}, {order.city}</span>
                   </div>
                 </div>
+                {(() => {
+                  const urg = URGENCY_OPTIONS.find(u => u.id === order.urgency);
+                  return (
+                    <div className="urgency-tag" style={{ background: urg?.color + '15', color: urg?.color }}>
+                      {urg?.label}
+                    </div>
+                  );
+                })()}
+              </div>
 
-                <div className="modal-section" style={{ background: 'var(--sb-teal-soft)', padding: 20, borderRadius: 20 }}>
-                  <h3>Necessidade Específica</h3>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <i className="fi fi-rr-exclamation text-teal" style={{ marginTop: 2 }}></i>
-                    <p style={{ fontWeight: 600, color: 'var(--sb-text)' }}>
-                      {selectedPedido.description}
-                    </p>
-                  </div>
-                </div>
+              <h3 className="card-title">{order.title}</h3>
 
-                <div className="modal-section">
-                  <h3>Histórico de Apoio</h3>
-                  {selectedPedido.history.length > 0 ? (
-                    selectedPedido.history.map((h, i) => (
-                      <div key={i} className="history-item">
-                        <i className="fi fi-rr-time-past"></i>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{h.date} — {h.help}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <p style={{ fontSize: '0.9rem', color: 'var(--sb-text-light)' }}>Nenhuma ajuda anterior registrada.</p>
-                  )}
-                </div>
+              <div className="user-type-tag">
+                <User size={12} />
+                <span>Perfil: {order.userType}</span>
+              </div>
 
-                <button className="btn btn-primary" style={{ width: '100%', padding: '18px', fontSize: '1.1rem' }} onClick={handleConfirmHelp}>
-                  Confirmar ajuda a esta pessoa
+              <p className="card-desc">{order.description}</p>
+
+              <div className="card-footer">
+                <button className="btn-card-details" onClick={() => setSelectedOrder(order)}>
+                  Detalhes
                 </button>
-              </>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ width: 80, height: 80, background: '#f0fdfa', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-                  <i className="fi fi-rr-check-circle" style={{ fontSize: '48px', color: 'var(--sb-teal)' }}></i>
-                </div>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: 12 }}>Iniciando Ajuda!</h2>
-                <p style={{ color: 'var(--sb-text-light)', marginBottom: 24 }}>
-                  Obrigado por se voluntariar! Você será conectado com {selectedPedido.userName} para finalizar os detalhes.
-                </p>
-                <button className="btn btn-primary" style={{ width: '100%' }} onClick={closeSuccess}>
-                  Voltar para a lista
+                <button className="btn-card-help" onClick={() => setOrderToHelp(order)}>
+                  Ajudar
                 </button>
               </div>
-            )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <ModalDetalhes 
+        order={selectedOrder} 
+        onClose={() => setSelectedOrder(null)} 
+        onHelp={(order) => setOrderToHelp(order)}
+      />
+
+      <AnimatePresence>
+        {orderToHelp && (
+          <div className="qa-modal-overlay" onClick={() => setOrderToHelp(null)}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="qa-modal-content mini"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="confirm-help-content">
+                <div className="confirm-icon-box"><Heart size={48} fill="currentColor" /></div>
+                <h2>Gesto de Solidariedade</h2>
+                <p>Você escolheu ajudar <strong>{orderToHelp.userName}</strong>. Deseja iniciar uma conversa para combinar os detalhes?</p>
+                <div className="confirm-actions-stack">
+                  <button className="btn-confirm-primary" onClick={() => { alert('Incrível! Abrindo chat...'); setOrderToHelp(null); }}>
+                    Sim, vamos conversar!
+                  </button>
+                  <button className="btn-confirm-ghost" onClick={() => setOrderToHelp(null)}>
+                    Voltar aos pedidos
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
-};
-
-export default QueroAjudar;
+}

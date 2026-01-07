@@ -87,7 +87,7 @@ const Header = ({ showLoginButton = true }) => {
             </span>
           </div>
 
-          {showLoginButton && !isAuthenticated() && (
+          {showLoginButton && (
             <div className="auth-buttons">
               <button 
                 className="btn btn-secondary"
@@ -104,7 +104,7 @@ const Header = ({ showLoginButton = true }) => {
             </div>
           )}
 
-          {isAuthenticated() && userName && (
+          {!showLoginButton && isAuthenticated() && userName && (
             <div className="user-section">
               {/* Notificações */}
               <div className="notification-wrapper">

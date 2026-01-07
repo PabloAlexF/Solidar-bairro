@@ -1,5 +1,5 @@
-/* ===== HEADER PADRÃO ===== */
-.header {
+/* ===== HEADER PADRÃO - APENAS PARA APP-LAYOUT ===== */
+.app-layout .header {
   position: fixed;
   top: 0;
   left: 0;
