@@ -1,11 +1,11 @@
 import React from 'react';
-import Header from './Header';
+import LandingHeader from './LandingHeader';
 import './Layout.css';
 
 const Layout = ({ children, showHeader = true }) => {
   return (
     <div className="app-layout">
-      {showHeader && <Header />}
+      {showHeader && <LandingHeader />}
       <main className="main-content">
         {children}
       </main>
