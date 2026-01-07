@@ -20,7 +20,7 @@ const AppRoutes = () => {
       <Route path="/cadastro" element={<Register />} />
       <Route path="/quero-ajudar" element={<Layout><QueroAjudar /></Layout>} />
       <Route path="/preciso-de-ajuda" element={<Layout><PrecisoDeAjuda /></Layout>} />
-      <Route path="/achados-e-perdidos" element={<Layout><AchadosEPerdidos /></Layout>} />
+      <Route path="/achados-e-perdidos" element={<AchadosEPerdidos />} />
       <Route path="/achados-e-perdidos/novo" element={<Layout><NovoAnuncio /></Layout>} />
       <Route path="/perfil" element={<Layout><Perfil /></Layout>} />
       <Route path="/conversas" element={<Layout><Conversas /></Layout>} />
