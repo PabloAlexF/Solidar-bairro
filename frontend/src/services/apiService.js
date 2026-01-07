@@ -329,10 +329,26 @@ class ApiService {
 
   async createPedido(pedidoData) {
     const sanitizedData = this.sanitizeData(pedidoData);
+    const errors = this.validatePedidoData(sanitizedData);
+    
+    if (errors.length > 0) {
+      throw new Error(errors.join(', '));
+    }
+
     return this.request('/pedidos', {
       method: 'POST',
       body: JSON.stringify(sanitizedData),
     });
+  }
+
+  // Validar dados de pedido
+  validatePedidoData(data) {
+    const errors = [];
+    if (!data.category?.trim()) errors.push('Categoria é obrigatória');
+    if (!data.description?.trim() || data.description.length < 10) errors.push('Descrição deve ter pelo menos 10 caracteres');
+    if (!data.urgency?.trim()) errors.push('Urgência é obrigatória');
+    if (!data.visibility || !Array.isArray(data.visibility) || data.visibility.length === 0) errors.push('Pelo menos uma opção de visibilidade é obrigatória');
+    return errors;
   }
 
   async getMeusPedidos() {
