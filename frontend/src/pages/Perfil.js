@@ -1,359 +1,657 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { formatLocation } from '../utils/addressUtils';
-import '../styles/pages/PerfilModern.css';
-const Perfil = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+import { 
+  User, 
+  MapPin, 
+  Calendar, 
+  Award, 
+  ShieldCheck, 
+  Pencil, 
+  Lock, 
+  Smartphone,
+  CheckCircle2,
+  ArrowRight,
+  Heart,
+  Settings,
+  Shield,
+  History,
+  Camera,
+  X,
+  Zap,
+  Star,
+  Trophy,
+  Coffee,
+  Globe,
+  HandHelping,
+  Palette,
+  Bell,
+  Volume2,
+  VolumeX,
+  Sparkles
+} from 'lucide-react';
+import './profile.css';
+
+const ProfileComponent = () => {
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [bio, setBio] = useState("Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [email] = useState("joao.silva@exemplo.com.br");
   
+  const [avatarUrl, setAvatarUrl] = useState("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
+  const [bannerConfig, setBannerConfig] = useState({
+    type: 'gradient',
+    value: 'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)',
+    overlay: true
+  });
+  const [isEditingBanner, setIsEditingBanner] = useState(false);
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [hasHistory] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [accentColor, setAccentColor] = useState("#10b981");
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [mood, setMood] = useState("Empolgado");
+  const [zenMode, setZenMode] = useState(false);
+  const [skills, setSkills] = useState([]);
+  const [newSkill, setNewSkill] = useState("");
+  const [isAddingSkill, setIsAddingSkill] = useState(false);
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+
   useEffect(() => {
-    const loadUserData = () => {
-      try {
-        setLoading(true);
-        const savedUser = localStorage.getItem('solidar-user');
-        
-        if (savedUser) {
-          const userData = JSON.parse(savedUser);
-          setUser({
-            name: userData.nomeCompleto || userData.name || userData.nome || userData.nomeFantasia || userData.razaoSocial || 'Usuário não identificado',
-            email: userData.email || 'Email não informado',
-            memberSince: userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível',
-            location: formatLocation(userData.endereco, userData.cidade, userData.estado),
-            phone: userData.telefone || userData.phone || userData.whatsapp || 'Telefone não informado',
-            avatar: null,
-            bio: userData.bio || userData.descricao || userData.missao || 'Biografia não cadastrada',
-            userType: userData.userType || userData.tipo || 'Tipo não definido',
-            cnpj: userData.cnpj || null,
-            cpf: userData.cpf || null,
-            stats: {
-              helpsGiven: userData.helpedCount || 0,
-              requestsMade: userData.receivedHelpCount || 0,
-              impactPoints: (userData.helpedCount || 0) * 10 + (userData.receivedHelpCount || 0) * 5
-            },
-            isVerified: userData.isVerified || false
-          });
-        } else {
-          navigate('/login');
-        }
-        setLoading(false);
-      } catch (err) {
-        setError('Erro ao carregar dados do perfil');
-        setLoading(false);
-      }
-    };
-    
-    loadUserData();
-  }, [navigate]);
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando perfil...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Erro ao carregar perfil</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      </div>
-    );
-  }
+    const profileContainer = document.querySelector('.profile-container');
+    if (profileContainer) {
+      profileContainer.style.setProperty('--primary', accentColor);
+      // Rough calculation for darker/lighter versions
+      const r = parseInt(accentColor.slice(1, 3), 16);
+      const g = parseInt(accentColor.slice(3, 5), 16);
+      const b = parseInt(accentColor.slice(5, 7), 16);
+      profileContainer.style.setProperty('--primary-dark', `rgb(${Math.max(0, r-30)}, ${Math.max(0, g-30)}, ${Math.max(0, b-30)})`);
+      profileContainer.style.setProperty('--primary-light', `rgba(${r}, ${g}, ${b}, 0.15)`);
+    }
+  }, [accentColor]);
+
+  const bannerPresets = [
+    { name: 'Esmeralda', value: 'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)', type: 'gradient' },
+    { name: 'Oceano', value: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)', type: 'gradient' },
+    { name: 'Pôr do Sol', value: 'linear-gradient(135deg, #7c2d12 0%, #f97316 100%)', type: 'gradient' },
+    { name: 'Noite', value: '#0f172a', type: 'color' },
+    { name: 'Natureza', value: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=1200&q=80', type: 'image' },
+    { name: 'Arquitetura', value: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80', type: 'image' }
+  ];
+
+  const handleSecurityAction = (action) => {
+    if (!isPhoneVerified) return;
+    alert(`${action} solicitado com sucesso!`);
+  };
+
+  const handleAvatarChange = () => {
+    document.getElementById('avatar-upload')?.click();
+  };
+
+  const updateBanner = (preset) => {
+    setBannerConfig({
+      type: preset.type,
+      value: preset.value,
+      overlay: preset.type === 'gradient'
+    });
+  };
 
   return (
-    <div className="perfil-modern">
-      {/* Header */}
-      <div className="perfil-header-nav">
-        <div className="max-w-6xl mx-auto px-4">
-          <button 
-            onClick={() => navigate('/')}
-            className="perfil-back-btn"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Voltar para Início
+    <div className={`profile-container animate-fade-in ${isDarkMode ? 'dark-mode' : ''}`}>
+      <header 
+        className="profile-header-bg" 
+        style={{ 
+          background: bannerConfig.type === 'image' ? `url(${bannerConfig.value}) center/cover no-repeat` : bannerConfig.value 
+        }}
+      >
+        {bannerConfig.overlay && (
+          <div style={{ position: 'absolute', inset: 0, background: 'url("https://www.transparenttextures.com/patterns/cubes.png")', opacity: 0.3 }} />
+        )}
+        <div className="banner-edit-overlay top-right">
+          <button className="btn-banner-edit glass-button" onClick={() => setIsEditingBanner(true)}>
+            <Palette size={20} />
+            Customizar Fundo
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="perfil-container">
-        {/* Profile Hero Section */}
-        <div className="perfil-hero">
-          {/* Avatar */}
-          <div className="perfil-avatar-container">
-            {user.avatar ? (
-              <img 
-                src={user.avatar} 
-                alt={user.name}
-                className="perfil-avatar"
-              />
-            ) : (
-              <div className="perfil-avatar">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-            )}
-            <button className="perfil-avatar-edit">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-          </div>
-          
-          {/* User Info */}
-          <div className="perfil-user-info">
-            <div className="perfil-name-container">
-              <h1 className="perfil-name">{user.name}</h1>
-              <div className={`perfil-verification ${user.isVerified ? 'verified' : 'unverified'}`}>
-                {user.isVerified ? (
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                ) : (
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                )}
-              </div>
+      {isSettingsOpen && (
+        <div className="modal-overlay" onClick={() => setIsSettingsOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Configurações do Perfil</h3>
+              <button className="close-btn" onClick={() => setIsSettingsOpen(false)}><X size={24} /></button>
             </div>
-            
-            <div className="perfil-type-badge">
-              {user.userType === 'cidadao' ? 'Cidadão' : 
-               user.userType === 'comercio' ? 'Comércio' :
-               user.userType === 'ong' ? 'ONG' :
-               user.userType === 'familia' ? 'Família' : 'Tipo não definido'}
-            </div>
-            
-            {/* Contact Info */}
-            <div className="perfil-contact-info">
-              <div className="perfil-contact-item">
-                <svg className="perfil-contact-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <span className="perfil-contact-text">{user.email}</span>
-              </div>
-              
-              <div className="perfil-contact-item">
-                <svg className="perfil-contact-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <span className="perfil-contact-text">{user.phone}</span>
-              </div>
-              
-              {user.cnpj && (
-                <div className="perfil-contact-item">
-                  <svg className="perfil-contact-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span className="perfil-contact-text">CNPJ: {user.cnpj}</span>
-                </div>
-              )}
-              
-              {user.cpf && (
-                <div className="perfil-contact-item">
-                  <svg className="perfil-contact-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                  </svg>
-                  <span className="perfil-contact-text">CPF: {user.cpf}</span>
-                </div>
-              )}
-              
-              <div className="perfil-contact-item">
-                <svg className="perfil-contact-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0h6m-6 0l-2 2m8-2l2 2m-2-2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V9" />
-                </svg>
-                <span className="perfil-contact-text">Membro desde {user.memberSince}</span>
-              </div>
-              
-              <div className="perfil-contact-item">
-                <svg className="perfil-contact-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="perfil-contact-text">{user.location}</span>
-              </div>
-            </div>
-            
-            <button className="perfil-complete-btn">
-              Completar Perfil
-            </button>
-          </div>
-        </div>
-        
-        {/* Grid Layout */}
-        <div className="perfil-grid">
-          {/* Impact Card */}
-          <div className="perfil-impact-card">
-            <div className="perfil-impact-header">Seu Impacto</div>
-            <div className="perfil-impact-points">
-              <span className="perfil-impact-number">{user.stats.impactPoints}</span>
-              <span className="perfil-impact-label">pontos</span>
-            </div>
-            <p className="perfil-impact-description">
-              Você ainda não possui atividades registradas. Comece ajudando ou pedindo ajuda para acumular pontos!
-            </p>
-            <div className="perfil-impact-progress">
-              <div className="perfil-impact-progress-bar" style={{ width: '0%' }} />
-            </div>
-            <p className="perfil-impact-tip">🚀 Comece sua jornada solidária</p>
-          </div>
-        </div>
-        
-        {/* Stats Grid */}
-        <div className="perfil-stats-grid">
-          <div className="perfil-stat-card">
-            <div className="perfil-stat-icon">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-            </div>
-            <div className="perfil-stat-content">
-              <div className="perfil-stat-number">{user.stats.helpsGiven}</div>
-              <div className="perfil-stat-label">Nenhuma ajuda oferecida ainda</div>
-            </div>
-          </div>
-          
-          <div className="perfil-stat-card">
-            <div className="perfil-stat-icon">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14"/>
-                <path d="m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h11c1.1 0 2.1-.4 2.8-1.2l5.1-5.1c.4-.4.4-1 0-1.4s-1-.4-1.4 0L15 15"/>
-              </svg>
-            </div>
-            <div className="perfil-stat-content">
-              <div className="perfil-stat-number">{user.stats.requestsMade}</div>
-              <div className="perfil-stat-label">Nenhum pedido realizado ainda</div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Details Card */}
-        <div className="perfil-details-card">
-          <div className="perfil-details-header">
-            <h2 className="perfil-details-title">
-              <svg className="w-6 h-6 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Detalhes da Conta
-            </h2>
-          </div>
-          
-          <div className="perfil-details-content">
-            {/* Bio Section */}
-            <div className="perfil-bio-section">
-              <label className="perfil-section-label">Sobre Você</label>
-              <div className="perfil-bio-content">
-                <p className="perfil-bio-text">"{user.bio}"</p>
-              </div>
-            </div>
-            
-            <div className="perfil-divider" />
-            
-            <div className="perfil-security-grid">
-              {/* Security Section */}
-              <div>
-                <label className="perfil-section-label">Segurança</label>
-                <div className="perfil-security-item">
-                  <div className="perfil-security-info">
-                    <svg className="perfil-security-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <div>
-                      <div className="perfil-security-text">Senha</div>
-                      <div className="perfil-security-status">Não configurada</div>
-                    </div>
+            <div className="settings-body">
+              <div className="settings-section">
+                <h4><Palette size={18} /> Personalização</h4>
+                <div className="setting-control" style={{ marginBottom: '12px' }}>
+                  <div className="setting-info">
+                    <span>Modo Noturno</span>
+                    <p>Alternar entre tema claro e escuro</p>
                   </div>
-                  <button className="perfil-security-action">
-                    Definir
+                  <label className="switch">
+                    <input type="checkbox" checked={isDarkMode} onChange={() => setIsDarkMode(!isDarkMode)} />
+                    <span className="slider round"></span>
+                  </label>
+                </div>
+                
+                <div className="setting-control">
+                  <div className="setting-info">
+                    <span>Cor de Destaque</span>
+                    <p>Mude a cor principal do seu perfil</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {['#10b981', '#6366f1', '#f97316', '#ef4444', '#ec4899'].map(color => (
+                      <button 
+                        key={color} 
+                        onClick={() => setAccentColor(color)}
+                        style={{ 
+                          width: '24px', 
+                          height: '24px', 
+                          borderRadius: '50%', 
+                          background: color, 
+                          border: accentColor === color ? '2px solid white' : 'none',
+                          boxShadow: '0 0 0 2px rgba(0,0,0,0.1)',
+                          cursor: 'pointer'
+                        }}
+                      />
+                    ))}
+                    <input 
+                      type="color" 
+                      value={accentColor} 
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      style={{ width: '24px', height: '24px', border: 'none', background: 'none', cursor: 'pointer' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-section">
+                <h4><Sparkles size={18} /> Mood & Experiência</h4>
+                <div className="setting-control" style={{ marginBottom: '12px' }}>
+                  <div className="setting-info">
+                    <span>Seu Mood</span>
+                    <p>Como você está se sentindo hoje?</p>
+                  </div>
+                  <select 
+                    value={mood} 
+                    onChange={(e) => setMood(e.target.value)}
+                    className="input-field"
+                    style={{ width: 'auto', padding: '8px 12px' }}
+                  >
+                    <option value="Empolgado">🚀 Empolgado</option>
+                    <option value="Zen">🧘 Zen</option>
+                    <option value="Focado">🎯 Focado</option>
+                    <option value="Criativo">🎨 Criativo</option>
+                    <option value="Grato">🙏 Grato</option>
+                  </select>
+                </div>
+                
+                <div className="setting-control">
+                  <div className="setting-info">
+                    <span>Modo Minimalista</span>
+                    <p>Foque apenas no essencial</p>
+                  </div>
+                  <label className="switch">
+                    <input type="checkbox" checked={zenMode} onChange={() => setZenMode(!zenMode)} />
+                    <span className="slider round"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="settings-section">
+                <h4><Bell size={18} /> Notificações</h4>
+                <div className="setting-control" style={{ marginBottom: '12px' }}>
+                  <div className="setting-info">
+                    <span>Alertas de Ajuda</span>
+                    <p>Receba avisos de novas oportunidades</p>
+                  </div>
+                  <label className="switch">
+                    <input type="checkbox" checked={notificationsEnabled} onChange={() => setNotificationsEnabled(!notificationsEnabled)} />
+                    <span className="slider round"></span>
+                  </label>
+                </div>
+                <div className="setting-control">
+                  <div className="setting-info">
+                    <span>Efeitos Sonoros</span>
+                    <p>Sons ao interagir com a plataforma</p>
+                  </div>
+                  <button 
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                  >
+                    {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
                   </button>
                 </div>
               </div>
-              
-              {/* Status Section */}
-              <div>
-                <label className="perfil-section-label">Status da Conta</label>
-                <div className="perfil-security-item perfil-status-unverified">
-                  <div className="perfil-security-info">
-                    <svg className="perfil-security-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <div>
-                      <div className="perfil-security-text">Não Verificada</div>
-                      <div className="perfil-security-status">Complete seu perfil para verificação</div>
-                    </div>
+
+              <div className="settings-section">
+                <h4><Shield size={18} /> Privacidade</h4>
+                <div className="setting-control">
+                  <div className="setting-info">
+                    <span>Perfil Privado</span>
+                    <p>Apenas amigos podem ver seu impacto</p>
                   </div>
+                  <label className="switch">
+                    <input type="checkbox" checked={isPrivate} onChange={() => setIsPrivate(!isPrivate)} />
+                    <span className="slider round"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="settings-footer">
+                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setIsSettingsOpen(false)}>
+                  Salvar Preferências
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {isViewingHistory && (
+        <div className="modal-overlay" onClick={() => setIsViewingHistory(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Histórico de Atividades</h3>
+              <button className="close-btn" onClick={() => setIsViewingHistory(false)}><X size={24} /></button>
+            </div>
+            <div className="card-padding" style={{ textAlign: 'center', padding: '48px' }}>
+              <div style={{ background: 'var(--background)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: 'var(--text-muted)' }}>
+                <History size={40} />
+              </div>
+              <h4 style={{ fontSize: '20px', marginBottom: '12px', fontFamily: 'var(--font-header)' }}>
+                {hasHistory ? "Você possui um histórico real" : "Nenhum histórico real encontrado"}
+              </h4>
+              <p style={{ color: 'var(--text-muted)', maxWidth: '300px', margin: '0 auto', lineHeight: '1.6' }}>
+                {hasHistory 
+                  ? "Suas atividades estão registradas e vinculadas à sua conta de forma permanente." 
+                  : "Atualmente não existem registros de atividades passadas vinculados ao seu perfil."}
+              </p>
+              <button className="btn btn-primary" style={{ marginTop: '32px', width: '100%', justifyContent: 'center' }} onClick={() => setIsViewingHistory(false)}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isEditingBanner && (
+        <div className="modal-overlay" onClick={() => setIsEditingBanner(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Design do Perfil</h3>
+              <button className="close-btn" onClick={() => setIsEditingBanner(false)}><X size={24} /></button>
+            </div>
+            <div className="banner-options">
+              <div className="options-grid">
+                {bannerPresets.map((preset, idx) => (
+                  <button 
+                    key={idx} 
+                    className={`banner-preset ${bannerConfig.value === preset.value ? 'active' : ''}`}
+                    onClick={() => updateBanner(preset)}
+                    style={{ 
+                      background: preset.type === 'image' ? `url(${preset.value}) center/cover` : preset.value 
+                    }}
+                  >
+                    <span>{preset.name}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="custom-url-section">
+                <p>Importar da Galeria:</p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    type="file" 
+                    id="banner-upload"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          updateBanner({ type: 'image', value: event.target?.result });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ width: '100%', justifyContent: 'center' }}
+                    onClick={() => document.getElementById('banner-upload')?.click()}
+                  >
+                    <Camera size={18} />
+                    Escolher Foto
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        
-        {/* Welcome Card */}
-        <div className="perfil-welcome-card">
-          <div className="perfil-welcome-header">
-            <div className="perfil-welcome-icon">
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
+      )}
+
+      <main className="profile-main">
+        <aside className="sidebar-sticky">
+          <section className="card identity-card">
+            <div className="avatar-container" onClick={handleAvatarChange}>
+              <img src={avatarUrl} alt="Profile" className="avatar-image" />
+              <input 
+                type="file" 
+                id="avatar-upload"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      setAvatarUrl(event.target?.result);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+              <div className="avatar-edit-hint">
+                <Camera size={28} />
+                <span>Importar Galeria</span>
+              </div>
+              <div className="avatar-status">
+                {mood === 'Empolgado' && <Zap size={20} />}
+                {mood === 'Zen' && <CheckCircle2 size={20} />}
+                {mood === 'Focado' && <ArrowRight size={20} />}
+                {mood === 'Criativo' && <Palette size={20} />}
+                {mood === 'Grato' && <Heart size={20} />}
+              </div>
             </div>
-            <h3 className="perfil-welcome-title">🎆 Bem-vindo ao Solidar Bairro!</h3>
-          </div>
-          <p className="perfil-welcome-description">
-            Sua jornada solidária começa agora! Conecte-se com sua comunidade, ajude seus vizinhos e construa um bairro mais unido. Cada ação conta e faz a diferença.
-          </p>
-          <div className="perfil-welcome-actions">
-            <button 
-              onClick={() => navigate('/preciso-de-ajuda')}
-              className="perfil-welcome-btn primary"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14"/>
-                <path d="m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h11c1.1 0 2.1-.4 2.8-1.2l5.1-5.1c.4-.4.4-1 0-1.4s-1-.4-1.4 0L15 15"/>
-              </svg>
-              Preciso de Ajuda
-            </button>
-            <button 
-              onClick={() => navigate('/quero-ajudar')}
-              className="perfil-welcome-btn secondary"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-              Quero Ajudar
-            </button>
-          </div>
-          <div className="perfil-welcome-tip">
-            <div className="perfil-tip-indicator"></div>
-            <span className="perfil-tip-label">Dica:</span>
-            <span className="perfil-tip-text">Comece oferecendo ajuda para ganhar seus primeiros pontos e conquistar o selo "Vizinho Amigo"</span>
+            
+            <h1 className="name-title">João Silva <span style={{ fontSize: '18px', verticalAlign: 'middle', opacity: 0.8 }}>{mood === 'Empolgado' ? '🚀' : mood === 'Zen' ? '🧘' : mood === 'Focado' ? '🎯' : mood === 'Criativo' ? '🎨' : '🙏'}</span></h1>
+            <div className="badge">Nível 1 • Iniciante</div>
+
+            <div className="level-container">
+              <div className="level-header">
+                <span>Progresso de Nível</span>
+                <span>0 / 100 XP</span>
+              </div>
+              <div className="progress-bar-bg">
+                <div className="progress-bar-fill" style={{ width: '15%' }}></div>
+              </div>
+            </div>
+
+            <div className="card-padding" style={{ paddingTop: '24px', textAlign: 'left' }}>
+              <div className="meta-item" style={{ marginBottom: '16px' }}>
+                <MapPin size={18} color="var(--primary)" />
+                São Paulo, SP
+              </div>
+              <div className="meta-item">
+                <Calendar size={18} color="var(--primary)" />
+                Desde Jan 2024
+              </div>
+              
+              <button className="btn btn-outline" style={{ width: '100%', marginTop: '32px' }} onClick={() => setIsSettingsOpen(true)}>
+                <Settings size={18} />
+                Configurações
+              </button>
+            </div>
+          </section>
+
+          <section className="card card-padding">
+            <h3 className="section-title" style={{ fontSize: '18px', marginBottom: '20px' }}>
+              <Trophy size={20} color="var(--primary)" />
+              Conquistas
+            </h3>
+            <div className="achievements-grid">
+              <div className="achievement-badge unlocked">
+                <div className="badge-icon"><Zap size={24} /></div>
+                <span className="badge-name">Pioneiro</span>
+              </div>
+              <div className="achievement-badge">
+                <div className="badge-icon"><Star size={24} /></div>
+                <span className="badge-name">Ajudante</span>
+              </div>
+              <div className="achievement-badge">
+                <div className="badge-icon"><Coffee size={24} /></div>
+                <span className="badge-name">Amigável</span>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <div className="content-area">
+          <section className={`card impact-card-v2 ${zenMode ? 'zen-simple' : ''}`}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h2 className="section-title" style={{ color: 'white', marginBottom: '8px' }}>
+                  {zenMode ? "Sua Presença" : "Impacto Social"}
+                </h2>
+                <p style={{ opacity: 0.7, maxWidth: '400px' }}>
+                  {zenMode ? "Focando na jornada, não nos números." : "Seu rastro de bondade na comunidade local."}
+                </p>
+              </div>
+              <Award size={40} color="var(--primary)" />
+            </div>
+
+            {!zenMode && (
+              <div className="impact-stats-grid">
+                <div className="impact-stat-item">
+                  <span className="value">0</span>
+                  <span className="label">Pontos</span>
+                </div>
+                <div className="impact-stat-item">
+                  <span className="value">0</span>
+                  <span className="label">Ajudas</span>
+                </div>
+                <div className="impact-stat-item">
+                  <span className="value">0</span>
+                  <span className="label">Pedidos</span>
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginTop: '40px', display: 'flex', gap: '16px' }}>
+              <button className="btn btn-primary">
+                Começar agora
+                <ArrowRight size={18} />
+              </button>
+              {!zenMode && (
+                <button className="btn glass-button" style={{ color: 'white' }} onClick={() => setIsViewingHistory(true)}>
+                  <History size={18} />
+                  Histórico
+                </button>
+              )}
+            </div>
+          </section>
+
+          {!zenMode && (
+            <section className="card card-padding">
+              <div className="section-header">
+                <h3 className="section-title">
+                  <User size={24} color="var(--primary)" />
+                  Sobre
+                </h3>
+                <button className="btn btn-outline" onClick={() => setIsEditingBio(!isEditingBio)} style={{ padding: '8px 16px' }}>
+                  {isEditingBio ? "Salvar" : <><Pencil size={14} /> Editar</>}
+                </button>
+              </div>
+              
+              {isEditingBio ? (
+                <textarea 
+                  className="input-field"
+                  style={{ minHeight: '120px' }}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  autoFocus
+                />
+              ) : (
+                <p className="bio-text">{bio}</p>
+              )}
+
+              <div style={{ marginTop: '32px' }}>
+                <h4 style={{ fontWeight: 700, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Zap size={18} color="var(--primary)" />
+                  Posso ajudar com:
+                </h4>
+                <div className="skills-container">
+                  {skills.map((skill, index) => (
+                    <div key={index} className="skill-tag">
+                      <HandHelping size={16} /> 
+                      {skill}
+                      <button 
+                        onClick={() => setSkills(skills.filter((_, i) => i !== index))}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', padding: '2px', borderRadius: '50%' }}
+                        className="skill-remove-btn"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  
+                  {isAddingSkill ? (
+                    <div className="skill-tag" style={{ padding: '4px 8px' }}>
+                      <input 
+                        type="text" 
+                        value={newSkill} 
+                        onChange={(e) => setNewSkill(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && newSkill.trim()) {
+                            setSkills([...skills, newSkill.trim()]);
+                            setNewSkill("");
+                            setIsAddingSkill(false);
+                          } else if (e.key === 'Escape') {
+                            setIsAddingSkill(false);
+                          }
+                        }}
+                        autoFocus
+                        placeholder="Ex: Pintura"
+                        style={{ border: 'none', background: 'none', outline: 'none', fontSize: '14px', width: '100px' }}
+                      />
+                    </div>
+                  ) : (
+                    <button 
+                      className="skill-tag" 
+                      style={{ borderStyle: 'dashed', color: 'var(--primary)', cursor: 'pointer' }}
+                      onClick={() => setIsAddingSkill(true)}
+                    >
+                      + Adicionar
+                    </button>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
+          <section className="card card-padding">
+            <div className="section-header">
+              <h3 className="section-title">
+                <Shield size={24} color="var(--primary)" />
+                Segurança
+              </h3>
+            </div>
+
+            <div className="security-list">
+              <div className="security-item">
+                <div className="security-info">
+                  <h4>E-mail Principal</h4>
+                  <p>{email}</p>
+                </div>
+                <button 
+                  className={isPhoneVerified ? "btn btn-outline" : "btn btn-disabled"}
+                  onClick={() => handleSecurityAction("Alterar E-mail")}
+                >
+                  Alterar
+                </button>
+              </div>
+
+              <div className="security-item">
+                <div className="security-info">
+                  <h4>Autenticação</h4>
+                  <p>Senha de acesso à conta</p>
+                </div>
+                <button 
+                  className={isPhoneVerified ? "btn btn-outline" : "btn btn-disabled"}
+                  onClick={() => handleSecurityAction("Redefinir Senha")}
+                >
+                  <Lock size={14} />
+                  Redefinir
+                </button>
+              </div>
+            </div>
+
+            {!isPhoneVerified ? (
+              <div className="verification-banner banner-warning" style={{ marginTop: '32px' }}>
+                <div className="banner-title"><ShieldCheck size={20} /> Verificação Necessária</div>
+                <p className="banner-desc">Confirme sua identidade via SMS para habilitar alterações críticas de segurança.</p>
+                <button className="btn btn-primary" onClick={() => setIsPhoneModalOpen(true)}>
+                  <Smartphone size={18} />
+                  Verificar Telefone
+                </button>
+              </div>
+            ) : (
+              <div className="verification-banner banner-success" style={{ marginTop: '32px' }}>
+                <div className="banner-title"><CheckCircle2 size={20} /> Identidade Confirmada</div>
+                <p className="banner-desc">Sua conta está totalmente protegida e verificada.</p>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+      {isPhoneModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsPhoneModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Verificação de Identidade</h3>
+              <button className="close-btn" onClick={() => setIsPhoneModalOpen(false)}><X size={24} /></button>
+            </div>
+            <div className="settings-body">
+              <div className="verification-alert">
+                <ShieldCheck size={48} color="var(--primary)" style={{ marginBottom: '16px' }} />
+                <h4>Sua segurança em primeiro lugar</h4>
+                <p>
+                  Usuários não verificados possuem <strong>menos permissões</strong> e <strong>menos credibilidade</strong> na comunidade. 
+                  A verificação via SMS garante que você é uma pessoa real.
+                </p>
+              </div>
+
+              <div className="settings-section" style={{ marginTop: '24px' }}>
+                <div className="setting-control" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+                  <div className="setting-info">
+                    <span>Número de Telefone</span>
+                    <p>Enviaremos um código de 6 dígitos via SMS</p>
+                  </div>
+                  <input 
+                    type="tel" 
+                    placeholder="(11) 99999-9999" 
+                    className="input-field"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="settings-footer">
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%', justifyContent: 'center' }} 
+                  onClick={() => {
+                    if (phoneNumber.length > 8) {
+                      setIsPhoneVerified(true);
+                      setIsPhoneModalOpen(false);
+                    }
+                  }}
+                >
+                  Receber Código SMS
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
-export default Perfil;
+export default ProfileComponent;

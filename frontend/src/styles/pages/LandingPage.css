@@ -890,6 +890,10 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  background: radial-gradient(circle at center, 
+    rgba(59, 130, 246, 0.05) 0%, 
+    rgba(13, 148, 136, 0.03) 40%, 
+    transparent 70%);
 }
 
 @media (min-width: 1024px) {
@@ -1250,8 +1254,17 @@
 .globe-canvas {
   position: relative;
   z-index: 10;
-  opacity: 0.9;
-  filter: drop-shadow(0 0 50px rgba(13, 148, 136, 0.1));
+  opacity: 0.95;
+  filter: drop-shadow(0 0 50px rgba(13, 148, 136, 0.2)) 
+          drop-shadow(0 0 100px rgba(59, 130, 246, 0.1))
+          saturate(1.2) contrast(1.1);
+  transition: filter 0.5s ease;
+}
+
+.globe-canvas:hover {
+  filter: drop-shadow(0 0 60px rgba(13, 148, 136, 0.3)) 
+          drop-shadow(0 0 120px rgba(59, 130, 246, 0.15))
+          saturate(1.3) contrast(1.2);
 }
 
 .globe-fade-overlay {
@@ -1868,4 +1881,59 @@
   background-clip: text;
   color: transparent;
   display: inline-block;
+}
+
+/* Globe Component */
+.globe-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.globe-decoration {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.radar-ring-1, .radar-ring-2 {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(13, 148, 136, 0.1);
+  animation: ping 3s linear infinite;
+}
+
+.radar-ring-1 { width: 80%; }
+.radar-ring-2 { width: 95%; animation-duration: 4s; }
+
+.scan-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(13, 148, 136, 0.2), transparent);
+  top: 50%;
+  transform: translateY(-50%);
+  animation: scan-v2 4s linear infinite;
+}
+
+.globe-canvas {
+  position: relative;
+  z-index: 10;
+  opacity: 0.9;
+  filter: saturate(1.5) contrast(1.2) brightness(1.05);
+}
+
+.globe-fade-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 30%, white 70%);
+  pointer-events: none;
 }
