@@ -191,12 +191,10 @@ export default function CadastroFamilia() {
 
   if (isSubmitted) {
     return (
-      <div className="cadastro-container familia-theme">
-        <div className="success-container animate-fade-in">
-          <div className="form-card-new">
-            <div className="success-grid">
-              {/* Lado Esquerdo: Mensagem e XP */}
-              <div className="success-left">
+      <div className="cadastro-container familia-theme" style={{ height: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div className="form-card-new" style={{ width: '100%', maxWidth: '1200px', height: 'auto', maxHeight: '85vh', overflow: 'hidden' }}>
+          <div className="success-grid" style={{ display: 'flex', height: '100%' }}>
+            <div className="success-left" style={{ flex: '1', minWidth: '400px' }}>
                 <div className="brand-icon success-icon-bg">
                   <Trophy size={48} color="white" />
                 </div>
@@ -223,8 +221,8 @@ export default function CadastroFamilia() {
                 </div>
               </div>
 
-              {/* Lado Direito: Próximos Passos */}
-              <div className="success-right">
+            <div className="success-right" style={{ flex: '1.2', minWidth: '450px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
                 <h2 className="success-steps-title">Próximos Passos</h2>
                 <div className="steps-cards-list">
                   {[
@@ -241,10 +239,10 @@ export default function CadastroFamilia() {
                     </div>
                   ))}
                 </div>
-                <div className="success-actions">
-                  <Link to="/" className="btn-base btn-primary" style={{ background: '#f97316' }}>Início</Link>
-                  <button className="btn-base btn-secondary">Acessar Painel</button>
-                </div>
+              </div>
+              <div className="success-actions">
+                <Link to="/" className="btn-base btn-primary" style={{ background: '#f97316' }}>Início</Link>
+                <button className="btn-base btn-secondary">Acessar Painel</button>
               </div>
             </div>
           </div>
@@ -499,21 +497,25 @@ export default function CadastroFamilia() {
                     
                     <div className="input-group">
                       <label className="input-label">Renda Familiar Mensal</label>
-                      <div className="radio-grid">
+                      <div className="card-radio-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
                         {[
-                          { label: 'Até R$ 500', value: 'ate_500' },
-                          { label: 'R$ 501 - R$ 1.000', value: '501_1000' },
-                          { label: 'R$ 1.001 - R$ 2.000', value: '1001_2000' },
-                          { label: 'Acima de R$ 2.000', value: 'acima_2000' }
+                          { label: 'Até R$ 500', value: 'ate_500', icon: <DollarSign size={20} />, desc: 'Renda baixa' },
+                          { label: 'R$ 501 - R$ 1.000', value: '501_1000', icon: <DollarSign size={20} />, desc: 'Renda moderada' },
+                          { label: 'R$ 1.001 - R$ 2.000', value: '1001_2000', icon: <DollarSign size={20} />, desc: 'Renda média' },
+                          { label: 'Acima de R$ 2.000', value: 'acima_2000', icon: <DollarSign size={20} />, desc: 'Renda alta' }
                         ].map((renda) => (
                           <label key={renda.value} className="radio-label">
                             <input type="radio" name="renda" value={renda.value} className="radio-input" />
-                            <div className="card-radio-box">
-                              <div className="card-icon-box">
-                                <DollarSign size={20} />
+                            <div className="card-radio-box-enhanced">
+                              <div className="card-icon-box-enhanced" style={{ background: '#fff7ed', color: '#f97316' }}>
+                                {renda.icon}
                               </div>
-                              <div>
-                                <h4 className="card-title">{renda.label}</h4>
+                              <div className="card-content">
+                                <h4 className="card-title-enhanced">{renda.label}</h4>
+                                <p className="card-desc-enhanced">{renda.desc}</p>
+                              </div>
+                              <div className="card-check-indicator">
+                                <CheckCircle2 size={16} />
                               </div>
                             </div>
                           </label>
@@ -631,7 +633,7 @@ export default function CadastroFamilia() {
                     
                     <div className="input-group">
                       <label className="input-label">Tipo de Moradia</label>
-                      <div className="radio-grid">
+                      <div className="radio-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
                         {[
                           { label: 'Casa Própria', icon: <Home size={20} /> },
                           { label: 'Casa Alugada', icon: <Home size={20} /> },

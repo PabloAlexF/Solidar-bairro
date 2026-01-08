@@ -277,7 +277,7 @@ export default function CadastroCidadao() {
                   </div>
                   <div className="form-group span-2">
                     <label className="field-label">Disponibilidade</label>
-                    <div className="selectable-grid">
+                    <div className="selectable-grid" id="availability-grid">
                       {availabilityOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
                           <input type="checkbox" name="disponibilidade" value={opt.label} />

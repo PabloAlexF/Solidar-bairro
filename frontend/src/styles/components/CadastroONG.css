@@ -265,13 +265,17 @@
   margin-bottom: 2rem;
 }
 
-.step-badge {
-  background: var(--theme-color);
-  color: white;
-  padding: 0.5rem 1rem;
+.ong-step-badge {
+  background: #1e1b4b;
+  color: #a78bfa;
+  padding: 0.75rem 1.5rem;
   border-radius: 2rem;
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 8px 16px -4px rgba(30, 27, 75, 0.3);
+  border: 1px solid #312e81;
 }
 
 .progress-bar-container {
@@ -542,6 +546,259 @@
 
 .btn-next:hover, .btn-finish:hover {
   transform: translateY(-2px);
+}
+
+.btn-cancel {
+  background-color: #fff1f2 !important;
+  color: #f43f5e !important;
+  border: 1.5px solid #ffe4e6 !important;
+  font-size: 0.9rem;
+  padding: 0.75rem 1.25rem !important;
+  border-radius: 0.75rem !important;
+}
+
+.btn-cancel:hover {
+  background-color: #ffe4e6 !important;
+  border-color: #fecdd3 !important;
+  color: #e11d48 !important;
+}
+
+/* ONG Success Modal Styles */
+.ong-success-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ong-form-card-new {
+  background: white;
+  border-radius: 2rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  border: 1px solid #f3f4f6;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.ong-success-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 600px;
+}
+
+@media (min-width: 1024px) {
+  .ong-success-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ong-success-left {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.ong-success-icon-bg {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  border-radius: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.4);
+  margin-bottom: 1rem;
+}
+
+.ong-success-title {
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 0.9;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.ong-success-description {
+  font-size: 1.125rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.ong-xp-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+  border: 1px solid #f3f4f6;
+}
+
+.ong-xp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.ong-xp-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.ong-xp-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #8b5cf6;
+  margin: 0.25rem 0 0 0;
+}
+
+.ong-xp-bar {
+  height: 8px;
+  background: #f3f4f6;
+  border-radius: 100px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.ong-xp-inner {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 1s ease;
+}
+
+.ong-xp-footer {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 600;
+  margin: 0;
+}
+
+.ong-success-right {
+  padding: 3rem;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ong-success-steps-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #111827;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ong-success-steps-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: #8b5cf6;
+  border-radius: 2px;
+}
+
+.ong-steps-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.ong-step-card-mini {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #f9fafb;
+  border-radius: 1rem;
+  border: 1px solid #f3f4f6;
+  transition: all 0.3s;
+}
+
+.ong-step-card-mini:hover {
+  transform: translateX(8px);
+  background: white;
+  border-color: #8b5cf6;
+  box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.1);
+}
+
+.ong-step-card-icon {
+  width: 48px;
+  height: 48px;
+  background: white;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+.ong-step-card-mini h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
+}
+
+.ong-step-card-mini p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.ong-success-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.ong-success-actions .ong-btn-base {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 1rem;
+}
+
+.ong-success-actions .ong-btn-primary {
+  color: white;
+}
+
+.ong-success-actions .ong-btn-secondary {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+}
+
+.ong-success-actions .ong-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.3);
+}
+
+.ong-success-actions .ong-btn-secondary:hover {
+  background: #e5e7eb;
+  color: #111827;
+  border-color: #d1d5db;
 }
 
 .btn-cancel {

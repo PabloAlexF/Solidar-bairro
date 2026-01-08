@@ -37,44 +37,44 @@ export default function CadastroONG() {
   if (isSubmitted) {
     return (
       <div className="ong-cadastro-container ong-theme" style={{ height: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-        <div className="form-card-new" style={{ width: '100%', maxWidth: '1200px', height: 'auto', maxHeight: '85vh', overflow: 'hidden' }}>
-          <div className="success-grid" style={{ display: 'flex', height: '100%' }}>
-            <div className="success-left" style={{ flex: '1', minWidth: '400px' }}>
-              <div className="brand-icon success-icon-bg">
+        <div className="ong-form-card-new" style={{ width: '100%', maxWidth: '1200px', height: 'auto', maxHeight: '85vh', overflow: 'hidden' }}>
+          <div className="ong-success-grid" style={{ display: 'flex', height: '100%' }}>
+            <div className="ong-success-left" style={{ flex: '1', minWidth: '400px' }}>
+              <div className="brand-icon ong-success-icon-bg">
                 <Trophy size={48} color="white" />
               </div>
-              <h1 className="success-title">
+              <h1 className="ong-success-title">
                 ONG <br/>
                 <span className="ong-text-highlight">Registrada!</span>
               </h1>
-              <p className="success-description">
+              <p className="ong-success-description">
                 Sua organização agora faz parte da rede oficial. Prepare-se para ampliar seu impacto!
               </p>
-              <div className="xp-card">
-                <div className="xp-header">
+              <div className="ong-xp-card">
+                <div className="ong-xp-header">
                   <div>
-                    <p className="xp-label">Impacto Institucional</p>
-                    <h3 className="xp-value">+100 XP</h3>
+                    <p className="ong-xp-label">Impacto Institucional</p>
+                    <h3 className="ong-xp-value">+100 XP</h3>
                   </div>
                   <Zap size={32} color="#8b5cf6" />
                 </div>
-                <div className="xp-bar">
-                  <div className="xp-inner" style={{ width: '25%', background: '#8b5cf6' }} />
+                <div className="ong-xp-bar">
+                  <div className="ong-xp-inner" style={{ width: '25%', background: '#8b5cf6' }} />
                 </div>
-                <p className="xp-footer">Complete a verificação para ganhar selo de confiança</p>
+                <p className="ong-xp-footer">Complete a verificação para ganhar selo de confiança</p>
               </div>
             </div>
-            <div className="success-right" style={{ flex: '1.2', minWidth: '450px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div className="ong-success-right" style={{ flex: '1.2', minWidth: '450px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <h2 className="success-steps-title">Próximos Passos</h2>
-                <div className="steps-cards-list">
+                <h2 className="ong-success-steps-title">Próximos Passos</h2>
+                <div className="ong-steps-cards-list">
                   {[
                     { title: "Verificação CNPJ", desc: "Validaremos os dados da sua instituição", icon: <ShieldCheck /> },
                     { title: "Painel de Gestão", desc: "Acesse ferramentas de mapeamento", icon: <Globe /> },
                     { title: "Rede de Apoio", desc: "Conecte-se com doadores e voluntários", icon: <Users /> }
                   ].map((item, i) => (
-                    <div key={i} className="step-card-mini">
-                      <div className="step-card-icon" style={{ color: '#8b5cf6' }}>{item.icon}</div>
+                    <div key={i} className="ong-step-card-mini">
+                      <div className="ong-step-card-icon" style={{ color: '#8b5cf6' }}>{item.icon}</div>
                       <div>
                         <h4>{item.title}</h4>
                         <p>{item.desc}</p>
@@ -83,9 +83,9 @@ export default function CadastroONG() {
                   ))}
                 </div>
               </div>
-              <div className="success-actions">
-                <Link to="/" className="btn-base btn-primary" style={{ background: '#8b5cf6' }}>Início</Link>
-                <button className="btn-base btn-secondary">Acessar Painel</button>
+              <div className="ong-success-actions">
+                <Link to="/" className="ong-btn-base ong-btn-primary" style={{ background: '#8b5cf6' }}>Início</Link>
+                <button className="ong-btn-base ong-btn-secondary">Acessar Painel</button>
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function CadastroONG() {
           <div className="form-container-card animate-slide-up">
             <div className="form-header-section">
               <div className="header-top">
-                <span className="step-badge" style={{ color: '#8b5cf6' }}>{steps.find(s => s.id === step)?.title}</span>
+                <span className="ong-step-badge" style={{ color: '#8b5cf6' }}>{steps.find(s => s.id === step)?.title}</span>
                 <div className="progress-bar-container">
                   <div className="progress-bar-fill" style={{ width: `${(step / totalSteps) * 100}%`, background: 'linear-gradient(to right, #8b5cf6, #a855f7)' }} />
                 </div>
