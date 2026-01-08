@@ -1,152 +1,154 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import apiService from '../services/apiService';
-import chatNotificationService from '../services/chatNotificationService';
 import Header from '../components/layout/Header';
+import { 
+  Heart, 
+  ArrowLeft, 
+  AlertTriangle, 
+  ShieldCheck, 
+  Package, 
+  MapPin, 
+  Check, 
+  CheckCheck, 
+  Paperclip, 
+  Send, 
+  MoreVertical,
+  ChevronRight,
+  Search,
+  Star,
+  Mail,
+  Phone,
+  User,
+  Sparkles
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/pages/Chat.css';
-
-// Ícones SVG convertidos
-const Heart = ({ size = 20, fill = "none" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
-
-const ArrowLeft = ({ size = 24 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
-  </svg>
-);
-
-const AlertTriangle = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-    <line x1="12" y1="9" x2="12" y2="13" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </svg>
-);
-
-const ShieldCheck = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    <path d="M9 12l2 2 4-4" />
-  </svg>
-);
-
-const Package = ({ size = 24 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="16.5" y1="9.4" x2="7.5" y2="4.21" />
-    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-    <line x1="12" y1="22.08" x2="12" y2="12" />
-  </svg>
-);
-
-const MapPin = ({ size = 12 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-    <circle cx="12" cy="10" r="3" />
-  </svg>
-);
-
-const Check = ({ size = 14 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
-
-const CheckCheck = ({ size = 14, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-    <path d="M9 11l3 3L22 4" />
-    <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.66 0 3.2.45 4.53 1.23" />
-  </svg>
-);
-
-const Paperclip = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 16.2a2 2 0 0 1-2.83-2.83l8.49-8.49" />
-  </svg>
-);
-
-const Send = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="22" y1="2" x2="11" y2="13" />
-    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-  </svg>
-);
-
-const MoreVertical = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="1" />
-    <circle cx="12" cy="5" r="1" />
-    <circle cx="12" cy="19" r="1" />
-  </svg>
-);
-
-const ChevronRight = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="9 18 15 12 9 6" />
-  </svg>
-);
-
-const Search = ({ size = 18, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
-);
-
-const Star = ({ size = 20, fill = "none", className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" className={className}>
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-);
-
-const Mail = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-    <polyline points="22 6 12 13 2 6" />
-  </svg>
-);
-
-const Phone = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-  </svg>
-);
-
-const User = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-    <circle cx="12" cy="7" r="4" />
-  </svg>
-);
-
-const Sparkles = ({ size = 16, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
-  </svg>
-);
 
 const formatTime = (date) => {
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
 
 const Chat = () => {
-  const { userId } = useParams();
-  const { user } = useAuth();
+  const params = useParams();
   const navigate = useNavigate();
+  const conversaId = params.id;
   
-  const [conversation, setConversation] = useState(null);
-  const [loading, setLoading] = useState(true);
-  
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    {
+      id: "sys1",
+      type: "system",
+      sender: "system",
+      content: "Pedido confirmado: Ajuda com alimentos.",
+      timestamp: new Date(Date.now() - 3600000),
+    },
+    {
+      id: "sys2",
+      type: "system",
+      sender: "system",
+      content: "Este é um ambiente seguro. Evite compartilhar dados pessoais sensíveis.",
+      timestamp: new Date(Date.now() - 3500000),
+    },
+    {
+      id: "1",
+      type: "text",
+      sender: "doador",
+      content: "Olá! Vi que você precisa de cesta básica. Posso ajudar.",
+      timestamp: new Date(Date.now() - 3400000),
+      read: true,
+    },
+    {
+      id: "2",
+      type: "text",
+      sender: "receptor",
+      content: "Obrigada! Sim, preciso para mim e meus dois filhos.",
+      timestamp: new Date(Date.now() - 3300000),
+      read: true,
+    },
+    {
+      id: "3",
+      type: "text",
+      sender: "doador",
+      content: "Perfeito! Tenho uma cesta completa aqui. Podemos combinar a entrega para amanhã?",
+      timestamp: new Date(Date.now() - 3200000),
+      read: true,
+    },
+    {
+      id: "4",
+      type: "text",
+      sender: "receptor",
+      content: "Seria ótimo! Qual horário fica melhor para você?",
+      timestamp: new Date(Date.now() - 3100000),
+      read: true,
+    },
+    {
+      id: "5",
+      type: "text",
+      sender: "doador",
+      content: "Pode ser às 14h? Sugiro a gente se encontrar na Praça Central, é um lugar seguro e movimentado.",
+      timestamp: new Date(Date.now() - 3000000),
+      read: true,
+    },
+    {
+      id: "6",
+      type: "location",
+      sender: "doador",
+      content: "",
+      timestamp: new Date(Date.now() - 2900000),
+      read: true,
+      location: {
+        name: "Praça Central - São Lucas",
+        address: "Ponto de encontro sugerido",
+      },
+    },
+    {
+      id: "7",
+      type: "text",
+      sender: "receptor",
+      content: "Perfeito! Conheço bem a praça. Estarei lá às 14h. Muito obrigada!",
+      timestamp: new Date(Date.now() - 2800000),
+      read: true,
+    },
+  ]);
+
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedChatId, setSelectedChatId] = useState(null);
-  const [chatContacts, setChatContacts] = useState([]);
+  const [currentUser] = useState("receptor");
+  const [selectedChatId, setSelectedChatId] = useState(conversaId || "1");
+  const [chatContacts, setChatContacts] = useState([
+    {
+      id: "1",
+      name: "Ana Paula",
+      initials: "AP",
+      type: "doador",
+      distance: "450m de você",
+      online: true,
+      lastMessage: "Perfeito! Conheço bem a praça...",
+      lastMessageTime: "14:20",
+      unreadCount: 0,
+    },
+    {
+      id: "2",
+      name: "Ricardo Silva",
+      initials: "RS",
+      type: "doador",
+      distance: "1.2km de você",
+      online: false,
+      lastMessage: "Vou verificar os itens aqui.",
+      lastMessageTime: "Ontem",
+      unreadCount: 2,
+    },
+    {
+      id: "3",
+      name: "Maria Oliveira",
+      initials: "MO",
+      type: "receptor",
+      distance: "800m de você",
+      online: true,
+      lastMessage: "Muito obrigada pela ajuda!",
+      lastMessageTime: "Segunda",
+      unreadCount: 0,
+    },
+  ]);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
@@ -158,102 +160,71 @@ const Chat = () => {
 
   const messagesEndRef = useRef(null);
 
-  // Carregar conversas do usuário
+  const currentUserData = {
+    name: "Seu Perfil",
+    email: "joao.silva@email.com",
+    phone: "(11) 98765-4321",
+    type: "Pessoa Física",
+    address: "Rua das Flores, 123 - São Lucas",
+    points: 1250,
+    initials: "JS"
+  };
+
+  const filteredContacts = chatContacts.filter(c => 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const currentContact = chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
+
+  const helpInfo = {
+    type: "Doação de Cesta Básica",
+    urgency: "high",
+    bairro: "São Lucas",
+    distance: "450 m",
+    status: deliveryStatus,
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   useEffect(() => {
-    const loadConversations = async () => {
-      if (!user) return;
-      
-      try {
-        const response = await apiService.getConversations();
-        if (response.success) {
-          const conversations = response.data.map(conv => ({
-            id: conv.id,
-            name: conv.title || 'Conversa',
-            initials: conv.title ? conv.title.substring(0, 2).toUpperCase() : 'CV',
-            type: 'conversa',
-            distance: '0m de você',
-            online: true,
-            lastMessage: conv.lastMessage || 'Nova conversa',
-            lastMessageTime: conv.lastMessageAt ? new Date(conv.lastMessageAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
-            unreadCount: 0,
-            participants: conv.participants
-          }));
-          setChatContacts(conversations);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar conversas:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadConversations();
-  }, [user]);
-
-  // Carregar conversa específica e mensagens
-  useEffect(() => {
-    const loadConversation = async () => {
-      if (!selectedChatId || !user || selectedChatId === 'default') return;
-      
-      try {
-        // Carregar dados da conversa
-        const convResponse = await apiService.getConversation(selectedChatId);
-        if (convResponse.success) {
-          setConversation(convResponse.data);
-        }
-
-        // Carregar mensagens
-        const messagesResponse = await apiService.getMessages(selectedChatId);
-        if (messagesResponse.success) {
-          const formattedMessages = messagesResponse.data.map(msg => ({
-            id: msg.id,
-            type: msg.type,
-            sender: msg.senderId === user.uid ? 'receptor' : 'doador',
-            content: msg.content,
-            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
-            read: msg.readBy?.includes(user.uid) || false,
-            location: msg.metadata?.location || null
-          }));
-          setMessages(formattedMessages);
-        }
-
-        // Marcar como lida
-        await apiService.markConversationAsRead(selectedChatId);
-        
-        // Iniciar escuta de novas mensagens
-        chatNotificationService.startListening(selectedChatId, (newMessages) => {
-          const formattedNewMessages = newMessages.map(msg => ({
-            id: msg.id,
-            type: msg.type,
-            sender: msg.senderId === user.uid ? 'receptor' : 'doador',
-            content: msg.content,
-            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
-            read: msg.readBy?.includes(user.uid) || false,
-            location: msg.metadata?.location || null
-          }));
-          
-          setMessages(prev => [...prev, ...formattedNewMessages]);
-        });
-      } catch (error) {
-        console.error('Erro ao carregar conversa:', error);
-        // Se a conversa não existe, limpar o selectedChatId
-        if (error.message.includes('não encontrada') || error.message.includes('404')) {
-          setSelectedChatId(null);
-        }
-      }
-    };
-
-    if (selectedChatId && selectedChatId !== 'default') {
-      loadConversation();
+    if (conversaId) {
+      setSelectedChatId(conversaId);
+      setChatContacts(prev => prev.map(c => 
+        c.id === conversaId ? { ...c, unreadCount: 0 } : c
+      ));
     }
+  }, [conversaId]);
 
-    // Cleanup ao trocar de conversa
-    return () => {
-      if (selectedChatId && selectedChatId !== 'default') {
-        chatNotificationService.stopListening(selectedChatId);
-      }
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  const handleSend = () => {
+    if (!inputValue.trim()) return;
+
+    const newMessage = {
+      id: Date.now().toString(),
+      type: "text",
+      sender: currentUser,
+      content: inputValue,
+      timestamp: new Date(),
+      read: false,
     };
-  }, [selectedChatId, user]);
+
+    setMessages([...messages, newMessage]);
+    setInputValue("");
+
+    // Simulate typing from other user
+    setTimeout(() => {
+      setIsTyping(true);
+      setTimeout(() => {
+        setIsTyping(false);
+      }, 2000);
+    }, 1000);
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -271,209 +242,7 @@ const Chat = () => {
     }, 3000);
   };
 
-  const currentUser = user?.uid || 'receptor';
-
-  const currentUserData = {
-    name: user?.displayName || "Seu Perfil",
-    email: user?.email || "usuario@email.com",
-    phone: "(11) 98765-4321",
-    type: "Pessoa Física",
-    address: "Rua das Flores, 123 - São Lucas",
-    points: 1250,
-    initials: user?.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : "US"
-  };
-
-  const filteredContacts = chatContacts.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const currentContact = chatContacts.find(c => c.id === selectedChatId) || {
-    id: 'default',
-    name: 'Selecione uma conversa',
-    initials: 'SC',
-    type: 'conversa',
-    distance: '0m de você',
-    online: false,
-    lastMessage: 'Nenhuma conversa selecionada',
-    lastMessageTime: 'Agora'
-  };
-
-  const helpInfo = {
-    type: "Doação de Cesta Básica",
-    urgency: "high",
-    bairro: "São Lucas",
-    distance: "450 m",
-    status: deliveryStatus,
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    if (userId) {
-      setSelectedChatId(userId);
-    }
-  }, [userId]);
-
-  // Selecionar primeira conversa se não há userId
-  useEffect(() => {
-    if (!userId && !selectedChatId && chatContacts.length > 0) {
-      setSelectedChatId(chatContacts[0].id);
-    }
-  }, [userId, selectedChatId, chatContacts.length]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
-
-  // Cleanup ao desmontar componente
-  useEffect(() => {
-    return () => {
-      chatNotificationService.cleanup();
-    };
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="chat-page-wrapper">
-        <Header showLoginButton={false} />
-        <div className="loading-container">
-          <p>Carregando conversas...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se não há conversas e não está carregando, mostrar estado vazio
-  if (!loading && chatContacts.length === 0) {
-    return (
-      <div className="chat-page-wrapper">
-        <Header showLoginButton={false} />
-        <div className="loading-container">
-          <p>Nenhuma conversa encontrada. Inicie uma nova conversa!</p>
-          <button 
-            className="btn-solid-success" 
-            onClick={() => navigate('/quero-ajudar')}
-            style={{ marginTop: '1rem', padding: '0.75rem 1.5rem', borderRadius: '0.5rem' }}
-          >
-            Encontrar Pedidos de Ajuda
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Se há conversas mas nenhuma está selecionada
-  if (!loading && chatContacts.length > 0 && !selectedChatId) {
-    return (
-      <div className="chat-page-wrapper">
-        <Header showLoginButton={false} />
-        <div className="chat-layout">
-          {/* Sidebar */}
-          <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-            <div className="sidebar-header">
-              <div className="sidebar-title-row">
-                <h2>Conversas</h2>
-                <button className="icon-btn" title="Nova conversa">
-                  <Heart size={20} />
-                </button>
-              </div>
-              <div className="search-bar-wrapper">
-                <Search size={18} className="search-icon" />
-                <input 
-                  type="text" 
-                  placeholder="Buscar vizinhos..." 
-                  className="search-input" 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="contacts-list">
-              {filteredContacts.map((contact) => (
-                <div 
-                  key={contact.id} 
-                  className={`contact-item ${selectedChatId === contact.id ? 'active' : ''}`}
-                  onClick={() => {
-                    setSelectedChatId(contact.id);
-                    setChatContacts(prev => prev.map(c => 
-                      c.id === contact.id ? { ...c, unreadCount: 0 } : c
-                    ));
-                    navigate(`/chat/${contact.id}`);
-                  }}
-                >
-                  <div className="avatar-wrapper">
-                    <div className={`contact-avatar ${contact.type}`}>
-                      {contact.initials}
-                    </div>
-                    {contact.online && <span className="online-status-dot" />}
-                  </div>
-                  <div className="contact-meta">
-                    <div className="contact-name-row">
-                      <span className="contact-name">{contact.name}</span>
-                      <span className="last-time">{contact.lastMessageTime}</span>
-                    </div>
-                    <div className="contact-preview-row">
-                      <p className="last-message">{contact.lastMessage}</p>
-                      {contact.unreadCount > 0 && selectedChatId !== contact.id && (
-                        <span className="unread-count-badge">{contact.unreadCount}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <div className="sidebar-footer">
-               <div className="mini-profile" onClick={() => setShowUserProfile(true)}>
-                 <div className="mini-avatar">EU</div>
-                 <div className="mini-info">
-                   <span className="mini-name">Seu Perfil</span>
-                   <span className="mini-status">Disponível</span>
-                 </div>
-               </div>
-            </div>
-          </aside>
-
-          {/* Main Chat Area - Empty State */}
-          <main className="chat-main-area">
-            <div className="loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center' }}>
-              <Heart size={64} style={{ color: '#10b981', marginBottom: '1rem' }} />
-              <h3>Selecione uma conversa</h3>
-              <p>Escolha uma conversa da lista ao lado para começar a conversar.</p>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
-  const handleSend = async () => {
-    if (!inputValue.trim() || !selectedChatId || selectedChatId === 'default') return;
-
-    try {
-      const response = await apiService.sendMessage(selectedChatId, inputValue.trim());
-      if (response.success) {
-        const newMessage = {
-          id: response.data.id,
-          type: response.data.type,
-          sender: 'receptor', // Current user
-          content: response.data.content,
-          timestamp: response.data.createdAt?.seconds ? new Date(response.data.createdAt.seconds * 1000) : new Date(),
-          read: true
-        };
-        setMessages(prev => [...prev, newMessage]);
-        setInputValue("");
-      }
-    } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
-    }
-  };
-
-  const handleSendLocation = async () => {
+  const handleSendLocation = () => {
     if (!navigator.geolocation) {
       alert("Geolocalização não é suportada pelo seu navegador.");
       return;
@@ -482,42 +251,26 @@ const Chat = () => {
     setIsGettingLocation(true);
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      (position) => {
         const { latitude, longitude } = position.coords;
         
-        try {
-          const response = await apiService.sendMessage(
-            selectedChatId, 
-            'Localização compartilhada', 
-            'location',
-            {
-              location: {
-                lat: latitude,
-                lng: longitude,
-                name: "Minha Localização",
-                address: "Compartilhada em tempo real"
-              }
-            }
-          );
+        const newMessage = {
+          id: Date.now().toString(),
+          type: "location",
+          sender: currentUser,
+          content: "",
+          timestamp: new Date(),
+          read: false,
+          location: {
+            lat: latitude,
+            lng: longitude,
+            name: "Minha Localização",
+            address: "Compartilhada em tempo real",
+          },
+        };
 
-          if (response.success) {
-            const newMessage = {
-              id: response.data.id,
-              type: 'location',
-              sender: 'receptor',
-              content: '',
-              timestamp: response.data.createdAt?.seconds ? new Date(response.data.createdAt.seconds * 1000) : new Date(),
-              read: true,
-              location: response.data.metadata.location
-            };
-            setMessages(prev => [...prev, newMessage]);
-          }
-        } catch (error) {
-          console.error('Erro ao enviar localização:', error);
-          alert('Erro ao compartilhar localização.');
-        } finally {
-          setIsGettingLocation(false);
-        }
+        setMessages([...messages, newMessage]);
+        setIsGettingLocation(false);
       },
       (error) => {
         console.error("Erro ao obter localização:", error);
@@ -994,7 +747,7 @@ const Chat = () => {
                 position: 'absolute',
                 top: '-10%',
                 left: `${Math.random() * 100}%`,
-                background: ["#ffd700", "#ffffff", "#0d9488", "#fbbf24", "#38bdf8"][Math.floor(Math.random() * 5)],
+                background: ["#ffd700", "#ffffff", "#10b981", "#fbbf24", "#38bdf8"][Math.floor(Math.random() * 5)],
                 width: Math.random() * 8 + 4 + 'px',
                 height: Math.random() * 8 + 4 + 'px',
                 borderRadius: Math.random() > 0.5 ? '50%' : '2px',

@@ -1,8 +1,8 @@
 :root {
   --chat-bg: #fdfdfd;
   --sidebar-bg: #ffffff;
-  --primary-teal: #0d9488;
-  --primary-teal-dark: #0f766e;
+  --primary-teal: #10b981;
+  --primary-teal-dark: #059669;
   --primary-teal-light: #f0fdfa;
   --primary-orange: #f97316;
   --primary-orange-light: #fff7ed;
@@ -11,11 +11,11 @@
   --border-color: #f1f5f9;
   --glass-bg: rgba(255, 255, 255, 0.8);
   --bubble-received: #ffffff;
-  --bubble-sent: #0d9488;
+  --bubble-sent: #10b981;
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
-  --sb-teal: #0d9488;
+  --sb-teal: #10b981;
   --sb-text: #1e293b;
   --sb-border: #f1f5f9;
 }
@@ -33,11 +33,11 @@
   flex: 1;
   display: flex;
   overflow: hidden;
-  margin-top: 73px; /* Header height approximate */
+  margin-top: 73px;
   position: relative;
 }
 
-/* SIDEBAR INNOVATION */
+/* SIDEBAR */
 .chat-sidebar {
   width: 380px;
   background-color: var(--sidebar-bg);
@@ -116,7 +116,7 @@
 .search-input:focus {
   background-color: white;
   border-color: var(--primary-teal);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .contacts-list {
@@ -144,7 +144,7 @@
 
 .contact-item.active {
   background-color: var(--primary-teal-light);
-  border-color: rgba(13, 148, 136, 0.1);
+  border-color: rgba(16, 185, 129, 0.1);
 }
 
 .contact-avatar {
@@ -160,7 +160,7 @@
 }
 
 .contact-avatar.doador {
-  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .contact-avatar.receptor {
@@ -220,7 +220,7 @@
 }
 
 .unread-count-badge {
-  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   font-size: 0.7rem;
   font-weight: 800;
@@ -231,7 +231,7 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
   border: 2px solid white;
   flex-shrink: 0;
   animation: badge-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -689,6 +689,16 @@
   margin: 0.5rem 0;
 }
 
+.sent { align-self: flex-end; align-items: flex-end; }
+.received { align-self: flex-start; align-items: flex-start; }
+
+.msg-bubble {
+  padding: 0.6rem 0.9rem;
+  border-radius: 1.25rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 .system-bubble {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -714,16 +724,6 @@
   background: #f0f9ff;
   border-color: #bae6fd;
   color: #0369a1;
-}
-
-.sent { align-self: flex-end; align-items: flex-end; }
-.received { align-self: flex-start; align-items: flex-start; }
-
-.msg-bubble {
-  padding: 0.6rem 0.9rem;
-  border-radius: 1.25rem;
-  font-size: 0.9rem;
-  line-height: 1.4;
 }
 
 .sent .text-bubble {
@@ -837,7 +837,7 @@
 .input-container:focus-within {
   background-color: white;
   border-color: var(--primary-teal);
-  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.05);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.05);
 }
 
 .input-actions-left {
@@ -856,7 +856,6 @@
   align-items: center;
   justify-content: center;
   transition: color 0.2s;
-  border-radius: 8px;
 }
 
 .action-icon-btn:hover { color: var(--primary-teal); }
@@ -868,7 +867,7 @@
 .mini-loader {
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(13, 148, 136, 0.2);
+  border: 2px solid rgba(16, 185, 129, 0.2);
   border-top-color: var(--primary-teal);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -944,7 +943,6 @@
 .modal-header {
   text-align: center;
   margin-bottom: 1.5rem;
-  position: relative;
 }
 
 .modal-icon-circle {
@@ -1005,12 +1003,6 @@
   font-weight: 700;
   cursor: pointer;
   color: var(--text-muted);
-  transition: all 0.2s;
-}
-
-.btn-ghost:hover {
-  background: #f8fafc;
-  color: var(--text-main);
 }
 
 .btn-solid-success {
@@ -1021,15 +1013,9 @@
   border-radius: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.btn-solid-success:hover {
-  background: var(--primary-teal-dark);
-  transform: translateY(-1px);
-}
-
-/* PROFILE MODAL SPECIFICS */
+/* Profile Modal */
 .profile-modal-content {
   text-align: left;
   padding: 0 0.5rem;
@@ -1086,7 +1072,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  border: 1px solid rgba(13, 148, 136, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.1);
 }
 
 .profile-details-grid {
@@ -1145,7 +1131,7 @@
   color: var(--text-main);
 }
 
-/* CONFIRMATION OVERLAY */
+/* Confirmation Overlay */
 .confirmation-overlay {
   background: radial-gradient(circle at center, var(--primary-teal) 0%, var(--primary-teal-dark) 100%);
   display: flex;
@@ -1185,12 +1171,6 @@
   margin-bottom: 1.5rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), inset 0 0 0 4px var(--primary-teal-light);
   transform: rotate(-5deg);
-  animation: success-ring 4s ease-in-out infinite;
-}
-
-@keyframes success-ring {
-  0%, 100% { transform: rotate(-5deg) scale(1); }
-  50% { transform: rotate(5deg) scale(1.05); }
 }
 
 .success-announcement h2 {
@@ -1217,19 +1197,6 @@
   opacity: 0;
 }
 
-@keyframes confetti-fall {
-  0% { 
-    top: -10%; 
-    opacity: 1;
-    transform: rotate(0deg);
-  }
-  100% { 
-    top: 110%; 
-    opacity: 0;
-    transform: rotate(360deg);
-  }
-}
-
 .reward-badge {
   margin-top: 2rem;
   background: rgba(255, 255, 255, 0.15);
@@ -1253,7 +1220,6 @@
   color: #fcd34d;
 }
 
-/* RESPONSIVE */
 @media (max-width: 768px) {
   .chat-sidebar { display: none; }
   .mobile-back-btn { display: block; }
@@ -1261,27 +1227,4 @@
   .quick-actions-desktop { display: none; }
   .card-middle-section { display: none; }
   .chat-layout { margin-top: 60px; }
-  
-  .chat-context-card {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .card-left-section {
-    justify-content: center;
-  }
-  
-  .success-announcement h2 {
-    font-size: 2rem;
-  }
-  
-  .success-announcement p {
-    font-size: 1rem;
-  }
-  
-  .success-icon-ring {
-    width: 100px;
-    height: 100px;
-  }
 }

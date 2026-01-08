@@ -2,8 +2,8 @@
   --conv-bg: #f4f7fa;
   --conv-sidebar-bg: #ffffff;
   --conv-card-bg: #ffffff;
-  --conv-primary: #0d9488;
-  --conv-primary-light: #ccfbf1;
+  --conv-primary: #10b981;
+  --conv-primary-light: #d1fae5;
   --conv-text-main: #1e293b;
   --conv-text-muted: #64748b;
   --conv-border: #e2e8f0;
@@ -49,7 +49,7 @@
 
 .profile-bg-gradient {
   height: 80px;
-  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .profile-content {
@@ -219,7 +219,7 @@
   outline: none;
   border-color: var(--conv-primary);
   background: white;
-  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.1);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
 }
 
 .mobile-tabs-scroll {
@@ -276,7 +276,7 @@
 }
 
 .card-avatar-box.receptor { background: linear-gradient(135deg, #f97316, #ea580c); }
-.card-avatar-box.doador { background: linear-gradient(135deg, #0d9488, #0f766e); }
+.card-avatar-box.doador { background: linear-gradient(135deg, #10b981, #059669); }
 
 .unread-dot {
   position: absolute;
@@ -435,7 +435,7 @@
 }
 
 .trophy-card {
-  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
 }
@@ -533,7 +533,7 @@
 }
 
 .btn-start-action:hover {
-  background: #0f766e;
+  background: #059669;
   transform: scale(1.05);
 }
 
