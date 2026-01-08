@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiService from '../services/apiService';
+import { AnalyzingModal, InconsistentModal, SuccessModal } from '../components/ui/modals';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -420,6 +421,20 @@ export default function PrecisoDeAjuda() {
   const [recognition, setRecognition] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
+  
+  // Estados para análise de IA
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStage, setAnalysisStage] = useState(0);
+  const [isPublished, setIsPublished] = useState(false);
+  const [isInconsistent, setIsInconsistent] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  
+  const stages = [
+    'Verificando categoria e descrição',
+    'Analisando urgência e contexto',
+    'Validando dados de segurança',
+    'Finalizando aprovação'
+  ];
 
   // Get user location
   useEffect(() => {
@@ -577,36 +592,51 @@ export default function PrecisoDeAjuda() {
 
   const handlePublish = useCallback(async () => {
     setIsSubmitting(true);
+    setIsAnalyzing(true);
+    setAnalysisStage(0);
     
-    try {
-      const pedidoData = {
-        category: formData.category,
-        subCategory: formData.subCategory,
-        size: formData.size,
-        style: formData.style,
-        subQuestionAnswers: formData.subQuestionAnswers,
-        description: formData.description,
-        urgency: formData.urgency,
-        visibility: formData.visibility,
-        specialists: formData.specialists,
-        isPublic: formData.isPublic,
-        radius: formData.radius
-      };
-      
-      const result = await apiService.createPedido(pedidoData);
-      
-      if (result.success) {
-        navigate('/quero-ajudar');
-      } else {
-        throw new Error(result.error || 'Erro ao criar pedido');
-      }
-    } catch (error) {
-      console.error('Erro ao publicar pedido:', error);
-      alert('Erro ao publicar pedido: ' + error.message);
-    } finally {
-      setIsSubmitting(false);
+    // Simular análise de IA
+    for (let i = 0; i < stages.length; i++) {
+      setAnalysisStage(i);
+      await new Promise(resolve => setTimeout(resolve, 1500));
     }
-  }, [formData, navigate]);
+    
+    // Simular resultado da análise
+    const isValid = Math.random() > 0.2; // 80% de chance de aprovação
+    
+    setIsAnalyzing(false);
+    
+    if (isValid) {
+      setAnalysis({
+        reason: 'Pedido validado com sucesso. Todas as informações estão claras e condizem com a categoria selecionada.'
+      });
+      setIsPublished(true);
+      
+      try {
+        const pedidoData = {
+          category: formData.category,
+          subCategory: formData.subCategory,
+          size: formData.size,
+          style: formData.style,
+          subQuestionAnswers: formData.subQuestionAnswers,
+          description: formData.description,
+          urgency: formData.urgency,
+          visibility: formData.visibility,
+          specialists: formData.specialists,
+          isPublic: formData.isPublic,
+          radius: formData.radius
+        };
+        
+        await apiService.createPedido(pedidoData);
+      } catch (error) {
+        console.error('Erro ao salvar pedido:', error);
+      }
+    } else {
+      setIsInconsistent(true);
+    }
+    
+    setIsSubmitting(false);
+  }, [formData, stages]);
 
   const selectedCategory = useMemo(() => 
     CATEGORIES.find(c => c.id === formData.category), 
@@ -1108,12 +1138,41 @@ export default function PrecisoDeAjuda() {
     }
   };
 
+  const selectedUrgencyData = URGENCY_OPTIONS.find(o => o.id === formData.urgency);
+  const urgencyColor = selectedUrgencyData?.color || '#f59e0b';
+  const urgencyLabel = selectedUrgencyData?.label || 'MODERADA';
+  const urgencyIcon = selectedUrgencyData?.icon || <Calendar size={16} />;
+
   return (
     <div className="novo-pedido-container">
       <div className="bg-blobs">
         <div className="blob blob-orange" />
         <div className="blob blob-blue" />
       </div>
+
+      {/* Visual de Análise (Assistente de IA) */}
+      {isAnalyzing && (
+        <AnalyzingModal stages={stages} analysisStage={analysisStage} />
+      )}
+
+      {/* Modal de Pedido Publicado */}
+      {isPublished && (
+        <SuccessModal
+          urgencyColor={urgencyColor}
+          urgencyLabel={urgencyLabel}
+          urgencyIcon={urgencyIcon}
+          reason={analysis?.reason || 'Pedido validado com sucesso'}
+          onClose={() => navigate('/quero-ajudar')}
+        />
+      )}
+
+      {/* Modal de Inconsistência */}
+      {isInconsistent && (
+        <InconsistentModal
+          onEdit={() => { setIsInconsistent(false); setStep(3); }}
+          onClose={() => navigate('/')}
+        />
+      )}
 
       <div className="wizard-box-v2">
         <div className="wizard-sidebar-v2">

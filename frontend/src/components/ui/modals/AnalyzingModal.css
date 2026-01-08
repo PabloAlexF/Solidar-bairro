@@ -1,0 +1,124 @@
+@import "./BaseModalStyles.css";
+
+.analyzing-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  min-height: 450px;
+}
+
+.ai-scanner {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+  border: 2px solid rgba(16, 185, 129, 0.1);
+}
+
+.scanner-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+  box-shadow: 0 0 20px #10b981;
+  animation: scan 2s ease-in-out infinite;
+  z-index: 2;
+}
+
+.ai-icon-pulse {
+  color: #10b981;
+  animation: pulse-ai 2s infinite;
+}
+
+.analysis-status h3 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin-bottom: 24px;
+  color: #0f172a;
+}
+
+.stages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.stage-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: all 0.3s;
+}
+
+.stage-item.done {
+  background: #f0fdf4;
+  color: #10b981;
+}
+
+.stage-item.current {
+  background: white;
+  color: #10b981;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: scale(1.02);
+}
+
+.stage-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage-item.done .stage-dot {
+  background: #10b981;
+  color: white;
+}
+
+.stage-item.current .stage-dot {
+  background: #10b981;
+  color: white;
+}
+
+.dot-pulse {
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  animation: pulse-dot 1s infinite;
+}
+
+@keyframes scan {
+  0%, 100% { top: 0; }
+  50% { top: 100%; }
+}
+
+@keyframes pulse-ai {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+}

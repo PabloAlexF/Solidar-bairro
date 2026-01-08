@@ -1,0 +1,41 @@
+@import "./BaseModalStyles.css";
+
+.urgency-result-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+
+.ai-reason-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #059669;
+  background: #f0fdf4;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px dashed #bbf7d0;
+}
+
+.btn-finish-premium.compact {
+  width: 100%;
+  padding: 16px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-finish-premium.compact:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}

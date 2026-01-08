@@ -1,0 +1,80 @@
+@import "./BaseModalStyles.css";
+
+.success-modal-content.error {
+  border: 2px solid #fee2e2;
+  background: linear-gradient(180deg, white 0%, #fff1f2 100%);
+}
+
+.success-icon-wrapper-v3.compact.error {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.verification-badge-v3.error {
+  background: #ef4444;
+}
+
+.inconsistency-box {
+  background: white;
+  border-radius: 20px;
+  padding: 20px;
+  text-align: left;
+  margin-bottom: 24px;
+  border: 1px solid #fee2e2;
+}
+
+.error-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fef2f2;
+  padding: 12px;
+  border-radius: 12px;
+  color: #b91c1c;
+  font-weight: 700;
+  font-size: 0.8rem;
+  margin-top: 12px;
+}
+
+.btn-edit-premium {
+  width: 100%;
+  padding: 16px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s;
+}
+
+.btn-edit-premium:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.btn-cancel-plain {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: #64748b;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: color 0.3s;
+}
+
+.btn-cancel-plain:hover {
+  color: #475569;
+}
+
+.action-buttons-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}

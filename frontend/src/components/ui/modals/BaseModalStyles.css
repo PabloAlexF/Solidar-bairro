@@ -1,0 +1,90 @@
+/* Estilos base para modais do Solidar Bairro */
+.success-modal-content {
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+}
+
+.success-modal-content.premium {
+  background: linear-gradient(180deg, white 0%, #f8fafc 100%);
+  border: 2px solid #e2e8f0;
+}
+
+.success-modal-content.compact {
+  padding: 24px;
+  max-width: 360px;
+}
+
+.success-icon-wrapper-v3 {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: white;
+}
+
+.success-icon-wrapper-v3.compact {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.success-title-v3 {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+.success-title-v3.compact {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+}
+
+.verification-badge-v3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #10b981;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.success-subtext {
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.success-subtext.compact {
+  margin-bottom: 20px;
+}
+
+/* Overlay do modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
