@@ -9,10 +9,32 @@ class ChatService {
       throw new Error('Pelo menos um participante é necessário');
     }
 
+    // Se há um pedidoId, verificar se já existe uma conversa para este pedido
+    if (data.pedidoId) {
+      const existingConversation = await this.findConversationByPedido(data.pedidoId, validParticipants);
+      if (existingConversation) {
+        return existingConversation;
+      }
+    }
+
     return await chatModel.createConversation({
       ...data,
       participants: validParticipants
     });
+  }
+
+  async findConversationByPedido(pedidoId, participants) {
+    try {
+      const conversations = await chatModel.getConversationsByPedido(pedidoId);
+      
+      // Procurar uma conversa que contenha todos os participantes
+      return conversations.find(conv => {
+        return participants.every(p => conv.participants.includes(p));
+      });
+    } catch (error) {
+      console.error('Erro ao buscar conversa por pedido:', error);
+      return null;
+    }
   }
 
   async findExistingConversation(participants, pedidoId = null) {

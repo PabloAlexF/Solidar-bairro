@@ -39,6 +39,16 @@ class ChatModel {
       });
   }
 
+  async getConversationsByPedido(pedidoId) {
+    const snapshot = await this.db.collection('conversations')
+      .where('pedidoId', '==', pedidoId)
+      .get();
+    
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(conv => conv.isActive !== false);
+  }
+
   async getConversation(conversationId) {
     const doc = await this.db.collection('conversations').doc(conversationId).get();
     if (!doc.exists) {

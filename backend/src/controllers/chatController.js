@@ -8,8 +8,11 @@ class ChatController {
       // Garantir array válido e adicionar usuário atual
       const validParticipants = Array.isArray(participants) ? [...participants] : [];
       
-      if (!validParticipants.includes(req.user.uid)) {
-        validParticipants.push(req.user.uid);
+      // Usar uid do usuário autenticado
+      const currentUserId = req.user.uid || req.user.id;
+      
+      if (!validParticipants.includes(currentUserId)) {
+        validParticipants.push(currentUserId);
       }
       
       const conversation = await chatService.createConversation({
@@ -21,6 +24,7 @@ class ChatController {
       
       res.status(201).json({ success: true, data: conversation });
     } catch (error) {
+      console.error('Erro ao criar conversa:', error);
       res.status(400).json({ success: false, error: error.message });
     }
   }

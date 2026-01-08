@@ -24,7 +24,7 @@ const AppRoutes = () => {
       <Route path="/achados-e-perdidos/novo" element={<Layout><NovoAnuncio /></Layout>} />
       <Route path="/perfil" element={<Layout><Perfil /></Layout>} />
       <Route path="/conversas" element={<Layout><Conversas /></Layout>} />
-      <Route path="/chat/:conversaId" element={<Chat />} />
+      <Route path="/chat/:userId" element={<Chat />} />
     </Routes>
   );
 };

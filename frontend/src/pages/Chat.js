@@ -145,7 +145,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedChatId, setSelectedChatId] = useState(userId || "1");
+  const [selectedChatId, setSelectedChatId] = useState(null);
   const [chatContacts, setChatContacts] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
@@ -193,7 +193,7 @@ const Chat = () => {
   // Carregar conversa específica e mensagens
   useEffect(() => {
     const loadConversation = async () => {
-      if (!selectedChatId || !user) return;
+      if (!selectedChatId || !user || selectedChatId === 'default') return;
       
       try {
         // Carregar dados da conversa
@@ -210,8 +210,8 @@ const Chat = () => {
             type: msg.type,
             sender: msg.senderId === user.uid ? 'receptor' : 'doador',
             content: msg.content,
-            timestamp: new Date(msg.createdAt.seconds * 1000),
-            read: msg.readBy.includes(user.uid),
+            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+            read: msg.readBy?.includes(user.uid) || false,
             location: msg.metadata?.location || null
           }));
           setMessages(formattedMessages);
@@ -227,8 +227,8 @@ const Chat = () => {
             type: msg.type,
             sender: msg.senderId === user.uid ? 'receptor' : 'doador',
             content: msg.content,
-            timestamp: new Date(msg.createdAt.seconds * 1000),
-            read: msg.readBy.includes(user.uid),
+            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+            read: msg.readBy?.includes(user.uid) || false,
             location: msg.metadata?.location || null
           }));
           
@@ -236,16 +236,20 @@ const Chat = () => {
         });
       } catch (error) {
         console.error('Erro ao carregar conversa:', error);
+        // Se a conversa não existe, limpar o selectedChatId
+        if (error.message.includes('não encontrada') || error.message.includes('404')) {
+          setSelectedChatId(null);
+        }
       }
     };
 
-    if (selectedChatId) {
+    if (selectedChatId && selectedChatId !== 'default') {
       loadConversation();
     }
 
     // Cleanup ao trocar de conversa
     return () => {
-      if (selectedChatId) {
+      if (selectedChatId && selectedChatId !== 'default') {
         chatNotificationService.stopListening(selectedChatId);
       }
     };
@@ -284,7 +288,16 @@ const Chat = () => {
     c.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentContact = chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
+  const currentContact = chatContacts.find(c => c.id === selectedChatId) || {
+    id: 'default',
+    name: 'Selecione uma conversa',
+    initials: 'SC',
+    type: 'conversa',
+    distance: '0m de você',
+    online: false,
+    lastMessage: 'Nenhuma conversa selecionada',
+    lastMessageTime: 'Agora'
+  };
 
   const helpInfo = {
     type: "Doação de Cesta Básica",
@@ -301,11 +314,15 @@ const Chat = () => {
   useEffect(() => {
     if (userId) {
       setSelectedChatId(userId);
-      setChatContacts(prev => prev.map(c => 
-        c.id === userId ? { ...c, unreadCount: 0 } : c
-      ));
     }
   }, [userId]);
+
+  // Selecionar primeira conversa se não há userId
+  useEffect(() => {
+    if (!userId && !selectedChatId && chatContacts.length > 0) {
+      setSelectedChatId(chatContacts[0].id);
+    }
+  }, [userId, selectedChatId, chatContacts.length]);
 
   useEffect(() => {
     scrollToBottom();
@@ -329,8 +346,113 @@ const Chat = () => {
     );
   }
 
+  // Se não há conversas e não está carregando, mostrar estado vazio
+  if (!loading && chatContacts.length === 0) {
+    return (
+      <div className="chat-page-wrapper">
+        <Header showLoginButton={false} />
+        <div className="loading-container">
+          <p>Nenhuma conversa encontrada. Inicie uma nova conversa!</p>
+          <button 
+            className="btn-solid-success" 
+            onClick={() => navigate('/quero-ajudar')}
+            style={{ marginTop: '1rem', padding: '0.75rem 1.5rem', borderRadius: '0.5rem' }}
+          >
+            Encontrar Pedidos de Ajuda
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Se há conversas mas nenhuma está selecionada
+  if (!loading && chatContacts.length > 0 && !selectedChatId) {
+    return (
+      <div className="chat-page-wrapper">
+        <Header showLoginButton={false} />
+        <div className="chat-layout">
+          {/* Sidebar */}
+          <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+            <div className="sidebar-header">
+              <div className="sidebar-title-row">
+                <h2>Conversas</h2>
+                <button className="icon-btn" title="Nova conversa">
+                  <Heart size={20} />
+                </button>
+              </div>
+              <div className="search-bar-wrapper">
+                <Search size={18} className="search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Buscar vizinhos..." 
+                  className="search-input" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="contacts-list">
+              {filteredContacts.map((contact) => (
+                <div 
+                  key={contact.id} 
+                  className={`contact-item ${selectedChatId === contact.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedChatId(contact.id);
+                    setChatContacts(prev => prev.map(c => 
+                      c.id === contact.id ? { ...c, unreadCount: 0 } : c
+                    ));
+                    navigate(`/chat/${contact.id}`);
+                  }}
+                >
+                  <div className="avatar-wrapper">
+                    <div className={`contact-avatar ${contact.type}`}>
+                      {contact.initials}
+                    </div>
+                    {contact.online && <span className="online-status-dot" />}
+                  </div>
+                  <div className="contact-meta">
+                    <div className="contact-name-row">
+                      <span className="contact-name">{contact.name}</span>
+                      <span className="last-time">{contact.lastMessageTime}</span>
+                    </div>
+                    <div className="contact-preview-row">
+                      <p className="last-message">{contact.lastMessage}</p>
+                      {contact.unreadCount > 0 && selectedChatId !== contact.id && (
+                        <span className="unread-count-badge">{contact.unreadCount}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="sidebar-footer">
+               <div className="mini-profile" onClick={() => setShowUserProfile(true)}>
+                 <div className="mini-avatar">EU</div>
+                 <div className="mini-info">
+                   <span className="mini-name">Seu Perfil</span>
+                   <span className="mini-status">Disponível</span>
+                 </div>
+               </div>
+            </div>
+          </aside>
+
+          {/* Main Chat Area - Empty State */}
+          <main className="chat-main-area">
+            <div className="loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center' }}>
+              <Heart size={64} style={{ color: '#10b981', marginBottom: '1rem' }} />
+              <h3>Selecione uma conversa</h3>
+              <p>Escolha uma conversa da lista ao lado para começar a conversar.</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   const handleSend = async () => {
-    if (!inputValue.trim() || !selectedChatId) return;
+    if (!inputValue.trim() || !selectedChatId || selectedChatId === 'default') return;
 
     try {
       const response = await apiService.sendMessage(selectedChatId, inputValue.trim());
@@ -340,7 +462,7 @@ const Chat = () => {
           type: response.data.type,
           sender: 'receptor', // Current user
           content: response.data.content,
-          timestamp: new Date(response.data.createdAt.seconds * 1000),
+          timestamp: response.data.createdAt?.seconds ? new Date(response.data.createdAt.seconds * 1000) : new Date(),
           read: true
         };
         setMessages(prev => [...prev, newMessage]);
@@ -384,7 +506,7 @@ const Chat = () => {
               type: 'location',
               sender: 'receptor',
               content: '',
-              timestamp: new Date(response.data.createdAt.seconds * 1000),
+              timestamp: response.data.createdAt?.seconds ? new Date(response.data.createdAt.seconds * 1000) : new Date(),
               read: true,
               location: response.data.metadata.location
             };
@@ -488,24 +610,24 @@ const Chat = () => {
               </button>
               <div className="current-user-info">
                 <div className="header-avatar">
-                  {currentContact.initials}
-                  {currentContact.online && <span className="online-indicator" />}
+                  {currentContact?.initials || 'CV'}
+                  {currentContact?.online && <span className="online-indicator" />}
                 </div>
                 <div className="header-text-details">
                   <div className="header-name-row">
-                    <h3>{currentContact.name}</h3>
-                    <span className={`role-badge ${currentContact.type}`}>
-                      {currentContact.type === "doador" ? "Doador Verificado" : "Vizinho em Busca"}
+                    <h3>{currentContact?.name || 'Carregando...'}</h3>
+                    <span className={`role-badge ${currentContact?.type || 'conversa'}`}>
+                      {currentContact?.type === "doador" ? "Doador Verificado" : "Vizinho em Busca"}
                     </span>
                   </div>
                   <div className="header-status-pills">
                     <span className="status-pill distance">
                       <MapPin size={12} />
-                      {currentContact.distance}
+                      {currentContact?.distance || '0m de você'}
                     </span>
-                    <span className={`status-pill state ${currentContact.online ? 'online' : 'offline'}`}>
+                    <span className={`status-pill state ${currentContact?.online ? 'online' : 'offline'}`}>
                       <span className="pulse-dot" />
-                      {currentContact.online ? 'Ativo Agora' : 'Offline'}
+                      {currentContact?.online ? 'Ativo Agora' : 'Offline'}
                     </span>
                   </div>
                 </div>
