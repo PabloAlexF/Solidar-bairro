@@ -33,6 +33,15 @@ class ONGController {
       res.status(404).json({ success: false, error: error.message });
     }
   }
+
+  async updateONG(req, res) {
+    try {
+      const ong = await ongService.updateONG(req.params.uid, req.body);
+      res.json({ success: true, data: ong });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new ONGController();

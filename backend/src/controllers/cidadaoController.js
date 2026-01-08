@@ -34,6 +34,15 @@ class CidadaoController {
       res.status(404).json({ success: false, error: error.message });
     }
   }
+
+  async updateCidadao(req, res) {
+    try {
+      const cidadao = await cidadaoService.updateCidadao(req.params.uid, req.body);
+      res.json({ success: true, data: cidadao });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new CidadaoController();

@@ -69,6 +69,16 @@ class FamiliaService {
     }
     return { id: doc.id, ...doc.data() };
   }
+
+  async updateFamilia(id, data) {
+    const updateData = {
+      ...data,
+      atualizadoEm: new Date()
+    };
+    
+    await this.db.collection(this.collection).doc(id).update(updateData);
+    return { id, ...updateData };
+  }
 }
 
 module.exports = new FamiliaService();

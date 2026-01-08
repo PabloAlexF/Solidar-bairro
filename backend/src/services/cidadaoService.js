@@ -50,6 +50,16 @@ class CidadaoService {
     }
     return { uid: doc.id, ...doc.data() };
   }
+
+  async updateCidadao(uid, data) {
+    const updateData = {
+      ...data,
+      atualizadoEm: new Date()
+    };
+    
+    await this.db.collection(this.collection).doc(uid).update(updateData);
+    return { uid, ...updateData };
+  }
 }
 
 module.exports = new CidadaoService();

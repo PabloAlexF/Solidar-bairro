@@ -6,5 +6,6 @@ const router = express.Router();
 router.post('/', ongController.createONG);
 router.get('/', ongController.getONGs);
 router.get('/:uid', ongController.getONGById);
+router.put('/:uid', ongController.updateONG);
 
 module.exports = router;

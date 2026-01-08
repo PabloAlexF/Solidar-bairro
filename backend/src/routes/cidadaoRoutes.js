@@ -6,5 +6,6 @@ const router = express.Router();
 router.post('/', cidadaoController.createCidadao);
 router.get('/', cidadaoController.getCidadaos);
 router.get('/:uid', cidadaoController.getCidadaoById);
+router.put('/:uid', cidadaoController.updateCidadao);
 
 module.exports = router;

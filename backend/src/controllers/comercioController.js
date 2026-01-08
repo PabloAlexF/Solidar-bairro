@@ -33,6 +33,15 @@ class ComercioController {
       res.status(404).json({ success: false, error: error.message });
     }
   }
+
+  async updateComercio(req, res) {
+    try {
+      const comercio = await comercioService.updateComercio(req.params.uid, req.body);
+      res.json({ success: true, data: comercio });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new ComercioController();
