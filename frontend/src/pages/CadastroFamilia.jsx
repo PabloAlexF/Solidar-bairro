@@ -191,395 +191,478 @@ export default function CadastroFamilia() {
 
   if (isSubmitted) {
     return (
-      <div className="cadastro-container success-page-desktop familia-theme animate-fadeIn">
-        <div className="floating-elements">
-          <div className="float-shape s1"></div>
-          <div className="float-shape s2"></div>
-          <div className="float-shape s3"></div>
-        </div>
-        
-        <div className="success-desktop-wrapper">
-          <div className="success-left">
-            <div className="success-icon">
-              <CheckCircle2 size={64} />
-            </div>
-            
-            <h1 className="success-title">
-              Impacto <span className="text-gradient">Confirmado!</span>
-            </h1>
-            
-            <p className="success-text">
-              Sua família agora faz parte da nossa rede de solidariedade. Transformamos dados em esperança.
-            </p>
-
-            <div className="analysis-info">
-              <div className="analysis-icon">
-                <ShieldCheck size={24} />
-              </div>
-              <div className="analysis-text">
-                <strong>Análise em Andamento</strong>
-                <p>Seu cadastro será analisado em até 24 horas. Você receberá uma notificação quando for aprovado.</p>
-              </div>
-            </div>
-
-            <div className="success-actions">
-              <Link to="/" className="btn-primary">
-                <Home size={20} />
-                Acessar Painel
-              </Link>
-              <button className="btn-secondary">
-                <User size={20} />
-                Ver Perfil
-              </button>
-            </div>
-          </div>
-
-          <div className="success-right">
-            <div className="achievements-section">
-              <h3>Conquistas Desbloqueadas</h3>
-              <div className="achievements-grid">
-                <div className="achievement-item unlocked">
-                  <Rocket size={24} />
-                  <span>Pioneiro</span>
+      <div className="cadastro-container familia-theme">
+        <div className="success-container animate-fade-in">
+          <div className="form-card-new">
+            <div className="success-grid">
+              {/* Lado Esquerdo: Mensagem e XP */}
+              <div className="success-left">
+                <div className="brand-icon success-icon-bg">
+                  <Trophy size={48} color="white" />
                 </div>
-                <div className="achievement-item unlocked">
-                  <Heart size={24} />
-                  <span>Solidário</span>
-                </div>
-                <div className="achievement-item locked">
-                  <Zap size={24} />
-                  <span>Ativo</span>
-                </div>
-                <div className="achievement-item locked">
-                  <Award size={24} />
-                  <span>Doador</span>
+                <h1 className="success-title">
+                  Família <br/>
+                  <span className="text-highlight" style={{ color: '#f97316' }}>Registrada!</span>
+                </h1>
+                <p className="success-description">
+                  Sua família agora faz parte da rede oficial. Prepare-se para receber apoio!
+                </p>
+                
+                <div className="xp-card">
+                  <div className="xp-header">
+                    <div>
+                      <p className="xp-label">Impacto Familiar</p>
+                      <h3 className="xp-value">+50 XP</h3>
+                    </div>
+                    <Zap size={32} color="#f97316" />
+                  </div>
+                  <div className="xp-bar">
+                    <div className="xp-inner" style={{ width: '15%', background: '#f97316' }} />
+                  </div>
+                  <p className="xp-footer">Complete a verificação para ganhar benefícios</p>
                 </div>
               </div>
-            </div>
 
-            <div className="success-stats">
-              <div className="stat-item">
-                <strong>Nível 01</strong>
-                <span>50 XP ganhos</span>
-              </div>
-              <div className="stat-item">
-                <strong>Prioritário</strong>
-                <span>Status ativo</span>
+              {/* Lado Direito: Próximos Passos */}
+              <div className="success-right">
+                <h2 className="success-steps-title">Próximos Passos</h2>
+                <div className="steps-cards-list">
+                  {[
+                    { title: "Verificação CNPJ", desc: "Validaremos os dados da sua instituição", icon: <ShieldCheck /> },
+                    { title: "Painel de Gestão", desc: "Acesse ferramentas de mapeamento", icon: <MapPin /> },
+                    { title: "Rede de Apoio", desc: "Conecte-se com doadores e voluntários", icon: <Users /> }
+                  ].map((item, i) => (
+                    <div key={i} className="step-card-mini">
+                      <div className="step-card-icon" style={{ color: '#f97316' }}>{item.icon}</div>
+                      <div>
+                        <h4>{item.title}</h4>
+                        <p>{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="success-actions">
+                  <Link to="/" className="btn-base btn-primary" style={{ background: '#f97316' }}>Início</Link>
+                  <button className="btn-base btn-secondary">Acessar Painel</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {showAnalysisAlert && (
-          <div className="alert-overlay">
-            <div className="analysis-alert">
-              <div className="alert-icon">
-                <ShieldCheck size={48} />
-              </div>
-              <h3>Cadastro em Análise</h3>
-              <p>Seu cadastro está sendo analisado por nossa equipe. Você receberá uma notificação em até 24 horas com o resultado.</p>
-              <button 
-                className="alert-btn" 
-                onClick={() => setShowAnalysisAlert(false)}
-              >
-                Entendi
-              </button>
-            </div>
+  // Privacy Modal
+  if (showPrivacyModal) {
+    return (
+      <div className="modal-overlay">
+        <div className="privacy-modal">
+          <div className="privacy-header">
+            <ShieldCheck size={24} color="#f97316" />
+            <h3>Proteção de Dados</h3>
           </div>
-        )}
+          <p className="privacy-text">
+            Seus dados serão protegidos conforme a LGPD. Utilizamos apenas para conectar sua família com ONGs e doadores.
+          </p>
+          <button 
+            className="privacy-btn" 
+            onClick={() => setShowPrivacyModal(false)}
+          >
+            Entendi, Continuar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Analysis Alert Modal
+  if (showAnalysisAlert) {
+    return (
+      <div className="alert-overlay">
+        <div className="analysis-alert">
+          <div className="alert-icon">
+            <ShieldCheck size={32} />
+          </div>
+          <h3>Análise Iniciada!</h3>
+          <p>Seu cadastro está sendo analisado. Você receberá uma notificação em até 24 horas.</p>
+          <button 
+            className="alert-btn" 
+            onClick={() => setShowAnalysisAlert(false)}
+          >
+            Entendi
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="cadastro-container familia-theme">
+      {/* Background Blobs */}
       <div className="bg-blobs">
-        <div className="blob-1" />
-        <div className="blob-2" />
+        <div className="blob-1"></div>
+        <div className="blob-2"></div>
       </div>
 
+      {/* Navbar */}
       <nav className="navbar">
         <Link to="/" className="back-link">
           <div className="back-icon">
             <ArrowLeft size={20} />
           </div>
-          <span className="back-text">Voltar</span>
+          <span>Voltar</span>
         </Link>
+        
         <div className="brand">
           <div className="brand-logo">
             <Users size={24} />
           </div>
-          <span className="brand-name">SolidarBairro</span>
+          <h1 className="brand-name">SolidarBairro</h1>
         </div>
       </nav>
 
+      {/* Main Grid */}
       <div className="main-grid">
+        {/* Sidebar */}
         <aside className="sidebar">
           <div className="steps-card">
-            <h2 className="steps-title">Etapas do Cadastro</h2>
+            <h2 className="steps-title">Cadastro da Família</h2>
+            
             <div className="steps-list">
-              {steps.map((s, i) => (
+              {steps.map((stepItem, index) => (
                 <div 
-                  key={s.id} 
+                  key={stepItem.id} 
                   className={`step-item ${
-                    step === s.id ? "active" : 
-                    step > s.id ? "completed" : "pending"
+                    stepItem.id === step ? 'active' : 
+                    stepItem.id < step ? 'completed' : 'pending'
                   }`}
                 >
                   <div className="step-icon-box">
-                    {step > s.id ? <CheckCircle2 size={20} /> : s.icon}
+                    {stepItem.id < step ? <CheckCircle2 size={20} /> : stepItem.icon}
                   </div>
                   <div>
-                    <p className="step-number">Passo 0{s.id}</p>
-                    <p className="step-label">{s.title}</p>
+                    <p className="step-number">Etapa {stepItem.id}</p>
+                    <h3 className="step-label">{stepItem.title}</h3>
                   </div>
-                  {i < steps.length - 1 && (
-                    <div className={`step-connector ${step > s.id ? "completed" : ""}`} />
+                  {index < steps.length - 1 && (
+                    <div className={`step-connector ${stepItem.id < step ? 'completed' : ''}`}></div>
                   )}
                 </div>
               ))}
             </div>
+
+            <div className="safety-tip">
+              <div className="safety-header">
+                <ShieldCheck size={20} color="#f97316" />
+                <h4>Dados Seguros</h4>
+              </div>
+              <p className="safety-text">
+                Suas informações são protegidas e usadas apenas para conectar sua família com ONGs e doadores.
+              </p>
+            </div>
           </div>
         </aside>
 
+        {/* Content Area */}
         <main className="content-area">
-          <div className="form-card animate-slideUp">
+          <div className="form-card">
+            {/* Form Header */}
             <div className="form-header">
               <div className="progress-container">
-                <span className="step-badge">
-                  {steps.find(s => s.id === step)?.title}
-                </span>
+                <div className="step-badge">Etapa {step} de {totalSteps}</div>
                 <div className="progress-bar-bg">
                   <div 
                     className="progress-bar-fill" 
                     style={{ width: `${(step / totalSteps) * 100}%` }}
-                  />
+                  ></div>
                 </div>
               </div>
+              
               <h1 className="form-title">
-                {step === 1 && <>Quem é o <span className="text-highlight">responsável</span>?</>}
-                {step === 2 && <>Sua <span className="text-highlight">identidade</span></>}
-                {step === 3 && <>Canais de <span className="text-highlight">contato</span></>}
-                {step === 4 && <>Onde vocês <span className="text-highlight">moram</span>?</>}
-                {step === 5 && <>Sua <span className="text-highlight">família</span></>}
-                {step === 6 && <>O que vocês <span className="text-highlight">precisam</span>?</>}
+                {step === 1 && <>Dados do <span className="text-highlight">Responsável</span></>}
+                {step === 2 && <>Documentos <span className="text-highlight">Pessoais</span></>}
+                {step === 3 && <>Informações de <span className="text-highlight">Contato</span></>}
+                {step === 4 && <>Endereço da <span className="text-highlight">Residência</span></>}
+                {step === 5 && <>Composição <span className="text-highlight">Familiar</span></>}
+                {step === 6 && <>Necessidades <span className="text-highlight">Específicas</span></>}
               </h1>
+              
               <p className="form-description">
-                {step === 1 && "Inicie o cadastro com os dados básicos de quem representa a família."}
-                {step === 2 && "Precisamos validar sua documentação para segurança de todos na rede."}
-                {step === 3 && "Como podemos falar com você? Esses dados são essenciais para ajuda rápida."}
-                {step === 4 && "Informe a localização para que ONGs próximas possam oferecer suporte."}
-                {step === 5 && "Conte-nos quantas pessoas vivem na casa para dimensionarmos o apoio."}
-                {step === 6 && "Selecione as necessidades mais urgentes para priorizarmos seu atendimento."}
+                {step === 1 && "Vamos começar com os dados básicos do responsável pela família."}
+                {step === 2 && "Agora precisamos dos documentos para validação das informações."}
+                {step === 3 && "Como podemos entrar em contato com vocês quando necessário?"}
+                {step === 4 && "Onde sua família reside? Isso nos ajuda a encontrar ONGs próximas."}
+                {step === 5 && "Conte-nos sobre a composição da sua família para melhor atendimento."}
+                {step === 6 && "Quais são as principais necessidades da sua família no momento?"}
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="form-body">
-              {step === 1 && (
-                <div className="form-grid form-grid-2 animate-fadeIn">
-                  <div className="input-group">
-                    <label className="input-label">Nome Completo</label>
-                    <div className="input-wrapper">
-                      <input 
-                        required
-                        type="text" 
-                        className="form-input" 
-                        placeholder="Nome do responsável" 
-                      />
-                      <User className="input-icon" />
+            {/* Form Body */}
+            <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+              <div className="form-body">
+                {/* Step 1: Responsável */}
+                {step === 1 && (
+                  <div className="form-grid form-grid-2">
+                    <div className="input-group">
+                      <label className="input-label">Nome Completo</label>
+                      <div className="input-wrapper">
+                        <User className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="Digite seu nome completo"
+                          required 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">Data de Nascimento</label>
+                      <div className="input-wrapper">
+                        <Calendar className="input-icon" />
+                        <input 
+                          type="date" 
+                          className="form-input" 
+                          required 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">Estado Civil</label>
+                      <div className="radio-grid radio-grid-4">
+                        {['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)'].map((estado) => (
+                          <label key={estado} className="radio-label">
+                            <input type="radio" name="estado_civil" value={estado} className="radio-input" />
+                            <div className="radio-box">{estado}</div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">Profissão</label>
+                      <div className="input-wrapper">
+                        <User className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="Qual sua profissão?"
+                          required 
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="input-group">
-                    <label className="input-label">Data de Nascimento</label>
-                    <div className="input-wrapper">
-                      <input 
-                        required
-                        type="date" 
-                        className="form-input" 
-                      />
-                      <Calendar className="input-icon" />
-                    </div>
-                  </div>
-                  <div className="input-group" style={{ gridColumn: 'span 2' }}>
-                    <label className="input-label">Gênero</label>
-                    <div className="radio-grid radio-grid-4">
-                      {["Masculino", "Feminino", "Não-binário", "Outro"].map((g) => (
-                        <label key={g} className="radio-label">
-                          <input type="radio" name="genero" className="radio-input" />
-                          <div className="radio-box">
-                            {g}
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {step === 2 && (
-                <div className="form-grid form-grid-2 animate-fadeIn">
-                  <div className="input-group">
-                    <label className="input-label">CPF</label>
-                    <div className="input-wrapper">
-                      <input 
-                        required
-                        type="text" 
-                        className="form-input" 
-                        placeholder="000.000.000-00" 
-                      />
-                      <Fingerprint className="input-icon" />
+                {/* Step 2: Documentos */}
+                {step === 2 && (
+                  <div className="form-grid form-grid-2">
+                    <div className="input-group">
+                      <label className="input-label">CPF</label>
+                      <div className="input-wrapper">
+                        <IdCard className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="000.000.000-00"
+                          required 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">RG</label>
+                      <div className="input-wrapper">
+                        <Fingerprint className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="00.000.000-0"
+                          required 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">NIS (Cadastro Único)</label>
+                      <div className="input-wrapper">
+                        <IdCard className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="000.00000.00-0 (se possuir)"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">Renda Familiar Mensal</label>
+                      <div className="radio-grid">
+                        {[
+                          { label: 'Até R$ 500', value: 'ate_500' },
+                          { label: 'R$ 501 - R$ 1.000', value: '501_1000' },
+                          { label: 'R$ 1.001 - R$ 2.000', value: '1001_2000' },
+                          { label: 'Acima de R$ 2.000', value: 'acima_2000' }
+                        ].map((renda) => (
+                          <label key={renda.value} className="radio-label">
+                            <input type="radio" name="renda" value={renda.value} className="radio-input" />
+                            <div className="card-radio-box">
+                              <div className="card-icon-box">
+                                <DollarSign size={20} />
+                              </div>
+                              <div>
+                                <h4 className="card-title">{renda.label}</h4>
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div className="input-group">
-                    <label className="input-label">RG / Documento</label>
-                    <div className="input-wrapper">
-                      <input 
-                        required
-                        type="text" 
-                        className="form-input" 
-                        placeholder="Número do documento" 
-                      />
-                      <IdCard className="input-icon" />
-                    </div>
-                  </div>
-                  <div className="info-banner">
-                    <div className="info-icon-box">
-                      <ShieldCheck color="#f97316" size={32} />
-                    </div>
-                    <div className="info-content">
-                      <h3>Análise de Documentos</h3>
-                      <p>
-                        Após finalizar, nossa inteligência fará uma verificação inicial rápida. Isso garante que a ajuda chegue a quem realmente precisa.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {step === 3 && (
-                <div className="form-grid form-grid-2 animate-fadeIn">
-                  <div className="input-group">
-                    <label className="input-label">WhatsApp / Celular</label>
-                    <div className="input-wrapper">
-                      <input 
-                        required
-                        type="tel" 
-                        className="form-input" 
-                        placeholder="(00) 00000-0000" 
-                      />
-                      <Phone className="input-icon" />
+                {/* Step 3: Contato */}
+                {step === 3 && (
+                  <div className="form-grid form-grid-2">
+                    <div className="input-group">
+                      <label className="input-label">Telefone Principal</label>
+                      <div className="input-wrapper">
+                        <Phone className="input-icon" />
+                        <input 
+                          type="tel" 
+                          className="form-input" 
+                          placeholder="(00) 00000-0000"
+                          required 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">WhatsApp (opcional)</label>
+                      <div className="input-wrapper">
+                        <Phone className="input-icon" />
+                        <input 
+                          type="tel" 
+                          className="form-input" 
+                          placeholder="(00) 00000-0000"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">E-mail (opcional)</label>
+                      <div className="input-wrapper">
+                        <Mail className="input-icon" />
+                        <input 
+                          type="email" 
+                          className="form-input" 
+                          placeholder="seu@email.com"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">Melhor horário para contato</label>
+                      <div className="radio-grid radio-grid-4">
+                        {['Manhã', 'Tarde', 'Noite', 'Qualquer'].map((horario) => (
+                          <label key={horario} className="radio-label">
+                            <input type="radio" name="horario" value={horario} className="radio-input" />
+                            <div className="radio-box">{horario}</div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div className="input-group">
-                    <label className="input-label">E-mail (Opcional)</label>
-                    <div className="input-wrapper">
-                      <input 
-                        type="email" 
-                        className="form-input" 
-                        placeholder="seu@email.com" 
-                      />
-                      <Mail className="input-icon" />
-                    </div>
-                  </div>
-                  <div className="input-group" style={{ gridColumn: 'span 2' }}>
-                    <label className="input-label">Tipo de Cadastro</label>
-                    <div className="card-radio-grid">
-                      {[
-                        { 
-                          id: "familia", 
-                          title: "Família", 
-                          desc: "Grupo familiar com 2 ou mais pessoas", 
-                          icon: <Users2 size={24} />,
-                          color: "#f97316"
-                        },
-                        { 
-                          id: "individual", 
-                          title: "Individual", 
-                          desc: "Pessoa que mora sozinha", 
-                          icon: <User size={24} />,
-                          color: "#3b82f6"
-                        },
-                        { 
-                          id: "instituicao", 
-                          title: "Instituição", 
-                          desc: "Casa de apoio, abrigo ou similar", 
-                          icon: <Home size={24} />,
-                          color: "#10b981"
-                        }
-                      ].map((item) => (
-                        <label key={item.id} className="radio-label">
-                          <input type="radio" name="tipo_cadastro" className="radio-input" />
-                          <div className="card-radio-box-enhanced">
-                            <div className="card-icon-box-enhanced" style={{ background: `${item.color}15`, color: item.color }}>
-                              {item.icon}
-                            </div>
-                            <div className="card-content">
-                              <p className="card-title-enhanced">{item.title}</p>
-                              <p className="card-desc-enhanced">{item.desc}</p>
-                            </div>
-                            <div className="card-check-indicator">
-                              <CheckCircle2 size={20} />
-                            </div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {step === 4 && (
-                <div className="form-grid form-grid-2 animate-fadeIn">
-                  <div className="input-group" style={{ gridColumn: 'span 2' }}>
-                    <label className="input-label">Endereço Residencial</label>
-                    <div className="input-wrapper">
-                      <input 
-                        required
-                        type="text" 
-                        className="form-input" 
-                        placeholder="Rua, número, complemento"
-                        value={addressData.endereco}
-                        onChange={(e) => setAddressData(prev => ({ ...prev, endereco: e.target.value }))}
-                      />
-                      <Home className="input-icon" />
-                    </div>
-                  </div>
-                  <div className="input-group">
-                    <label className="input-label">Bairro</label>
-                    <div className="input-wrapper">
-                      <input 
-                        required
-                        type="text" 
-                        className="form-input" 
-                        placeholder="Digite ou use o mapa"
-                        value={addressData.bairro}
-                        onChange={(e) => setAddressData(prev => ({ ...prev, bairro: e.target.value }))}
-                      />
-                      <MapPin className="input-icon" size={16} />
-                    </div>
-                  </div>
-                  <div className="input-group">
-                    <label className="input-label">Ponto de Referência</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      style={{ paddingLeft: '1.25rem' }}
-                      placeholder="Ex: Perto do mercado"
-                      value={addressData.referencia}
-                      onChange={(e) => setAddressData(prev => ({ ...prev, referencia: e.target.value }))}
+                {/* Step 4: Residência */}
+                {step === 4 && (
+                  <div className="form-grid form-grid-2">
+                    <MapLocationButton 
+                      isLocating={isLocating} 
+                      onClick={handleMapLocation} 
                     />
+                    
+                    <div className="input-group">
+                      <label className="input-label">Endereço</label>
+                      <div className="input-wrapper">
+                        <Home className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="Rua, Avenida, etc."
+                          value={addressData.endereco}
+                          onChange={(e) => setAddressData(prev => ({ ...prev, endereco: e.target.value }))}
+                          required 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">Bairro</label>
+                      <div className="input-wrapper">
+                        <MapPin className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="Nome do bairro"
+                          value={addressData.bairro}
+                          onChange={(e) => setAddressData(prev => ({ ...prev, bairro: e.target.value }))}
+                          required 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">Ponto de Referência</label>
+                      <div className="input-wrapper">
+                        <MapPin className="input-icon" />
+                        <input 
+                          type="text" 
+                          className="form-input" 
+                          placeholder="Próximo a..."
+                          value={addressData.referencia}
+                          onChange={(e) => setAddressData(prev => ({ ...prev, referencia: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="input-group">
+                      <label className="input-label">Tipo de Moradia</label>
+                      <div className="radio-grid">
+                        {[
+                          { label: 'Casa Própria', icon: <Home size={20} /> },
+                          { label: 'Casa Alugada', icon: <Home size={20} /> },
+                          { label: 'Apartamento', icon: <Home size={20} /> },
+                          { label: 'Outros', icon: <Home size={20} /> }
+                        ].map((tipo) => (
+                          <label key={tipo.label} className="radio-label">
+                            <input type="radio" name="tipo_moradia" value={tipo.label} className="radio-input" />
+                            <div className="card-radio-box">
+                              <div className="card-icon-box">
+                                {tipo.icon}
+                              </div>
+                              <div>
+                                <h4 className="card-title">{tipo.label}</h4>
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <MapLocationButton 
-                    isLocating={isLocating} 
-                    onClick={handleMapLocation} 
-                  />
-                </div>
-              )}
+                )}
 
-              {step === 5 && (
-                <div className="form-grid form-grid-2 animate-fadeIn">
+                {/* Step 5: Família */}
+                {step === 5 && (
                   <div className="family-input-section">
-                    <h3 className="section-subtitle">Quantos moram com você?</h3>
+                    <h3 className="section-subtitle">
+                      <Users2 size={24} color="#f97316" />
+                      Composição Familiar
+                    </h3>
+                    
                     <div className="family-grid-enhanced">
                       {familyTypes.map((item) => (
                         <FamilyCounter
@@ -590,52 +673,36 @@ export default function CadastroFamilia() {
                         />
                       ))}
                     </div>
-                  </div>
-
-                  <div className="special-situations-section">
-                    <h3 className="section-subtitle">Situações Especiais</h3>
-                    <div className="special-cards-grid">
-                      {[
-                        { label: "Há gestantes na família", id: "gestantes", icon: <Heart size={20} /> },
-                        { label: "Pessoas com deficiência (PcD)", id: "pcd", icon: <Info size={20} /> },
-                        { label: "Família chefiada por mulher", id: "mulher_chefe", icon: <User size={20} /> },
-                        { label: "Risco de perda de moradia", id: "risco_despejo", icon: <Home size={20} /> }
-                      ].map((item) => (
-                        <label key={item.id} className="special-card-label">
-                          <input type="checkbox" name={item.id} className="special-card-input-hidden" />
-                          <div className="special-card-content">
-                            <div className="special-card-icon">
-                              {item.icon}
-                            </div>
-                            <span className="special-card-text">{item.label}</span>
-                            <div className="special-card-check">
-                              <CheckCircle2 size={16} />
-                            </div>
-                          </div>
-                        </label>
-                      ))}
+                    
+                    <div className="info-banner">
+                      <div className="info-icon-box">
+                        <Info size={24} color="#f97316" />
+                      </div>
+                      <div className="info-content">
+                        <h3>Informação Importante</h3>
+                        <p>Estes dados nos ajudam a dimensionar melhor o tipo de apoio que sua família precisa e conectar com ONGs especializadas.</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {step === 6 && (
-                <div className="form-grid form-grid-2 animate-fadeIn">
+                {/* Step 6: Necessidades */}
+                {step === 6 && (
                   <div className="needs-section">
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 900, marginBottom: '2rem' }}>Necessidades Urgentes</h3>
+                    <h3 className="section-subtitle">
+                      <ListChecks size={24} color="#f97316" />
+                      Principais Necessidades
+                    </h3>
+                    
                     <div className="needs-grid">
                       {[
-                        "Alimentação & Cesta Básica",
-                        "Roupas & Agasalhos",
-                        "Produtos de Higiene",
-                        "Medicamentos",
-                        "Oportunidade de Trabalho",
-                        "Apoio Psicológico"
-                      ].map((label) => (
-                        <label key={label} className="need-item">
-                          <input type="checkbox" className="radio-input need-input" />
+                        'Alimentação', 'Roupas', 'Medicamentos', 'Material Escolar',
+                        'Móveis', 'Eletrodomésticos', 'Consultas Médicas', 'Cursos Profissionalizantes'
+                      ].map((need) => (
+                        <label key={need} className="need-item">
+                          <input type="checkbox" name="necessidades" value={need} className="need-input" />
                           <div className="need-box">
-                            <span className="need-label">{label}</span>
+                            <span className="need-label">{need}</span>
                             <div className="check-circle-box">
                               <CheckCircle2 size={16} />
                             </div>
@@ -643,88 +710,52 @@ export default function CadastroFamilia() {
                         </label>
                       ))}
                     </div>
-                  </div>
-
-                  <div className="final-step-section">
-                    <div className="final-card">
-                      <h3 className="final-title">Estamos quase lá!</h3>
-                      <p className="final-text">
-                        Suas respostas serão enviadas para nossa rede de parceiros solidários. 
-                        A ajuda pode vir de ONGs, comércios locais ou voluntários individuais.
-                      </p>
-                      <div className="final-warning">
-                        <ShieldCheck size={40} className="warning-icon" />
-                        <p className="warning-text">
-                          Ao clicar em finalizar, você declara que as informações são verdadeiras.
+                    
+                    <div className="final-step-section">
+                      <div className="final-card">
+                        <h3 className="final-title">Quase Pronto!</h3>
+                        <p className="final-text">
+                          Revise suas informações e clique em "Finalizar Cadastro" para enviar sua solicitação.
                         </p>
+                        <div className="final-warning">
+                          <ShieldCheck className="warning-icon" size={24} />
+                          <p className="warning-text">
+                            Seus dados serão analisados em até 24 horas. Você receberá uma confirmação por telefone.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
+              {/* Form Footer */}
               <div className="form-footer">
-                {step > 1 ? (
-                  <button 
-                    type="button" 
-                    onClick={prevStep} 
-                    className="btn-prev"
-                  >
+                {step > 1 && (
+                  <button type="button" className="btn-prev" onClick={prevStep}>
                     <ChevronLeft size={20} />
                     Anterior
                   </button>
-                ) : (
-                  <div />
                 )}
                 
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  {step === 1 && (
-                    <Link to="/cadastro" className="btn-prev">
-                      Cancelar
-                    </Link>
-                  )}
-                  
-                  {step < totalSteps ? (
-                    <button 
-                      type="button" 
-                      onClick={nextStep} 
-                      className="btn-next"
-                    >
-                      Continuar
-                      <ChevronRight size={20} />
-                    </button>
-                  ) : (
-                    <button 
-                      type="submit" 
-                      className="btn-finish"
-                    >
-                      Finalizar Cadastro
-                      <CheckCircle2 size={20} />
-                    </button>
-                  )}
-                </div>
+                <div style={{ flex: 1 }}></div>
+                
+                {step < totalSteps ? (
+                  <button type="submit" className="btn-next">
+                    Próximo
+                    <ChevronRight size={20} />
+                  </button>
+                ) : (
+                  <button type="submit" className="btn-finish">
+                    Finalizar Cadastro
+                    <CheckCircle2 size={20} />
+                  </button>
+                )}
               </div>
             </form>
           </div>
         </main>
       </div>
-
-      {showPrivacyModal && (
-        <div className="modal-overlay" onClick={() => setShowPrivacyModal(false)}>
-          <div className="privacy-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="privacy-header">
-              <ShieldCheck size={32} color="#f97316" />
-              <h3>Dica de Segurança</h3>
-            </div>
-            <p className="privacy-text">
-              Seus dados são protegidos pela Lei Geral de Proteção de Dados (LGPD). Nunca compartilharemos informações sem sua permissão.
-            </p>
-            <button className="privacy-btn" onClick={() => setShowPrivacyModal(false)}>
-              Entendi
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
