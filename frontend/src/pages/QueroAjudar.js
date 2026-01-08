@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
+import { useToast } from '../hooks/useToast';
 import { formatAddress, formatLocation, formatNeighborhood } from '../utils/addressUtils';
 import { 
   MapPin, 
@@ -229,6 +231,8 @@ function ModalDetalhes({ order, onClose, onHelp }) {
 // --- Main Page ---
 
 export default function QueroAjudarPage() {
+  const navigate = useNavigate();
+  const { addToast } = useToast();
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -438,7 +442,11 @@ export default function QueroAjudarPage() {
                 <h2>Gesto de Solidariedade</h2>
                 <p>Você escolheu ajudar <strong>{orderToHelp.nomeUsuario || orderToHelp.userName || 'este usuário'}</strong>. Deseja iniciar uma conversa para combinar os detalhes?</p>
                 <div className="confirm-actions-stack">
-                  <button className="btn-confirm-primary" onClick={() => { alert('Incrível! Abrindo chat...'); setOrderToHelp(null); }}>
+                  <button className="btn-confirm-primary" onClick={() => {
+                    addToast('Iniciando conversa...', 'success');
+                    navigate(`/chat/${orderToHelp.usuarioId || orderToHelp.id}`);
+                    setOrderToHelp(null);
+                  }}>
                     Sim, vamos conversar!
                   </button>
                   <button className="btn-confirm-ghost" onClick={() => setOrderToHelp(null)}>

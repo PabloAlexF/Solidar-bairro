@@ -12,7 +12,11 @@ const authenticateToken = async (req, res, next) => {
     }
 
     const decoded = jwtUtils.verifyAccessToken(token);
-    req.user = decoded;
+    req.user = {
+      uid: decoded.id || decoded.uid,
+      id: decoded.id,
+      ...decoded
+    };
     next();
   } catch (error) {
     return res.status(401).json({ 

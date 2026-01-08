@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import apiService from '../services/apiService';
+import chatNotificationService from '../services/chatNotificationService';
 import Header from '../components/layout/Header';
 import '../styles/pages/Chat.css';
 
@@ -132,125 +135,18 @@ const formatTime = (date) => {
 };
 
 const Chat = () => {
-  const { conversaId } = useParams();
+  const { userId } = useParams();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
-  const [messages, setMessages] = useState([
-    {
-      id: "sys1",
-      type: "system",
-      sender: "system",
-      content: "Pedido confirmado: Ajuda com alimentos.",
-      timestamp: new Date(Date.now() - 3600000),
-    },
-    {
-      id: "sys2",
-      type: "system",
-      sender: "system",
-      content: "Este é um ambiente seguro. Evite compartilhar dados pessoais sensíveis.",
-      timestamp: new Date(Date.now() - 3500000),
-    },
-    {
-      id: "1",
-      type: "text",
-      sender: "doador",
-      content: "Olá! Vi que você precisa de cesta básica. Posso ajudar.",
-      timestamp: new Date(Date.now() - 3400000),
-      read: true,
-    },
-    {
-      id: "2",
-      type: "text",
-      sender: "receptor",
-      content: "Obrigada! Sim, preciso para mim e meus dois filhos.",
-      timestamp: new Date(Date.now() - 3300000),
-      read: true,
-    },
-    {
-      id: "3",
-      type: "text",
-      sender: "doador",
-      content: "Perfeito! Tenho uma cesta completa aqui. Podemos combinar a entrega para amanhã?",
-      timestamp: new Date(Date.now() - 3200000),
-      read: true,
-    },
-    {
-      id: "4",
-      type: "text",
-      sender: "receptor",
-      content: "Seria ótimo! Qual horário fica melhor para você?",
-      timestamp: new Date(Date.now() - 3100000),
-      read: true,
-    },
-    {
-      id: "5",
-      type: "text",
-      sender: "doador",
-      content: "Pode ser às 14h? Sugiro a gente se encontrar na Praça Central, é um lugar seguro e movimentado.",
-      timestamp: new Date(Date.now() - 3000000),
-      read: true,
-    },
-    {
-      id: "6",
-      type: "location",
-      sender: "doador",
-      content: "",
-      timestamp: new Date(Date.now() - 2900000),
-      read: true,
-      location: {
-        name: "Praça Central - São Lucas",
-        address: "Ponto de encontro sugerido",
-      },
-    },
-    {
-      id: "7",
-      type: "text",
-      sender: "receptor",
-      content: "Perfeito! Conheço bem a praça. Estarei lá às 14h. Muito obrigada!",
-      timestamp: new Date(Date.now() - 2800000),
-      read: true,
-    },
-  ]);
-
+  const [conversation, setConversation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentUser] = useState("receptor");
-  const [selectedChatId, setSelectedChatId] = useState(conversaId || "1");
-  const [chatContacts, setChatContacts] = useState([
-    {
-      id: "1",
-      name: "Ana Paula",
-      initials: "AP",
-      type: "doador",
-      distance: "450m de você",
-      online: true,
-      lastMessage: "Perfeito! Conheço bem a praça...",
-      lastMessageTime: "14:20",
-      unreadCount: 0,
-    },
-    {
-      id: "2",
-      name: "Ricardo Silva",
-      initials: "RS",
-      type: "doador",
-      distance: "1.2km de você",
-      online: false,
-      lastMessage: "Vou verificar os itens aqui.",
-      lastMessageTime: "Ontem",
-      unreadCount: 2,
-    },
-    {
-      id: "3",
-      name: "Maria Oliveira",
-      initials: "MO",
-      type: "receptor",
-      distance: "800m de você",
-      online: true,
-      lastMessage: "Muito obrigada pela ajuda!",
-      lastMessageTime: "Segunda",
-      unreadCount: 0,
-    },
-  ]);
+  const [selectedChatId, setSelectedChatId] = useState(userId || "1");
+  const [chatContacts, setChatContacts] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
@@ -262,14 +158,125 @@ const Chat = () => {
 
   const messagesEndRef = useRef(null);
 
+  // Carregar conversas do usuário
+  useEffect(() => {
+    const loadConversations = async () => {
+      if (!user) return;
+      
+      try {
+        const response = await apiService.getConversations();
+        if (response.success) {
+          const conversations = response.data.map(conv => ({
+            id: conv.id,
+            name: conv.title || 'Conversa',
+            initials: conv.title ? conv.title.substring(0, 2).toUpperCase() : 'CV',
+            type: 'conversa',
+            distance: '0m de você',
+            online: true,
+            lastMessage: conv.lastMessage || 'Nova conversa',
+            lastMessageTime: conv.lastMessageAt ? new Date(conv.lastMessageAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
+            unreadCount: 0,
+            participants: conv.participants
+          }));
+          setChatContacts(conversations);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar conversas:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadConversations();
+  }, [user]);
+
+  // Carregar conversa específica e mensagens
+  useEffect(() => {
+    const loadConversation = async () => {
+      if (!selectedChatId || !user) return;
+      
+      try {
+        // Carregar dados da conversa
+        const convResponse = await apiService.getConversation(selectedChatId);
+        if (convResponse.success) {
+          setConversation(convResponse.data);
+        }
+
+        // Carregar mensagens
+        const messagesResponse = await apiService.getMessages(selectedChatId);
+        if (messagesResponse.success) {
+          const formattedMessages = messagesResponse.data.map(msg => ({
+            id: msg.id,
+            type: msg.type,
+            sender: msg.senderId === user.uid ? 'receptor' : 'doador',
+            content: msg.content,
+            timestamp: new Date(msg.createdAt.seconds * 1000),
+            read: msg.readBy.includes(user.uid),
+            location: msg.metadata?.location || null
+          }));
+          setMessages(formattedMessages);
+        }
+
+        // Marcar como lida
+        await apiService.markConversationAsRead(selectedChatId);
+        
+        // Iniciar escuta de novas mensagens
+        chatNotificationService.startListening(selectedChatId, (newMessages) => {
+          const formattedNewMessages = newMessages.map(msg => ({
+            id: msg.id,
+            type: msg.type,
+            sender: msg.senderId === user.uid ? 'receptor' : 'doador',
+            content: msg.content,
+            timestamp: new Date(msg.createdAt.seconds * 1000),
+            read: msg.readBy.includes(user.uid),
+            location: msg.metadata?.location || null
+          }));
+          
+          setMessages(prev => [...prev, ...formattedNewMessages]);
+        });
+      } catch (error) {
+        console.error('Erro ao carregar conversa:', error);
+      }
+    };
+
+    if (selectedChatId) {
+      loadConversation();
+    }
+
+    // Cleanup ao trocar de conversa
+    return () => {
+      if (selectedChatId) {
+        chatNotificationService.stopListening(selectedChatId);
+      }
+    };
+  }, [selectedChatId, user]);
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleFinishDelivery = () => {
+    setShowFinishModal(false);
+    setShowConfirmation(true);
+    setDeliveryStatus("entregue");
+    setTimeout(() => {
+      setShowConfirmation(false);
+    }, 3000);
+  };
+
+  const currentUser = user?.uid || 'receptor';
+
   const currentUserData = {
-    name: "Seu Perfil",
-    email: "joao.silva@email.com",
+    name: user?.displayName || "Seu Perfil",
+    email: user?.email || "usuario@email.com",
     phone: "(11) 98765-4321",
     type: "Pessoa Física",
     address: "Rua das Flores, 123 - São Lucas",
     points: 1250,
-    initials: "JS"
+    initials: user?.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : "US"
   };
 
   const filteredContacts = chatContacts.filter(c => 
@@ -292,59 +299,59 @@ const Chat = () => {
   };
 
   useEffect(() => {
-    if (conversaId) {
-      setSelectedChatId(conversaId);
+    if (userId) {
+      setSelectedChatId(userId);
       setChatContacts(prev => prev.map(c => 
-        c.id === conversaId ? { ...c, unreadCount: 0 } : c
+        c.id === userId ? { ...c, unreadCount: 0 } : c
       ));
     }
-  }, [conversaId]);
+  }, [userId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
-
-    const newMessage = {
-      id: Date.now().toString(),
-      type: "text",
-      sender: currentUser,
-      content: inputValue,
-      timestamp: new Date(),
-      read: false,
+  // Cleanup ao desmontar componente
+  useEffect(() => {
+    return () => {
+      chatNotificationService.cleanup();
     };
+  }, []);
 
-    setMessages([...messages, newMessage]);
-    setInputValue("");
+  if (loading) {
+    return (
+      <div className="chat-page-wrapper">
+        <Header showLoginButton={false} />
+        <div className="loading-container">
+          <p>Carregando conversas...</p>
+        </div>
+      </div>
+    );
+  }
 
-    // Simulate typing from other user
-    setTimeout(() => {
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-      }, 2000);
-    }, 1000);
-  };
+  const handleSend = async () => {
+    if (!inputValue.trim() || !selectedChatId) return;
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+    try {
+      const response = await apiService.sendMessage(selectedChatId, inputValue.trim());
+      if (response.success) {
+        const newMessage = {
+          id: response.data.id,
+          type: response.data.type,
+          sender: 'receptor', // Current user
+          content: response.data.content,
+          timestamp: new Date(response.data.createdAt.seconds * 1000),
+          read: true
+        };
+        setMessages(prev => [...prev, newMessage]);
+        setInputValue("");
+      }
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
     }
   };
 
-  const handleFinishDelivery = () => {
-    setShowFinishModal(false);
-    setShowConfirmation(true);
-    setDeliveryStatus("entregue");
-    setTimeout(() => {
-      setShowConfirmation(false);
-    }, 3000);
-  };
-
-  const handleSendLocation = () => {
+  const handleSendLocation = async () => {
     if (!navigator.geolocation) {
       alert("Geolocalização não é suportada pelo seu navegador.");
       return;
@@ -353,26 +360,42 @@ const Chat = () => {
     setIsGettingLocation(true);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         
-        const newMessage = {
-          id: Date.now().toString(),
-          type: "location",
-          sender: currentUser,
-          content: "",
-          timestamp: new Date(),
-          read: false,
-          location: {
-            lat: latitude,
-            lng: longitude,
-            name: "Minha Localização",
-            address: "Compartilhada em tempo real",
-          },
-        };
+        try {
+          const response = await apiService.sendMessage(
+            selectedChatId, 
+            'Localização compartilhada', 
+            'location',
+            {
+              location: {
+                lat: latitude,
+                lng: longitude,
+                name: "Minha Localização",
+                address: "Compartilhada em tempo real"
+              }
+            }
+          );
 
-        setMessages([...messages, newMessage]);
-        setIsGettingLocation(false);
+          if (response.success) {
+            const newMessage = {
+              id: response.data.id,
+              type: 'location',
+              sender: 'receptor',
+              content: '',
+              timestamp: new Date(response.data.createdAt.seconds * 1000),
+              read: true,
+              location: response.data.metadata.location
+            };
+            setMessages(prev => [...prev, newMessage]);
+          }
+        } catch (error) {
+          console.error('Erro ao enviar localização:', error);
+          alert('Erro ao compartilhar localização.');
+        } finally {
+          setIsGettingLocation(false);
+        }
       },
       (error) => {
         console.error("Erro ao obter localização:", error);

@@ -76,6 +76,7 @@ class FirebaseConnection {
         });
 
         this.db = admin.firestore();
+        this.db.settings({ ignoreUndefinedProperties: true });
         this.auth = admin.auth();
         this.admin = admin;
         this.isDevMode = false;
