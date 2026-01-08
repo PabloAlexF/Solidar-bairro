@@ -45,7 +45,7 @@ import {
   Globe
 } from 'lucide-react';
 import MapaAlcance from '../components/MapaAlcance';
-import './PrecisoDeAjuda.css';
+import '../styles/pages/PrecisoDeAjuda-main.css';
 
 const CATEGORIES = [
   { id: 'Alimentos', label: 'Alimentos', icon: <ShoppingCart size={24} />, color: '#f97316' },

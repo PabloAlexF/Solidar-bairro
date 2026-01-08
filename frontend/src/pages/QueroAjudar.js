@@ -17,7 +17,7 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import './quero-ajudar.css';
+import '../styles/pages/quero-ajudar.css';
 
 // --- Constants ---
 const DETAIL_LABELS = {

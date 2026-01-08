@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/apiService';
 import LogoutButton from '../LogoutButton';
-import './Header.css';
+import '../../styles/components/Header.css';
 
 const Header = ({ showLoginButton = false }) => {
   const navigate = useNavigate();

@@ -25,9 +25,10 @@
 }
 
 .section-container {
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 2rem;
+  width: 100%;
 }
 
 /* Background Mesh */
@@ -253,6 +254,7 @@
   padding-bottom: 4rem;
   overflow: hidden;
   background: white;
+  width: 100%;
 }
 
 .hero-atmosphere {

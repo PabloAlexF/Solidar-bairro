@@ -31,7 +31,7 @@ import {
   User
 } from 'lucide-react';
 import ThreeScene from '../components/ThreeScene';
-import './LostAndFound.css';
+import '../styles/pages/LostAndFound.css';
 
 const CATEGORIES = [
   'Eletrônicos',

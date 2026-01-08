@@ -3,8 +3,11 @@ import { Routes, Route } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import LandingPage from '../pages/LandingPage';
 import Login from '../pages/Login';
-import Register from '../pages/Register';
-import RegisterCidadao from '../pages/RegisterCidadao';
+import Cadastro from '../pages/Cadastro.jsx';
+import CadastroCidadao from '../pages/CadastroCidadao.jsx';
+import CadastroComercio from '../pages/CadastroComercio.jsx';
+import CadastroFamilia from '../pages/CadastroFamilia.jsx';
+import CadastroONG from '../pages/CadastroONG.jsx';
 import QueroAjudar from '../pages/QueroAjudar';
 import PrecisoDeAjuda from '../pages/PrecisoDeAjuda';
 import AchadosEPerdidos from '../pages/AchadosEPerdidos';
@@ -18,8 +21,11 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/cadastro" element={<Register />} />
-      <Route path="/cadastro/cidadao" element={<RegisterCidadao />} />
+      <Route path="/cadastro" element={<Cadastro />} />
+      <Route path="/cadastro/cidadao" element={<CadastroCidadao />} />
+      <Route path="/cadastro/comercio" element={<CadastroComercio />} />
+      <Route path="/cadastro/familia" element={<CadastroFamilia />} />
+      <Route path="/cadastro/ong" element={<CadastroONG />} />
       <Route path="/quero-ajudar" element={<Layout><QueroAjudar /></Layout>} />
       <Route path="/preciso-de-ajuda" element={<Layout><PrecisoDeAjuda /></Layout>} />
       <Route path="/achados-e-perdidos" element={<AchadosEPerdidos />} />
