@@ -28,7 +28,7 @@
 .home-wrapper .stagger-4 { animation-delay: 0.4s; }
 
 .home-wrapper {
-  min-height: 100vh;
+  min-height: auto;
   background-color: #fafafb;
   overflow: hidden;
   position: relative;
@@ -82,8 +82,14 @@
 }
 
 .home-wrapper .hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  margin-bottom: 6rem;
+  margin-bottom: 2rem;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .home-wrapper .badge-sparkles {
@@ -109,11 +115,11 @@
 }
 
 .home-wrapper .hero-title {
-  font-size: 3.75rem;
+  font-size: 2.5rem;
   line-height: 0.9;
   font-weight: 900;
   color: #111827;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   letter-spacing: -0.05em;
   opacity: 0;
 }
@@ -132,11 +138,11 @@
 }
 
 .home-wrapper .hero-description {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   color: #6b7280;
-  max-width: 42rem;
+  max-width: 600px;
   margin: 0 auto;
-  line-height: 1.625;
+  line-height: 1.5;
   font-weight: 500;
   opacity: 0;
 }
@@ -161,7 +167,7 @@
 }
 
 .home-wrapper .stats-section {
-  margin-top: 10rem;
+  margin-top: 4rem;
   opacity: 0;
 }
 
@@ -220,7 +226,7 @@
 }
 
 .home-wrapper .footer {
-  padding: 5rem 2rem;
+  padding: 2rem;
   border-top: 1px solid rgba(229, 231, 235, 0.5);
   background-color: #ffffff;
 }

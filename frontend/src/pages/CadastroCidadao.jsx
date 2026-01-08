@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
-import { User, ArrowLeft, Mail, Phone, Heart, MapPin, Calendar, ShieldCheck, Fingerprint, IdCard, CheckCircle2, ChevronRight, ChevronLeft, Home, Trophy, Star, Target, Zap, Award } from 'lucide-react';
+import { 
+  User, ArrowLeft, Heart, Zap, 
+  MapPin, CheckCircle2, ChevronRight, 
+  ChevronLeft, Fingerprint, Calendar, 
+  Phone, Mail, ShieldCheck, Trophy, 
+  Award, Info, Sparkles, Target, Home,
+  Sun, Moon, CloudSun, AlertTriangle, Coffee,
+  Apple, BookOpen, Stethoscope, Hammer, Smile, Truck,
+  Share2, Rocket
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
-import '../styles/pages/styles.css';
+import '../styles/components/CadastroCidadao.css';
 
 export default function CadastroCidadao() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const totalSteps = 4;
+  const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
+  const totalSteps = 6;
 
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -14,314 +24,331 @@ export default function CadastroCidadao() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitted(true);
+    setTimeout(() => setShowAnalysisAlert(true), 2000);
   };
 
   const steps = [
-    { id: 1, title: "Identidade", icon: <Fingerprint size={20} /> },
-    { id: 2, title: "Localização", icon: <MapPin size={20} /> },
-    { id: 3, title: "Habilidades", icon: <Heart size={20} /> },
-    { id: 4, title: "Segurança", icon: <ShieldCheck size={20} /> },
+    { id: 1, title: "Perfil", icon: <User size={20} /> },
+    { id: 2, title: "Identidade", icon: <Fingerprint size={20} /> },
+    { id: 3, title: "Contato", icon: <Phone size={20} /> },
+    { id: 4, title: "Local", icon: <MapPin size={20} /> },
+    { id: 5, title: "Interesses", icon: <Target size={20} /> },
+    { id: 6, title: "Impacto", icon: <Sparkles size={20} /> },
   ];
 
-    if (isSubmitted) {
-      return (
-        <div className="cadastro-container">
-          <div className="success-container">
-            <div className="form-card-new animate-slide-up">
-              <div className="success-grid">
-                <div className="success-left">
-                  <div className="brand-icon animate-scale-in-bounce" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', marginBottom: '2.5rem' }}>
-                    <Trophy size={40} color="white" />
-                  </div>
+  const availabilityOptions = [
+    { label: "Dias úteis", icon: <Calendar size={24} /> },
+    { label: "Finais de semana", icon: <Coffee size={24} /> },
+    { label: "Período da manhã", icon: <Sun size={24} /> },
+    { label: "Período da tarde", icon: <CloudSun size={24} /> },
+    { label: "Período da noite", icon: <Moon size={24} /> },
+    { label: "Apenas emergências", icon: <AlertTriangle size={24} /> },
+  ];
 
-                  <h1 className="success-title animate-slide-up stagger-1">
-                    Voluntário <br/>
-                    <span>Cadastrado!</span>
-                  </h1>
-                  
-                  <p className="form-description animate-slide-up stagger-2" style={{ fontSize: '1.5rem', marginBottom: '3rem' }}>
-                    Sua jornada como voluntário começa agora. 
-                    Obrigado por fortalecer nossa comunidade com seu tempo e talento!
-                  </p>
+  const helpOptions = [
+    { label: "Doação de Alimentos", icon: <Apple size={24} /> },
+    { label: "Aulas e Tutorias", icon: <BookOpen size={24} /> },
+    { label: "Serviços de Saúde", icon: <Stethoscope size={24} /> },
+    { label: "Reparos e Reformas", icon: <Hammer size={24} /> },
+    { label: "Apoio Psicológico", icon: <Smile size={24} /> },
+    { label: "Logística e Transporte", icon: <Truck size={24} /> },
+  ];
 
-                  <div className="xp-card animate-slide-up stagger-3">
-                    <div className="xp-header">
-                      <div>
-                        <p className="step-label">Nível Atual</p>
-                        <h3 className="form-title" style={{ fontSize: '2.5rem', margin: 0 }}>Nível 01</h3>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span className="form-title" style={{ fontSize: '2rem' }}>0 <span style={{ color: 'var(--text-gray-400)' }}>/ 100 XP</span></span>
-                      </div>
-                    </div>
-                    
-                    <div className="xp-bar">
-                      <div className="xp-inner animate-grow-width" style={{ width: '5%' }} />
-                    </div>
-                    
-                    <div className="animate-float" style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', color: '#10b981', fontWeight: '900' }}>
-                      <Zap size={24} />
-                      SUA PRIMEIRA AJUDA VALE +150 XP
-                    </div>
-                  </div>
+  if (isSubmitted) {
+    return (
+      <div className="cadastro-container success-page-immersive cidadao-theme animate-fadeIn">
+        <div className="floating-elements">
+          <div className="float-shape s1-green"></div>
+          <div className="float-shape s2-green"></div>
+        </div>
+
+        <div className="success-full-wrapper">
+          <div className="success-hero-section">
+            <div className="celebration-master-icon">
+              <div className="icon-pulse-ring-green"></div>
+              <div className="icon-main-box-green">
+                <CheckCircle2 size={60} strokeWidth={2.5} />
+              </div>
+              <Sparkles className="sparkle-icon" size={24} style={{ color: '#10b981', position: 'absolute', top: '-5px', right: '-5px' }} />
+            </div>
+            
+            <h1 className="success-main-title">
+              Missão <span className="text-gradient-green">Confirmada!</span>
+            </h1>
+            <p className="success-description">
+              Sua jornada começou. O SolidarBairro conta com você para transformar nossa comunidade.
+            </p>
+          </div>
+
+          <div className="success-simple-card animate-slide-up">
+            <div className="premium-status-banner-green">
+              <div className="status-info" style={{ flexDirection: 'column', gap: '0.5rem', textAlign: 'center' }}>
+                <Rocket size={32} style={{ color: '#34d399', margin: '0 auto' }} />
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Status: <span style={{ color: '#34d399' }}>Recruta Ativo</span></h2>
+                  <p style={{ fontSize: '0.85rem', opacity: 0.9, marginTop: '4px' }}>Seu perfil está visível para ONGs locais.</p>
                 </div>
-
-                <div className="success-right">
-                  <h2 className="step-label animate-slide-up stagger-2">Conquistas Desbloqueadas</h2>
-                  <div className="achievement-list">
-                    {[
-                      { title: "Pioneiro", icon: <Star size={32} color="#f59e0b" />, desc: "Iniciou a jornada" },
-                      { title: "Doador", icon: <Heart size={32} color="#f43f5e" />, desc: "Pronto para cooperar" },
-                      { title: "Ativo", icon: <Target size={32} color="#3b82f6" />, desc: "Membro da rede" }
-                    ].map((achievement, i) => (
-                      <div key={i} className={`achievement-card animate-slide-in-right stagger-${i + 3}`}>
-                        <div className="brand-icon" style={{ background: 'var(--bg-gray-100)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                          {achievement.icon}
-                        </div>
-                        <div>
-                          <h4 style={{ margin: 0, fontWeight: '900', fontSize: '1.25rem', color: 'var(--text-gray-900)' }}>{achievement.title}</h4>
-                          <p style={{ margin: 0, color: 'var(--text-gray-500)', fontWeight: '600' }}>{achievement.desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="button-row animate-slide-up stagger-5" style={{ marginTop: '3rem', borderTop: 'none', paddingTop: 0 }}>
-                    <Link to="/cadastro" className="btn-base btn-primary" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
-                      Voltar ao Início
-                    </Link>
-                    <button className="btn-base btn-secondary">
-                      <Award size={24} />
-                      Ver Perfil
-                    </button>
-                  </div>
-                </div>
+              </div>
+              <Link to="/" className="btn-go-home-green" style={{ padding: '1rem 2rem', fontSize: '1rem', width: '100%', justifyContent: 'center', marginTop: '1.5rem' }}>
+                Acessar Painel
+              </Link>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="stat-card-mini" style={{ padding: '1rem' }}>
+                <Heart size={20} />
+                <span style={{ fontSize: '0.7rem' }}>Impacto Local</span>
+                <strong style={{ fontSize: '1rem' }}>+100 XP</strong>
+              </div>
+              <div className="stat-card-mini" style={{ padding: '1rem' }}>
+                <Share2 size={20} />
+                <span style={{ fontSize: '0.7rem' }}>Comunidade</span>
+                <strong style={{ fontSize: '1rem' }}>Compartilhar</strong>
               </div>
             </div>
           </div>
         </div>
-      );
-    }
 
+        {showAnalysisAlert && (
+          <div className="alert-overlay">
+            <div className="analysis-alert">
+              <div className="alert-icon">
+                <ShieldCheck size={48} />
+              </div>
+              <h3>Cadastro em Análise</h3>
+              <p>Seu cadastro está sendo analisado por nossa equipe. Você receberá uma notificação em até 24 horas com o resultado.</p>
+              <button 
+                className="alert-btn" 
+                onClick={() => setShowAnalysisAlert(false)}
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="cadastro-container">
-      <div className="header-nav">
-        <Link to="/cadastro" className="back-button">
-          <ArrowLeft size={24} />
-        </Link>
-        <div className="brand-wrapper">
-          <div className="brand-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
-            <User size={28} color="white" />
-          </div>
-          <span className="brand-name">SolidarBairro</span>
-        </div>
+    <div className="cadastro-container cidadao-theme">
+      <div className="bg-blobs">
+        <div className="blob blob-1" />
+        <div className="blob blob-2" />
       </div>
 
-      <div className="form-layout">
-        <aside className="sidebar-progress">
-          <div className="steps-list">
-            <h2 className="step-label">Progresso</h2>
-            {steps.map((s) => (
-              <div 
-                key={s.id} 
-                className={`step-item ${step === s.id ? "active" : step > s.id ? "completed" : ""}`}
-              >
-                <div className="step-icon-box">
-                  {step > s.id ? <CheckCircle2 size={24} /> : s.icon}
-                </div>
-                <div className="step-info">
-                  <p>Passo 0{s.id}</p>
-                  <p>{s.title}</p>
-                </div>
-              </div>
-            ))}
+      <nav className="top-nav">
+        <Link to="/" className="back-link">
+          <div className="back-icon-box"><ArrowLeft size={20} /></div>
+          <span>Voltar</span>
+        </Link>
+        <div className="nav-brand">
+          <div className="brand-icon-box">
+            <Heart size={24} />
           </div>
+          <span className="brand-text">SolidarBairro <span style={{ color: '#10b981', fontSize: '0.8rem' }}>VOLUNTÁRIO</span></span>
+        </div>
+      </nav>
 
-          <div className="mobile-progress-bar">
-            <div 
-              className="mobile-progress-inner" 
-              style={{ width: `${(step / totalSteps) * 100}%` }}
-            />
+      <div className="main-layout">
+        <aside className="sidebar-stepper">
+          <div className="stepper-card">
+            <h2 className="stepper-title">CADASTRO DE VOLUNTÁRIO</h2>
+            <div className="stepper-list">
+              {steps.map((s, i) => (
+                <div key={s.id} className={`stepper-item ${step === s.id ? 'active' : step > s.id ? 'completed' : ''}`}>
+                  <div className="stepper-icon">
+                    {step > s.id ? <CheckCircle2 size={20} /> : s.icon}
+                  </div>
+                  <div className="stepper-info">
+                    <span className="stepper-step-num">PASSO 0{s.id}</span>
+                    <span className="stepper-step-name">{s.title}</span>
+                  </div>
+                  {i < steps.length - 1 && <div className="stepper-line" />}
+                </div>
+              ))}
+            </div>
           </div>
         </aside>
 
-        <main className="form-area">
-          <div className="form-card-new animate-slide-up">
-            <div className="form-header">
-              <span className="step-label">
-                {steps.find(s => s.id === step)?.title}
-              </span>
-              <h1 className="form-title">
-                {step === 1 && <>Conte-nos quem <span>você é</span></>}
-                {step === 2 && <>Onde você <span>atua</span></>}
-                {step === 3 && <>Suas <span>habilidades</span></>}
-                {step === 4 && <>Sua <span>segurança</span></>}
+        <main className="form-main">
+          <div className="form-container-card animate-slide-up">
+            <div className="form-header-section">
+              <div className="header-top">
+                <span className="step-badge">{steps.find(s => s.id === step)?.title}</span>
+                <div className="progress-bar-container">
+                  <div className="progress-bar-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
+                </div>
+              </div>
+              <h1 className="form-main-title">
+                {step === 1 && <>Qual o seu <span className="text-highlight">perfil</span>?</>}
+                {step === 2 && <>Sua <span className="text-highlight">identidade</span></>}
+                {step === 3 && <>Canais de <span className="text-highlight">contato</span></>}
+                {step === 4 && <>Onde você <span className="text-highlight">atua</span>?</>}
+                {step === 5 && <>Seus <span className="text-highlight">interesses</span></>}
+                {step === 6 && <>Seu <span className="text-highlight">propósito</span></>}
               </h1>
-              <p className="form-description">
-                {step === 1 && "Precisamos de seus documentos básicos para validar sua identidade na rede."}
-                {step === 2 && "Ajude-nos a entender em quais bairros você pode levar esperança."}
-                {step === 3 && "Quais talentos você deseja compartilhar com quem mais precisa?"}
-                {step === 4 && "Finalize seu cadastro aceitando nossos termos de segurança e privacidade."}
+              <p className="form-subtitle">
+                {step === 1 && "Conte-nos quem você é para começarmos sua jornada voluntária."}
+                {step === 2 && "A segurança é prioridade. Validamos todos os voluntários da nossa rede."}
+                {step === 3 && "Como podemos falar com você sobre oportunidades de ajuda?"}
+                {step === 4 && "Informe seu endereço ou região onde prefere realizar as ações."}
+                {step === 5 && "Selecione as áreas onde suas habilidades podem ser mais úteis."}
+                {step === 6 && "Defina como você pretende impactar o seu bairro hoje."}
               </p>
             </div>
 
-              <form onSubmit={handleSubmit}>
-                {step === 1 && (
-                  <div className="input-grid grid-cols-3">
-                    <div className="input-group col-span-3">
-                      <label className="input-label">Nome Completo</label>
-                      <div className="input-wrapper">
-                        <input type="text" className="input-field pl-icon" placeholder="Nome como no documento" />
-                        <User className="input-icon" />
-                      </div>
-                    </div>
-                    <div className="input-group">
-                      <label className="input-label">CPF</label>
-                      <div className="input-wrapper">
-                        <input type="text" className="input-field pl-icon" placeholder="000.000.000-00" />
-                        <Fingerprint className="input-icon" />
-                      </div>
-                    </div>
-                    <div className="input-group">
-                      <label className="input-label">RG</label>
-                      <div className="input-wrapper">
-                        <input type="text" className="input-field pl-icon" placeholder="00.000.000-0" />
-                        <IdCard className="input-icon" />
-                      </div>
-                    </div>
-                    <div className="input-group">
-                      <label className="input-label">Nascimento</label>
-                      <div className="input-wrapper">
-                        <input type="date" className="input-field pl-icon" />
-                        <Calendar className="input-icon" />
-                      </div>
-                    </div>
-                    <div className="input-group col-span-2">
-                      <label className="input-label">Gênero</label>
-                      <select className="input-field">
-                        <option value="">Selecione</option>
-                        <option value="m">Masculino</option>
-                        <option value="f">Feminino</option>
-                        <option value="o">Outro</option>
-                        <option value="p">Prefiro não dizer</option>
-                      </select>
+            <form onSubmit={handleSubmit} className="form-content">
+              {step === 1 && (
+                <div className="form-grid">
+                  <div className="form-group span-2">
+                    <label className="field-label">Nome Completo</label>
+                    <div className="input-with-icon">
+                      <User className="field-icon" size={20} />
+                      <input required type="text" className="form-input" placeholder="Seu nome completo" />
                     </div>
                   </div>
-                )}
+                  <div className="form-group">
+                    <label className="field-label">Data de Nascimento</label>
+                    <div className="input-with-icon">
+                      <Calendar className="field-icon" size={20} />
+                      <input required type="date" className="form-input" />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Ocupação / Habilidade</label>
+                    <input required type="text" className="form-input" placeholder="Ex: Professor, Médico, etc." />
+                  </div>
+                </div>
+              )}
 
-                {step === 2 && (
-                  <div className="input-grid grid-cols-3">
-                    <div className="input-group">
-                      <label className="input-label">E-mail</label>
-                      <div className="input-wrapper">
-                        <input type="email" className="input-field pl-icon" placeholder="seu@email.com" />
-                        <Mail className="input-icon" />
-                      </div>
-                    </div>
-                    <div className="input-group">
-                      <label className="input-label">WhatsApp</label>
-                      <div className="input-wrapper">
-                        <input type="tel" className="input-field pl-icon" placeholder="(00) 00000-0000" />
-                        <Phone className="input-icon" />
-                      </div>
-                    </div>
-                    <div className="input-group">
-                      <label className="input-label">Cidade / UF</label>
-                      <input type="text" className="input-field" placeholder="Sua Cidade - UF" />
-                    </div>
-                    <div className="input-group col-span-3">
-                      <label className="input-label">Endereço Residencial</label>
-                      <div className="input-wrapper">
-                        <input type="text" className="input-field pl-icon" placeholder="Rua, número, complemento" />
-                        <Home className="input-icon" />
-                      </div>
-                    </div>
-                    <div className="input-group col-span-3">
-                      <label className="input-label">Bairros de Atuação</label>
-                      <div className="input-wrapper">
-                        <input type="text" className="input-field pl-icon" placeholder="Ex: Centro, Vila Nova..." />
-                        <MapPin className="input-icon" />
-                      </div>
+              {step === 2 && (
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="field-label">CPF</label>
+                    <div className="input-with-icon">
+                      <Fingerprint className="field-icon" size={20} />
+                      <input required type="text" className="form-input" placeholder="000.000.000-00" />
                     </div>
                   </div>
-                )}
+                  <div className="form-group">
+                    <label className="field-label">RG</label>
+                    <input required type="text" className="form-input" placeholder="Número do documento" />
+                  </div>
+                  <div className="form-info-box span-2">
+                    <div className="info-icon-box">
+                      <ShieldCheck size={32} />
+                    </div>
+                    <div>
+                      <h4 className="info-title">Rede Segura</h4>
+                      <p className="info-text">Sua identidade é mantida em sigilo e serve apenas para garantir a idoneidade das ações.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {step === 3 && (
-                <div className="input-grid">
-                  <div className="input-group">
-                    <label className="input-label">Habilidade Principal</label>
-                    <input type="text" className="input-field" placeholder="Ex: Cozinha, Aulas, Logística..." />
-                  </div>
-                  <div className="input-group">
-                    <label className="input-label">Disponibilidade</label>
-                    <div className="input-wrapper">
-                      <input type="text" className="input-field pl-icon" placeholder="Ex: Sábados de manhã" />
-                      <Calendar className="input-icon" />
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="field-label">WhatsApp</label>
+                    <div className="input-with-icon">
+                      <Phone className="field-icon" size={20} />
+                      <input required type="tel" className="form-input" placeholder="(00) 00000-0000" />
                     </div>
                   </div>
-
-                  <div className="input-group col-span-2">
-                    <label className="input-label">Breve Bio / Experiência</label>
-                    <textarea className="input-field" style={{ minHeight: '200px', paddingTop: '1.5rem' }} placeholder="Conte um pouco sobre suas experiências e como gostaria de ajudar..."></textarea>
+                  <div className="form-group">
+                    <label className="field-label">E-mail</label>
+                    <div className="input-with-icon">
+                      <Mail className="field-icon" size={20} />
+                      <input required type="email" className="form-input" placeholder="seu@email.com" />
+                    </div>
                   </div>
                 </div>
               )}
 
               {step === 4 && (
-                <div className="input-grid">
-                  <div className="col-span-2 achievement-card" style={{ background: 'rgba(16, 185, 129, 0.05)', border: 'none', padding: '2rem' }}>
-                    <ShieldCheck size={48} color="#10b981" style={{ flexShrink: 0 }} />
-                    <div>
-                      <h3 style={{ margin: '0 0 1rem 0', fontWeight: '900', color: '#10b981', fontSize: '1.5rem' }}>VERIFICAÇÃO DE SEGURANÇA</h3>
-                      <p style={{ margin: 0, fontSize: '1.125rem', color: 'var(--text-gray-500)', lineHeight: '1.6' }}>
-                        Para garantir a segurança de todos na plataforma, seus dados passarão por uma análise rápida antes da ativação completa do perfil.
-                      </p>
+                <div className="form-grid">
+                  <div className="form-group span-2">
+                    <label className="field-label">Endereço de Referência</label>
+                    <div className="input-with-icon">
+                      <Home className="field-icon" size={20} />
+                      <input required type="text" className="form-input" placeholder="Rua, Bairro, Cidade" />
                     </div>
                   </div>
-
-                  <div className="col-span-2 checkbox-grid">
-                    <label className="checkbox-item">
-                      <input type="checkbox" />
-                      <span className="checkbox-label">Aceito os Termos de Uso e Privacidade</span>
-                    </label>
-                    <label className="checkbox-item">
-                      <input type="checkbox" />
-                      <span className="checkbox-label">Declaro que todas as informações são verídicas</span>
-                    </label>
+                  <div className="form-group span-2">
+                    <label className="field-label">Disponibilidade</label>
+                    <div className="selectable-grid">
+                      {availabilityOptions.map((opt) => (
+                        <label key={opt.label} className="selectable-item">
+                          <input type="checkbox" name="disponibilidade" value={opt.label} />
+                          <div className="selectable-card">
+                            <div className="selectable-card-icon">{opt.icon}</div>
+                            <span className="selectable-card-text">{opt.label}</span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-
-                  <button type="button" className="col-span-2 btn-base btn-secondary" style={{ borderStyle: 'dashed', padding: '2rem' }}>
-                    <IdCard size={28} />
-                    FAZER UPLOAD DO DOCUMENTO (OPCIONAL)
-                  </button>
                 </div>
               )}
 
-              <div className="button-row">
-                {step > 1 && (
-                  <button type="button" onClick={prevStep} className="btn-base btn-secondary">
-                    <ChevronLeft size={24} />
-                    VOLTAR
-                  </button>
-                )}
-                
-                {step < totalSteps ? (
-                  <button type="button" onClick={nextStep} className="btn-base btn-primary" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
-                    CONTINUAR
-                    <ChevronRight size={24} />
+              {step === 5 && (
+                <div className="form-grid">
+                  <div className="form-group span-2">
+                    <label className="field-label">Como você quer ajudar?</label>
+                    <div className="selectable-grid">
+                      {helpOptions.map((opt) => (
+                        <label key={opt.label} className="selectable-item">
+                          <input type="checkbox" name="interesses" value={opt.label} />
+                          <div className="selectable-card">
+                            <div className="selectable-card-icon">{opt.icon}</div>
+                            <span className="selectable-card-text">{opt.label}</span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {step === 6 && (
+                <div className="form-grid">
+                  <div className="form-group span-2">
+                    <label className="field-label">Conte seu propósito (Opcional)</label>
+                    <textarea className="form-input" placeholder="Por que você quer ser voluntário?" rows={4}></textarea>
+                  </div>
+                  <div className="form-final-box span-2">
+                    <Award size={48} className="final-icon" />
+                    <p>Ao se tornar um voluntário, você ganha acesso a missões exclusivas e badges de reconhecimento na comunidade.</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="form-navigation">
+                {step > 1 ? (
+                  <button type="button" onClick={prevStep} className="btn-prev">
+                    <ChevronLeft size={20} />
+                    <span>Anterior</span>
                   </button>
                 ) : (
-                  <button type="submit" className="btn-base btn-primary" style={{ background: 'linear-gradient(to right, #10b981, #0d9488)' }}>
-                    FINALIZAR CADASTRO
-                  </button>
+                  <div />
                 )}
                 
-                {step === 1 && (
-                  <Link to="/cadastro" className="btn-base btn-secondary">
-                    CANCELAR
-                  </Link>
-                )}
+                <div className="nav-actions" style={{ display: 'flex', gap: '1rem' }}>
+                  {step === 1 && <Link to="/" className="btn-cancel">Cancelar</Link>}
+                  
+                  {step < totalSteps ? (
+                    <button type="button" onClick={nextStep} className="btn-next">
+                      <span>Avançar</span>
+                      <ChevronRight size={20} />
+                    </button>
+                  ) : (
+                    <button type="submit" className="btn-finish">
+                      <span>Confirmar Compromisso</span>
+                      <CheckCircle2 size={20} />
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
           </div>

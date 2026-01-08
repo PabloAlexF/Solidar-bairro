@@ -701,4 +701,17 @@ textarea.input-field {
   .form-title {
     font-size: 2rem;
   }
+  
+  /* Otimizações específicas para formulário de família */
+  .input-grid[style*="gap: 2rem"] {
+    gap: 1.5rem !important;
+  }
+  
+  .checkbox-grid[style*="repeat(2, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .checkbox-grid[style*="repeat(3, 1fr)"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }

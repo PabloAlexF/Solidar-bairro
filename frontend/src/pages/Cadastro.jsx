@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Building2, Heart, Sparkles, User, Store, ArrowRight } from 'lucide-react';
 import Header from '../components/layout/Header';
-import '../styles/pages/home.css';
+import '../styles/cadastro/cadastro.css';
 
 const cadastroTypes = [
   {
@@ -91,78 +91,76 @@ function CadastroCard({ type, index }) {
 
 export default function CadastroPage() {
   return (
-    <div className="home-wrapper">
+    <div className="cadastro-wrapper">
       <div className="bg-decoration">
         <div className="blob-orange animate-pulse-slow" />
         <div className="blob-indigo animate-pulse-slow" style={{ animationDelay: '-5s' }} />
       </div>
 
-      <div style={{ position: 'relative' }}>
-        <Header />
+      <Header />
 
-        <main className="main-container">
-          <div className="hero-section">
-            <div className="badge-sparkles animate-scaleIn">
-              <Sparkles />
-              CONSTRUINDO COMUNIDADES FORTES
-            </div>
-            
-            <h2 className="hero-title animate-slideUp stagger-1">
-              Como você quer
-              <br />
-              <span className="text-gradient">
-                transformar o mundo?
-              </span>
-            </h2>
-            
-            <p className="hero-description animate-slideUp stagger-2">
-              Escolha seu papel nesta rede de solidariedade e comece a impactar vidas positivamente ainda hoje.
-            </p>
+      <main>
+        <div className="cadastro-hero">
+          <div className="badge-sparkles animate-scaleIn">
+            <Sparkles />
+            CONSTRUINDO COMUNIDADES FORTES
           </div>
+          
+          <h2 className="hero-title animate-slideUp stagger-1">
+            Como você quer
+            <br />
+            <span className="text-gradient">
+              transformar o mundo?
+            </span>
+          </h2>
+          
+          <p className="hero-description animate-slideUp stagger-2">
+            Escolha seu papel nesta rede de solidariedade e comece a impactar vidas positivamente ainda hoje.
+          </p>
+        </div>
 
-          <div className="cards-grid">
-            {cadastroTypes.map((type, index) => (
-              <CadastroCard key={type.id} type={type} index={index} />
+        <div className="cards-grid">
+          {cadastroTypes.map((type, index) => (
+            <CadastroCard key={type.id} type={type} index={index} />
+          ))}
+        </div>
+
+        <div className="stats-section animate-fadeIn" style={{ animationDelay: '0.8s' }}>
+          <div className="stats-grid">
+            {[
+              { label: "Famílias Apoiadas", value: "1.240+", icon: Users },
+              { label: "Voluntários Ativos", value: "850", icon: Heart },
+              { label: "ONGs Parceiras", value: "42", icon: Building2 },
+            ].map((stat, i) => (
+              <div key={i} className="stat-card">
+                <stat.icon className="stat-icon" />
+                <p className="stat-value">{stat.value}</p>
+                <p className="stat-label">{stat.label}</p>
+              </div>
             ))}
           </div>
+        </div>
+      </main>
 
-          <div className="stats-section animate-fadeIn" style={{ animationDelay: '0.8s' }}>
-            <div className="stats-grid">
-              {[
-                { label: "Famílias Apoiadas", value: "1.240+", icon: Users },
-                { label: "Voluntários Ativos", value: "850", icon: Heart },
-                { label: "ONGs Parceiras", value: "42", icon: Building2 },
-              ].map((stat, i) => (
-                <div key={i} className="stat-card">
-                  <stat.icon className="stat-icon" />
-                  <p className="stat-value">{stat.value}</p>
-                  <p className="stat-label">{stat.label}</p>
-                </div>
-              ))}
+      <footer className="footer">
+        <div className="footer-content">
+          <div className="footer-logo">
+             <div className="footer-icon-wrapper">
+              <Heart className="footer-icon" />
             </div>
+            <p className="footer-copy">
+              © 2024 SolidarBairro. Made for impact.
+            </p>
           </div>
-        </main>
-
-        <footer className="footer">
-          <div className="footer-content">
-            <div className="footer-logo">
-               <div className="footer-icon-wrapper">
-                <Heart className="footer-icon" />
-              </div>
-              <p className="footer-copy">
-                © 2024 SolidarBairro. Made for impact.
-              </p>
-            </div>
-            <div className="footer-links">
-              {['Privacidade', 'Termos', 'Suporte'].map((link) => (
-                <Link key={link} to="#" className="footer-link">
-                  {link}
-                </Link>
-              ))}
-            </div>
+          <div className="footer-links">
+            {['Privacidade', 'Termos', 'Suporte'].map((link) => (
+              <Link key={link} to="#" className="footer-link">
+                {link}
+              </Link>
+            ))}
           </div>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </div>
   );
 }
