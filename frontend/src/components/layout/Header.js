@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import apiService from '../../services/apiService';
 import LogoutButton from '../LogoutButton';
 import './Header.css';
 
@@ -10,6 +11,7 @@ const Header = ({ showLoginButton = false }) => {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [userStats, setUserStats] = useState({ helpedCount: 0, receivedHelpCount: 0 });
 
   useEffect(() => {
     // Load notifications from localStorage
@@ -20,7 +22,29 @@ const Header = ({ showLoginButton = false }) => {
       }
     };
     
+    // Load user stats
+    const loadUserStats = async () => {
+      if (user?.uid || user?.id) {
+        try {
+          // Buscar pedidos do usuário (ajudas recebidas)
+          const pedidosResponse = await apiService.getMeusPedidos();
+          const receivedHelpCount = pedidosResponse?.data?.length || 0;
+          
+          // Buscar interesses do usuário (pessoas ajudadas)
+          const interessesResponse = await apiService.getMeusInteresses();
+          const helpedCount = interessesResponse?.data?.length || 0;
+          
+          setUserStats({ helpedCount, receivedHelpCount });
+        } catch (error) {
+          console.error('Erro ao carregar estatísticas:', error);
+        }
+      }
+    };
+    
     loadNotifications();
+    if (isAuthenticated()) {
+      loadUserStats();
+    }
 
     // Listen for new notifications
     const handleNotificationAdded = () => {
@@ -207,11 +231,11 @@ const Header = ({ showLoginButton = false }) => {
 
                     <div className="user-stats">
                       <div className="stat">
-                        <div className="stat-number">{user?.helpedCount || 0}</div>
+                        <div className="stat-number">{userStats.helpedCount}</div>
                         <div className="stat-label">Pessoas ajudadas</div>
                       </div>
                       <div className="stat">
-                        <div className="stat-number">{user?.receivedHelpCount || 0}</div>
+                        <div className="stat-number">{userStats.receivedHelpCount}</div>
                         <div className="stat-label">Ajudas recebidas</div>
                       </div>
                     </div>

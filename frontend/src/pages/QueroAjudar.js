@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
+import { useToast } from '../hooks/useToast';
 import { formatAddress, formatLocation, formatNeighborhood } from '../utils/addressUtils';
 import { 
   MapPin, 
@@ -229,6 +231,8 @@ function ModalDetalhes({ order, onClose, onHelp }) {
 // --- Main Page ---
 
 export default function QueroAjudarPage() {
+  const navigate = useNavigate();
+  const { addToast } = useToast();
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -438,7 +442,33 @@ export default function QueroAjudarPage() {
                 <h2>Gesto de Solidariedade</h2>
                 <p>Você escolheu ajudar <strong>{orderToHelp.nomeUsuario || orderToHelp.userName || 'este usuário'}</strong>. Deseja iniciar uma conversa para combinar os detalhes?</p>
                 <div className="confirm-actions-stack">
-                  <button className="btn-confirm-primary" onClick={() => { alert('Incrível! Abrindo chat...'); setOrderToHelp(null); }}>
+                  <button className="btn-confirm-primary" onClick={async () => {
+                    try {
+                      addToast('Iniciando conversa...', 'info');
+                      
+                      // Criar ou encontrar conversa existente
+                      const conversationData = {
+                        participants: [orderToHelp.userId || orderToHelp.usuario?.id],
+                        pedidoId: orderToHelp.id,
+                        type: 'direct',
+                        title: `Ajuda: ${orderToHelp.category || 'Pedido'}`
+                      };
+                      
+                      const response = await apiService.createConversation(conversationData);
+                      
+                      if (response.success) {
+                        addToast('Conversa iniciada com sucesso!', 'success');
+                        navigate(`/chat/${response.data.id}`);
+                      } else {
+                        throw new Error(response.error || 'Erro ao criar conversa');
+                      }
+                    } catch (error) {
+                      console.error('Erro ao iniciar conversa:', error);
+                      addToast('Erro ao iniciar conversa. Tente novamente.', 'error');
+                    } finally {
+                      setOrderToHelp(null);
+                    }
+                  }}>
                     Sim, vamos conversar!
                   </button>
                   <button className="btn-confirm-ghost" onClick={() => setOrderToHelp(null)}>

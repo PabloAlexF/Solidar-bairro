@@ -27,6 +27,15 @@ class FamiliaController {
       res.status(404).json({ success: false, error: error.message });
     }
   }
+
+  async updateFamilia(req, res) {
+    try {
+      const familia = await familiaService.updateFamilia(req.params.id, req.body);
+      res.json({ success: true, data: familia });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new FamiliaController();

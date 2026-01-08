@@ -28,13 +28,19 @@ import {
   VolumeX,
   Sparkles
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import apiService from '../services/apiService';
 import './profile.css';
 
 const ProfileComponent = () => {
+  const { user, isAuthenticated, updateUser } = useAuth();
+  const navigate = useNavigate();
+  
   const [isEditingBio, setIsEditingBio] = useState(false);
-  const [bio, setBio] = useState("Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [email] = useState("joao.silva@exemplo.com.br");
+  const [bio, setBio] = useState(user?.bio || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
+  const [isPhoneVerified, setIsPhoneVerified] = useState(user?.phoneVerified || false);
+  const [email] = useState(user?.email || "usuario@exemplo.com");
   
   const [avatarUrl, setAvatarUrl] = useState("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
   const [bannerConfig, setBannerConfig] = useState({
@@ -58,12 +64,17 @@ const ProfileComponent = () => {
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     const profileContainer = document.querySelector('.profile-container');
     if (profileContainer) {
       profileContainer.style.setProperty('--primary', accentColor);
-      // Rough calculation for darker/lighter versions
       const r = parseInt(accentColor.slice(1, 3), 16);
       const g = parseInt(accentColor.slice(3, 5), 16);
       const b = parseInt(accentColor.slice(5, 7), 16);
@@ -71,6 +82,14 @@ const ProfileComponent = () => {
       profileContainer.style.setProperty('--primary-light', `rgba(${r}, ${g}, ${b}, 0.15)`);
     }
   }, [accentColor]);
+
+  if (!user) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+        <p>Carregando perfil...</p>
+      </div>
+    );
+  }
 
   const bannerPresets = [
     { name: 'Esmeralda', value: 'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)', type: 'gradient' },
@@ -80,6 +99,25 @@ const ProfileComponent = () => {
     { name: 'Natureza', value: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=1200&q=80', type: 'image' },
     { name: 'Arquitetura', value: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80', type: 'image' }
   ];
+
+  const handleSaveBio = async () => {
+    try {
+      // Salvar no banco via API
+      const endpoint = user.tipo === 'comercio' ? '/comercios' : 
+                      user.tipo === 'ong' ? '/ongs' : 
+                      user.tipo === 'familia' ? '/familias' : '/cidadaos';
+      
+      await apiService.request(`${endpoint}/${user.uid || user.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ bio })
+      });
+      
+      setIsEditingBio(false);
+    } catch (error) {
+      console.error('Erro ao salvar bio:', error);
+      alert('Erro ao salvar. Tente novamente.');
+    }
+  };
 
   const handleSecurityAction = (action) => {
     if (!isPhoneVerified) return;
@@ -369,8 +407,8 @@ const ProfileComponent = () => {
               </div>
             </div>
             
-            <h1 className="name-title">João Silva <span style={{ fontSize: '18px', verticalAlign: 'middle', opacity: 0.8 }}>{mood === 'Empolgado' ? '🚀' : mood === 'Zen' ? '🧘' : mood === 'Focado' ? '🎯' : mood === 'Criativo' ? '🎨' : '🙏'}</span></h1>
-            <div className="badge">Nível 1 • Iniciante</div>
+            <h1 className="name-title">{user?.nome || user?.nomeCompleto || user?.nomeEstabelecimento || user?.nomeEntidade || 'Usuário'} <span style={{ fontSize: '18px', verticalAlign: 'middle', opacity: 0.8 }}>{mood === 'Empolgado' ? '🚀' : mood === 'Zen' ? '🧘' : mood === 'Focado' ? '🎯' : mood === 'Criativo' ? '🎨' : '🙏'}</span></h1>
+            <div className="badge">{user?.tipo === 'comercio' ? 'Comércio Local' : user?.tipo === 'ong' ? 'ONG Parceira' : user?.tipo === 'familia' ? 'Família Cadastrada' : 'Nível 1 • Iniciante'}</div>
 
             <div className="level-container">
               <div className="level-header">
@@ -385,12 +423,29 @@ const ProfileComponent = () => {
             <div className="card-padding" style={{ paddingTop: '24px', textAlign: 'left' }}>
               <div className="meta-item" style={{ marginBottom: '16px' }}>
                 <MapPin size={18} color="var(--primary)" />
-                São Paulo, SP
+                {user?.cidade || 'Lagoa Santa'}, {user?.estado || 'MG'}
               </div>
               <div className="meta-item">
                 <Calendar size={18} color="var(--primary)" />
-                Desde Jan 2024
+                Desde {user?.criadoEm ? (() => {
+                  let date;
+                  if (user.criadoEm.seconds) {
+                    date = new Date(user.criadoEm.seconds * 1000);
+                  } else if (user.criadoEm._seconds) {
+                    date = new Date(user.criadoEm._seconds * 1000);
+                  } else {
+                    date = new Date(user.criadoEm);
+                  }
+                  return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+                })() : 'Jan 2024'}
               </div>
+              
+              {user?.telefone && (
+                <div className="meta-item" style={{ marginTop: '16px' }}>
+                  <Smartphone size={18} color="var(--primary)" />
+                  {user.telefone}
+                </div>
+              )}
               
               <button className="btn btn-outline" style={{ width: '100%', marginTop: '32px' }} onClick={() => setIsSettingsOpen(true)}>
                 <Settings size={18} />
@@ -473,7 +528,13 @@ const ProfileComponent = () => {
                   <User size={24} color="var(--primary)" />
                   Sobre
                 </h3>
-                <button className="btn btn-outline" onClick={() => setIsEditingBio(!isEditingBio)} style={{ padding: '8px 16px' }}>
+                <button className="btn btn-outline" onClick={() => {
+                  if (isEditingBio) {
+                    handleSaveBio();
+                  } else {
+                    setIsEditingBio(true);
+                  }
+                }} style={{ padding: '8px 16px' }}>
                   {isEditingBio ? "Salvar" : <><Pencil size={14} /> Editar</>}
                 </button>
               </div>
