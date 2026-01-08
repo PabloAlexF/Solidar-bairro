@@ -1,6 +1,10 @@
 const chatModel = require('../models/chatModel');
+const firebase = require('../config/firebase');
 
 class ChatService {
+  constructor() {
+    this.db = firebase.getDb();
+  }
   async createConversation(data) {
     // Validar participantes - permitir 1 ou mais
     const validParticipants = (data.participants || []).filter(p => p && typeof p === 'string');
@@ -54,14 +58,91 @@ class ChatService {
     const conversations = await chatModel.getConversationsByUser(userId);
     
     // Enriquecer com informações dos participantes
-    return conversations.map(conv => ({
-      ...conv,
-      otherParticipants: conv.participants.filter(p => p !== userId)
-    }));
+    const enrichedConversations = [];
+    
+    for (const conv of conversations) {
+      const otherParticipantIds = conv.participants.filter(p => p !== userId);
+      
+      // Buscar dados do outro participante
+      let otherParticipant = null;
+      if (otherParticipantIds.length > 0) {
+        otherParticipant = await this.getUserData(otherParticipantIds[0]);
+      }
+      
+      enrichedConversations.push({
+        ...conv,
+        otherParticipant
+      });
+    }
+    
+    return enrichedConversations;
+  }
+
+  async getUserData(id) {
+    try {
+      // Buscar em cidadãos
+      const cidadaoDoc = await this.db.collection('cidadaos').doc(id).get();
+      
+      if (cidadaoDoc.exists) {
+        const cidadaoData = cidadaoDoc.data();
+        return {
+          id: cidadaoDoc.id,
+          nome: cidadaoData.nome,
+          tipo: 'cidadao',
+          bairro: cidadaoData.endereco?.bairro
+        };
+      }
+
+      // Buscar em comércios
+      const comercioDoc = await this.db.collection('comercios').doc(id).get();
+      
+      if (comercioDoc.exists) {
+        const comercioData = comercioDoc.data();
+        return {
+          id: comercioDoc.id,
+          nome: comercioData.nomeFantasia || comercioData.razaoSocial,
+          tipo: 'comercio',
+          bairro: comercioData.endereco?.bairro
+        };
+      }
+
+      // Buscar em ONGs
+      const ongDoc = await this.db.collection('ongs').doc(id).get();
+      
+      if (ongDoc.exists) {
+        const ongData = ongDoc.data();
+        return {
+          id: ongDoc.id,
+          nome: ongData.nome,
+          tipo: 'ong',
+          bairro: ongData.endereco?.bairro
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Erro ao buscar dados do usuário:', error);
+      return null;
+    }
   }
 
   async getConversation(conversationId) {
-    return await chatModel.getConversation(conversationId);
+    const conversation = await chatModel.getConversation(conversationId);
+    
+    // Enriquecer com dados dos participantes
+    const participantsData = [];
+    
+    for (const participantId of conversation.participants) {
+      const userData = await this.getUserData(participantId);
+      if (userData) {
+        participantsData.push(userData);
+      }
+    }
+    
+    return {
+      ...conversation,
+      participantsData
+    };
   }
 
   async sendMessage(conversationId, senderId, messageData) {

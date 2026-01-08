@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
+import { useAuth } from '../contexts/AuthContext';
+import ApiService from '../services/apiService';
+import chatNotificationService from '../services/chatNotificationService';
 import { 
   Heart, 
   ArrowLeft, 
@@ -31,124 +34,20 @@ const formatTime = (date) => {
 const Chat = () => {
   const params = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const conversaId = params.id;
   
-  const [messages, setMessages] = useState([
-    {
-      id: "sys1",
-      type: "system",
-      sender: "system",
-      content: "Pedido confirmado: Ajuda com alimentos.",
-      timestamp: new Date(Date.now() - 3600000),
-    },
-    {
-      id: "sys2",
-      type: "system",
-      sender: "system",
-      content: "Este é um ambiente seguro. Evite compartilhar dados pessoais sensíveis.",
-      timestamp: new Date(Date.now() - 3500000),
-    },
-    {
-      id: "1",
-      type: "text",
-      sender: "doador",
-      content: "Olá! Vi que você precisa de cesta básica. Posso ajudar.",
-      timestamp: new Date(Date.now() - 3400000),
-      read: true,
-    },
-    {
-      id: "2",
-      type: "text",
-      sender: "receptor",
-      content: "Obrigada! Sim, preciso para mim e meus dois filhos.",
-      timestamp: new Date(Date.now() - 3300000),
-      read: true,
-    },
-    {
-      id: "3",
-      type: "text",
-      sender: "doador",
-      content: "Perfeito! Tenho uma cesta completa aqui. Podemos combinar a entrega para amanhã?",
-      timestamp: new Date(Date.now() - 3200000),
-      read: true,
-    },
-    {
-      id: "4",
-      type: "text",
-      sender: "receptor",
-      content: "Seria ótimo! Qual horário fica melhor para você?",
-      timestamp: new Date(Date.now() - 3100000),
-      read: true,
-    },
-    {
-      id: "5",
-      type: "text",
-      sender: "doador",
-      content: "Pode ser às 14h? Sugiro a gente se encontrar na Praça Central, é um lugar seguro e movimentado.",
-      timestamp: new Date(Date.now() - 3000000),
-      read: true,
-    },
-    {
-      id: "6",
-      type: "location",
-      sender: "doador",
-      content: "",
-      timestamp: new Date(Date.now() - 2900000),
-      read: true,
-      location: {
-        name: "Praça Central - São Lucas",
-        address: "Ponto de encontro sugerido",
-      },
-    },
-    {
-      id: "7",
-      type: "text",
-      sender: "receptor",
-      content: "Perfeito! Conheço bem a praça. Estarei lá às 14h. Muito obrigada!",
-      timestamp: new Date(Date.now() - 2800000),
-      read: true,
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
+  const [conversation, setConversation] = useState(null);
+  const [pedidoData, setPedidoData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [inputValue, setInputValue] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentUser] = useState("receptor");
   const [selectedChatId, setSelectedChatId] = useState(conversaId || "1");
-  const [chatContacts, setChatContacts] = useState([
-    {
-      id: "1",
-      name: "Ana Paula",
-      initials: "AP",
-      type: "doador",
-      distance: "450m de você",
-      online: true,
-      lastMessage: "Perfeito! Conheço bem a praça...",
-      lastMessageTime: "14:20",
-      unreadCount: 0,
-    },
-    {
-      id: "2",
-      name: "Ricardo Silva",
-      initials: "RS",
-      type: "doador",
-      distance: "1.2km de você",
-      online: false,
-      lastMessage: "Vou verificar os itens aqui.",
-      lastMessageTime: "Ontem",
-      unreadCount: 2,
-    },
-    {
-      id: "3",
-      name: "Maria Oliveira",
-      initials: "MO",
-      type: "receptor",
-      distance: "800m de você",
-      online: true,
-      lastMessage: "Muito obrigada pela ajuda!",
-      lastMessageTime: "Segunda",
-      unreadCount: 0,
-    },
-  ]);
+  const [chatContacts, setChatContacts] = useState([]);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showUserProfile, setShowUserProfile] = useState(false);
@@ -161,69 +60,222 @@ const Chat = () => {
   const messagesEndRef = useRef(null);
 
   const currentUserData = {
-    name: "Seu Perfil",
-    email: "joao.silva@email.com",
-    phone: "(11) 98765-4321",
-    type: "Pessoa Física",
-    address: "Rua das Flores, 123 - São Lucas",
-    points: 1250,
-    initials: "JS"
+    name: user?.nome || "Seu Perfil",
+    email: user?.email || "usuario@email.com",
+    phone: user?.telefone || "(11) 00000-0000",
+    type: user?.tipo || "Pessoa Física",
+    address: user?.endereco || "Endereço não informado",
+    points: user?.pontos || 0,
+    initials: user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "US"
   };
 
   const filteredContacts = chatContacts.filter(c => 
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.lastMessage?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentContact = chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
+  const currentContact = chatContacts.find(c => c.id === selectedChatId) || 
+    (conversation ? {
+      id: conversaId,
+      name: (() => {
+        // Buscar nome do outro participante
+        if (conversation.otherParticipant?.nome) return conversation.otherParticipant.nome;
+        if (conversation.participantsData?.length > 0) {
+          const otherUser = conversation.participantsData.find(p => p.uid !== user?.uid);
+          if (otherUser?.nome) return otherUser.nome;
+        }
+        // Usar título como fallback
+        if (conversation.title && conversation.title !== 'direct') {
+          return conversation.title.replace('Ajuda: ', '');
+        }
+        return 'Carregando...';
+      })(),
+      initials: (() => {
+        const name = conversation.otherParticipant?.nome || 
+                    conversation.participantsData?.find(p => p.uid !== user?.uid)?.nome || 
+                    conversation.title?.replace('Ajuda: ', '') || 'CV';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      })(),
+      type: conversation.otherParticipant?.tipo || 
+            conversation.participantsData?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
+      distance: '0m de você',
+      online: Math.random() > 0.5
+    } : chatContacts[0]);
 
   const helpInfo = {
-    type: "Doação de Cesta Básica",
-    urgency: "high",
-    bairro: "São Lucas",
+    type: pedidoData?.titulo || pedidoData?.category || "Doação de Cesta Básica",
+    urgency: pedidoData?.urgencia || pedidoData?.priority || "high",
+    bairro: pedidoData?.endereco?.bairro || pedidoData?.bairro || "São Lucas",
     distance: "450 m",
     status: deliveryStatus,
   };
+  
+  console.log('helpInfo atual:', helpInfo);
+  console.log('pedidoData atual:', pedidoData);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Carregar conversas
+  const loadConversations = async () => {
+    try {
+      const response = await ApiService.getConversations();
+      if (response.success && response.data) {
+        const formattedContacts = response.data.map(conv => ({
+          id: conv.id,
+          name: conv.otherParticipant?.nome || conv.participants?.find(p => p.uid !== user?.uid)?.nome || 'Usuário',
+          initials: (conv.otherParticipant?.nome || conv.participants?.find(p => p.uid !== user?.uid)?.nome || 'US')
+            .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+          type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
+          distance: '0m de você',
+          online: Math.random() > 0.5,
+          lastMessage: conv.lastMessage?.content || 'Nova conversa',
+          lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
+            new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
+          unreadCount: conv.unreadCount || 0
+        }));
+        setChatContacts(formattedContacts);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar conversas:', error);
+    }
+  };
+
+  // Carregar mensagens da conversa
+  const loadMessages = async () => {
+    if (!conversaId) return;
+    
+    try {
+      setLoading(true);
+      const [conversationResponse, messagesResponse] = await Promise.all([
+        ApiService.getConversation(conversaId),
+        ApiService.getMessages(conversaId)
+      ]);
+      
+      console.log('Dados da conversa:', conversationResponse.data);
+      
+      if (conversationResponse.success) {
+        const convData = conversationResponse.data;
+        
+        // Se não há dados dos participantes, buscar via API
+        if (!convData.participantsData?.length && convData.participants?.length > 0) {
+          const otherUserId = convData.participants.find(p => p !== user?.id && p !== user?.uid);
+          if (otherUserId) {
+            try {
+              const userResponse = await ApiService.getUserData(otherUserId);
+              if (userResponse.success && userResponse.data) {
+                convData.participantsData = [userResponse.data];
+              }
+            } catch (error) {
+              console.error('Erro ao buscar dados do usuário:', error);
+            }
+          }
+        }
+        
+        // Buscar dados do pedido se existir
+        if (convData.pedidoId) {
+          console.log('Buscando dados do pedido:', convData.pedidoId);
+          try {
+            const pedidoResponse = await ApiService.getPedido(convData.pedidoId);
+            console.log('Resposta do pedido:', pedidoResponse);
+            if (pedidoResponse.success && pedidoResponse.data) {
+              console.log('Dados do pedido carregados:', pedidoResponse.data);
+              setPedidoData(pedidoResponse.data);
+            }
+          } catch (error) {
+            console.error('Erro ao buscar dados do pedido:', error);
+          }
+        } else {
+          console.log('Conversa sem pedidoId');
+        }
+        
+        setConversation(convData);
+      }
+      
+      if (messagesResponse.success && messagesResponse.data) {
+        const formattedMessages = messagesResponse.data.map(msg => ({
+          id: msg.id,
+          type: msg.type || 'text',
+          sender: msg.senderId === user?.uid ? 'sent' : 'received',
+          content: msg.content || msg.text,
+          timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+          read: msg.read || false,
+          location: msg.metadata?.location
+        }));
+        setMessages(formattedMessages);
+      }
+      
+      // Marcar conversa como lida
+      await ApiService.markConversationAsRead(conversaId);
+    } catch (error) {
+      console.error('Erro ao carregar mensagens:', error);
+      setError('Erro ao carregar mensagens');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (conversaId) {
       setSelectedChatId(conversaId);
-      setChatContacts(prev => prev.map(c => 
-        c.id === conversaId ? { ...c, unreadCount: 0 } : c
-      ));
+      loadMessages();
+      
+      // Iniciar escuta de novas mensagens
+      chatNotificationService.startListening(conversaId, (newMessages) => {
+        setMessages(prev => [...prev, ...newMessages.map(msg => ({
+          id: msg.id,
+          type: msg.type || 'text',
+          sender: msg.senderId === user?.uid ? 'sent' : 'received',
+          content: msg.content || msg.text,
+          timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+          read: msg.read || false,
+          location: msg.metadata?.location
+        }))]);
+      });
     }
-  }, [conversaId]);
+    
+    loadConversations();
+    
+    return () => {
+      if (conversaId) {
+        chatNotificationService.stopListening(conversaId);
+      }
+    };
+  }, [conversaId, user?.uid]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  const handleSend = async () => {
+    if (!inputValue.trim() || sendingMessage) return;
 
-    const newMessage = {
-      id: Date.now().toString(),
-      type: "text",
-      sender: currentUser,
-      content: inputValue,
-      timestamp: new Date(),
-      read: false,
-    };
-
-    setMessages([...messages, newMessage]);
+    const messageText = inputValue.trim();
     setInputValue("");
+    setSendingMessage(true);
 
-    // Simulate typing from other user
-    setTimeout(() => {
-      setIsTyping(true);
-      setTimeout(() => {
-        setIsTyping(false);
-      }, 2000);
-    }, 1000);
+    try {
+      const response = await ApiService.sendMessage(conversaId, messageText);
+      
+      if (response.success) {
+        const newMessage = {
+          id: response.data.id,
+          type: "text",
+          sender: "sent",
+          content: messageText,
+          timestamp: new Date(),
+          read: false,
+        };
+        
+        setMessages(prev => [...prev, newMessage]);
+      }
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      setInputValue(messageText); // Restaurar texto em caso de erro
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -251,26 +303,43 @@ const Chat = () => {
     setIsGettingLocation(true);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         
-        const newMessage = {
-          id: Date.now().toString(),
-          type: "location",
-          sender: currentUser,
-          content: "",
-          timestamp: new Date(),
-          read: false,
-          location: {
+        try {
+          const locationData = {
             lat: latitude,
             lng: longitude,
             name: "Minha Localização",
             address: "Compartilhada em tempo real",
-          },
-        };
-
-        setMessages([...messages, newMessage]);
-        setIsGettingLocation(false);
+          };
+          
+          const response = await ApiService.sendMessage(
+            conversaId, 
+            "📍 Localização compartilhada", 
+            "location", 
+            { location: locationData }
+          );
+          
+          if (response.success) {
+            const newMessage = {
+              id: response.data.id,
+              type: "location",
+              sender: "sent",
+              content: "",
+              timestamp: new Date(),
+              read: false,
+              location: locationData,
+            };
+            
+            setMessages(prev => [...prev, newMessage]);
+          }
+        } catch (error) {
+          console.error("Erro ao enviar localização:", error);
+          alert("Erro ao compartilhar localização. Tente novamente.");
+        } finally {
+          setIsGettingLocation(false);
+        }
       },
       (error) => {
         console.error("Erro ao obter localização:", error);
@@ -283,8 +352,6 @@ const Chat = () => {
 
   return (
     <div className="chat-page-wrapper">
-      <Header showLoginButton={false} />
-      
       <div className="chat-layout">
         {/* Sidebar */}
         <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
@@ -472,8 +539,8 @@ const Chat = () => {
 
               {messages.map((msg) => {
                 if (msg.type === "system") {
-                  const isSuccess = msg.content.includes("Pedido confirmado");
-                  const isSecurity = msg.content.includes("ambiente seguro");
+                  const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso");
+                  const isSecurity = msg.content?.includes("seguro") || msg.content?.includes("ambiente");
 
                   return (
                     <div key={msg.id} className="msg-row system">
@@ -492,7 +559,7 @@ const Chat = () => {
                   const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.005}%2C${lat - 0.005}%2C${lng + 0.005}%2C${lat + 0.005}&layer=mapnik&marker=${lat}%2C${lng}`;
 
                   return (
-                    <div key={msg.id} className={`msg-row ${msg.sender === currentUser ? 'sent' : 'received'}`}>
+                    <div key={msg.id} className={`msg-row ${msg.sender === 'sent' ? 'sent' : 'received'}`}>
                       <div className="msg-bubble location-bubble">
                         <div className="location-map-preview">
                           <iframe
@@ -514,7 +581,7 @@ const Chat = () => {
                       </div>
                       <div className="msg-metadata">
                         <span className="msg-time">{formatTime(msg.timestamp)}</span>
-                        {msg.sender === currentUser && (
+                        {msg.sender === 'sent' && (
                           <span className="msg-status">
                             <CheckCheck size={14} className="read" />
                           </span>
@@ -525,13 +592,13 @@ const Chat = () => {
                 }
 
                 return (
-                  <div key={msg.id} className={`msg-row ${msg.sender === currentUser ? 'sent' : 'received'}`}>
+                  <div key={msg.id} className={`msg-row ${msg.sender === 'sent' ? 'sent' : 'received'}`}>
                     <div className="msg-bubble text-bubble">
                       {msg.content}
                     </div>
                     <div className="msg-metadata">
                       <span className="msg-time">{formatTime(msg.timestamp)}</span>
-                      {msg.sender === currentUser && (
+                      {msg.sender === 'sent' && (
                         <span className="msg-status">
                           {msg.read ? <CheckCheck size={14} className="read" /> : <Check size={14} />}
                         </span>
@@ -586,11 +653,15 @@ const Chat = () => {
                 />
               </div>
               <button
-                className={`send-msg-btn ${inputValue.trim() ? 'active' : ''}`}
+                className={`send-msg-btn ${inputValue.trim() && !sendingMessage ? 'active' : ''}`}
                 onClick={handleSend}
-                disabled={!inputValue.trim()}
+                disabled={!inputValue.trim() || sendingMessage}
               >
-                <Send size={20} />
+                {sendingMessage ? (
+                  <div className="mini-loader" />
+                ) : (
+                  <Send size={20} />
+                )}
               </button>
             </div>
           </footer>

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import apiService from '../services/apiService';
 import { useToast } from '../hooks/useToast';
-import { formatAddress, formatLocation, formatNeighborhood } from '../utils/addressUtils';
+import { formatAddress, formatLocation, formatNeighborhood, safeRenderAddress } from '../utils/addressUtils';
 import { 
   MapPin, 
   Heart,
@@ -147,7 +147,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                     <span className="user-type-badge">{order.tipoUsuario || order.userType || 'Cidadão'}</span>
                     <span className="user-loc-modal">
                       <MapPin size={14} />
-                      {formatLocation(order.endereco, order.cidade || order.city, order.estado || order.state)}
+                      {safeRenderAddress(formatLocation(order.endereco, order.cidade || order.city, order.estado || order.state))}
                     </span>
                   </div>
                 </div>
@@ -204,7 +204,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                 </div>
                 <div className="loc-content-modal">
                   <strong>Local de Retirada/Entrega</strong>
-                  <p>{formatLocation(order.endereco, order.cidade || order.city, order.estado || order.state)}</p>
+                  <p>{safeRenderAddress(formatLocation(order.endereco, order.cidade || order.city, order.estado || order.state))}</p>
                   <span>O endereço exato será compartilhado após o contato inicial.</span>
                 </div>
               </div>
@@ -385,7 +385,7 @@ export default function QueroAjudarPage() {
                     </div>
                     <div className="user-loc">
                       <MapPin size={14} />
-                      <span>{formatNeighborhood(order.endereco, order.bairro || order.neighborhood) || order.location || 'Localização não informada'}</span>
+                      <span>{safeRenderAddress(formatNeighborhood(order.endereco, order.bairro || order.neighborhood) || order.location || 'Localização não informada')}</span>
                     </div>
                   </div>
                   {(() => {

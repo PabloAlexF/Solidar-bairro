@@ -13,7 +13,6 @@
 .conv-page-wrapper {
   min-height: 100vh;
   background-color: var(--conv-bg);
-  padding-top: 80px;
 }
 
 .conv-main-content {
@@ -585,4 +584,53 @@
     background: var(--conv-primary);
     color: white;
   }
+}
+
+/* Loading and Error States */
+.conv-loading-state, .conv-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--conv-text-muted);
+  background: white;
+  border-radius: 1.5rem;
+  border: 1px solid var(--conv-border);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f1f5f9;
+  border-top-color: var(--conv-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.conv-error-state p {
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.btn-retry {
+  background: var(--conv-primary);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-retry:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

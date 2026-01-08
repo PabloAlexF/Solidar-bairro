@@ -129,10 +129,53 @@ const ApiService = {
     return this.request(`/chat/conversations/${conversationId}/messages${query}`);
   },
 
+  async createCidadao(data) {
+    return this.request('/cidadaos', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async createComercio(data) {
+    return this.request('/comercios', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async createOng(data) {
+    return this.request('/ongs', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async createFamilia(data) {
+    return this.request('/familias', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async createPedido(data) {
+    return this.request('/pedidos', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
   async markConversationAsRead(conversationId) {
     return this.request(`/chat/conversations/${conversationId}/read`, {
       method: 'PUT'
     });
+  },
+
+  async getUserData(id) {
+    return this.request(`/users/${id}`);
+  },
+
+  async getPedido(id) {
+    return this.request(`/pedidos/${id}`);
   }
 };
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/apiService';
+import { formatAddress } from '../utils/addressUtils';
 
 const AuthContext = createContext();
 
@@ -27,7 +28,17 @@ export const AuthProvider = ({ children }) => {
 
       if (savedToken && savedUser) {
         setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        
+        // Parse and process user data
+        let userData = JSON.parse(savedUser);
+        if (userData && typeof userData.endereco === 'object') {
+          userData = {
+            ...userData,
+            endereco: formatAddress(userData.endereco)
+          };
+        }
+        
+        setUser(userData);
         
         // Verificar se token ainda é válido apenas se não estiver em página pública
         const currentPath = window.location.pathname;
@@ -58,13 +69,22 @@ export const AuthProvider = ({ children }) => {
       if (response.success && response.data) {
         const { user: userData, token: userToken } = response.data;
         
-        setUser(userData);
+        // Ensure address data is properly formatted
+        let processedUserData = userData;
+        if (userData && typeof userData.endereco === 'object') {
+          processedUserData = {
+            ...userData,
+            endereco: formatAddress(userData.endereco)
+          };
+        }
+        
+        setUser(processedUserData);
         setToken(userToken);
         
-        localStorage.setItem('solidar-user', JSON.stringify(userData));
+        localStorage.setItem('solidar-user', JSON.stringify(processedUserData));
         localStorage.setItem('solidar-token', userToken);
         
-        return { success: true, user: userData };
+        return { success: true, user: processedUserData };
       }
       
       throw new Error(response.message || 'Erro no login');
@@ -99,13 +119,22 @@ export const AuthProvider = ({ children }) => {
       if (response.success && response.data) {
         const { user: newUser, token: newToken } = response.data;
         
-        setUser(newUser);
+        // Ensure address data is properly formatted
+        let processedUserData = newUser;
+        if (newUser && typeof newUser.endereco === 'object') {
+          processedUserData = {
+            ...newUser,
+            endereco: formatAddress(newUser.endereco)
+          };
+        }
+        
+        setUser(processedUserData);
         setToken(newToken);
         
-        localStorage.setItem('solidar-user', JSON.stringify(newUser));
+        localStorage.setItem('solidar-user', JSON.stringify(processedUserData));
         localStorage.setItem('solidar-token', newToken);
         
-        return { success: true, user: newUser };
+        return { success: true, user: processedUserData };
       }
       
       throw new Error(response.message || 'Erro no cadastro');
@@ -115,6 +144,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (userData) => {
+    // Ensure address data is properly formatted
+    if (userData && typeof userData.endereco === 'object') {
+      userData = {
+        ...userData,
+        endereco: formatAddress(userData.endereco)
+      };
+    }
+    
     setUser(userData);
     localStorage.setItem('solidar-user', JSON.stringify(userData));
     window.dispatchEvent(new CustomEvent('userUpdated'));

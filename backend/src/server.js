@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const pedidoRoutes = require('./routes/pedidoRoutes');
 const interesseRoutes = require('./routes/interesseRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const userRoutes = require('./routes/userRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -45,6 +46,7 @@ app.use('/api/ongs', ongRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/interesses', interesseRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/users', userRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });

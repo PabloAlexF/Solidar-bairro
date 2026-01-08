@@ -49,3 +49,26 @@ export const formatNeighborhood = (endereco, bairro) => {
   
   return bairro || 'Bairro não informado';
 };
+
+// Safe render function to prevent React errors when objects are rendered directly
+export const safeRenderAddress = (value) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  if (typeof value === 'object') {
+    // If it's an address object, format it
+    if (value.rua || value.bairro || value.cidade || value.estado) {
+      return formatAddress(value);
+    }
+    
+    // For other objects, return empty string to prevent React error
+    return '';
+  }
+  
+  return String(value);
+};

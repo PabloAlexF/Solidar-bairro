@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ApiService from '../services/apiService';
 import Header from '../components/layout/Header';
 import { useToast } from '../contexts/ToastContext';
+import '../styles/pages/Register.css';
 
 const RegisterCidadao = () => {
   const navigate = useNavigate();

@@ -423,7 +423,10 @@ const ProfileComponent = () => {
             <div className="card-padding" style={{ paddingTop: '24px', textAlign: 'left' }}>
               <div className="meta-item" style={{ marginBottom: '16px' }}>
                 <MapPin size={18} color="var(--primary)" />
-                {user?.cidade || 'Lagoa Santa'}, {user?.estado || 'MG'}
+                {typeof user?.endereco === 'object' 
+                  ? `${user.endereco.cidade || user?.cidade || 'Lagoa Santa'}, ${user.endereco.estado || user?.estado || 'MG'}`
+                  : `${user?.cidade || 'Lagoa Santa'}, ${user?.estado || 'MG'}`
+                }
               </div>
               <div className="meta-item">
                 <Calendar size={18} color="var(--primary)" />

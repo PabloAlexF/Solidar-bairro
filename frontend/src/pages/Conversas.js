@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header';
+import { useAuth } from '../contexts/AuthContext';
+import ApiService from '../services/apiService';
+import chatNotificationService from '../services/chatNotificationService';
 import { 
   Heart, 
   Search, 
@@ -20,50 +23,110 @@ import '../styles/pages/ConversationsList.css';
 
 const Conversas = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState('todas');
   const [searchTerm, setSearchTerm] = useState('');
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const conversations = [
-    {
-      id: '1',
-      userName: 'Ana Paula Silva',
-      userInitials: 'AN',
-      userType: 'receptor',
-      time: '19h',
-      subject: 'Cesta Básica',
-      neighborhood: 'São Lucas',
-      status: 'ativa',
-      lastMessage: 'Obrigada! Posso buscar hoje à tarde?',
-      unreadCount: 1,
-      urgency: 'high'
-    },
-    {
-      id: '2',
-      userName: 'Dr. Carlos Mendes',
-      userInitials: 'DR',
-      userType: 'doador',
-      time: '1d',
-      subject: 'Remédios',
-      neighborhood: 'Centro',
-      status: 'finalizada',
-      lastMessage: 'Ajuda finalizada com sucesso! 🎉',
-      unreadCount: 0,
-      urgency: 'low'
-    },
-    {
-      id: '3',
-      userName: 'Ricardo Souza',
-      userInitials: 'RS',
-      userType: 'doador',
-      time: '3h',
-      subject: 'Móveis',
-      neighborhood: 'Vila Nova',
-      status: 'ativa',
-      lastMessage: 'Consigo levar o sofá no sábado.',
-      unreadCount: 3,
-      urgency: 'medium'
-    },
-  ];
+  // Carregar conversas
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      const response = await ApiService.getConversations();
+      
+      if (response.success && response.data) {
+        const formattedConversations = response.data.map(conv => {
+          const otherParticipant = conv.otherParticipant || {};
+          const lastMessage = conv.lastMessage || {};
+          
+          return {
+            id: conv.id,
+            userName: otherParticipant.nome || 'Usuário',
+            userInitials: otherParticipant.nome ? 
+              otherParticipant.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'US',
+            userType: otherParticipant.tipo || 'cidadao',
+            time: lastMessage.createdAt ? 
+              formatTimeAgo(new Date(lastMessage.createdAt.seconds * 1000)) : 'Agora',
+            subject: conv.subject || 'Conversa',
+            neighborhood: otherParticipant.bairro || 'Não informado',
+            status: conv.status || 'ativa',
+            lastMessage: lastMessage.content || 'Nova conversa iniciada',
+            unreadCount: conv.unreadCount || 0,
+            urgency: conv.urgency || 'medium'
+          };
+        });
+        
+        setConversations(formattedConversations);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar conversas:', error);
+      setError('Erro ao carregar conversas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Formatar tempo relativo
+  const formatTimeAgo = (date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Agora';
+    if (diffInMinutes < 60) return `${diffInMinutes}min`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays === 1) return 'Ontem';
+    if (diffInDays < 7) return `${diffInDays}d`;
+    
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadConversations();
+      
+      // Configurar polling para novas conversas
+      const interval = chatNotificationService.startConversationPolling(
+        user.uid, 
+        (updatedConversations) => {
+          if (updatedConversations && updatedConversations.length > 0) {
+            const formatted = updatedConversations.map(conv => {
+              const otherParticipant = conv.otherParticipant || {};
+              const lastMessage = conv.lastMessage || {};
+              
+              return {
+                id: conv.id,
+                userName: otherParticipant.nome || 'Usuário',
+                userInitials: otherParticipant.nome ? 
+                  otherParticipant.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'US',
+                userType: otherParticipant.tipo || 'cidadao',
+                time: lastMessage.createdAt ? 
+                  formatTimeAgo(new Date(lastMessage.createdAt.seconds * 1000)) : 'Agora',
+                subject: conv.subject || 'Conversa',
+                neighborhood: otherParticipant.bairro || 'Não informado',
+                status: conv.status || 'ativa',
+                lastMessage: lastMessage.content || 'Nova conversa iniciada',
+                unreadCount: conv.unreadCount || 0,
+                urgency: conv.urgency || 'medium'
+              };
+            });
+            setConversations(formatted);
+          }
+        }
+      );
+      
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    }
+  }, [user]);
 
   const filteredConversations = conversations.filter(conv => {
     const matchesFilter = 
@@ -80,8 +143,6 @@ const Conversas = () => {
 
   return (
     <div className="conv-page-wrapper">
-      <Header showLoginButton={false} />
-      
       <main className="conv-main-content">
         <div className="conv-dashboard-grid">
           {/* Left Column: Stats & Profile (Desktop) */}
@@ -89,16 +150,18 @@ const Conversas = () => {
             <div className="conv-profile-card">
               <div className="profile-bg-gradient" />
               <div className="profile-content">
-                <div className="profile-avatar-large">V</div>
+                <div className="profile-avatar-large">
+                  {user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'V'}
+                </div>
                 <h3>Seu Perfil Solidário</h3>
                 <p className="profile-rank">⭐ Super Vizinho</p>
                 <div className="profile-stats-mini">
                   <div className="stat-mini-item">
-                    <span className="stat-value">12</span>
+                    <span className="stat-value">{user?.ajudasRealizadas || 0}</span>
                     <span className="stat-label">Ajudas</span>
                   </div>
                   <div className="stat-mini-item">
-                    <span className="stat-value">4.9</span>
+                    <span className="stat-value">{user?.avaliacao || '5.0'}</span>
                     <span className="stat-label">Nota</span>
                   </div>
                 </div>
@@ -159,7 +222,18 @@ const Conversas = () => {
             </header>
 
             <div className="conv-list-container">
-              <AnimatePresence mode="popLayout">
+              {loading ? (
+                <div className="conv-loading-state">
+                  <div className="loading-spinner"></div>
+                  <p>Carregando conversas...</p>
+                </div>
+              ) : error ? (
+                <div className="conv-error-state">
+                  <p>{error}</p>
+                  <button onClick={loadConversations} className="btn-retry">Tentar novamente</button>
+                </div>
+              ) : (
+                <AnimatePresence mode="popLayout">
                 {filteredConversations.length > 0 ? (
                   filteredConversations.map((conv, index) => (
                     <motion.div 
@@ -225,7 +299,8 @@ const Conversas = () => {
                     <button className="btn-start-action" onClick={() => navigate('/')}>Ver Mapa de Ajuda</button>
                   </motion.div>
                 )}
-              </AnimatePresence>
+                </AnimatePresence>
+              )}
             </div>
           </section>
 
@@ -237,7 +312,7 @@ const Conversas = () => {
               </div>
               <div className="insight-text">
                 <h4>Conquista da Semana</h4>
-                <p>Você ajudou 3 vizinhos nos últimos 7 dias. Continue assim!</p>
+                <p>Você ajudou {user?.ajudasRealizadas || 0} vizinhos nos últimos 7 dias. Continue assim!</p>
               </div>
             </div>
 
