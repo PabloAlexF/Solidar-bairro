@@ -49,6 +49,52 @@ export default function CadastroCidadao() {
     }));
   };
 
+  const formatCPF = (value) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  };
+
+  const formatRG = (value) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 9) {
+      // RG tradicional: 00.000.000-0
+      return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4');
+    } else {
+      // RG nacional (formato CPF): 000.000.000-00
+      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+  };
+
+  const handleCPFChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      updateFormData('cpf', formatCPF(value));
+    }
+  };
+
+  const handleRGChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      updateFormData('rg', formatRG(value));
+    }
+  };
+
+  const formatPhone = (value) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    } else {
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      updateFormData('telefone', formatPhone(value));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -292,7 +338,8 @@ export default function CadastroCidadao() {
                         className="form-input" 
                         placeholder="000.000.000-00"
                         value={formData.cpf}
-                        onChange={(e) => updateFormData('cpf', e.target.value)}
+                        onChange={handleCPFChange}
+                        maxLength={14}
                       />
                     </div>
                   </div>
@@ -302,9 +349,10 @@ export default function CadastroCidadao() {
                       required 
                       type="text" 
                       className="form-input" 
-                      placeholder="Número do documento"
+                      placeholder="00.000.000-0 ou 000.000.000-00"
                       value={formData.rg}
-                      onChange={(e) => updateFormData('rg', e.target.value)}
+                      onChange={handleRGChange}
+                      maxLength={14}
                     />
                   </div>
                   <div className="form-info-box span-2">
@@ -331,7 +379,8 @@ export default function CadastroCidadao() {
                         className="form-input" 
                         placeholder="(00) 00000-0000"
                         value={formData.telefone}
-                        onChange={(e) => updateFormData('telefone', e.target.value)}
+                        onChange={handlePhoneChange}
+                        maxLength={15}
                       />
                     </div>
                   </div>
