@@ -28,10 +28,10 @@ import {
   VolumeX,
   Sparkles
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService';
-import '../styles/pages/profile.css';
+import apiService from '../../services/apiService';
+import './styles.css';
 
 const ProfileComponent = () => {
   const { user, isAuthenticated, updateUser } = useAuth();

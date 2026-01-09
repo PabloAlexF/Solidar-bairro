@@ -11,16 +11,16 @@ import CadastroCidadao from '../pages/Cadastro/components/CadastroCidadao';
 import CadastroComercio from '../pages/Cadastro/components/CadastroComercio';
 import CadastroFamilia from '../pages/Cadastro/components/CadastroFamilia';
 import CadastroONG from '../pages/Cadastro/components/CadastroONG';
-
-// Other pages (to be refactored)
 import AdminDashboard from '../pages/AdminDashboard';
 import QueroAjudar from '../pages/QueroAjudar';
 import PrecisoDeAjuda from '../pages/PrecisoDeAjuda';
 import AchadosEPerdidos from '../pages/AchadosEPerdidos';
-import NovoAnuncio from '../pages/NovoAnuncio';
 import Perfil from '../pages/Perfil';
-import Conversas from '../pages/Conversas';
 import Chat from '../pages/Chat';
+
+// Remaining pages (not yet refactored)
+import NovoAnuncio from '../pages/NovoAnuncio';
+import Conversas from '../pages/Conversas';
 
 const AppRoutes = () => {
   return (
@@ -33,12 +33,11 @@ const AppRoutes = () => {
       <Route path="/cadastro/comercio" element={<CadastroComercio />} />
       <Route path="/cadastro/familia" element={<CadastroFamilia />} />
       <Route path="/cadastro/ong" element={<CadastroONG />} />
-      <Route path="/quero-ajudar" element={<Layout><QueroAjudar /></Layout>} />
-      <Route path="/preciso-de-ajuda" element={<Layout><PrecisoDeAjuda /></Layout>} />
+      <Route path="/quero-ajudar" element={<Layout showHeader={false}><QueroAjudar /></Layout>} />
+      <Route path="/preciso-de-ajuda" element={<Layout showHeader={false}><PrecisoDeAjuda /></Layout>} />
       <Route path="/achados-e-perdidos" element={<AchadosEPerdidos />} />
       <Route path="/achados-e-perdidos/novo" element={<Layout><NovoAnuncio /></Layout>} />
-      <Route path="/perfil" element={<Layout><Perfil /></Layout>} />
-      <Route path="/conversas" element={<Conversas />} />
+      <Route path="/perfil" element={<Perfil />} />
       <Route path="/chat/:id" element={<Layout><Chat /></Layout>} />
     </Routes>
   );

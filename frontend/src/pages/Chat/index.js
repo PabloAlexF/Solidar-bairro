@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../components/layout/Header';
-import { useAuth } from '../contexts/AuthContext';
-import ApiService from '../services/apiService';
-import chatNotificationService from '../services/chatNotificationService';
+import Header from '../../components/layout/Header';
+import { useAuth } from '../../contexts/AuthContext';
+import ApiService from '../../services/apiService';
+import chatNotificationService from '../../services/chatNotificationService';
 import { 
   Heart, 
   ArrowLeft, 
@@ -25,7 +25,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import '../styles/pages/Chat.css';
+import './styles.css';
 
 const formatTime = (date) => {
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });

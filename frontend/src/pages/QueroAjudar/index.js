@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import apiService from '../services/apiService';
-import { useToast } from '../hooks/useToast';
-import { formatAddress, formatLocation, formatNeighborhood, safeRenderAddress } from '../utils/addressUtils';
+import apiService from '../../services/apiService';
+import { useToast } from '../../hooks/useToast';
+import { formatAddress, formatLocation, formatNeighborhood, safeRenderAddress } from '../../utils/addressUtils';
 import { 
   MapPin, 
   Heart,
@@ -17,7 +17,7 @@ import {
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import '../styles/pages/quero-ajudar.css';
+import './styles.css';
 
 // --- Constants ---
 const DETAIL_LABELS = {

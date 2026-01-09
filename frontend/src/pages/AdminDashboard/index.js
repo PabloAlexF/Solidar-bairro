@@ -23,7 +23,7 @@ import {
   Zap, Target, Sparkles, DollarSign,
   Home, Users2, ListChecks
 } from 'lucide-react';
-import '../styles/pages/AdminDashboard.css';
+import './styles.css';
 
 ChartJS.register(
   CategoryScale,

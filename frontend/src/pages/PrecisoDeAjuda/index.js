@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiService from '../services/apiService';
-import { AnalyzingModal, InconsistentModal, SuccessModal } from '../components/ui/modals';
+import apiService from '../../services/apiService';
+import { AnalyzingModal, InconsistentModal, SuccessModal } from '../../components/ui/modals';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -44,8 +44,8 @@ import {
   Map as MapIcon,
   Globe
 } from 'lucide-react';
-import MapaAlcance from '../components/MapaAlcance';
-import '../styles/pages/PrecisoDeAjuda.css';
+import MapaAlcance from '../../components/MapaAlcance';
+import './styles.css';
 
 const CATEGORIES = [
   { id: 'Alimentos', label: 'Alimentos', icon: <ShoppingCart size={24} />, color: '#f97316' },

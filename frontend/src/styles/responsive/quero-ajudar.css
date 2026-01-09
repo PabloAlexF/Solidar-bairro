@@ -1,13 +1,8 @@
-/* ===== RESPONSIVIDADE - QUERO AJUDAR ===== */
+/* Responsive styles for QueroAjudar page */
 
-/* Tablet */
-@media (max-width: 1024px) {
-  .pedidos-grid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  }
-}
+/* Mobile First - Base styles already in main CSS */
 
-/* Mobile */
+/* Tablet styles */
 @media (max-width: 768px) {
   .pedidos-wrapper {
     padding: 20px 16px;
@@ -27,42 +22,93 @@
     justify-content: center;
   }
 
+  .filters-content {
+    padding: 24px;
+    gap: 24px;
+  }
+
   .pedidos-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .modal-content {
     padding: 24px;
+    margin: 10px;
     border-radius: 24px;
-  }
-
-  .options-grid {
-    grid-template-columns: 1fr !important;
   }
 }
 
-/* Small Mobile */
+/* Mobile styles */
 @media (max-width: 480px) {
+  .pedidos-wrapper {
+    padding: 16px 12px;
+  }
+
   .pedidos-header h1 {
     font-size: 1.75rem;
   }
 
-  .card-header {
+  .pedidos-header p {
+    font-size: 1rem;
+  }
+
+  .filters-content {
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .filter-options {
+    gap: 8px;
+  }
+
+  .chip-btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+
+  .pedido-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .card-footer {
     flex-direction: column;
-    align-items: flex-start;
+    gap: 8px;
   }
 
-  .urgency-badge {
-    align-self: flex-start;
+  .btn {
+    padding: 14px;
+    font-size: 0.9rem;
   }
 
-  .modal-section-flex {
-    flex-direction: column;
-    align-items: flex-start !important;
+  .modal-content {
+    padding: 20px;
+    margin: 8px;
+    border-radius: 20px;
+    max-height: 95vh;
   }
 
-  .user-avatar-large {
-    width: 60px !important;
-    height: 60px !important;
+  .modal-close {
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1200px) {
+  .container {
+    max-width: 1400px;
+  }
+
+  .pedidos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 32px;
+  }
+
+  .pedido-card {
+    padding: 32px;
   }
 }

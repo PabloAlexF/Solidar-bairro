@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { formatLocation } from '../utils/addressUtils';
+import { useAuth } from '../../contexts/AuthContext';
+import { formatLocation } from '../../utils/addressUtils';
 import { 
   Search, 
   Plus, 
@@ -30,8 +30,8 @@ import {
   Bell,
   User
 } from 'lucide-react';
-import ThreeScene from '../components/ThreeScene';
-import '../styles/pages/LostAndFound.css';
+import ThreeScene from '../../components/ThreeScene';
+import './styles.css';
 
 const CATEGORIES = [
   'Eletrônicos',
@@ -186,7 +186,7 @@ const ItemCard = ({ item, onOpenDetails, isPreview = false }) => {
 };
 
 // --- Main Component ---
-export default function LostAndFound() {
+export default function AchadosEPerdidos() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [items, setItems] = useState([]);
