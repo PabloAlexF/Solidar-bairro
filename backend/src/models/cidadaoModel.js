@@ -3,15 +3,14 @@ class Cidadao {
     this.nome = data.nome;
     this.email = data.email;
     this.telefone = data.telefone;
-    this.endereco = {
-      cep: data.cep,
-      rua: data.rua,
-      numero: data.numero,
-      complemento: data.complemento || '',
-      bairro: data.bairro,
-      cidade: data.cidade,
-      estado: data.estado
-    };
+    this.dataNascimento = data.dataNascimento;
+    this.ocupacao = data.ocupacao;
+    this.cpf = data.cpf;
+    this.rg = data.rg;
+    this.endereco = data.endereco || '';
+    this.disponibilidade = data.disponibilidade || [];
+    this.interesses = data.interesses || [];
+    this.proposito = data.proposito || '';
     this.tipo = 'cidadao';
     this.ativo = true;
     this.criadoEm = new Date();
@@ -24,12 +23,11 @@ class Cidadao {
     if (!this.nome?.trim()) errors.push('Nome é obrigatório');
     if (!this.email?.trim()) errors.push('Email é obrigatório');
     if (!this.telefone?.trim()) errors.push('Telefone é obrigatório');
-    if (!this.endereco.cep?.trim()) errors.push('CEP é obrigatório');
-    if (!this.endereco.rua?.trim()) errors.push('Rua é obrigatória');
-    if (!this.endereco.numero?.trim()) errors.push('Número é obrigatório');
-    if (!this.endereco.bairro?.trim()) errors.push('Bairro é obrigatório');
-    if (!this.endereco.cidade?.trim()) errors.push('Cidade é obrigatória');
-    if (!this.endereco.estado?.trim()) errors.push('Estado é obrigatório');
+    if (!this.dataNascimento) errors.push('Data de nascimento é obrigatória');
+    if (!this.ocupacao?.trim()) errors.push('Ocupação é obrigatória');
+    if (!this.cpf?.trim()) errors.push('CPF é obrigatório');
+    if (!this.rg?.trim()) errors.push('RG é obrigatório');
+    if (!this.endereco?.trim()) errors.push('Endereço é obrigatório');
     
     return errors;
   }

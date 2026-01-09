@@ -8,6 +8,7 @@ import {
   Star, Rocket, Share2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ApiService from '../services/apiService';
 import '../styles/components/CadastroFamilia.css';
 
 // Componente para contador de família
@@ -68,7 +69,31 @@ export default function CadastroFamilia() {
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
   const [addressData, setAddressData] = useState({ endereco: '', bairro: '', referencia: '' });
   const [isLocating, setIsLocating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
+  const [formData, setFormData] = useState({
+    nomeCompleto: '',
+    dataNascimento: '',
+    estadoCivil: '',
+    profissao: '',
+    cpf: '',
+    rg: '',
+    nis: '',
+    rendaFamiliar: '',
+    telefone: '',
+    whatsapp: '',
+    email: '',
+    horarioContato: '',
+    endereco: '',
+    bairro: '',
+    pontoReferencia: '',
+    tipoMoradia: '',
+    criancas: 0,
+    jovens: 0,
+    adultos: 1,
+    idosos: 0,
+    necessidades: []
+  });
   
   const totalSteps = 6;
   
@@ -94,17 +119,46 @@ export default function CadastroFamilia() {
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
   
-  const updateFamilyCount = (key, increment) => {
-    setFamilyCount(prev => ({
-      ...prev,
-      [key]: Math.max(0, prev[key] + increment)
-    }));
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleCheckboxChange = (field, value, checked) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: checked 
+        ? [...prev[field], value]
+        : prev[field].filter(item => item !== value)
+    }));
+  };
+  
+  const updateFamilyCount = (key, increment) => {
+    const newCount = Math.max(0, familyCount[key] + increment);
+    setFamilyCount(prev => ({ ...prev, [key]: newCount }));
+    setFormData(prev => ({ ...prev, [key]: newCount }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => setShowAnalysisAlert(true), 2000);
+    setIsLoading(true);
+    
+    try {
+      const submitData = {
+        ...formData,
+        endereco: addressData.endereco || formData.endereco,
+        bairro: addressData.bairro || formData.bairro,
+        pontoReferencia: addressData.referencia || formData.pontoReferencia
+      };
+      
+      await ApiService.createFamilia(submitData);
+      setIsSubmitted(true);
+      setTimeout(() => setShowAnalysisAlert(true), 2000);
+    } catch (error) {
+      console.error('Erro ao cadastrar família:', error);
+      alert('Erro ao realizar cadastro. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleMapLocation = () => {
@@ -410,6 +464,8 @@ export default function CadastroFamilia() {
                           type="text" 
                           className="form-input" 
                           placeholder="Digite seu nome completo"
+                          value={formData.nomeCompleto}
+                          onChange={(e) => updateFormData('nomeCompleto', e.target.value)}
                           required 
                         />
                       </div>
@@ -421,7 +477,9 @@ export default function CadastroFamilia() {
                         <Calendar className="input-icon" />
                         <input 
                           type="date" 
-                          className="form-input" 
+                          className="form-input"
+                          value={formData.dataNascimento}
+                          onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                           required 
                         />
                       </div>
@@ -432,7 +490,14 @@ export default function CadastroFamilia() {
                       <div className="radio-grid radio-grid-4">
                         {['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)'].map((estado) => (
                           <label key={estado} className="radio-label">
-                            <input type="radio" name="estado_civil" value={estado} className="radio-input" />
+                            <input 
+                              type="radio" 
+                              name="estado_civil" 
+                              value={estado} 
+                              className="radio-input"
+                              checked={formData.estadoCivil === estado}
+                              onChange={(e) => updateFormData('estadoCivil', e.target.value)}
+                            />
                             <div className="radio-box">{estado}</div>
                           </label>
                         ))}
@@ -447,6 +512,8 @@ export default function CadastroFamilia() {
                           type="text" 
                           className="form-input" 
                           placeholder="Qual sua profissão?"
+                          value={formData.profissao}
+                          onChange={(e) => updateFormData('profissao', e.target.value)}
                           required 
                         />
                       </div>
@@ -465,6 +532,8 @@ export default function CadastroFamilia() {
                           type="text" 
                           className="form-input" 
                           placeholder="000.000.000-00"
+                          value={formData.cpf}
+                          onChange={(e) => updateFormData('cpf', e.target.value)}
                           required 
                         />
                       </div>
@@ -478,6 +547,8 @@ export default function CadastroFamilia() {
                           type="text" 
                           className="form-input" 
                           placeholder="00.000.000-0"
+                          value={formData.rg}
+                          onChange={(e) => updateFormData('rg', e.target.value)}
                           required 
                         />
                       </div>
@@ -491,6 +562,8 @@ export default function CadastroFamilia() {
                           type="text" 
                           className="form-input" 
                           placeholder="000.00000.00-0 (se possuir)"
+                          value={formData.nis}
+                          onChange={(e) => updateFormData('nis', e.target.value)}
                         />
                       </div>
                     </div>
@@ -505,7 +578,14 @@ export default function CadastroFamilia() {
                           { label: 'Acima de R$ 2.000', value: 'acima_2000', icon: <DollarSign size={20} />, desc: 'Renda alta' }
                         ].map((renda) => (
                           <label key={renda.value} className="radio-label">
-                            <input type="radio" name="renda" value={renda.value} className="radio-input" />
+                            <input 
+                              type="radio" 
+                              name="renda" 
+                              value={renda.value} 
+                              className="radio-input"
+                              checked={formData.rendaFamiliar === renda.value}
+                              onChange={(e) => updateFormData('rendaFamiliar', e.target.value)}
+                            />
                             <div className="card-radio-box-enhanced">
                               <div className="card-icon-box-enhanced" style={{ background: '#fff7ed', color: '#f97316' }}>
                                 {renda.icon}
@@ -536,6 +616,8 @@ export default function CadastroFamilia() {
                           type="tel" 
                           className="form-input" 
                           placeholder="(00) 00000-0000"
+                          value={formData.telefone}
+                          onChange={(e) => updateFormData('telefone', e.target.value)}
                           required 
                         />
                       </div>
@@ -549,6 +631,8 @@ export default function CadastroFamilia() {
                           type="tel" 
                           className="form-input" 
                           placeholder="(00) 00000-0000"
+                          value={formData.whatsapp}
+                          onChange={(e) => updateFormData('whatsapp', e.target.value)}
                         />
                       </div>
                     </div>
@@ -561,6 +645,8 @@ export default function CadastroFamilia() {
                           type="email" 
                           className="form-input" 
                           placeholder="seu@email.com"
+                          value={formData.email}
+                          onChange={(e) => updateFormData('email', e.target.value)}
                         />
                       </div>
                     </div>
@@ -570,7 +656,14 @@ export default function CadastroFamilia() {
                       <div className="radio-grid radio-grid-4">
                         {['Manhã', 'Tarde', 'Noite', 'Qualquer'].map((horario) => (
                           <label key={horario} className="radio-label">
-                            <input type="radio" name="horario" value={horario} className="radio-input" />
+                            <input 
+                              type="radio" 
+                              name="horario" 
+                              value={horario} 
+                              className="radio-input"
+                              checked={formData.horarioContato === horario}
+                              onChange={(e) => updateFormData('horarioContato', e.target.value)}
+                            />
                             <div className="radio-box">{horario}</div>
                           </label>
                         ))}
@@ -641,7 +734,14 @@ export default function CadastroFamilia() {
                           { label: 'Outros', icon: <Home size={20} /> }
                         ].map((tipo) => (
                           <label key={tipo.label} className="radio-label">
-                            <input type="radio" name="tipo_moradia" value={tipo.label} className="radio-input" />
+                            <input 
+                              type="radio" 
+                              name="tipo_moradia" 
+                              value={tipo.label} 
+                              className="radio-input"
+                              checked={formData.tipoMoradia === tipo.label}
+                              onChange={(e) => updateFormData('tipoMoradia', e.target.value)}
+                            />
                             <div className="card-radio-box">
                               <div className="card-icon-box">
                                 {tipo.icon}
@@ -651,7 +751,7 @@ export default function CadastroFamilia() {
                               </div>
                             </div>
                           </label>
-                        ))}
+                        ))}}
                       </div>
                     </div>
                   </div>
@@ -702,7 +802,14 @@ export default function CadastroFamilia() {
                         'Móveis', 'Eletrodomésticos', 'Consultas Médicas', 'Cursos Profissionalizantes'
                       ].map((need) => (
                         <label key={need} className="need-item">
-                          <input type="checkbox" name="necessidades" value={need} className="need-input" />
+                          <input 
+                            type="checkbox" 
+                            name="necessidades" 
+                            value={need} 
+                            className="need-input"
+                            checked={formData.necessidades.includes(need)}
+                            onChange={(e) => handleCheckboxChange('necessidades', need, e.target.checked)}
+                          />
                           <div className="need-box">
                             <span className="need-label">{need}</span>
                             <div className="check-circle-box">
@@ -748,8 +855,8 @@ export default function CadastroFamilia() {
                     <ChevronRight size={20} />
                   </button>
                 ) : (
-                  <button type="submit" className="btn-finish">
-                    Finalizar Cadastro
+                  <button type="submit" className="btn-finish" disabled={isLoading}>
+                    {isLoading ? 'Finalizando...' : 'Finalizar Cadastro'}
                     <CheckCircle2 size={20} />
                   </button>
                 )}

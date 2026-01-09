@@ -10,21 +10,59 @@ import {
   Share2, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ApiService from '../services/apiService';
 import '../styles/components/CadastroCidadao.css';
 
 export default function CadastroCidadao() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    nome: '',
+    dataNascimento: '',
+    ocupacao: '',
+    cpf: '',
+    rg: '',
+    telefone: '',
+    email: '',
+    endereco: '',
+    disponibilidade: [],
+    interesses: [],
+    proposito: ''
+  });
   const totalSteps = 6;
 
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
-  const handleSubmit = (e) => {
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCheckboxChange = (field, value, checked) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: checked 
+        ? [...prev[field], value]
+        : prev[field].filter(item => item !== value)
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => setShowAnalysisAlert(true), 2000);
+    setIsLoading(true);
+    
+    try {
+      await ApiService.createCidadao(formData);
+      setIsSubmitted(true);
+      setTimeout(() => setShowAnalysisAlert(true), 2000);
+    } catch (error) {
+      console.error('Erro ao cadastrar cidadão:', error);
+      alert('Erro ao realizar cadastro. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const steps = [
@@ -205,19 +243,39 @@ export default function CadastroCidadao() {
                     <label className="field-label">Nome Completo</label>
                     <div className="input-with-icon">
                       <User className="field-icon" size={20} />
-                      <input required type="text" className="form-input" placeholder="Seu nome completo" />
+                      <input 
+                        required 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Seu nome completo"
+                        value={formData.nome}
+                        onChange={(e) => updateFormData('nome', e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="form-group">
                     <label className="field-label">Data de Nascimento</label>
                     <div className="input-with-icon">
                       <Calendar className="field-icon" size={20} />
-                      <input required type="date" className="form-input" />
+                      <input 
+                        required 
+                        type="date" 
+                        className="form-input"
+                        value={formData.dataNascimento}
+                        onChange={(e) => updateFormData('dataNascimento', e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="form-group">
                     <label className="field-label">Ocupação / Habilidade</label>
-                    <input required type="text" className="form-input" placeholder="Ex: Professor, Médico, etc." />
+                    <input 
+                      required 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="Ex: Professor, Médico, etc."
+                      value={formData.ocupacao}
+                      onChange={(e) => updateFormData('ocupacao', e.target.value)}
+                    />
                   </div>
                 </div>
               )}
@@ -228,12 +286,26 @@ export default function CadastroCidadao() {
                     <label className="field-label">CPF</label>
                     <div className="input-with-icon">
                       <Fingerprint className="field-icon" size={20} />
-                      <input required type="text" className="form-input" placeholder="000.000.000-00" />
+                      <input 
+                        required 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="000.000.000-00"
+                        value={formData.cpf}
+                        onChange={(e) => updateFormData('cpf', e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="form-group">
                     <label className="field-label">RG</label>
-                    <input required type="text" className="form-input" placeholder="Número do documento" />
+                    <input 
+                      required 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="Número do documento"
+                      value={formData.rg}
+                      onChange={(e) => updateFormData('rg', e.target.value)}
+                    />
                   </div>
                   <div className="form-info-box span-2">
                     <div className="info-icon-box">
@@ -253,14 +325,28 @@ export default function CadastroCidadao() {
                     <label className="field-label">WhatsApp</label>
                     <div className="input-with-icon">
                       <Phone className="field-icon" size={20} />
-                      <input required type="tel" className="form-input" placeholder="(00) 00000-0000" />
+                      <input 
+                        required 
+                        type="tel" 
+                        className="form-input" 
+                        placeholder="(00) 00000-0000"
+                        value={formData.telefone}
+                        onChange={(e) => updateFormData('telefone', e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="form-group">
                     <label className="field-label">E-mail</label>
                     <div className="input-with-icon">
                       <Mail className="field-icon" size={20} />
-                      <input required type="email" className="form-input" placeholder="seu@email.com" />
+                      <input 
+                        required 
+                        type="email" 
+                        className="form-input" 
+                        placeholder="seu@email.com"
+                        value={formData.email}
+                        onChange={(e) => updateFormData('email', e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -272,7 +358,14 @@ export default function CadastroCidadao() {
                     <label className="field-label">Endereço de Referência</label>
                     <div className="input-with-icon">
                       <Home className="field-icon" size={20} />
-                      <input required type="text" className="form-input" placeholder="Rua, Bairro, Cidade" />
+                      <input 
+                        required 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Rua, Bairro, Cidade"
+                        value={formData.endereco}
+                        onChange={(e) => updateFormData('endereco', e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="form-group span-2">
@@ -280,7 +373,13 @@ export default function CadastroCidadao() {
                     <div className="selectable-grid" id="availability-grid">
                       {availabilityOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
-                          <input type="checkbox" name="disponibilidade" value={opt.label} />
+                          <input 
+                            type="checkbox" 
+                            name="disponibilidade" 
+                            value={opt.label}
+                            checked={formData.disponibilidade.includes(opt.label)}
+                            onChange={(e) => handleCheckboxChange('disponibilidade', opt.label, e.target.checked)}
+                          />
                           <div className="selectable-card">
                             <div className="selectable-card-icon">{opt.icon}</div>
                             <span className="selectable-card-text">{opt.label}</span>
@@ -299,7 +398,13 @@ export default function CadastroCidadao() {
                     <div className="selectable-grid">
                       {helpOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
-                          <input type="checkbox" name="interesses" value={opt.label} />
+                          <input 
+                            type="checkbox" 
+                            name="interesses" 
+                            value={opt.label}
+                            checked={formData.interesses.includes(opt.label)}
+                            onChange={(e) => handleCheckboxChange('interesses', opt.label, e.target.checked)}
+                          />
                           <div className="selectable-card">
                             <div className="selectable-card-icon">{opt.icon}</div>
                             <span className="selectable-card-text">{opt.label}</span>
@@ -315,7 +420,13 @@ export default function CadastroCidadao() {
                 <div className="form-grid">
                   <div className="form-group span-2">
                     <label className="field-label">Conte seu propósito (Opcional)</label>
-                    <textarea className="form-input" placeholder="Por que você quer ser voluntário?" rows={4}></textarea>
+                    <textarea 
+                      className="form-input" 
+                      placeholder="Por que você quer ser voluntário?" 
+                      rows={4}
+                      value={formData.proposito}
+                      onChange={(e) => updateFormData('proposito', e.target.value)}
+                    ></textarea>
                   </div>
                   <div className="form-final-box span-2">
                     <Award size={48} className="final-icon" />
@@ -343,8 +454,8 @@ export default function CadastroCidadao() {
                       <ChevronRight size={20} />
                     </button>
                   ) : (
-                    <button type="submit" className="btn-finish">
-                      <span>Confirmar Compromisso</span>
+                    <button type="submit" className="btn-finish" disabled={isLoading}>
+                      <span>{isLoading ? 'Cadastrando...' : 'Confirmar Compromisso'}</span>
                       <CheckCircle2 size={20} />
                     </button>
                   )}
