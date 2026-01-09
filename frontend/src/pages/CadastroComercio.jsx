@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Store, ArrowLeft, Building, Phone, MapPin, Package, CheckCircle2, ChevronRight, ChevronLeft, Mail, ShieldCheck, Search, UserCheck, Trophy, Target, Zap, Award, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PasswordField from '../components/ui/PasswordField';
 import '../styles/pages/styles.css';
+import '../styles/components/PasswordField.css';
 
 export default function CadastroComercio() {
   const [step, setStep] = useState(1);
@@ -222,6 +224,18 @@ export default function CadastroComercio() {
                       <Mail className="input-icon" />
                     </div>
                   </div>
+                  <PasswordField 
+                    label="Senha de Acesso"
+                    placeholder="Crie uma senha segura"
+                    required
+                    className=""
+                  />
+                  <PasswordField 
+                    label="Confirmar Senha"
+                    placeholder="Digite a senha novamente"
+                    required
+                    className=""
+                  />
                 </div>
               )}
 

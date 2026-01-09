@@ -10,7 +10,9 @@ import {
   Share2, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PasswordField from '../components/ui/PasswordField';
 import '../styles/components/CadastroCidadao.css';
+import '../styles/components/PasswordField.css';
 
 export default function CadastroCidadao() {
   const [step, setStep] = useState(1);
@@ -263,6 +265,16 @@ export default function CadastroCidadao() {
                       <input required type="email" className="form-input" placeholder="seu@email.com" />
                     </div>
                   </div>
+                  <PasswordField 
+                    label="Senha de Acesso"
+                    placeholder="Crie uma senha segura"
+                    required
+                  />
+                  <PasswordField 
+                    label="Confirmar Senha"
+                    placeholder="Digite a senha novamente"
+                    required
+                  />
                 </div>
               )}
 

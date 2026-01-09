@@ -7,7 +7,9 @@ import {
   Calendar, Home, Compass, Sun, Sunrise, Warehouse, Map
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PasswordField from '../components/ui/PasswordField';
 import '../styles/components/CadastroONG.css';
+import '../styles/components/PasswordField.css';
 
 export default function CadastroONG() {
   const [step, setStep] = useState(1);
@@ -246,6 +248,16 @@ export default function CadastroONG() {
                       <input type="url" className="form-input" placeholder="https://www.suaong.org" />
                     </div>
                   </div>
+                  <PasswordField 
+                    label="Senha de Acesso"
+                    placeholder="Crie uma senha segura"
+                    required
+                  />
+                  <PasswordField 
+                    label="Confirmar Senha"
+                    placeholder="Digite a senha novamente"
+                    required
+                  />
                 </div>
               )}
 

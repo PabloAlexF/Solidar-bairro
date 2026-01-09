@@ -8,7 +8,9 @@ import {
   Star, Rocket, Share2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PasswordField from '../components/ui/PasswordField';
 import '../styles/components/CadastroFamilia.css';
+import '../styles/components/PasswordField.css';
 
 // Componente para contador de família
 const FamilyCounter = ({ item, count, onUpdate }) => (
@@ -576,6 +578,20 @@ export default function CadastroFamilia() {
                         ))}
                       </div>
                     </div>
+                    
+                    <PasswordField 
+                      label="Senha de Acesso"
+                      placeholder="Crie uma senha segura"
+                      required
+                      className=""
+                    />
+                    
+                    <PasswordField 
+                      label="Confirmar Senha"
+                      placeholder="Digite a senha novamente"
+                      required
+                      className=""
+                    />
                   </div>
                 )}
 
