@@ -10,11 +10,11 @@ import {
   Share2, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import PasswordField from '../components/ui/PasswordField';
-import ApiService from '../services/apiService';
-import '../styles/components/CadastroCidadao.css';
-import '../styles/components/PasswordField.css';
-import '../styles/components/Toast.css';
+import PasswordField from '../../../components/ui/PasswordField';
+import ApiService from '../../../services/apiService';
+import '../../../styles/components/CadastroCidadao.css';
+import '../../../styles/components/PasswordField.css';
+import '../../../styles/components/Toast.css';
 
 export default function CadastroCidadao() {
   const [step, setStep] = useState(1);
@@ -228,7 +228,7 @@ export default function CadastroCidadao() {
         </div>
 
         {showAnalysisAlert && (
-          <div className="alert-overlay">
+          <div className="alert-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
             <div className="analysis-alert">
               <div className="alert-icon">
                 <ShieldCheck size={48} />

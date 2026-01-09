@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import createGlobe from 'cobe';
 import { 
@@ -24,7 +24,7 @@ import {
   Sparkles
 } from 'lucide-react';
 
-import '../styles/pages/LandingPage.css';
+import './styles.css';
 
 const ActionCard = ({ 
   icon, 

@@ -7,9 +7,9 @@ import {
   Calendar, Home, Compass, Sun, Sunrise, Warehouse, Map
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import PasswordField from '../components/ui/PasswordField';
-import '../styles/components/CadastroONG.css';
-import '../styles/components/PasswordField.css';
+import PasswordField from '../../../components/ui/PasswordField';
+import '../../../styles/components/CadastroONG.css';
+import '../../../styles/components/PasswordField.css';
 
 export default function CadastroONG() {
   const [step, setStep] = useState(1);

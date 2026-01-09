@@ -8,11 +8,11 @@ import {
   Star, Rocket, Share2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import PasswordField from '../components/ui/PasswordField';
-import ApiService from '../services/apiService';
-import '../styles/components/CadastroFamilia.css';
-import '../styles/components/PasswordField.css';
-import '../styles/components/Toast.css';
+import PasswordField from '../../../components/ui/PasswordField';
+import ApiService from '../../../services/apiService';
+import '../../../styles/components/CadastroFamilia.css';
+import '../../../styles/components/PasswordField.css';
+import '../../../styles/components/Toast.css';
 
 // Componente para contador de família
 const FamilyCounter = ({ item, count, onUpdate }) => (

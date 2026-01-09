@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Lock, Eye, EyeOff, Heart, ArrowRight, LogIn, Users, ShieldCheck, Sparkles } from 'lucide-react';
-import '../styles/pages/Login.css';
+import './styles.css';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -34,6 +34,14 @@ const Login = () => {
     setLoading(true);
     
     try {
+      // Usuário temporário para admin
+      if (formData.email === 'admin@solidar.com' && formData.senha === 'admin123') {
+        localStorage.setItem('authToken', 'admin-token');
+        localStorage.setItem('userRole', 'admin');
+        navigate('/admin/dashboard');
+        return;
+      }
+      
       await login(formData.email, formData.senha);
       navigate('/');
     } catch (error) {

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Building2, Heart, Sparkles, User, Store, ArrowRight, Zap, TrendingUp } from 'lucide-react';
-import Header from '../components/layout/Header';
-import '../styles/cadastro/cadastro.css';
+import Header from '../../components/layout/Header';
+import './styles.css';
 
 const cadastroTypes = [
   {

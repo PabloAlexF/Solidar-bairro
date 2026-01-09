@@ -7,7 +7,7 @@ import {
   ShoppingBag, CreditCard, Tag, Eye, EyeOff, AlertCircle, X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import '../styles/pages/cadastro-comercio.css';
+import '../../../styles/pages/cadastro-comercio.css';
 
 export default function CadastroComercio() {
   const [step, setStep] = useState(1);
