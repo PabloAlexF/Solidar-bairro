@@ -1,6 +1,6 @@
 /* Styles for Cadastro de Família */
 
-.cadastro-container {
+.familia-cadastro-container {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   position: relative;
   overflow-x: hidden;
@@ -14,7 +14,7 @@
 }
 
 /* Background Blobs */
-.bg-blobs {
+.familia-bg-blobs {
   position: fixed;
   top: 0;
   left: 0;
@@ -24,32 +24,32 @@
   z-index: 1;
 }
 
-.blob-1, .blob-2 {
+.familia-blob-1, .familia-blob-2 {
   position: absolute;
   border-radius: 50%;
   filter: blur(60px);
   opacity: 0.3;
 }
 
-.blob-1 {
+.familia-blob-1 {
   width: 400px;
   height: 400px;
   background: var(--theme-color-light);
   top: -200px;
   right: -200px;
-  animation: float 20s ease-in-out infinite;
+  animation: familia-float 20s ease-in-out infinite;
 }
 
-.blob-2 {
+.familia-blob-2 {
   width: 300px;
   height: 300px;
   background: #fff1f2;
   bottom: -150px;
   left: -150px;
-  animation: float 25s ease-in-out infinite reverse;
+  animation: familia-float 25s ease-in-out infinite reverse;
 }
 
-@keyframes float {
+@keyframes familia-float {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
   33% { transform: translate(30px, -30px) rotate(120deg); }
   66% { transform: translate(-20px, 20px) rotate(240deg); }
@@ -121,7 +121,7 @@
 }
 
 /* Main Grid */
-.main-grid {
+.familia-main-grid {
   display: grid;
   grid-template-columns: 400px 1fr;
   position: relative;
@@ -1614,7 +1614,7 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .main-grid {
+  .familia-main-grid {
     grid-template-columns: 1fr;
     overflow: visible;
   }

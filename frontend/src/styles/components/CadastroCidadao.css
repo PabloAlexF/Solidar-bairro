@@ -9,14 +9,14 @@
 }
 
 /* Base Styles */
-.cadastro-container {
+.cidadao-cadastro-container {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   position: relative;
   overflow-x: hidden;
   padding: 2rem 0;
 }
 
-.bg-blobs {
+.cidadao-bg-blobs {
   position: fixed;
   top: 0;
   left: 0;
@@ -26,33 +26,33 @@
   z-index: 1;
 }
 
-.blob {
+.cidadao-blob {
   position: absolute;
   border-radius: 50%;
   filter: blur(60px);
   opacity: 0.3;
 }
 
-.blob-1 {
+.cidadao-blob-1 {
   width: 400px;
   height: 400px;
   background: var(--theme-color-light);
   top: -200px;
   right: -200px;
-  animation: float 20s ease-in-out infinite;
+  animation: cidadao-float 20s ease-in-out infinite;
 }
 
-.blob-2 {
+.cidadao-blob-2 {
   width: 300px;
   height: 300px;
   background: #fff1f2;
   bottom: -150px;
   left: -150px;
-  animation: float 25s ease-in-out infinite reverse;
+  animation: cidadao-float 25s ease-in-out infinite reverse;
 }
 
 /* Navigation */
-.top-nav {
+.cidadao-top-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -63,7 +63,7 @@
   z-index: 10;
 }
 
-.back-link {
+.cidadao-back-link {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -73,11 +73,11 @@
   transition: all 0.2s;
 }
 
-.back-link:hover {
+.cidadao-back-link:hover {
   color: var(--theme-color);
 }
 
-.back-icon-box {
+.cidadao-back-icon-box {
   width: 40px;
   height: 40px;
   background: #f9fafb;
@@ -88,18 +88,18 @@
   transition: all 0.2s;
 }
 
-.back-link:hover .back-icon-box {
+.cidadao-back-link:hover .cidadao-back-icon-box {
   background: var(--theme-color-light);
   color: var(--theme-color);
 }
 
-.nav-brand {
+.cidadao-nav-brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.brand-icon-box {
+.cidadao-brand-icon-box {
   width: 48px;
   height: 48px;
   background: var(--theme-color);
@@ -110,14 +110,14 @@
   justify-content: center;
 }
 
-.brand-text {
+.cidadao-brand-text {
   font-size: 1.5rem;
   font-weight: 900;
   color: #111827;
 }
 
 /* Main Layout */
-.main-layout {
+.cidadao-main-layout {
   display: grid;
   grid-template-columns: 400px 1fr;
   position: relative;
@@ -683,7 +683,7 @@
 }
 
 /* Animations */
-@keyframes float {
+@keyframes cidadao-float {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
   33% { transform: translate(30px, -30px) rotate(120deg); }
   66% { transform: translate(-20px, 20px) rotate(240deg); }
@@ -725,7 +725,7 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .main-layout {
+  .cidadao-main-layout {
     grid-template-columns: 1fr;
   }
   
@@ -757,11 +757,11 @@
     font-size: 2rem;
   }
   
-  .top-nav {
+  .cidadao-top-nav {
     padding: 1rem;
   }
   
-  .brand-text {
+  .cidadao-brand-text {
     font-size: 1.25rem;
   }
 }

@@ -328,7 +328,7 @@ export default function CadastroFamilia() {
 
   if (isSubmitted) {
     return (
-      <div className="cadastro-container familia-theme" style={{ height: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div className="familia-cadastro-container familia-theme" style={{ height: '100vh', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
         <div className="form-card-new" style={{ width: '100%', maxWidth: '1200px', height: 'auto', maxHeight: '85vh', overflow: 'hidden' }}>
           <div className="success-grid" style={{ display: 'flex', height: '100%' }}>
             <div className="success-left" style={{ flex: '1', minWidth: '400px' }}>
@@ -433,11 +433,11 @@ export default function CadastroFamilia() {
   }
 
   return (
-    <div className="cadastro-container familia-theme">
+    <div className="familia-cadastro-container familia-theme">
       {/* Background Blobs */}
-      <div className="bg-blobs">
-        <div className="blob-1"></div>
-        <div className="blob-2"></div>
+      <div className="familia-bg-blobs">
+        <div className="familia-blob-1"></div>
+        <div className="familia-blob-2"></div>
       </div>
 
       {/* Navbar */}
@@ -458,7 +458,7 @@ export default function CadastroFamilia() {
       </nav>
 
       {/* Main Grid */}
-      <div className="main-grid">
+      <div className="familia-main-grid">
         {/* Sidebar */}
         <aside className="sidebar">
           <div className="steps-card">
@@ -485,16 +485,6 @@ export default function CadastroFamilia() {
                   )}
                 </div>
               ))}
-            </div>
-
-            <div className="safety-tip">
-              <div className="safety-header">
-                <ShieldCheck size={20} color="#f97316" />
-                <h4>Dados Seguros</h4>
-              </div>
-              <p className="safety-text">
-                Suas informações são protegidas e usadas apenas para conectar sua família com ONGs e doadores.
-              </p>
             </div>
           </div>
         </aside>

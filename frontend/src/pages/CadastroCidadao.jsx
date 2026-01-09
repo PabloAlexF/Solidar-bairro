@@ -174,7 +174,7 @@ export default function CadastroCidadao() {
 
   if (isSubmitted) {
     return (
-      <div className="cadastro-container success-page-immersive cidadao-theme animate-fadeIn">
+      <div className="cidadao-cadastro-container cidadao-theme animate-fadeIn">
         <div className="floating-elements">
           <div className="float-shape s1-green"></div>
           <div className="float-shape s2-green"></div>
@@ -249,26 +249,26 @@ export default function CadastroCidadao() {
   }
 
   return (
-    <div className="cadastro-container cidadao-theme">
-      <div className="bg-blobs">
-        <div className="blob blob-1" />
-        <div className="blob blob-2" />
+    <div className="cidadao-cadastro-container cidadao-theme">
+      <div className="cidadao-bg-blobs">
+        <div className="cidadao-blob cidadao-blob-1" />
+        <div className="cidadao-blob cidadao-blob-2" />
       </div>
 
-      <nav className="top-nav">
-        <Link to="/" className="back-link">
-          <div className="back-icon-box"><ArrowLeft size={20} /></div>
+      <nav className="cidadao-top-nav">
+        <Link to="/" className="cidadao-back-link">
+          <div className="cidadao-back-icon-box"><ArrowLeft size={20} /></div>
           <span>Voltar</span>
         </Link>
-        <div className="nav-brand">
-          <div className="brand-icon-box">
+        <div className="cidadao-nav-brand">
+          <div className="cidadao-brand-icon-box">
             <Heart size={24} />
           </div>
-          <span className="brand-text">SolidarBairro <span style={{ color: '#10b981', fontSize: '0.8rem' }}>VOLUNTÁRIO</span></span>
+          <span className="cidadao-brand-text">SolidarBairro <span style={{ color: '#10b981', fontSize: '0.8rem' }}>VOLUNTÁRIO</span></span>
         </div>
       </nav>
 
-      <div className="main-layout">
+      <div className="cidadao-main-layout">
         <aside className="sidebar-stepper">
           <div className="stepper-card">
             <h2 className="stepper-title">CADASTRO DE VOLUNTÁRIO</h2>

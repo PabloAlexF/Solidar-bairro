@@ -294,8 +294,8 @@
 
 @media (min-width: 1024px) {
   .hero-grid {
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: 5rem;
+    grid-template-columns: 1.3fr 0.7fr;
+    gap: 6rem;
   }
 }
 
@@ -512,6 +512,12 @@
   justify-content: flex-end;
 }
 
+@media (min-width: 1024px) {
+  .hero-image-wrapper {
+    right: 7rem;
+  }
+}
+
 .main-image-frame {
   position: relative;
   z-index: 10;
@@ -523,6 +529,13 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   border: 12px solid white;
   outline: 1px solid var(--sb-border);
+}
+
+@media (min-width: 1024px) {
+  .main-image-frame {
+    max-width: 550px;
+    aspect-ratio: 3/4;
+  }
 }
 
 .hero-img {
@@ -572,14 +585,15 @@
   position: absolute;
   z-index: 20;
   background: white;
-  padding: 1rem;
+  padding: 1.25rem;
   border-radius: 24px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   border: 1px solid transparent;
   transition: transform 0.5s ease;
+  min-width: 200px;
 }
 
 .floating-card:hover {
@@ -587,15 +601,36 @@
 }
 
 .impact-card {
-  top: -1rem;
-  right: -1rem;
-  border-color: var(--sb-teal-soft);
+  top: 2rem;
+  right: -2rem;
+  border-color: rgba(13, 148, 136, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
 }
 
 .geo-card {
-  bottom: -1.5rem;
-  left: -1rem;
-  border-color: var(--sb-orange-soft);
+  bottom: 2rem;
+  left: -2rem;
+  border-color: rgba(249, 115, 22, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+}
+
+@media (min-width: 1024px) {
+  .impact-card {
+    top: 0.5rem;
+    right: -4rem;
+  }
+
+  .geo-card {
+    bottom: 0.5rem;
+    left: -4rem;
+  }
+
+  .main-image-frame {
+    max-width: 550px;
+    aspect-ratio: 5/4;
+  }
 }
 
 .card-icon {
@@ -618,20 +653,22 @@
 .card-icon.geo { background: var(--sb-orange); }
 
 .card-label {
-  font-size: 0.5rem;
+  font-size: 0.75rem;
   font-weight: 900;
   color: var(--sb-text-light);
   text-transform: uppercase;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.1em;
   margin: 0 0 0.25rem 0;
+  line-height: 1;
 }
 
 .card-value {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 900;
   color: var(--sb-text);
-  letter-spacing: -0.05em;
+  letter-spacing: -0.025em;
   margin: 0;
+  line-height: 1;
 }
 
 .accent {
