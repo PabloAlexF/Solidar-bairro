@@ -36,6 +36,31 @@ export default function CadastroCidadao() {
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
+  const validateStep = (stepNumber) => {
+    switch (stepNumber) {
+      case 1:
+        return formData.nome.trim() && formData.dataNascimento && formData.ocupacao.trim();
+      case 2:
+        return formData.cpf.replace(/\D/g, '').length >= 11 && formData.rg.replace(/\D/g, '').length >= 7;
+      case 3:
+        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim();
+      case 4:
+        return formData.endereco.trim();
+      case 5:
+        return formData.interesses.length > 0;
+      default:
+        return true;
+    }
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(step)) {
+      nextStep();
+    } else {
+      alert('Por favor, preencha todos os campos obrigatórios antes de continuar.');
+    }
+  };
+
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -498,7 +523,7 @@ export default function CadastroCidadao() {
                   {step === 1 && <Link to="/" className="btn-cancel">Cancelar</Link>}
                   
                   {step < totalSteps ? (
-                    <button type="button" onClick={nextStep} className="btn-next">
+                    <button type="button" onClick={handleNextStep} className="btn-next">
                       <span>Avançar</span>
                       <ChevronRight size={20} />
                     </button>
