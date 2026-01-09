@@ -1,47 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Heart, ArrowRight, LogIn, Users, ShieldCheck, Sparkles } from 'lucide-react';
 import '../styles/pages/Login.css';
 
-const Login = () => {
-  const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    senha: ''
+    identifier: '',
+    password: ''
   });
 
-  useEffect(() => {
-    if (isAuthenticated()) {
-      navigate('/');
-    }
-  }, [isAuthenticated, navigate]);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-    
-    try {
-      await login(formData.email, formData.senha);
-      navigate('/');
-    } catch (error) {
-      console.error('Erro no login:', error);
-      setError(error.message || 'Erro ao fazer login. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
+    console.log('Login attempt:', formData);
   };
 
   return (
@@ -114,23 +85,16 @@ const Login = () => {
             </div>
 
             <form className="login-form" onSubmit={handleSubmit}>
-              {error && (
-                <div className="error-alert">
-                  <span>{error}</span>
-                </div>
-              )}
-              
               <div className="login-input-group">
                 <label className="login-label">E-mail ou telefone</label>
                 <div className="login-input-wrapper">
                   <Mail className="login-input-icon" size={18} />
                   <input 
                     type="text" 
-                    name="email"
                     className="login-field"
                     placeholder="Digite seu e-mail ou telefone"
-                    value={formData.email}
-                    onChange={handleChange}
+                    value={formData.identifier}
+                    onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
                     required
                   />
                 </div>
@@ -142,11 +106,10 @@ const Login = () => {
                   <Lock className="login-input-icon" size={18} />
                   <input 
                     type={showPassword ? "text" : "password"} 
-                    name="senha"
                     className="login-field"
                     placeholder="Digite sua senha"
-                    value={formData.senha}
-                    onChange={handleChange}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
                   />
                   <button 
@@ -160,8 +123,8 @@ const Login = () => {
                 </div>
               </div>
 
-              <button type="submit" className="login-submit-btn" disabled={loading}>
-                <span>{loading ? 'Entrando...' : 'Entrar na plataforma'}</span>
+              <button type="submit" className="login-submit-btn">
+                <span>Entrar na plataforma</span>
                 <LogIn size={18} />
               </button>
             </form>
@@ -170,13 +133,10 @@ const Login = () => {
 
             <div className="login-footer-section">
               <p className="login-footer-text">Ainda não faz parte da comunidade?</p>
-              <button 
-                className="login-create-acc-btn"
-                onClick={() => navigate('/cadastro')}
-              >
+              <Link to="/cadastro" className="login-create-acc-btn">
                 Criar conta gratuita
                 <ArrowRight size={18} style={{ marginLeft: '8px' }} />
-              </button>
+              </Link>
               <p className="login-footer-tagline">
                 <Heart size={14} className="login-heart-icon" fill="currentColor" />
                 Junte-se à rede de solidariedade
@@ -193,6 +153,4 @@ const Login = () => {
       </div>
     </div>
   );
-};
-
-export default Login;
+}

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Building2, Heart, Sparkles, User, Store, ArrowRight } from 'lucide-react';
+import { Users, Building2, Heart, Sparkles, User, Store, ArrowRight, Zap, TrendingUp } from 'lucide-react';
 import Header from '../components/layout/Header';
 import '../styles/cadastro/cadastro.css';
 
@@ -13,6 +13,7 @@ const cadastroTypes = [
     gradient: "linear-gradient(to bottom right, #f97316, #f43f5e)",
     shadowColor: "rgba(249, 115, 22, 0.1)",
     href: "/cadastro/familia",
+    badge: "Mais procurado",
   },
   {
     id: "cidadao",
@@ -22,6 +23,7 @@ const cadastroTypes = [
     gradient: "linear-gradient(to bottom right, #10b981, #14b8a6)",
     shadowColor: "rgba(16, 185, 129, 0.1)",
     href: "/cadastro/cidadao",
+    badge: "Impacto direto",
   },
   {
     id: "ong",
@@ -31,6 +33,7 @@ const cadastroTypes = [
     gradient: "linear-gradient(to bottom right, #8b5cf6, #a855f7)",
     shadowColor: "rgba(139, 92, 246, 0.1)",
     href: "/cadastro/ong",
+    badge: "Parceria oficial",
   },
   {
     id: "comercio",
@@ -40,18 +43,28 @@ const cadastroTypes = [
     gradient: "linear-gradient(to bottom right, #3b82f6, #0ea5e9)",
     shadowColor: "rgba(59, 130, 246, 0.1)",
     href: "/cadastro/comercio",
+    badge: "Visibilidade +",
   },
 ];
 
 function CadastroCard({ type, index }) {
   const Icon = type.icon;
+  const [isHovered, setIsHovered] = useState(false);
+  
   return (
     <div className={`card-outer animate-slideUp stagger-${index + 1}`}>
       <Link
         to={type.href}
         className="card-inner"
         style={{ boxShadow: `0 10px 25px -5px ${type.shadowColor}` }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
+        <div className="card-badge">
+          <Zap size={12} />
+          <span>{type.badge}</span>
+        </div>
+        
         <div 
           className="card-gradient-overlay" 
           style={{ backgroundImage: type.gradient }}
@@ -78,7 +91,7 @@ function CadastroCard({ type, index }) {
           </p>
 
           <div className="card-footer">
-            <span>Explorar</span>
+            <span>{isHovered ? 'Começar agora' : 'Explorar'}</span>
             <div className="card-arrow-wrapper">
               <ArrowRight className="card-arrow" />
             </div>
