@@ -10,6 +10,7 @@ import {
 import { Link } from 'react-router-dom';
 import ApiService from '../services/apiService';
 import '../styles/components/CadastroFamilia.css';
+import '../styles/components/Toast.css';
 
 // Componente para contador de família
 const FamilyCounter = ({ item, count, onUpdate }) => (
@@ -70,6 +71,7 @@ export default function CadastroFamilia() {
   const [addressData, setAddressData] = useState({ endereco: '', bairro: '', referencia: '' });
   const [isLocating, setIsLocating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
   const [formData, setFormData] = useState({
     nomeCompleto: '',
@@ -119,6 +121,85 @@ export default function CadastroFamilia() {
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
   
+  const validateStep = (stepNumber) => {
+    switch (stepNumber) {
+      case 1:
+        return formData.nomeCompleto.trim() && formData.dataNascimento && formData.estadoCivil && formData.profissao.trim();
+      case 2:
+        return formData.cpf.trim() && formData.rg.trim() && formData.rendaFamiliar;
+      case 3:
+        return formData.telefone.trim() && formData.horarioContato;
+      case 4:
+        return (addressData.endereco.trim() || formData.endereco.trim()) && (addressData.bairro.trim() || formData.bairro.trim()) && formData.tipoMoradia;
+      default:
+        return true;
+    }
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(step)) {
+      nextStep();
+    } else {
+      showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
+    }
+  };
+
+  const showToast = (message, type = 'error') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'error' }), 4000);
+  };
+
+  const formatCPF = (value) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  };
+
+  const formatRG = (value) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 9) {
+      return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4');
+    } else {
+      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
+  };
+
+  const formatPhone = (value) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    } else {
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+  };
+
+  const handleCPFChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      updateFormData('cpf', formatCPF(value));
+    }
+  };
+
+  const handleRGChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      updateFormData('rg', formatRG(value));
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      updateFormData('telefone', formatPhone(value));
+    }
+  };
+
+  const handleWhatsAppChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 11) {
+      updateFormData('whatsapp', formatPhone(value));
+    }
+  };
+  
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -155,7 +236,7 @@ export default function CadastroFamilia() {
       setTimeout(() => setShowAnalysisAlert(true), 2000);
     } catch (error) {
       console.error('Erro ao cadastrar família:', error);
-      alert('Erro ao realizar cadastro. Tente novamente.');
+      showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -163,7 +244,7 @@ export default function CadastroFamilia() {
 
   const handleMapLocation = () => {
     if (!navigator.geolocation) {
-      alert('Geolocalização não suportada');
+      showToast('Geolocalização não suportada', 'error');
       return;
     }
     setIsLocating(true);
@@ -230,14 +311,14 @@ export default function CadastroFamilia() {
           
         } catch (error) {
           console.error('Erro:', error);
-          alert('Erro ao obter endereço');
+          showToast('Erro ao obter endereço', 'error');
         } finally {
           setIsLocating(false);
         }
       },
       (error) => {
         setIsLocating(false);
-        alert(`Erro GPS: ${error.message}`);
+        showToast(`Erro GPS: ${error.message}`, 'error');
       },
       { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
     );
@@ -451,13 +532,13 @@ export default function CadastroFamilia() {
             </div>
 
             {/* Form Body */}
-            <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
+            <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNextStep(); }}>
               <div className="form-body">
                 {/* Step 1: Responsável */}
                 {step === 1 && (
                   <div className="form-grid form-grid-2">
                     <div className="input-group">
-                      <label className="input-label">Nome Completo</label>
+                      <label className="input-label">Nome Completo <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="input-wrapper">
                         <User className="input-icon" />
                         <input 
@@ -472,7 +553,7 @@ export default function CadastroFamilia() {
                     </div>
                     
                     <div className="input-group">
-                      <label className="input-label">Data de Nascimento</label>
+                      <label className="input-label">Data de Nascimento <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="input-wrapper">
                         <Calendar className="input-icon" />
                         <input 
@@ -486,7 +567,7 @@ export default function CadastroFamilia() {
                     </div>
                     
                     <div className="input-group">
-                      <label className="input-label">Estado Civil</label>
+                      <label className="input-label">Estado Civil <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="radio-grid radio-grid-4">
                         {['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)'].map((estado) => (
                           <label key={estado} className="radio-label">
@@ -505,7 +586,7 @@ export default function CadastroFamilia() {
                     </div>
                     
                     <div className="input-group">
-                      <label className="input-label">Profissão</label>
+                      <label className="input-label">Profissão <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="input-wrapper">
                         <User className="input-icon" />
                         <input 
@@ -525,7 +606,7 @@ export default function CadastroFamilia() {
                 {step === 2 && (
                   <div className="form-grid form-grid-2">
                     <div className="input-group">
-                      <label className="input-label">CPF</label>
+                      <label className="input-label">CPF <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="input-wrapper">
                         <IdCard className="input-icon" />
                         <input 
@@ -533,22 +614,24 @@ export default function CadastroFamilia() {
                           className="form-input" 
                           placeholder="000.000.000-00"
                           value={formData.cpf}
-                          onChange={(e) => updateFormData('cpf', e.target.value)}
+                          onChange={handleCPFChange}
+                          maxLength={14}
                           required 
                         />
                       </div>
                     </div>
                     
                     <div className="input-group">
-                      <label className="input-label">RG</label>
+                      <label className="input-label">RG <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="input-wrapper">
                         <Fingerprint className="input-icon" />
                         <input 
                           type="text" 
                           className="form-input" 
-                          placeholder="00.000.000-0"
+                          placeholder="00.000.000-0 ou 000.000.000-00"
                           value={formData.rg}
-                          onChange={(e) => updateFormData('rg', e.target.value)}
+                          onChange={handleRGChange}
+                          maxLength={14}
                           required 
                         />
                       </div>
@@ -569,7 +652,7 @@ export default function CadastroFamilia() {
                     </div>
                     
                     <div className="input-group">
-                      <label className="input-label">Renda Familiar Mensal</label>
+                      <label className="input-label">Renda Familiar Mensal <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="card-radio-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
                         {[
                           { label: 'Até R$ 500', value: 'ate_500', icon: <DollarSign size={20} />, desc: 'Renda baixa' },
@@ -609,7 +692,7 @@ export default function CadastroFamilia() {
                 {step === 3 && (
                   <div className="form-grid form-grid-2">
                     <div className="input-group">
-                      <label className="input-label">Telefone Principal</label>
+                      <label className="input-label">Telefone Principal <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="input-wrapper">
                         <Phone className="input-icon" />
                         <input 
@@ -617,7 +700,8 @@ export default function CadastroFamilia() {
                           className="form-input" 
                           placeholder="(00) 00000-0000"
                           value={formData.telefone}
-                          onChange={(e) => updateFormData('telefone', e.target.value)}
+                          onChange={handlePhoneChange}
+                          maxLength={15}
                           required 
                         />
                       </div>
@@ -632,7 +716,8 @@ export default function CadastroFamilia() {
                           className="form-input" 
                           placeholder="(00) 00000-0000"
                           value={formData.whatsapp}
-                          onChange={(e) => updateFormData('whatsapp', e.target.value)}
+                          onChange={handleWhatsAppChange}
+                          maxLength={15}
                         />
                       </div>
                     </div>
@@ -652,7 +737,7 @@ export default function CadastroFamilia() {
                     </div>
                     
                     <div className="input-group">
-                      <label className="input-label">Melhor horário para contato</label>
+                      <label className="input-label">Melhor horário para contato <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="radio-grid radio-grid-4">
                         {['Manhã', 'Tarde', 'Noite', 'Qualquer'].map((horario) => (
                           <label key={horario} className="radio-label">
@@ -681,7 +766,7 @@ export default function CadastroFamilia() {
                     />
                     
                     <div className="input-group">
-                      <label className="input-label">Endereço</label>
+                      <label className="input-label">Endereço <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="input-wrapper">
                         <Home className="input-icon" />
                         <input 
@@ -696,7 +781,7 @@ export default function CadastroFamilia() {
                     </div>
                     
                     <div className="input-group">
-                      <label className="input-label">Bairro</label>
+                      <label className="input-label">Bairro <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="input-wrapper">
                         <MapPin className="input-icon" />
                         <input 
@@ -725,7 +810,7 @@ export default function CadastroFamilia() {
                     </div>
                     
                     <div className="input-group">
-                      <label className="input-label">Tipo de Moradia</label>
+                      <label className="input-label">Tipo de Moradia <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="radio-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
                         {[
                           { label: 'Casa Própria', icon: <Home size={20} /> },
@@ -865,6 +950,21 @@ export default function CadastroFamilia() {
           </div>
         </main>
       </div>
+
+      {/* Toast */}
+      {toast.show && (
+        <div className={`toast toast-${toast.type}`}>
+          <div className="toast-content">
+            <span className="toast-message">{toast.message}</span>
+            <button 
+              className="toast-close" 
+              onClick={() => setToast({ show: false, message: '', type: 'error' })}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

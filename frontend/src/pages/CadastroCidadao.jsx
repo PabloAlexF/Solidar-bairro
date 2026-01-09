@@ -12,12 +12,14 @@ import {
 import { Link } from 'react-router-dom';
 import ApiService from '../services/apiService';
 import '../styles/components/CadastroCidadao.css';
+import '../styles/components/Toast.css';
 
 export default function CadastroCidadao() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [formData, setFormData] = useState({
     nome: '',
     dataNascimento: '',
@@ -57,8 +59,13 @@ export default function CadastroCidadao() {
     if (validateStep(step)) {
       nextStep();
     } else {
-      alert('Por favor, preencha todos os campos obrigatórios antes de continuar.');
+      showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
     }
+  };
+
+  const showToast = (message, type = 'error') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'error' }), 4000);
   };
 
   const updateFormData = (field, value) => {
@@ -76,18 +83,19 @@ export default function CadastroCidadao() {
 
   const formatCPF = (value) => {
     const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 6) return numbers.replace(/(\d{3})(\d+)/, '$1.$2');
+    if (numbers.length <= 9) return numbers.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
     return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
   const formatRG = (value) => {
     const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 9) {
-      // RG tradicional: 00.000.000-0
-      return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4');
-    } else {
-      // RG nacional (formato CPF): 000.000.000-00
-      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 5) return numbers.replace(/(\d{2})(\d+)/, '$1.$2');
+    if (numbers.length <= 8) return numbers.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+    if (numbers.length <= 9) return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4');
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
   const handleCPFChange = (e) => {
@@ -106,11 +114,10 @@ export default function CadastroCidadao() {
 
   const formatPhone = (value) => {
     const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 10) {
-      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-    } else {
-      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    }
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 6) return numbers.replace(/(\d{2})(\d+)/, '($1) $2');
+    if (numbers.length <= 10) return numbers.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+    return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   };
 
   const handlePhoneChange = (e) => {
@@ -130,7 +137,7 @@ export default function CadastroCidadao() {
       setTimeout(() => setShowAnalysisAlert(true), 2000);
     } catch (error) {
       console.error('Erro ao cadastrar cidadão:', error);
-      alert('Erro ao realizar cadastro. Tente novamente.');
+      showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -311,7 +318,7 @@ export default function CadastroCidadao() {
               {step === 1 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
-                    <label className="field-label">Nome Completo</label>
+                    <label className="field-label">Nome Completo <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <User className="field-icon" size={20} />
                       <input 
@@ -325,7 +332,7 @@ export default function CadastroCidadao() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="field-label">Data de Nascimento</label>
+                    <label className="field-label">Data de Nascimento <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Calendar className="field-icon" size={20} />
                       <input 
@@ -338,7 +345,7 @@ export default function CadastroCidadao() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="field-label">Ocupação / Habilidade</label>
+                    <label className="field-label">Ocupação / Habilidade <span style={{ color: '#ef4444' }}>*</span></label>
                     <input 
                       required 
                       type="text" 
@@ -354,7 +361,7 @@ export default function CadastroCidadao() {
               {step === 2 && (
                 <div className="form-grid">
                   <div className="form-group">
-                    <label className="field-label">CPF</label>
+                    <label className="field-label">CPF <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Fingerprint className="field-icon" size={20} />
                       <input 
@@ -369,7 +376,7 @@ export default function CadastroCidadao() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="field-label">RG</label>
+                    <label className="field-label">RG <span style={{ color: '#ef4444' }}>*</span></label>
                     <input 
                       required 
                       type="text" 
@@ -395,7 +402,7 @@ export default function CadastroCidadao() {
               {step === 3 && (
                 <div className="form-grid">
                   <div className="form-group">
-                    <label className="field-label">WhatsApp</label>
+                    <label className="field-label">WhatsApp <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Phone className="field-icon" size={20} />
                       <input 
@@ -410,7 +417,7 @@ export default function CadastroCidadao() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="field-label">E-mail</label>
+                    <label className="field-label">E-mail <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Mail className="field-icon" size={20} />
                       <input 
@@ -429,7 +436,7 @@ export default function CadastroCidadao() {
               {step === 4 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
-                    <label className="field-label">Endereço de Referência</label>
+                    <label className="field-label">Endereço de Referência <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Home className="field-icon" size={20} />
                       <input 
@@ -468,7 +475,7 @@ export default function CadastroCidadao() {
               {step === 5 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
-                    <label className="field-label">Como você quer ajudar?</label>
+                    <label className="field-label">Como você quer ajudar? <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="selectable-grid">
                       {helpOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
@@ -539,6 +546,21 @@ export default function CadastroCidadao() {
           </div>
         </main>
       </div>
+
+      {/* Toast */}
+      {toast.show && (
+        <div className={`toast toast-${toast.type}`}>
+          <div className="toast-content">
+            <span className="toast-message">{toast.message}</span>
+            <button 
+              className="toast-close" 
+              onClick={() => setToast({ show: false, message: '', type: 'error' })}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
