@@ -16,7 +16,31 @@ export default function CadastroONG() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState([]);
+  const [formData, setFormData] = useState({
+    cnpj: '',
+    telefone: ''
+  });
   const totalSteps = 6;
+
+  const handleCNPJChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 14) {
+      value = value.replace(/(\d{2})(\d)/, '$1.$2');
+      value = value.replace(/(\d{3})(\d)/, '$1.$2');
+      value = value.replace(/(\d{3})(\d)/, '$1/$2');
+      value = value.replace(/(\d{4})(\d)/, '$1-$2');
+      setFormData(prev => ({ ...prev, cnpj: value }));
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length <= 10) {
+      value = value.replace(/(\d{2})(\d)/, '($1) $2');
+      value = value.replace(/(\d{4})(\d)/, '$1-$2');
+      setFormData(prev => ({ ...prev, telefone: value }));
+    }
+  };
 
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -186,14 +210,14 @@ export default function CadastroONG() {
               {step === 1 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
-                    <label className="field-label">Nome Fantasia da ONG</label>
+                    <label className="field-label">Nome Fantasia da ONG <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Building2 className="field-icon" size={20} />
                       <input required type="text" className="form-input" placeholder="Nome da organização" />
                     </div>
                   </div>
                   <div className="form-group span-2">
-                    <label className="field-label">Razão Social</label>
+                    <label className="field-label">Razão Social <span style={{ color: '#ef4444' }}>*</span></label>
                     <input required type="text" className="form-input" placeholder="Razão social completa" />
                   </div>
                 </div>
@@ -202,14 +226,22 @@ export default function CadastroONG() {
               {step === 2 && (
                 <div className="form-grid">
                   <div className="form-group">
-                    <label className="field-label">CNPJ</label>
+                    <label className="field-label">CNPJ <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <FileText className="field-icon" size={20} />
-                      <input required type="text" className="form-input" placeholder="00.000.000/0000-00" />
+                      <input 
+                        required 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="00.000.000/0000-00"
+                        value={formData.cnpj}
+                        onChange={handleCNPJChange}
+                        maxLength={18}
+                      />
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="field-label">Data de Fundação</label>
+                    <label className="field-label">Data de Fundação <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Calendar className="field-icon" size={20} />
                       <input required type="date" className="form-input" />
@@ -228,14 +260,22 @@ export default function CadastroONG() {
               {step === 3 && (
                 <div className="form-grid">
                   <div className="form-group">
-                    <label className="field-label">Telefone Comercial</label>
+                    <label className="field-label">Telefone Comercial <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Phone className="field-icon" size={20} />
-                      <input required type="tel" className="form-input" placeholder="(00) 0000-0000" />
+                      <input 
+                        required 
+                        type="tel" 
+                        className="form-input" 
+                        placeholder="(00) 0000-0000"
+                        value={formData.telefone}
+                        onChange={handlePhoneChange}
+                        maxLength={14}
+                      />
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="field-label">E-mail Institucional</label>
+                    <label className="field-label">E-mail Institucional <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Mail className="field-icon" size={20} />
                       <input required type="email" className="form-input" placeholder="contato@ong.org" />
@@ -264,7 +304,7 @@ export default function CadastroONG() {
               {step === 4 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
-                    <label className="field-label">Sede da ONG</label>
+                    <label className="field-label">Sede da ONG <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <Home className="field-icon" size={20} />
                       <input required type="text" className="form-input" placeholder="Endereço completo da sede" />

@@ -31,17 +31,22 @@ class FamiliaService {
 
     const familiaData = {
       nomeCompleto: familia.nomeCompleto,
+      dataNascimento: familia.dataNascimento,
+      estadoCivil: familia.estadoCivil,
+      profissao: familia.profissao,
       cpf: familia.cpf,
+      rg: familia.rg,
+      nis: familia.nis,
+      rendaFamiliar: familia.rendaFamiliar,
       telefone: familia.telefone,
+      whatsapp: familia.whatsapp,
       email: familia.email,
-      tipoCadastro: familia.tipoCadastro,
+      horarioContato: familia.horarioContato,
       endereco: familia.endereco,
       composicao: familia.composicao,
-      situacaoSocioeconomica: familia.situacaoSocioeconomica,
       necessidades: familia.necessidades,
-      vulnerabilidade: familia.vulnerabilidade,
-      status: familia.status,
-      tipo: 'familia',
+      tipo: familia.tipo,
+      ativo: familia.ativo,
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };
