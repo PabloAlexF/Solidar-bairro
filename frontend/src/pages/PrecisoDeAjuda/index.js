@@ -909,27 +909,121 @@ export default function PrecisoDeAjuda() {
     'Finalizando aprovação'
   ];
 
-  // Get user location
+  const [formData, setFormData] = useState({
+    category: '',
+    subCategory: [],
+    size: '',
+    style: '',
+    subQuestionAnswers: {},
+    description: '',
+    urgency: '',
+    visibility: [],
+    specialists: [],
+    isPublic: true,
+    radius: 5,
+    userLocation: null,
+    locationString: '',
+    city: '',
+    state: '',
+    neighborhood: ''
+  });
+
+  const nextStep = useCallback(() => setStep(s => Math.min(s + 1, TOTAL_STEPS)), []);
+  const prevStep = useCallback(() => setStep(s => Math.max(s - 1, 1)), []);
+
+  const updateData = useCallback((data) => {
+    setFormData(prev => ({ ...prev, ...data }));
+  }, []);
+
+  const updateSubAnswer = useCallback((questionId, value) => {
+    setFormData(prev => ({
+      ...prev,
+      subQuestionAnswers: {
+        ...prev.subQuestionAnswers,
+        [questionId]: value
+      }
+    }));
+  }, []);
+
+  // Get user location and address
   useEffect(() => {
     if (navigator.geolocation) {
+      // Opções para maior precisão
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      };
+      
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
+        async (position) => {
+          const coords = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
-          });
+          };
+          setUserLocation(coords);
+          
+          // Get address from coordinates using reverse geocoding
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}&addressdetails=1&zoom=18`
+            );
+            const data = await response.json();
+            
+            if (data && data.address) {
+              const address = data.address;
+              
+              // Construir endereço mais específico (apenas bairro e cidade)
+              const bairro = address.suburb || address.neighbourhood || address.quarter || address.city_district || '';
+              const cidade = address.city || address.town || address.village || address.municipality || '';
+              const estado = address.state || address.region || '';
+              
+              // Formato: "Bairro, Cidade - Estado"
+              let locationString = '';
+              if (bairro) {
+                locationString += `${bairro}, `;
+              }
+              locationString += `${cidade} - ${estado}`;
+              
+              updateData({ 
+                userLocation: coords,
+                locationString: locationString,
+                city: cidade,
+                state: estado,
+                neighborhood: bairro
+              });
+            }
+          } catch (error) {
+            console.error('Erro ao obter endereço:', error);
+            setLocationError('Localização obtida, mas não foi possível determinar o endereço');
+          }
         },
         (error) => {
           setLocationError('Não foi possível obter sua localização');
           // Default to São Paulo center if location fails
           setUserLocation({ lat: -23.5505, lng: -46.6333 });
-        }
+          updateData({ 
+            userLocation: { lat: -23.5505, lng: -46.6333 },
+            locationString: 'São Paulo, SP - Centro',
+            city: 'São Paulo',
+            state: 'SP',
+            neighborhood: 'Centro'
+          });
+        },
+        options
       );
     } else {
       setLocationError('Geolocalização não suportada');
       setUserLocation({ lat: -23.5505, lng: -46.6333 });
+      updateData({ 
+        userLocation: { lat: -23.5505, lng: -46.6333 },
+        locationString: 'São Paulo, SP - Centro',
+        city: 'São Paulo',
+        state: 'SP',
+        neighborhood: 'Centro'
+      });
     }
-  }, []);
+  }, [updateData]);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -1007,36 +1101,6 @@ export default function PrecisoDeAjuda() {
       }
     }
   };
-  const [formData, setFormData] = useState({
-    category: '',
-    subCategory: [],
-    size: '',
-    style: '',
-    subQuestionAnswers: {},
-    description: '',
-    urgency: '',
-    visibility: [],
-    specialists: [],
-    isPublic: true,
-    radius: 5
-  });
-
-  const nextStep = useCallback(() => setStep(s => Math.min(s + 1, TOTAL_STEPS)), []);
-  const prevStep = useCallback(() => setStep(s => Math.max(s - 1, 1)), []);
-
-  const updateData = useCallback((data) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  }, []);
-
-  const updateSubAnswer = useCallback((questionId, value) => {
-    setFormData(prev => ({
-      ...prev,
-      subQuestionAnswers: {
-        ...prev.subQuestionAnswers,
-        [questionId]: value
-      }
-    }));
-  }, []);
 
   const isDescriptionValid = useMemo(() => {
     if (formData.description.length < 10) return false;
@@ -1097,7 +1161,12 @@ export default function PrecisoDeAjuda() {
           visibility: formData.visibility,
           specialists: formData.specialists,
           isPublic: formData.isPublic,
-          radius: formData.radius
+          radius: formData.radius,
+          location: formData.locationString,
+          coordinates: formData.userLocation,
+          city: formData.city,
+          state: formData.state,
+          neighborhood: formData.neighborhood
         };
         
         await apiService.createPedido(pedidoData);
@@ -1546,7 +1615,8 @@ export default function PrecisoDeAjuda() {
         <div className="vis-map-section-v4">
           <MapaAlcance 
             radius={formData.radius} 
-            onRadiusChange={(r) => updateData({ radius: r })} 
+            onRadiusChange={(r) => updateData({ radius: r })}
+            userLocation={formData.userLocation}
           />
         </div>
       </div>
@@ -1579,6 +1649,12 @@ export default function PrecisoDeAjuda() {
             {formData.subCategory.length > 0 && (
               <div className="review-details">
                 <strong>Itens:</strong> {formData.subCategory.map(id => details?.options.find(o => o.id === id)?.label).join(', ')}
+              </div>
+            )}
+            {formData.locationString && (
+              <div className="review-location">
+                <MapPin size={16} />
+                <span>{formData.locationString}</span>
               </div>
             )}
           </div>
@@ -1654,6 +1730,20 @@ export default function PrecisoDeAjuda() {
             <div className="sidebar-brand-v2">
               <h3>Solidar</h3>
               <span>Criação de Pedido</span>
+              {formData.locationString && (
+                <div className="location-indicator">
+                  <MapPin size={12} />
+                  <span title={formData.locationString}>
+                    {formData.neighborhood ? `${formData.neighborhood}, ${formData.city}` : formData.city || 'Carregando...'}
+                  </span>
+                </div>
+              )}
+              {locationError && (
+                <div className="location-error">
+                  <AlertTriangle size={12} />
+                  <span>Localização não detectada</span>
+                </div>
+              )}
             </div>
           </div>
           

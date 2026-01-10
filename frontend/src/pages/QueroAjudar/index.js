@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSpring, animated, useTrail, useSprings } from 'react-spring';
 import { useInView } from 'react-intersection-observer';
+import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { Tooltip } from 'react-tooltip';
+import apiService from '../../services/apiService';
 import { 
   MapPin, 
   Heart,
@@ -29,7 +31,8 @@ import {
   Sofa,
   Tv,
   Car,
-  Receipt
+  Receipt,
+  Home
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
@@ -847,6 +850,7 @@ function AnimatedBackground() {
 }
 
 export default function QueroAjudarPage() {
+  const navigate = useNavigate();
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -861,6 +865,8 @@ export default function QueroAjudarPage() {
   const [fontSize, setFontSize] = useState('normal');
   const [highContrast, setHighContrast] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
+  const [pedidos, setPedidos] = useState([]);
+  const [loadingPedidos, setLoadingPedidos] = useState(true);
 
   // Animation hooks
   const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
@@ -878,61 +884,156 @@ export default function QueroAjudarPage() {
     config: { tension: 300, friction: 10 }
   });
 
-  // Get user's location
-  useEffect(() => {
-    const savedFontSize = localStorage.getItem('fontSize') || 'normal';
-    const savedContrast = localStorage.getItem('highContrast') === 'true';
-    setFontSize(savedFontSize);
-    setHighContrast(savedContrast);
+  // Transform backend data to frontend format
+  const transformPedidoData = (pedido) => {
+    // Extrair cidade e estado da localização
+    let city = 'Porto Alegre';
+    let state = 'RS';
+    let neighborhood = 'Centro';
     
-    document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
-    
-    setIsLoading(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          let detectedState = 'MG';
-          let detectedCity = 'Belo Horizonte';
-          
-          if (latitude >= -23 && latitude <= -19 && longitude >= -51 && longitude <= -39) {
-            detectedState = 'MG';
-            detectedCity = 'Belo Horizonte';
-          } else if (latitude >= -25 && latitude <= -22 && longitude >= -54 && longitude <= -44) {
-            detectedState = 'SP';
-            detectedCity = 'São Paulo';
-          } else if (latitude >= -33 && latitude <= -27 && longitude >= -58 && longitude <= -49) {
-            detectedState = 'RS';
-            detectedCity = 'Porto Alegre';
-          }
-          
-          setUserLocation({ state: detectedState, city: detectedCity });
-          toast.success(`Localização detectada: ${detectedCity}, ${detectedState}`);
-          setTimeout(() => setIsLoading(false), 1000);
-        },
-        (error) => {
-          console.log('Location access denied');
-          setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-          toast.error('Localização negada. Usando Belo Horizonte como padrão.');
-          setTimeout(() => setIsLoading(false), 1000);
+    if (pedido.city && pedido.state) {
+      city = pedido.city;
+      state = pedido.state;
+      neighborhood = pedido.neighborhood || 'Centro';
+    } else if (pedido.location) {
+      // Formato: "Cidade, Estado - Bairro" ou "Bairro, Cidade - Estado"
+      const parts = pedido.location.split(',');
+      if (parts.length >= 2) {
+        const firstPart = parts[0].trim();
+        const secondPart = parts[1].trim();
+        
+        if (secondPart.includes('-')) {
+          const [cityPart, statePart] = secondPart.split('-');
+          city = cityPart.trim();
+          state = statePart.trim();
+          neighborhood = firstPart;
+        } else {
+          city = firstPart;
+          const [statePart, neighborhoodPart] = secondPart.split('-');
+          state = statePart?.trim() || 'RS';
+          neighborhood = neighborhoodPart?.trim() || 'Centro';
         }
-      );
-    } else {
-      setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-      toast.error('Geolocalização não suportada.');
-      setTimeout(() => setIsLoading(false), 1000);
+      }
     }
+    
+    return {
+      id: pedido.id,
+      userName: pedido.usuario?.nome || 'Usuário',
+      city: city,
+      state: state,
+      neighborhood: neighborhood,
+      urgency: pedido.urgency || 'moderada',
+      category: pedido.category || 'Outros',
+      title: `${pedido.category} - ${pedido.subCategory?.join(', ') || 'Ajuda'}`,
+      userType: pedido.usuario?.tipo || 'Cidadão',
+      description: pedido.description || 'Sem descrição',
+      subCategories: pedido.subCategory || [],
+      subQuestionAnswers: pedido.subQuestionAnswers || {},
+      isNew: new Date(pedido.createdAt) > new Date(Date.now() - 24*60*60*1000),
+      userId: pedido.userId,
+      createdAt: pedido.createdAt
+    };
+  };
+
+  // Load pedidos with filters
+  const loadPedidos = async (filters = {}) => {
+    setLoadingPedidos(true);
+    try {
+      const queryParams = new URLSearchParams();
+      
+      // Apenas adicionar parâmetros que têm valor
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value);
+        }
+      });
+      
+      const url = queryParams.toString() ? `/pedidos?${queryParams.toString()}` : '/pedidos';
+      console.log('Fazendo requisição para:', url);
+      
+      const response = await apiService.get(url);
+      
+      if (response.success) {
+        const transformedPedidos = response.data.map(transformPedidoData);
+        setPedidos(transformedPedidos);
+        console.log(`Carregados ${transformedPedidos.length} pedidos`);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+      toast.error('Erro ao carregar pedidos');
+      setPedidos(MOCK_ORDERS);
+    } finally {
+      setLoadingPedidos(false);
+    }
+  };
+
+  // Get user's location and load pedidos
+  useEffect(() => {
+    const loadData = async () => {
+      const savedFontSize = localStorage.getItem('fontSize') || 'normal';
+      const savedContrast = localStorage.getItem('highContrast') === 'true';
+      setFontSize(savedFontSize);
+      setHighContrast(savedContrast);
+      
+      document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
+      
+      setIsLoading(true);
+      
+      // Load initial pedidos
+      await loadPedidos();
+      
+      // Get location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            
+            let detectedState = 'MG';
+            let detectedCity = 'Belo Horizonte';
+            
+            if (latitude >= -23 && latitude <= -19 && longitude >= -51 && longitude <= -39) {
+              detectedState = 'MG';
+              detectedCity = 'Belo Horizonte';
+            } else if (latitude >= -25 && latitude <= -22 && longitude >= -54 && longitude <= -44) {
+              detectedState = 'SP';
+              detectedCity = 'São Paulo';
+            } else if (latitude >= -33 && latitude <= -27 && longitude >= -58 && longitude <= -49) {
+              detectedState = 'RS';
+              detectedCity = 'Porto Alegre';
+            }
+            
+            setUserLocation({ state: detectedState, city: detectedCity });
+            toast.success(`Localização detectada: ${detectedCity}, ${detectedState}`);
+            setTimeout(() => setIsLoading(false), 1000);
+          },
+          (error) => {
+            console.log('Location access denied');
+            setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
+            toast.error('Localização negada. Usando Belo Horizonte como padrão.');
+            setTimeout(() => setIsLoading(false), 1000);
+          }
+        );
+      } else {
+        setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
+        toast.error('Geolocalização não suportada.');
+        setTimeout(() => setIsLoading(false), 1000);
+      }
+    };
+    
+    loadData();
   }, []);
 
   // Group cities by state
   const citiesByState = useMemo(() => {
     const grouped = {};
-    MOCK_ORDERS.forEach(order => {
-      if (!grouped[order.state]) {
-        grouped[order.state] = new Set();
+    const ordersToUse = pedidos.length > 0 ? pedidos : MOCK_ORDERS;
+    ordersToUse.forEach(order => {
+      const state = order.state || order.usuario?.estado || 'RS';
+      const city = order.city || order.usuario?.cidade || order.location || 'Porto Alegre';
+      if (!grouped[state]) {
+        grouped[state] = new Set();
       }
-      grouped[order.state].add(order.city);
+      grouped[state].add(city);
     });
     
     // Convert Sets to sorted arrays
@@ -941,28 +1042,36 @@ export default function QueroAjudarPage() {
     });
     
     return grouped;
-  }, []);
+  }, [pedidos]);
 
-  const filteredOrders = useMemo(() => {
-    return MOCK_ORDERS.filter((order) => {
-      const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
-      const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
-      
-      let locationMatch = true;
-      if (selectedLocation === 'meu_estado' && userLocation) {
-        locationMatch = order.state === userLocation.state;
-      } else if (selectedLocation === 'minha_cidade' && userLocation) {
-        locationMatch = order.city === userLocation.city && order.state === userLocation.state;
-      } else if (selectedLocation !== 'brasil' && selectedLocation !== 'meu_estado' && selectedLocation !== 'minha_cidade') {
-        locationMatch = `${order.city}, ${order.state}` === selectedLocation;
-      }
-      
-      const newMatch = !onlyNew || order.isNew;
-      const timeMatch = selectedTimeframe === 'todos' || (selectedTimeframe === 'hoje' && order.isNew);
-      
-      return catMatch && urgMatch && locationMatch && newMatch && timeMatch;
-    });
+  // Apply filters - reload pedidos when filters change
+  useEffect(() => {
+    if (!userLocation) return; // Aguardar localização ser detectada
+    
+    const filters = {};
+    
+    if (selectedCat !== 'Todas') filters.category = selectedCat;
+    if (selectedUrgency) filters.urgency = selectedUrgency;
+    if (selectedTimeframe !== 'todos') filters.timeframe = selectedTimeframe;
+    if (onlyNew) filters.onlyNew = true;
+    
+    // Location filters
+    if (selectedLocation === 'meu_estado' && userLocation) {
+      filters.state = userLocation.state;
+    } else if (selectedLocation === 'minha_cidade' && userLocation) {
+      filters.city = userLocation.city;
+      filters.state = userLocation.state;
+    } else if (selectedLocation !== 'brasil' && selectedLocation.includes(',')) {
+      const [city, state] = selectedLocation.split(', ');
+      filters.city = city.trim();
+      filters.state = state.trim();
+    }
+    
+    console.log('Aplicando filtros:', filters);
+    loadPedidos(filters);
   }, [selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation]);
+
+  const filteredOrders = pedidos;
 
   // Trail animation for cards
   const trail = useTrail(filteredOrders.length, {
@@ -1005,6 +1114,17 @@ export default function QueroAjudarPage() {
           </div>
 
         <div className="header-controls">
+          <motion.button
+            className="btn-home"
+            onClick={() => navigate('/')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            data-tooltip-id="home-tooltip"
+            data-tooltip-content="Voltar para a página inicial"
+          >
+            <Home size={20} />
+            <span>Início</span>
+          </motion.button>
           <motion.button
             className="accessibility-toggle"
             onClick={() => setShowHelper(!showHelper)}
@@ -1055,7 +1175,10 @@ export default function QueroAjudarPage() {
                     <div className="filter-options">
                       <button
                         className={`filter-option ${selectedLocation === 'brasil' ? 'active' : ''}`}
-                        onClick={() => setSelectedLocation('brasil')}
+                        onClick={() => {
+                          setSelectedLocation('brasil');
+                          toast.success('Mostrando pedidos de todo o Brasil');
+                        }}
                       >
                         Todo o Brasil
                       </button>
@@ -1063,13 +1186,19 @@ export default function QueroAjudarPage() {
                         <>
                           <button
                             className={`filter-option ${selectedLocation === 'meu_estado' ? 'active' : ''}`}
-                            onClick={() => setSelectedLocation('meu_estado')}
+                            onClick={() => {
+                              setSelectedLocation('meu_estado');
+                              toast.success(`Filtrando por: ${userLocation.state}`);
+                            }}
                           >
                             Meu Estado ({userLocation.state})
                           </button>
                           <button
                             className={`filter-option ${selectedLocation === 'minha_cidade' ? 'active' : ''}`}
-                            onClick={() => setSelectedLocation('minha_cidade')}
+                            onClick={() => {
+                              setSelectedLocation('minha_cidade');
+                              toast.success(`Filtrando por: ${userLocation.city}`);
+                            }}
                           >
                             Minha Cidade ({userLocation.city})
                           </button>
@@ -1082,8 +1211,11 @@ export default function QueroAjudarPage() {
                         <h4>Escolher cidade em {userLocation.state}:</h4>
                         <select 
                           className="city-dropdown"
-                          value={selectedLocation.startsWith(userLocation.state) ? selectedLocation : ''}
-                          onChange={(e) => setSelectedLocation(e.target.value)}
+                          value={selectedLocation}
+                          onChange={(e) => {
+                            setSelectedLocation(e.target.value);
+                            toast.success(`Filtro de localização atualizado: ${e.target.value}`);
+                          }}
                         >
                           <option value="meu_estado">Todas as cidades do estado</option>
                           {citiesByState[userLocation.state]?.map(city => (
@@ -1103,7 +1235,10 @@ export default function QueroAjudarPage() {
                         <button
                           key={cat.id}
                           className={`filter-option ${selectedCat === cat.id ? 'active' : ''}`}
-                          onClick={() => setSelectedCat(cat.id)}
+                          onClick={() => {
+                            setSelectedCat(cat.id);
+                            toast.success(`Categoria selecionada: ${cat.label}`);
+                          }}
                           style={{ '--filter-color': cat.color }}
                         >
                           {cat.label}
@@ -1119,7 +1254,11 @@ export default function QueroAjudarPage() {
                         <button
                           key={opt.id}
                           className={`filter-option ${selectedUrgency === opt.id ? 'active' : ''}`}
-                          onClick={() => setSelectedUrgency(selectedUrgency === opt.id ? null : opt.id)}
+                          onClick={() => {
+                            const newUrgency = selectedUrgency === opt.id ? null : opt.id;
+                            setSelectedUrgency(newUrgency);
+                            toast.success(newUrgency ? `Urgência: ${opt.label}` : 'Filtro de urgência removido');
+                          }}
                           style={{ '--filter-color': opt.color }}
                         >
                           {opt.icon}
@@ -1134,21 +1273,54 @@ export default function QueroAjudarPage() {
                     <div className="filter-options">
                       <button
                         className={`filter-option ${selectedTimeframe === 'todos' ? 'active' : ''}`}
-                        onClick={() => setSelectedTimeframe('todos')}
+                        onClick={() => {
+                          setSelectedTimeframe('todos');
+                          toast.success('Mostrando todos os períodos');
+                        }}
                       >
                         Todos os Períodos
                       </button>
                       <button
                         className={`filter-option ${selectedTimeframe === 'hoje' ? 'active' : ''}`}
-                        onClick={() => setSelectedTimeframe('hoje')}
+                        onClick={() => {
+                          setSelectedTimeframe('hoje');
+                          toast.success('Filtrando pedidos de hoje');
+                        }}
                       >
                         Hoje
                       </button>
                       <button
-                        className={`filter-option ${onlyNew ? 'active' : ''}`}
-                        onClick={() => setOnlyNew(!onlyNew)}
+                        className={`filter-option ${selectedTimeframe === 'semana' ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedTimeframe('semana');
+                          toast.success('Filtrando última semana');
+                        }}
                       >
-                        Apenas Novos
+                        Última Semana
+                      </button>
+                      <button
+                        className={`filter-option ${selectedTimeframe === 'mes' ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedTimeframe('mes');
+                          toast.success('Filtrando último mês');
+                        }}
+                      >
+                        Último Mês
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="filter-section">
+                    <h3>Novidades</h3>
+                    <div className="filter-options">
+                      <button
+                        className={`filter-option ${onlyNew ? 'active' : ''}`}
+                        onClick={() => {
+                          setOnlyNew(!onlyNew);
+                          toast.success(onlyNew ? 'Mostrando todos os pedidos' : 'Mostrando apenas pedidos novos');
+                        }}
+                      >
+                        Apenas Pedidos Novos (24h)
                       </button>
                     </div>
                   </div>
@@ -1163,13 +1335,17 @@ export default function QueroAjudarPage() {
                       setSelectedLocation('brasil');
                       setSelectedTimeframe('todos');
                       setOnlyNew(false);
+                      toast.success('Todos os filtros foram limpos!');
                     }}
                   >
                     Limpar Filtros
                   </button>
                   <button 
                     className="btn-apply-filters"
-                    onClick={() => setShowFiltersModal(false)}
+                    onClick={() => {
+                      setShowFiltersModal(false);
+                      toast.success(`Filtros aplicados! ${filteredOrders.length} pedidos encontrados.`);
+                    }}
                   >
                     Aplicar Filtros
                   </button>
@@ -1180,7 +1356,7 @@ export default function QueroAjudarPage() {
         </AnimatePresence>
 
         <div className="results-count">
-          <p>Encontramos <strong>{isLoading ? <Skeleton width={30} /> : filteredOrders.length}</strong> pedidos para você ajudar</p>
+          <p>Encontramos <strong>{loadingPedidos ? <Skeleton width={30} /> : filteredOrders.length}</strong> pedidos para você ajudar</p>
         </div>
 
         <div className="orders-grid-layout" ref={cardsRef}>
@@ -1239,7 +1415,7 @@ export default function QueroAjudarPage() {
               </div>
             )}
           </AnimatePresence>
-          {isLoading ? (
+          {loadingPedidos ? (
             // Loading skeletons
             [...Array(6)].map((_, i) => (
               <div key={i} className="vibrant-order-card">
@@ -1388,7 +1564,30 @@ export default function QueroAjudarPage() {
                   Iremos abrir um chat para que vocês possam combinar a entrega ou doação diretamente.
                 </p>
                 <div className="modal-confirm-actions">
-                  <button className="btn-confirm-chat">
+                  <button 
+                    className="btn-confirm-chat"
+                    onClick={async () => {
+                      try {
+                        const conversationData = {
+                          participants: [orderToHelp.userId],
+                          pedidoId: orderToHelp.id,
+                          type: 'ajuda',
+                          title: `Ajuda: ${orderToHelp.title}`
+                        };
+                        
+                        await apiService.createConversation(conversationData);
+                        toast.success('Conversa iniciada! Redirecionando...');
+                        
+                        setTimeout(() => {
+                          navigate('/conversas');
+                        }, 1500);
+                      } catch (error) {
+                        console.error('Erro ao criar conversa:', error);
+                        toast.error('Erro ao iniciar conversa');
+                      }
+                      setOrderToHelp(null);
+                    }}
+                  >
                     <MessageCircle size={20} />
                     Sim, conversar agora
                   </button>
@@ -1428,6 +1627,11 @@ export default function QueroAjudarPage() {
           }}
         />
         
+        <Tooltip 
+          id="home-tooltip" 
+          place="bottom"
+          delayShow={200}
+        />
         <Tooltip 
           id="filter-tooltip" 
           place="bottom"

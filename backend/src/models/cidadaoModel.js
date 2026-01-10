@@ -11,6 +11,7 @@ class Cidadao {
     this.disponibilidade = data.disponibilidade || [];
     this.interesses = data.interesses || [];
     this.proposito = data.proposito || '';
+    this.senha = data.senha; // Campo para senha hasheada
     this.tipo = 'cidadao';
     this.ativo = true;
     this.criadoEm = new Date();

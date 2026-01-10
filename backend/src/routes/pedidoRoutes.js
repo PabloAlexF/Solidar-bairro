@@ -3,25 +3,23 @@ const router = express.Router();
 const pedidoController = require('../controllers/pedidoController');
 const { authenticateToken } = require('../middleware/auth');
 
-// Todas as rotas de pedidos requerem autenticação
-router.use(authenticateToken);
-
-// POST /api/pedidos - Criar novo pedido
-router.post('/', pedidoController.create);
-
-// GET /api/pedidos - Listar todos os pedidos
+// GET /api/pedidos - Listar todos os pedidos (público para "Quero Ajudar")
 router.get('/', pedidoController.getAll);
 
-// GET /api/pedidos/meus - Listar pedidos do usuário logado
-router.get('/meus', pedidoController.getByUserId);
+// Rotas que requerem autenticação
+// POST /api/pedidos - Criar novo pedido
+router.post('/', authenticateToken, pedidoController.create);
 
-// GET /api/pedidos/:id - Buscar pedido por ID
-router.get('/:id', pedidoController.getById);
+// GET /api/pedidos/meus - Listar pedidos do usuário logado
+router.get('/meus', authenticateToken, pedidoController.getByUserId);
 
 // PUT /api/pedidos/:id - Atualizar pedido
-router.put('/:id', pedidoController.update);
+router.put('/:id', authenticateToken, pedidoController.update);
 
 // DELETE /api/pedidos/:id - Deletar pedido
-router.delete('/:id', pedidoController.delete);
+router.delete('/:id', authenticateToken, pedidoController.delete);
+
+// GET /api/pedidos/:id - Buscar pedido por ID (público)
+router.get('/:id', pedidoController.getById);
 
 module.exports = router;

@@ -85,6 +85,10 @@ const ApiService = {
     return this.request('/pedidos');
   },
 
+  async get(endpoint) {
+    return this.request(endpoint);
+  },
+
   async getMeusPedidos() {
     return this.request('/pedidos/meus');
   },
