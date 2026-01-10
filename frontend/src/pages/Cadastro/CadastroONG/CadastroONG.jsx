@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
-import '../../../styles/components/CadastroONG.css';
+import './CadastroONG.css';
 import '../../../styles/components/PasswordField.css';
 
 export default function CadastroONG() {

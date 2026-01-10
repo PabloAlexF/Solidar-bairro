@@ -1,0 +1,80 @@
+        {/* Modal de Especificações */}
+        <AnimatePresence>
+          {showSpecsModal && (
+            <div className="modal-overlay-fullscreen">
+              <motion.div 
+                className="modal-overlay" 
+                onClick={() => setShowSpecsModal(false)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <motion.div 
+                  className="sub-modal-v3 specs-modal"
+                  style={{ '--modal-color': selectedCategory?.color }}
+                  onClick={(e) => e.stopPropagation()}
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <div className="modal-header">
+                    <div className="header-info">
+                      <h3>Especificações Gerais</h3>
+                      <p>Defina o tamanho e a preferência para o seu pedido.</p>
+                    </div>
+                    <button className="close-btn" onClick={() => setShowSpecsModal(false)}>
+                      <X size={20} />
+                    </button>
+                  </div>
+                  
+                  <div className="modal-body">
+                    <div className="specs-modal-content">
+                      <div className="spec-item">
+                        <label className="q-label"><Maximize2 size={16} /> Qual o tamanho?</label>
+                        <div className="chips-grid">
+                          {details.sizes.map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => updateData({ size: s })}
+                              className={`chip-item ${formData.size === s ? 'active' : ''}`}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {details.styles && (
+                        <div className="spec-item" style={{ marginTop: '24px' }}>
+                          <label className="q-label"><User size={16} /> Qual a preferência?</label>
+                          <div className="chips-grid">
+                            {details.styles.map((s) => (
+                              <button
+                                key={s}
+                                onClick={() => updateData({ style: s })}
+                                className={`chip-item ${formData.style === s ? 'active' : ''}`}
+                              >
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button 
+                      className="btn-v3 btn-modal-done"
+                      onClick={() => setShowSpecsModal(false)}
+                    >
+                      Concluir <Check size={18} />
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>

@@ -1,0 +1,31 @@
+/* Fix específico apenas para visibilidade - sem afetar cores/estilos */
+
+/* Corrigir apenas animações que ocultam elementos */
+.cadastro-wrapper .animate-slideUp {
+  opacity: 1 !important;
+}
+
+.cadastro-wrapper .card-outer {
+  opacity: 1 !important;
+}
+
+/* Garantir que elementos com stagger sejam visíveis */
+.cadastro-wrapper .stagger-1,
+.cadastro-wrapper .stagger-2,
+.cadastro-wrapper .stagger-3,
+.cadastro-wrapper .stagger-4 {
+  opacity: 1 !important;
+}
+
+/* Corrigir apenas elementos que podem estar com display: none */
+.cards-grid {
+  display: grid !important;
+}
+
+.card-outer {
+  display: block !important;
+}
+
+.card-inner {
+  display: block !important;
+}
