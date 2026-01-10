@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useSpring, animated, useTrail } from 'react-spring';
+import { useSpring, animated, useTrail, useSprings } from 'react-spring';
 import { useInView } from 'react-intersection-observer';
 import toast, { Toaster } from 'react-hot-toast';
 import Skeleton from 'react-loading-skeleton';
@@ -699,12 +699,152 @@ function ModalDetalhes({ order, onClose, onHelp }) {
           place="top"
           delayShow={300}
         />
+        <Tooltip 
+          id="accessibility-tooltip" 
+          place="left"
+          delayShow={200}
+        />
       </motion.div>
     </div>
   );
 }
 
 // --- MAIN PAGE ---
+
+// Accessibility and Navigation Helper Component
+function AccessibilityHelper() {
+  const [fontSize, setFontSize] = useState('normal');
+  const [highContrast, setHighContrast] = useState(false);
+  const [showHelper, setShowHelper] = useState(false);
+
+  useEffect(() => {
+    const savedFontSize = localStorage.getItem('fontSize') || 'normal';
+    const savedContrast = localStorage.getItem('highContrast') === 'true';
+    setFontSize(savedFontSize);
+    setHighContrast(savedContrast);
+    
+    document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
+  }, []);
+
+  const changeFontSize = (size) => {
+    setFontSize(size);
+    localStorage.setItem('fontSize', size);
+    document.documentElement.className = document.documentElement.className.replace(/font-\w+/g, `font-${size}`);
+    toast.success(`Tamanho da fonte: ${size === 'large' ? 'Grande' : size === 'small' ? 'Pequena' : 'Normal'}`);
+  };
+
+  const toggleContrast = () => {
+    const newContrast = !highContrast;
+    setHighContrast(newContrast);
+    localStorage.setItem('highContrast', newContrast.toString());
+    document.documentElement.classList.toggle('high-contrast', newContrast);
+    toast.success(newContrast ? 'Alto contraste ativado' : 'Alto contraste desativado');
+  };
+
+  return (
+    <>
+      <motion.button
+        className="accessibility-toggle"
+        onClick={() => setShowHelper(!showHelper)}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        data-tooltip-id="accessibility-tooltip"
+        data-tooltip-content="Opções de acessibilidade"
+      >
+        ♿ Acessibilidade
+      </motion.button>
+      
+      <AnimatePresence>
+        {showHelper && (
+          <div className="filters-modal-overlay" onClick={() => setShowHelper(false)}>
+            <motion.div
+              className="accessibility-modal"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              onClick={e => e.stopPropagation()}
+            >
+            <h3>Acessibilidade</h3>
+            
+            <div className="accessibility-group">
+              <label>Tamanho da Fonte:</label>
+              <div className="font-controls">
+                <button 
+                  className={fontSize === 'small' ? 'active' : ''}
+                  onClick={() => changeFontSize('small')}
+                >
+                  A-
+                </button>
+                <button 
+                  className={fontSize === 'normal' ? 'active' : ''}
+                  onClick={() => changeFontSize('normal')}
+                >
+                  A
+                </button>
+                <button 
+                  className={fontSize === 'large' ? 'active' : ''}
+                  onClick={() => changeFontSize('large')}
+                >
+                  A+
+                </button>
+              </div>
+            </div>
+            
+            <div className="accessibility-group">
+              <button 
+                className={`contrast-btn ${highContrast ? 'active' : ''}`}
+                onClick={toggleContrast}
+              >
+                {highContrast ? '🌙' : '☀️'} Alto Contraste
+              </button>
+            </div>
+            
+            <button 
+              className="close-accessibility"
+              onClick={() => setShowHelper(false)}
+            >
+              ✕
+            </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+function AnimatedBackground() {
+  return (
+    <div className="animated-background">
+      {/* Floating geometric shapes */}
+      <div className="geometric-shapes">
+        {[...Array(12)].map((_, i) => (
+          <div 
+            key={i} 
+            className={`shape shape-${(i % 8) + 1}`}
+            style={{
+              '--delay': `${i * 1.5}s`,
+              '--duration': `${20 + i * 2}s`
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Gradient orbs */}
+      <div className="gradient-orbs">
+        {[...Array(6)].map((_, i) => (
+          <div 
+            key={i} 
+            className={`orb orb-${(i % 5) + 1}`}
+            style={{
+              '--delay': `${i * 2}s`,
+              '--size': `${120 + i * 40}px`
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function QueroAjudarPage() {
   const [selectedCat, setSelectedCat] = useState('Todas');
@@ -718,6 +858,9 @@ export default function QueroAjudarPage() {
   const [userLocation, setUserLocation] = useState(null);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [fontSize, setFontSize] = useState('normal');
+  const [highContrast, setHighContrast] = useState(false);
+  const [showHelper, setShowHelper] = useState(false);
 
   // Animation hooks
   const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
@@ -737,6 +880,13 @@ export default function QueroAjudarPage() {
 
   // Get user's location
   useEffect(() => {
+    const savedFontSize = localStorage.getItem('fontSize') || 'normal';
+    const savedContrast = localStorage.getItem('highContrast') === 'true';
+    setFontSize(savedFontSize);
+    setHighContrast(savedContrast);
+    
+    document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
+    
     setIsLoading(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -821,15 +971,27 @@ export default function QueroAjudarPage() {
     config: { tension: 280, friction: 60 }
   });
 
+  const changeFontSize = (size) => {
+    setFontSize(size);
+    localStorage.setItem('fontSize', size);
+    document.documentElement.className = document.documentElement.className.replace(/font-\w+/g, `font-${size}`);
+    toast.success(`Tamanho da fonte: ${size === 'large' ? 'Grande' : size === 'small' ? 'Pequena' : 'Normal'}`);
+  };
+
+  const toggleContrast = () => {
+    const newContrast = !highContrast;
+    setHighContrast(newContrast);
+    localStorage.setItem('highContrast', newContrast.toString());
+    document.documentElement.classList.toggle('high-contrast', newContrast);
+    toast.success(newContrast ? 'Alto contraste ativado' : 'Alto contraste desativado');
+  };
+
   return (
     <div className="qa-page">
-      <div className="floating-elements">
-        {[...Array(9)].map((_, i) => (
-          <Heart key={i} className="floating-heart" size={Math.random() * 20 + 15} />
-        ))}
-      </div>
+      <a href="#main-content" className="skip-link">Pular para o conteúdo principal</a>
+      <AnimatedBackground />
       
-      <div className="qa-main-wrapper">
+      <div className="qa-main-wrapper" id="main-content">
         <animated.header className="page-header" style={headerSpring} ref={headerRef}>
           <div className="brand-box">
             <div className="brand-logo">
@@ -841,6 +1003,17 @@ export default function QueroAjudarPage() {
             </div>
           </div>
 
+        <div className="header-controls">
+          <motion.button
+            className="accessibility-toggle"
+            onClick={() => setShowHelper(!showHelper)}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            data-tooltip-id="accessibility-tooltip"
+            data-tooltip-content="Opções de acessibilidade"
+          >
+            Acessibilidade
+          </motion.button>
           <animated.button 
             className={`btn-toggle-filters ${showFiltersModal ? 'active' : ''}`}
             onClick={() => {
@@ -855,6 +1028,7 @@ export default function QueroAjudarPage() {
             <span>Filtros Avançados</span>
             {(selectedCat !== 'Todas' || selectedUrgency || (selectedLocation !== 'brasil' && selectedLocation !== 'todas') || selectedTimeframe !== 'todos' || onlyNew) && <div className="active-filter-indicator" />}
           </animated.button>
+        </div>
         </animated.header>
 
         <AnimatePresence>
@@ -1009,6 +1183,61 @@ export default function QueroAjudarPage() {
         </div>
 
         <div className="orders-grid-layout" ref={cardsRef}>
+          <AnimatePresence>
+            {showHelper && (
+              <div className="accessibility-overlay">
+                <motion.div
+                  className="accessibility-modal"
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <h3>Acessibilidade</h3>
+                  
+                  <div className="accessibility-group">
+                    <label>Tamanho da Fonte:</label>
+                    <div className="font-controls">
+                      <button 
+                        className={fontSize === 'small' ? 'active' : ''}
+                        onClick={() => changeFontSize('small')}
+                      >
+                        A-
+                      </button>
+                      <button 
+                        className={fontSize === 'normal' ? 'active' : ''}
+                        onClick={() => changeFontSize('normal')}
+                      >
+                        A
+                      </button>
+                      <button 
+                        className={fontSize === 'large' ? 'active' : ''}
+                        onClick={() => changeFontSize('large')}
+                      >
+                        A+
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="accessibility-group">
+                    <button 
+                      className={`contrast-btn ${highContrast ? 'active' : ''}`}
+                      onClick={toggleContrast}
+                    >
+                      {highContrast ? 'Desativar' : 'Ativar'} Alto Contraste
+                    </button>
+                  </div>
+                  
+                  <button 
+                    className="close-accessibility"
+                    onClick={() => setShowHelper(false)}
+                  >
+                    X
+                  </button>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
           {isLoading ? (
             // Loading skeletons
             [...Array(6)].map((_, i) => (
@@ -1103,6 +1332,7 @@ export default function QueroAjudarPage() {
                           onClick={() => setSelectedOrder(order)}
                           data-tooltip-id="view-tooltip"
                           data-tooltip-content="Ver detalhes completos"
+                          aria-label={`Ver detalhes de ${order.title}`}
                         >
                           <Eye size={18} />
                           Ver Detalhes
@@ -1115,6 +1345,7 @@ export default function QueroAjudarPage() {
                           }}
                           data-tooltip-id="help-tooltip"
                           data-tooltip-content="Oferecer ajuda"
+                          aria-label={`Ajudar ${order.userName} com ${order.title}`}
                         >
                           <Heart size={18} />
                           Ajudar
