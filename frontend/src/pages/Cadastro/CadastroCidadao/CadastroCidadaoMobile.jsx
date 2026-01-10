@@ -192,7 +192,7 @@ export default function CadastroCidadaoMobile() {
       </div>
 
       <nav className="mobile-vlt-top-nav">
-        <Link to="/" className="mobile-vlt-back-link">
+        <Link to="/cadastro" className="mobile-vlt-back-link">
           <div className="mobile-vlt-back-icon-box"><ArrowLeft size={20} /></div>
           <span>Voltar</span>
         </Link>
@@ -452,7 +452,7 @@ export default function CadastroCidadaoMobile() {
                 )}
                 
                 <div className="mobile-vlt-nav-actions">
-                  {step === 1 && <Link to="/" className="mobile-vlt-btn-cancel">Cancelar</Link>}
+                  {step === 1 && <Link to="/cadastro" className="mobile-vlt-btn-cancel">Cancelar</Link>}
                   
                   {step < totalSteps ? (
                     <button type="button" onClick={handleNextStep} className="mobile-vlt-btn mobile-vlt-btn-next">

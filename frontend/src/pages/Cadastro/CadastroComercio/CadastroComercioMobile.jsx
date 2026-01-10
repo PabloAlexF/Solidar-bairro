@@ -179,7 +179,7 @@ export default function CadastroComercioMobile() {
       </div>
 
       <nav className="cmr-prm-mobile-top-nav">
-        <Link to="/" className="cmr-prm-back-link">
+        <Link to="/cadastro" className="cmr-prm-back-link">
           <div className="cmr-prm-back-icon-box"><ArrowLeft size={20} /></div>
           <span>Voltar</span>
         </Link>
@@ -394,7 +394,7 @@ export default function CadastroComercioMobile() {
                   <span>Anterior</span>
                 </button>
               ) : (
-                <Link to="/" className="cmr-prm-nav-btn cmr-prm-btn-cancel cmr-prm-cancel-left">Cancelar</Link>
+                <Link to="/cadastro" className="cmr-prm-nav-btn cmr-prm-btn-cancel cmr-prm-cancel-left">Cancelar</Link>
               )}
 
               <div className="cmr-prm-nav-actions">

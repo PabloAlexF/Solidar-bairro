@@ -384,7 +384,7 @@ export default function CadastroFamiliaMobile() {
       </div>
 
       <nav className="fam-mob-navbar">
-        <Link href="/" className="fam-mob-back-link">
+        <Link to="/cadastro" className="fam-mob-back-link">
           <div className="fam-mob-back-icon">
             <ArrowLeft size={20} />
           </div>

@@ -168,7 +168,7 @@ export default function CadastroONGMobile() {
       </div>
 
       <div className="ong-mob-top">
-        <Link to="/" className="ong-mob-back">
+        <Link to="/cadastro" className="ong-mob-back">
           <div style={{ width: 36, height: 36, background: '#fff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ArrowLeft size={18} />
           </div>
@@ -333,7 +333,7 @@ export default function CadastroONGMobile() {
                 <span>Anterior</span>
               </button>
             ) : (
-              <Link to="/" className="ong-mob-btn ong-mob-btn-secondary ong-mob-btn-full" style={{ textAlign: 'center', lineHeight: '36px' }}>Cancelar</Link>
+              <Link to="/cadastro" className="ong-mob-btn ong-mob-btn-secondary ong-mob-btn-full" style={{ textAlign: 'center', lineHeight: '36px' }}>Cancelar</Link>
             )}
             
             {step < totalSteps ? (
