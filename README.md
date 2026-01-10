@@ -97,6 +97,15 @@ node tests/test-all-apis.js
 - **GET** `/api/familias` - Listar famílias
 - **GET** `/api/familias/:id` - Buscar família
 
+### 🔍 Achados e Perdidos
+- **POST** `/api/achados-perdidos` - Criar item perdido/encontrado
+- **GET** `/api/achados-perdidos` - Listar itens com filtros
+- **GET** `/api/achados-perdidos/:id` - Buscar item específico
+- **PUT** `/api/achados-perdidos/:id` - Atualizar item
+- **DELETE** `/api/achados-perdidos/:id` - Deletar item
+- **GET** `/api/achados-perdidos/user/my-items` - Meus itens
+- **PATCH** `/api/achados-perdidos/:id/resolve` - Marcar como resolvido
+
 ## 🏗️ Arquitetura
 
 ### Padrões de Design Implementados
@@ -194,6 +203,7 @@ export const API_CONFIG = {
 - [API Comércio](./backend/docs/api-comercio.md)
 - [API ONG](./backend/docs/api-ong.md)
 - [API Família](./backend/docs/api-familia.md)
+- [API Achados e Perdidos](./backend/docs/api-achados-perdidos.md)
 
 ## 🔧 Configuração
 

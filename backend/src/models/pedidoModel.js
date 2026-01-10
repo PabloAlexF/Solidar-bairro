@@ -49,12 +49,8 @@ class PedidoModel {
 
   async findAll(filters = {}) {
     try {
-      console.log('Aplicando filtros no Firestore:', filters);
-      
       // Buscar todos os pedidos primeiro (sem filtros complexos)
       const snapshot = await this.collection.orderBy('createdAt', 'desc').get();
-      
-      console.log(`Query retornou ${snapshot.docs.length} documentos`);
       
       const pedidos = [];
       for (const doc of snapshot.docs) {
@@ -95,7 +91,6 @@ class PedidoModel {
             }
           }
           
-          console.log(`Comparando cidade: '${pedidoCity}' vs '${filters.city}'`);
           if (pedidoCity !== filters.city) {
             incluir = false;
           }
@@ -116,7 +111,6 @@ class PedidoModel {
             }
           }
           
-          console.log(`Comparando estado: '${pedidoState}' vs '${filters.state}'`);
           if (pedidoState !== filters.state) {
             incluir = false;
           }
@@ -160,7 +154,6 @@ class PedidoModel {
         }
       }
       
-      console.log(`Após filtros: ${pedidos.length} pedidos`);
       return pedidos;
     } catch (error) {
       console.error('Erro detalhado no findAll:', error);

@@ -27,8 +27,6 @@ class PedidoController {
 
   async getAll(req, res) {
     try {
-      console.log('Query params recebidos:', req.query);
-      
       const filters = {
         category: req.query.category,
         urgency: req.query.urgency,
@@ -38,11 +36,7 @@ class PedidoController {
         onlyNew: req.query.onlyNew === 'true'
       };
       
-      console.log('Filtros processados:', filters);
-      
       const pedidos = await pedidoService.getAllPedidos(filters);
-      
-      console.log(`Retornando ${pedidos.length} pedidos`);
       
       res.json({
         success: true,

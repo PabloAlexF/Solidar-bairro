@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatLocation } from '../../utils/addressUtils';
+import apiService from '../../services/apiService';
 import { 
   Search, 
   Plus, 
@@ -49,63 +50,6 @@ const STATS = [
   { label: 'Itens Reportados', value: '1.2k+', icon: Package },
   { label: 'Devolvidos com Sucesso', value: '850', icon: ShieldCheck },
   { label: 'Comunidade Ativa', value: '5k+', icon: Sparkles }
-];
-
-const DUMMY_FALLBACK = [
-  {
-    id: '1',
-    title: 'MacBook Pro 14 M3',
-    description: 'Esquecido na mesa do café. Possui adesivo de foguete na tampa e uma pequena marca no canto inferior esquerdo. O teclado é padrão internacional.',
-    category: 'Eletrônicos',
-    type: 'lost',
-    location: 'Starbucks Paulista',
-    date_occurrence: '2025-05-15',
-    contact_info: '(11) 98888-7777',
-    image_url: 'https://images.unsplash.com/photo-1517336714460-1c98ca4e823a?q=80&w=800&auto=format&fit=crop',
-    reward: 'R$ 500,00',
-    tags: ['apple', 'laptop', 'macbook'],
-    status: 'active'
-  },
-  {
-    id: '2',
-    title: 'Carteira de Couro Preta',
-    description: 'Encontrada no banco da praça. Contém documentos em nome de Ricardo S. e alguns cartões de visita. A carteira é da marca Montblanc.',
-    category: 'Carteiras',
-    type: 'found',
-    location: 'Praça da Liberdade',
-    date_occurrence: '2025-05-14',
-    contact_info: 'Portaria do Edifício Ouro',
-    image_url: 'https://images.unsplash.com/photo-1627123118496-e377aef97331?q=80&w=800&auto=format&fit=crop',
-    tags: ['documentos', 'carteira', 'montblanc'],
-    status: 'active'
-  },
-  {
-    id: '3',
-    title: 'Chaves de Carro BMW',
-    description: 'Molho de chaves com chaveiro de couro preto. Encontrado próximo à entrada do estacionamento G2.',
-    category: 'Chaves',
-    type: 'found',
-    location: 'Shopping Eldorado',
-    date_occurrence: '2025-05-16',
-    contact_info: 'SAC do Shopping',
-    image_url: 'https://images.unsplash.com/photo-1582139329536-e7284fece509?q=80&w=800&auto=format&fit=crop',
-    tags: ['chaves', 'bmw', 'estacionamento'],
-    status: 'active'
-  },
-  {
-    id: '4',
-    title: 'Golden Retriever - "Buddy"',
-    description: 'Cachorro Golden Retriever macho, muito dócil. Estava usando uma coleira azul sem identificação. Visto pela última vez no Parque Ibirapuera.',
-    category: 'Pets',
-    type: 'lost',
-    location: 'Parque Ibirapuera',
-    date_occurrence: '2025-05-17',
-    contact_info: '(11) 97777-6666',
-    image_url: 'https://images.unsplash.com/photo-1552053831-71594a27632d?q=80&w=800&auto=format&fit=crop',
-    reward: 'Gratificação Generosa',
-    tags: ['pet', 'cachorro', 'golden', 'ibirapuera'],
-    status: 'active'
-  }
 ];
 
 // --- Sub-components ---
@@ -252,14 +196,22 @@ export default function AchadosEPerdidos() {
 
   const fetchItems = async () => {
     try {
-      // Simulate API call - replace with actual API call
-      setTimeout(() => {
-        setItems(DUMMY_FALLBACK);
-        setLoading(false);
-      }, 1000);
+      setLoading(true);
+      const filters = {};
+      if (categoryFilter !== 'all') filters.category = categoryFilter;
+      if (typeFilter !== 'all') filters.type = typeFilter;
+      if (searchTerm) filters.search = searchTerm;
+      
+      const response = await apiService.getAchadosPerdidos(filters);
+      if (response.success) {
+        setItems(response.data || []);
+      } else {
+        setItems([]);
+      }
     } catch (err) {
       console.error('Error fetching items:', err);
-      setItems(DUMMY_FALLBACK);
+      setItems([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -274,18 +226,17 @@ export default function AchadosEPerdidos() {
     
     setIsSubmitting(true);
     try {
-      // Simulate API call - replace with actual API call
-      const newItem = {
-        ...formData,
-        id: Date.now().toString(),
-        created_at: new Date().toISOString()
-      };
-      
-      setItems(prev => [newItem, ...prev]);
-      setIsModalOpen(false);
-      resetForm();
+      const response = await apiService.createAchadoPerdido(formData);
+      if (response.success) {
+        setItems(prev => [response.data, ...prev]);
+        setIsModalOpen(false);
+        resetForm();
+      } else {
+        throw new Error(response.error || 'Erro ao criar item');
+      }
     } catch (err) {
       console.error('Error creating item:', err);
+      alert('Erro ao criar item: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -344,21 +295,14 @@ export default function AchadosEPerdidos() {
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 5));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
 
+  // Refetch when filters change
+  useEffect(() => {
+    fetchItems();
+  }, [categoryFilter, typeFilter, searchTerm]);
+
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
   const userLocation = formatLocation(user?.endereco, user?.cidade, user?.estado) || user?.bairro || "São Paulo, SP";
-
-  const filteredItems = items.filter(item => {
-    const title = item.title?.toLowerCase() || '';
-    const desc = item.description?.toLowerCase() || '';
-    const search = searchTerm.toLowerCase();
-    const matchesSearch = title.includes(search) || desc.includes(search);
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-    const matchesType = typeFilter === 'all' || item.type === typeFilter;
-    const matchesLocation = locationScope === 'global' || 
-                           item.location?.toLowerCase().includes(userLocation.toLowerCase());
-    return matchesSearch && matchesCategory && matchesType && matchesLocation;
-  });
 
   const renderStep = () => {
     switch (currentStep) {
@@ -714,14 +658,6 @@ export default function AchadosEPerdidos() {
         <div className="lf-container">
           <div className="lf-header-content">
             <div className="lf-title-group">
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="lf-badge"
-              >
-                <Sparkles size={16} style={{ color: 'var(--sb-orange)' }} />
-                <span>COMUNIDADE SOLIDÁRIA</span>
-              </motion.div>
               <motion.h1 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -788,10 +724,6 @@ export default function AchadosEPerdidos() {
                 <span className="lf-location-label">Sua Localização Cadastrada</span>
                 <span className="lf-location-value">{userLocation}</span>
               </div>
-            </div>
-            <div className="lf-location-recommendation">
-              <Sparkles size={20} className="text-orange" />
-              <span>Recomendando itens na sua região</span>
             </div>
             <div className="lf-location-scope-toggle">
               <button 
@@ -864,8 +796,8 @@ export default function AchadosEPerdidos() {
         ) : (
           <div className="lf-grid">
             <AnimatePresence mode="popLayout">
-              {filteredItems.length > 0 ? (
-                filteredItems.map((item) => (
+              {items.length > 0 ? (
+                items.map((item) => (
                   <ItemCard 
                     key={item.id} 
                     item={item} 

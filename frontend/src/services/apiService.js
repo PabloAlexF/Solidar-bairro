@@ -180,6 +180,52 @@ const ApiService = {
 
   async getPedido(id) {
     return this.request(`/pedidos/${id}`);
+  },
+
+  // Achados e Perdidos
+  async getAchadosPerdidos(filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.type) params.append('type', filters.type);
+    if (filters.category) params.append('category', filters.category);
+    if (filters.city) params.append('city', filters.city);
+    if (filters.search) params.append('search', filters.search);
+    
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/achados-perdidos${query}`);
+  },
+
+  async getAchadoPerdido(id) {
+    return this.request(`/achados-perdidos/${id}`);
+  },
+
+  async createAchadoPerdido(data) {
+    return this.request('/achados-perdidos', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateAchadoPerdido(id, data) {
+    return this.request(`/achados-perdidos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async deleteAchadoPerdido(id) {
+    return this.request(`/achados-perdidos/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async getMeusAchadosPerdidos() {
+    return this.request('/achados-perdidos/user/my-items');
+  },
+
+  async resolverAchadoPerdido(id) {
+    return this.request(`/achados-perdidos/${id}/resolve`, {
+      method: 'PATCH'
+    });
   }
 };
 

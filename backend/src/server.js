@@ -9,6 +9,7 @@ const pedidoRoutes = require('./routes/pedidoRoutes');
 const interesseRoutes = require('./routes/interesseRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const userRoutes = require('./routes/userRoutes');
+const achadosPerdidosRoutes = require('./routes/achadosPerdidosRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -47,6 +48,7 @@ app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/interesses', interesseRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/achados-perdidos', achadosPerdidosRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });

@@ -233,7 +233,8 @@ const MOCK_ORDERS = [
       armazenamento_prot: 'Sim, possui geladeira',
       tipo_fresco: 'Batata, cebola e frutas da época'
     },
-    isNew: true
+    isNew: true,
+    createdAt: new Date().toISOString()
   },
   {
     id: '2',
@@ -253,7 +254,8 @@ const MOCK_ORDERS = [
       dosagem: '30 UI pela manhã, 20 UI à noite',
       med_continuo: 'Sim'
     },
-    isNew: true
+    isNew: true,
+    createdAt: new Date().toISOString()
   },
   {
     id: '3',
@@ -272,7 +274,8 @@ const MOCK_ORDERS = [
       atraso_luz: '2 meses',
       valor_agua: 'R$ 80,00',
       atraso_agua: '1 mês'
-    }
+    },
+    createdAt: new Date(Date.now() - 2*24*60*60*1000).toISOString()
   },
   {
     id: '4',
@@ -292,7 +295,8 @@ const MOCK_ORDERS = [
       serie_escolar: '4º ano do Fundamental',
       escola_nome: 'Escola Estadual Júlio de Castilhos',
       genero: 'Masculino'
-    }
+    },
+    createdAt: new Date(Date.now() - 1*24*60*60*1000).toISOString()
   },
   {
     id: '5',
@@ -308,8 +312,68 @@ const MOCK_ORDERS = [
     subCategories: ['curriculo'],
     subQuestionAnswers: {
       tipo_curr: 'Criar um do zero e imprimir'
-    }
+    },
+    createdAt: new Date(Date.now() - 3*24*60*60*1000).toISOString()
   },
+  // Adicionando pedidos de Belo Horizonte para teste
+  {
+    id: '6',
+    userName: 'Pedro Santos',
+    city: 'Belo Horizonte',
+    state: 'MG',
+    neighborhood: 'Savassi',
+    urgency: 'urgente',
+    category: 'Alimentos',
+    title: 'Cesta Básica Urgente',
+    userType: 'Cidadão',
+    description: 'Perdi o emprego recentemente e preciso de ajuda com alimentação para minha família de 3 pessoas.',
+    subCategories: ['cesta', 'proteinas'],
+    subQuestionAnswers: {
+      itens_cesta: ['Arroz', 'Feijão', 'Açúcar', 'Sal'],
+      familia: '3 pessoas (2 adultos, 1 criança)',
+      tipo_proteina: ['Ovos', 'Carne']
+    },
+    isNew: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '7',
+    userName: 'Lucia Mendes',
+    city: 'Belo Horizonte',
+    state: 'MG',
+    neighborhood: 'Centro',
+    urgency: 'moderada',
+    category: 'Medicamentos',
+    title: 'Remédio para Pressão',
+    userType: 'Cidadão',
+    description: 'Preciso de ajuda para comprar medicamento para pressão alta. O remédio acabou e não consigo pelo SUS.',
+    subCategories: ['continuo'],
+    subQuestionAnswers: {
+      medicamento_nome: 'Losartana 50mg',
+      receita: 'Sim, tenho receita médica',
+      med_continuo: 'Sim, uso diariamente'
+    },
+    createdAt: new Date(Date.now() - 1*24*60*60*1000).toISOString()
+  },
+  {
+    id: '8',
+    userName: 'Roberto Silva',
+    city: 'Belo Horizonte',
+    state: 'MG',
+    neighborhood: 'Pampulha',
+    urgency: 'critico',
+    category: 'Contas',
+    title: 'Conta de Luz Vencida',
+    userType: 'Cidadão',
+    description: 'Minha conta de luz está vencida há 2 meses e recebi aviso de corte. Tenho uma criança pequena em casa.',
+    subCategories: ['luz'],
+    subQuestionAnswers: {
+      valor_luz: 'R$ 180,00',
+      atraso_luz: '2 meses'
+    },
+    isNew: true,
+    createdAt: new Date().toISOString()
+  }
 ];
 
 // --- COMPONENTS ---
@@ -891,41 +955,81 @@ export default function QueroAjudarPage() {
     let state = 'RS';
     let neighborhood = 'Centro';
     
+    // Mapeamento de estados por nome completo para sigla
+    const stateMapping = {
+      'Minas Gerais': 'MG',
+      'São Paulo': 'SP', 
+      'Rio Grande do Sul': 'RS',
+      'Rio de Janeiro': 'RJ',
+      'Bahia': 'BA',
+      'Paraná': 'PR',
+      'Santa Catarina': 'SC',
+      'Goiás': 'GO',
+      'Pernambuco': 'PE',
+      'Ceará': 'CE'
+    };
+    
+    // Priorizar campos diretos
     if (pedido.city && pedido.state) {
       city = pedido.city;
-      state = pedido.state;
+      // Converter nome do estado para sigla se necessário
+      state = stateMapping[pedido.state] || pedido.state;
       neighborhood = pedido.neighborhood || 'Centro';
-    } else if (pedido.location) {
-      // Formato: "Cidade, Estado - Bairro" ou "Bairro, Cidade - Estado"
-      const parts = pedido.location.split(',');
-      if (parts.length >= 2) {
-        const firstPart = parts[0].trim();
-        const secondPart = parts[1].trim();
+    } 
+    // Fallback para campo location
+    else if (pedido.location) {
+      try {
+        // Tentar diferentes formatos de localização
+        const locationStr = pedido.location.toString();
         
-        if (secondPart.includes('-')) {
-          const [cityPart, statePart] = secondPart.split('-');
-          city = cityPart.trim();
-          state = statePart.trim();
-          neighborhood = firstPart;
-        } else {
-          city = firstPart;
-          const [statePart, neighborhoodPart] = secondPart.split('-');
-          state = statePart?.trim() || 'RS';
-          neighborhood = neighborhoodPart?.trim() || 'Centro';
+        // Formato: "Cidade, Estado - Bairro" ou "Bairro, Cidade - Estado"
+        if (locationStr.includes(',') && locationStr.includes('-')) {
+          const [part1, part2] = locationStr.split('-').map(s => s.trim());
+          const [subPart1, subPart2] = part1.split(',').map(s => s.trim());
+          
+          // Assumir que o estado é sempre 2 letras ou nome completo
+          if (part2.length === 2 || stateMapping[part2]) {
+            state = stateMapping[part2] || part2;
+            city = subPart2 || subPart1;
+            neighborhood = subPart2 ? subPart1 : 'Centro';
+          } else {
+            city = subPart1;
+            state = stateMapping[subPart2] || subPart2 || 'RS';
+            neighborhood = part2;
+          }
         }
+        // Formato: "Cidade, Estado"
+        else if (locationStr.includes(',')) {
+          const parts = locationStr.split(',').map(s => s.trim());
+          city = parts[0];
+          state = stateMapping[parts[1]] || parts[1] || 'RS';
+        }
+        // Formato simples: apenas cidade
+        else {
+          city = locationStr;
+        }
+      } catch (error) {
+        console.warn('Erro ao processar localização:', pedido.location, error);
       }
+    }
+    
+    // Garantir que state seja sempre maiúsculo e tenha 2 caracteres
+    state = state.toUpperCase();
+    if (state.length !== 2) {
+      // Se ainda não é uma sigla válida, tentar mapear novamente
+      state = stateMapping[state] || 'RS'; // fallback
     }
     
     return {
       id: pedido.id,
-      userName: pedido.usuario?.nome || 'Usuário',
+      userName: pedido.usuario?.nome || pedido.userName || 'Usuário',
       city: city,
       state: state,
       neighborhood: neighborhood,
       urgency: pedido.urgency || 'moderada',
       category: pedido.category || 'Outros',
-      title: `${pedido.category} - ${pedido.subCategory?.join(', ') || 'Ajuda'}`,
-      userType: pedido.usuario?.tipo || 'Cidadão',
+      title: pedido.title || `${pedido.category} - ${pedido.subCategory?.join(', ') || 'Ajuda'}`,
+      userType: pedido.usuario?.tipo || pedido.userType || 'Cidadão',
       description: pedido.description || 'Sem descrição',
       subCategories: pedido.subCategory || [],
       subQuestionAnswers: pedido.subQuestionAnswers || {},
@@ -991,13 +1095,14 @@ export default function QueroAjudarPage() {
             let detectedState = 'MG';
             let detectedCity = 'Belo Horizonte';
             
-            if (latitude >= -23 && latitude <= -19 && longitude >= -51 && longitude <= -39) {
+            // Coordenadas aproximadas para diferentes regiões
+            if (latitude >= -20.5 && latitude <= -19.5 && longitude >= -44.5 && longitude <= -43.5) {
               detectedState = 'MG';
               detectedCity = 'Belo Horizonte';
-            } else if (latitude >= -25 && latitude <= -22 && longitude >= -54 && longitude <= -44) {
+            } else if (latitude >= -24 && latitude <= -23 && longitude >= -47 && longitude <= -46) {
               detectedState = 'SP';
               detectedCity = 'São Paulo';
-            } else if (latitude >= -33 && latitude <= -27 && longitude >= -58 && longitude <= -49) {
+            } else if (latitude >= -31 && latitude <= -29 && longitude >= -52 && longitude <= -50) {
               detectedState = 'RS';
               detectedCity = 'Porto Alegre';
             }
@@ -1009,13 +1114,13 @@ export default function QueroAjudarPage() {
           (error) => {
             console.log('Location access denied');
             setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-            toast.error('Localização negada. Usando Belo Horizonte como padrão.');
+            toast.success('Usando Belo Horizonte como localização padrão.');
             setTimeout(() => setIsLoading(false), 1000);
           }
         );
       } else {
         setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-        toast.error('Geolocalização não suportada.');
+        toast.success('Usando Belo Horizonte como localização padrão.');
         setTimeout(() => setIsLoading(false), 1000);
       }
     };
@@ -1044,34 +1149,99 @@ export default function QueroAjudarPage() {
     return grouped;
   }, [pedidos]);
 
-  // Apply filters - reload pedidos when filters change
-  useEffect(() => {
-    if (!userLocation) return; // Aguardar localização ser detectada
+  // Apply filters - client-side filtering for better performance
+  const filteredOrders = useMemo(() => {
+    let filtered = pedidos.length > 0 ? pedidos : MOCK_ORDERS;
     
-    const filters = {};
+    console.log('=== FILTROS APLICADOS ===');
+    console.log('Total de pedidos:', filtered.length);
+    console.log('Dados dos pedidos:', filtered.map(p => ({ id: p.id, city: p.city, state: p.state, category: p.category })));
+    console.log('Localização do usuário:', userLocation);
+    console.log('Filtro selecionado:', selectedLocation);
     
-    if (selectedCat !== 'Todas') filters.category = selectedCat;
-    if (selectedUrgency) filters.urgency = selectedUrgency;
-    if (selectedTimeframe !== 'todos') filters.timeframe = selectedTimeframe;
-    if (onlyNew) filters.onlyNew = true;
-    
-    // Location filters
-    if (selectedLocation === 'meu_estado' && userLocation) {
-      filters.state = userLocation.state;
-    } else if (selectedLocation === 'minha_cidade' && userLocation) {
-      filters.city = userLocation.city;
-      filters.state = userLocation.state;
-    } else if (selectedLocation !== 'brasil' && selectedLocation.includes(',')) {
-      const [city, state] = selectedLocation.split(', ');
-      filters.city = city.trim();
-      filters.state = state.trim();
+    // Category filter
+    if (selectedCat !== 'Todas') {
+      filtered = filtered.filter(order => order.category === selectedCat);
+      console.log(`Após filtro categoria: ${filtered.length} pedidos`);
     }
     
-    console.log('Aplicando filtros:', filters);
-    loadPedidos(filters);
-  }, [selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation]);
+    // Urgency filter
+    if (selectedUrgency) {
+      filtered = filtered.filter(order => order.urgency === selectedUrgency);
+      console.log(`Após filtro urgência: ${filtered.length} pedidos`);
+    }
+    
+    // Location filter - com normalização de strings
+    if (selectedLocation === 'meu_estado' && userLocation) {
+      filtered = filtered.filter(order => {
+        const orderState = order.state?.toUpperCase().trim();
+        const userState = userLocation.state?.toUpperCase().trim();
+        console.log(`Comparando estados: "${orderState}" === "${userState}"`);
+        return orderState === userState;
+      });
+      console.log(`Após filtro meu estado (${userLocation.state}): ${filtered.length} pedidos`);
+    } else if (selectedLocation === 'minha_cidade' && userLocation) {
+      filtered = filtered.filter(order => {
+        const orderCity = order.city?.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const userCity = userLocation.city?.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const orderState = order.state?.toUpperCase().trim();
+        const userState = userLocation.state?.toUpperCase().trim();
+        
+        console.log(`Comparando: cidade "${orderCity}" === "${userCity}" && estado "${orderState}" === "${userState}"`);
+        return orderCity === userCity && orderState === userState;
+      });
+      console.log(`Após filtro minha cidade (${userLocation.city}): ${filtered.length} pedidos`);
+    } else if (selectedLocation !== 'brasil' && selectedLocation.includes(',')) {
+      const [city, state] = selectedLocation.split(', ');
+      filtered = filtered.filter(order => {
+        const orderCity = order.city?.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const filterCity = city?.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const orderState = order.state?.toUpperCase().trim();
+        const filterState = state?.toUpperCase().trim();
+        
+        return orderCity === filterCity && orderState === filterState;
+      });
+      console.log(`Após filtro cidade específica (${city}): ${filtered.length} pedidos`);
+    }
+    
+    // Timeframe filter
+    if (selectedTimeframe !== 'todos') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+      
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.createdAt || Date.now());
+        
+        switch (selectedTimeframe) {
+          case 'hoje':
+            return orderDate >= today;
+          case 'semana':
+            return orderDate >= weekAgo;
+          case 'mes':
+            return orderDate >= monthAgo;
+          default:
+            return true;
+        }
+      });
+      console.log(`Após filtro período: ${filtered.length} pedidos`);
+    }
+    
+    // Only new filter
+    if (onlyNew) {
+      filtered = filtered.filter(order => order.isNew);
+      console.log(`Após filtro apenas novos: ${filtered.length} pedidos`);
+    }
+    
+    console.log('=== RESULTADO FINAL ===', filtered.length, 'pedidos');
+    return filtered;
+  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation]);
 
-  const filteredOrders = pedidos;
+  // Load pedidos only once on mount
+  useEffect(() => {
+    loadPedidos();
+  }, []);
 
   // Trail animation for cards
   const trail = useTrail(filteredOrders.length, {
@@ -1180,7 +1350,7 @@ export default function QueroAjudarPage() {
                           toast.success('Mostrando pedidos de todo o Brasil');
                         }}
                       >
-                        Todo o Brasil
+                        🇧🇷 Todo o Brasil
                       </button>
                       {userLocation && (
                         <>
@@ -1188,42 +1358,72 @@ export default function QueroAjudarPage() {
                             className={`filter-option ${selectedLocation === 'meu_estado' ? 'active' : ''}`}
                             onClick={() => {
                               setSelectedLocation('meu_estado');
-                              toast.success(`Filtrando por: ${userLocation.state}`);
+                              toast.success(`Filtrando por estado: ${userLocation.state}`);
                             }}
                           >
-                            Meu Estado ({userLocation.state})
+                            📍 Meu Estado ({userLocation.state})
                           </button>
                           <button
                             className={`filter-option ${selectedLocation === 'minha_cidade' ? 'active' : ''}`}
                             onClick={() => {
                               setSelectedLocation('minha_cidade');
-                              toast.success(`Filtrando por: ${userLocation.city}`);
+                              toast.success(`Filtrando por cidade: ${userLocation.city}`);
                             }}
                           >
-                            Minha Cidade ({userLocation.city})
+                            🏠 Minha Cidade ({userLocation.city})
                           </button>
                         </>
                       )}
                     </div>
                     
-                    {userLocation && selectedLocation === 'meu_estado' && (
+                    {userLocation && (selectedLocation === 'meu_estado' || selectedLocation.includes(userLocation.state)) && (
                       <div className="state-section">
-                        <h4>Escolher cidade em {userLocation.state}:</h4>
+                        <h4>🏙️ Cidades em {userLocation.state}:</h4>
                         <select 
                           className="city-dropdown"
                           value={selectedLocation}
                           onChange={(e) => {
                             setSelectedLocation(e.target.value);
-                            toast.success(`Filtro de localização atualizado: ${e.target.value}`);
+                            const selectedValue = e.target.value;
+                            if (selectedValue === 'meu_estado') {
+                              toast.success(`Mostrando todas as cidades de ${userLocation.state}`);
+                            } else {
+                              const cityName = selectedValue.split(', ')[0];
+                              toast.success(`Filtrando por: ${cityName}`);
+                            }
                           }}
                         >
-                          <option value="meu_estado">Todas as cidades do estado</option>
+                          <option value="meu_estado">🌆 Todas as cidades do estado</option>
                           {citiesByState[userLocation.state]?.map(city => (
                             <option key={city} value={`${city}, ${userLocation.state}`}>
-                              {city}
+                              🏘️ {city}
                             </option>
                           ))}
                         </select>
+                      </div>
+                    )}
+                    
+                    {/* Mostrar outras opções de estados se houver dados */}
+                    {Object.keys(citiesByState).length > 1 && (
+                      <div className="other-states-section">
+                        <h4>🗺️ Outros Estados:</h4>
+                        <div className="states-grid">
+                          {Object.keys(citiesByState)
+                            .filter(state => state !== userLocation?.state)
+                            .map(state => (
+                              <button
+                                key={state}
+                                className={`state-btn ${selectedLocation.includes(state) ? 'active' : ''}`}
+                                onClick={() => {
+                                  setSelectedLocation(`${citiesByState[state][0]}, ${state}`);
+                                  toast.success(`Filtrando por: ${state}`);
+                                }}
+                              >
+                                {state}
+                              </button>
+                            ))
+                          }
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1357,6 +1557,16 @@ export default function QueroAjudarPage() {
 
         <div className="results-count">
           <p>Encontramos <strong>{loadingPedidos ? <Skeleton width={30} /> : filteredOrders.length}</strong> pedidos para você ajudar</p>
+          {/* Debug info */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '8px' }}>
+              Filtros ativos: {selectedCat !== 'Todas' ? `Categoria: ${selectedCat}` : ''}
+              {selectedUrgency ? ` | Urgência: ${selectedUrgency}` : ''}
+              {selectedLocation !== 'brasil' ? ` | Local: ${selectedLocation}` : ''}
+              {selectedTimeframe !== 'todos' ? ` | Período: ${selectedTimeframe}` : ''}
+              {onlyNew ? ' | Apenas novos' : ''}
+            </div>
+          )}
         </div>
 
         <div className="orders-grid-layout" ref={cardsRef}>
