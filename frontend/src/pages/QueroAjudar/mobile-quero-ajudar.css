@@ -1,9 +1,16 @@
+/* Reset e base para mobile */
+* {
+  box-sizing: border-box;
+}
+
 .qa-page-mobile {
   min-height: 100vh;
   background: #f8fafc;
   color: #1e293b;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding-bottom: 20px;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .qa-main-wrapper-mobile {

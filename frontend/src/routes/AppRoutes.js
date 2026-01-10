@@ -12,7 +12,7 @@ import CadastroComercio from '../pages/Cadastro/CadastroComercio/CadastroComerci
 import CadastroFamilia from '../pages/Cadastro/CadastroFamilia/CadastroFamilia';
 import CadastroONG from '../pages/Cadastro/CadastroONG/CadastroONG';
 import AdminDashboard from '../pages/AdminDashboard';
-import QueroAjudar from '../pages/QueroAjudar';
+import QueroAjudar from '../pages/QueroAjudar/ResponsiveQueroAjudar';
 import PrecisoDeAjuda from '../pages/PrecisoDeAjuda';
 import AchadosEPerdidos from '../pages/AchadosEPerdidos';
 import Perfil from '../pages/Perfil';

@@ -10,6 +10,7 @@ export const useIsMobile = () => {
       const isMobileDevice = mobileRegex.test(userAgent.toLowerCase());
       const isSmallScreen = window.innerWidth <= 768;
       
+      console.log('Device check:', { isMobileDevice, isSmallScreen, width: window.innerWidth });
       setIsMobile(isMobileDevice || isSmallScreen);
     };
 

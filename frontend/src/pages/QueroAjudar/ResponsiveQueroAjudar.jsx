@@ -6,6 +6,8 @@ import { useIsMobile } from '../../hooks/useIsMobile';
 const ResponsiveQueroAjudar = () => {
   const isMobile = useIsMobile();
   
+  console.log('ResponsiveQueroAjudar - isMobile:', isMobile);
+  
   return isMobile ? <MobileQueroAjudar /> : <DesktopQueroAjudar />;
 };
 
