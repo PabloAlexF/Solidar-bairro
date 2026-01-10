@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Heart, 
   HandHelping, 
+  Search,
   MapPin, 
   Navigation, 
   Bell, 
@@ -117,9 +118,9 @@ const MobileNav = () => {
   
   const navItems = [
     { icon: <Home size={22} />, label: 'Início', path: '/' },
-    { icon: <HandHelping size={22} />, label: 'Ajuda', path: '/painel-social' },
+    { icon: <HandHelping size={22} />, label: 'Ajuda', path: '/quero-ajudar' },
     { icon: <PlusCircle size={28} />, label: 'Criar', path: '/preciso-de-ajuda', fab: true },
-    { icon: <MessageSquare size={22} />, label: 'Chat', path: '/conversas' },
+    { icon: <MessageSquare size={22} />, label: 'Chat', path: '/chat' },
     { icon: <User size={22} />, label: 'Perfil', path: '/perfil' },
   ];
 
@@ -190,9 +191,9 @@ export const MobileLandingPage = () => {
                   </div>
                   <Sparkles size={16} className="sparkle-icon" />
                 </div>
-                <div className="card-body">
-                  <h3>Quero Ajudar</h3>
-                  <p>Encontre vizinhos que precisam de você hoje.</p>
+                <div className="card-body" style={{ color: 'white' }}>
+                  <h3 style={{ color: 'white' }}>Quero Ajudar</h3>
+                  <p style={{ color: 'white' }}>Encontre vizinhos que precisam de você hoje.</p>
                 </div>
                 <div className="card-footer-btn">
                   Ver pedidos <ChevronRight size={14} />
@@ -205,13 +206,28 @@ export const MobileLandingPage = () => {
                     <HandHelping size={20} fill="white" />
                   </div>
                 </div>
-                <div className="card-body">
-                  <h3>Pedir Ajuda</h3>
-                  <p>Precisa de algo? Sua rede está aqui por você.</p>
+                <div className="card-body" style={{ color: 'white' }}>
+                  <h3 style={{ color: 'white' }}>Pedir Ajuda</h3>
+                  <p style={{ color: 'white' }}>Precisa de algo? Sua rede está aqui por você.</p>
                 </div>
                 <div className="card-footer-btn">
                   Solicitar <ChevronRight size={14} />
                 </div>
+              </div>
+            </div>
+
+            <div className="quick-card purple" onClick={() => navigate('/achados-e-perdidos')} style={{ marginTop: '1rem' }}>
+              <div className="card-top">
+                <div className="card-icon-badge">
+                  <MapPin size={20} fill="white" />
+                </div>
+              </div>
+              <div className="card-body" style={{ color: 'white' }}>
+                <h3 style={{ color: 'white' }}>Achados e Perdidos</h3>
+                <p style={{ color: 'white' }}>Encontre ou reporte itens perdidos na vizinhança.</p>
+              </div>
+              <div className="card-footer-btn">
+                Ver itens <ChevronRight size={14} />
               </div>
             </div>
         </div>
