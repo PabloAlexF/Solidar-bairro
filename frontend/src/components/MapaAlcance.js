@@ -21,11 +21,16 @@ const orangeIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-const MapaAlcance = ({ radius, onRadiusChange }) => {
-  const [userLocation, setUserLocation] = useState(null);
+const MapaAlcance = ({ radius, onRadiusChange, userLocation: propUserLocation }) => {
+  const [userLocation, setUserLocation] = useState(propUserLocation);
   const [locationError, setLocationError] = useState(null);
 
   useEffect(() => {
+    if (propUserLocation) {
+      setUserLocation(propUserLocation);
+      return;
+    }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -43,7 +48,7 @@ const MapaAlcance = ({ radius, onRadiusChange }) => {
       setLocationError('Geolocalização não suportada');
       setUserLocation({ lat: -23.5505, lng: -46.6333 });
     }
-  }, []);
+  }, [propUserLocation]);
 
   if (!userLocation) {
     return (

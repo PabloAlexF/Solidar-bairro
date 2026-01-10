@@ -30,6 +30,8 @@ export default function CadastroCidadao() {
     rg: '',
     telefone: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     endereco: '',
     disponibilidade: [],
     interesses: [],
@@ -47,7 +49,10 @@ export default function CadastroCidadao() {
       case 2:
         return formData.cpf.replace(/\D/g, '').length >= 11 && formData.rg.replace(/\D/g, '').length >= 7;
       case 3:
-        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim();
+        return formData.telefone.replace(/\D/g, '').length >= 10 && 
+               formData.email.trim() && 
+               formData.password.length >= 6 && 
+               formData.password === formData.confirmPassword;
       case 4:
         return formData.endereco.trim();
       case 5:
@@ -58,6 +63,18 @@ export default function CadastroCidadao() {
   };
 
   const handleNextStep = () => {
+    if (step === 3) {
+      // Validações específicas para o passo 3 (senhas)
+      if (formData.password.length < 6) {
+        showToast('A senha deve ter pelo menos 6 caracteres', 'error');
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        showToast('As senhas não coincidem', 'error');
+        return;
+      }
+    }
+    
     if (validateStep(step)) {
       nextStep();
     } else {
@@ -131,10 +148,24 @@ export default function CadastroCidadao() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validar senhas
+    if (formData.password !== formData.confirmPassword) {
+      showToast('As senhas não coincidem', 'error');
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      showToast('A senha deve ter pelo menos 6 caracteres', 'error');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      await ApiService.createCidadao(formData);
+      // Preparar dados para envio (remover confirmPassword)
+      const { confirmPassword, ...dataToSend } = formData;
+      await ApiService.createCidadao(dataToSend);
       setIsSubmitted(true);
       setTimeout(() => setShowAnalysisAlert(true), 2000);
     } catch (error) {
@@ -435,11 +466,15 @@ export default function CadastroCidadao() {
                   <PasswordField 
                     label="Senha de Acesso"
                     placeholder="Crie uma senha segura"
+                    value={formData.password}
+                    onChange={(e) => updateFormData('password', e.target.value)}
                     required
                   />
                   <PasswordField 
                     label="Confirmar Senha"
                     placeholder="Digite a senha novamente"
+                    value={formData.confirmPassword}
+                    onChange={(e) => updateFormData('confirmPassword', e.target.value)}
                     required
                   />
                 </div>

@@ -1,0 +1,108 @@
+const { db } = require('../config/firebase');
+
+class AchadosPerdidosModel {
+  constructor() {
+    this.collection = db.collection('achados_perdidos');
+  }
+
+  async create(data) {
+    const docRef = await this.collection.add({
+      ...data,
+      created_at: new Date(),
+      updated_at: new Date(),
+      status: 'active'
+    });
+    return { id: docRef.id, ...data };
+  }
+
+  async findAll(filters = {}) {
+    try {
+      // Buscar todos os itens ativos primeiro
+      const snapshot = await this.collection
+        .where('status', '==', 'active')
+        .get();
+      
+      let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Aplicar filtros no código
+      if (filters.type) {
+        items = items.filter(item => item.type === filters.type);
+      }
+      if (filters.category) {
+        items = items.filter(item => item.category === filters.category);
+      }
+      if (filters.city) {
+        items = items.filter(item => item.city === filters.city);
+      }
+      
+      // Ordenar por data de criação
+      items.sort((a, b) => {
+        const dateA = a.created_at?.toDate ? a.created_at.toDate() : new Date(a.created_at);
+        const dateB = b.created_at?.toDate ? b.created_at.toDate() : new Date(b.created_at);
+        return dateB - dateA;
+      });
+      
+      return items;
+    } catch (error) {
+      console.error('Erro no findAll:', error);
+      return [];
+    }
+  }
+
+  async findById(id) {
+    const doc = await this.collection.doc(id).get();
+    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+  }
+
+  async update(id, data) {
+    await this.collection.doc(id).update({
+      ...data,
+      updated_at: new Date()
+    });
+    return this.findById(id);
+  }
+
+  async delete(id) {
+    await this.collection.doc(id).update({
+      status: 'deleted',
+      updated_at: new Date()
+    });
+    return true;
+  }
+
+  async findByUser(userId) {
+    try {
+      const snapshot = await this.collection
+        .where('user_id', '==', userId)
+        .where('status', '==', 'active')
+        .get();
+      
+      let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Ordenar por data
+      items.sort((a, b) => {
+        const dateA = a.created_at?.toDate ? a.created_at.toDate() : new Date(a.created_at);
+        const dateB = b.created_at?.toDate ? b.created_at.toDate() : new Date(b.created_at);
+        return dateB - dateA;
+      });
+      
+      return items;
+    } catch (error) {
+      console.error('Erro no findByUser:', error);
+      return [];
+    }
+  }
+
+  async search(searchTerm, filters = {}) {
+    const allItems = await this.findAll(filters);
+    const term = searchTerm.toLowerCase();
+    
+    return allItems.filter(item => 
+      item.title?.toLowerCase().includes(term) ||
+      item.description?.toLowerCase().includes(term) ||
+      item.tags?.some(tag => tag.toLowerCase().includes(term))
+    );
+  }
+}
+
+module.exports = new AchadosPerdidosModel();

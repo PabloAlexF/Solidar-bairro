@@ -27,7 +27,16 @@ class PedidoController {
 
   async getAll(req, res) {
     try {
-      const pedidos = await pedidoService.getAllPedidos();
+      const filters = {
+        category: req.query.category,
+        urgency: req.query.urgency,
+        city: req.query.city,
+        state: req.query.state,
+        timeframe: req.query.timeframe,
+        onlyNew: req.query.onlyNew === 'true'
+      };
+      
+      const pedidos = await pedidoService.getAllPedidos(filters);
       
       res.json({
         success: true,

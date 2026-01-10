@@ -41,7 +41,11 @@ class PedidoService {
       specialists: Array.isArray(data.specialists) ? data.specialists : [],
       isPublic: data.isPublic !== undefined ? data.isPublic : true,
       radius: data.radius || 5,
-      location: data.location?.trim() || 'São Paulo, SP - Bairro Jardins'
+      location: data.location?.trim() || 'Localização não informada',
+      coordinates: data.coordinates || null,
+      city: data.city?.trim() || null,
+      state: data.state?.trim() || null,
+      neighborhood: data.neighborhood?.trim() || null
     };
   }
 
@@ -56,8 +60,8 @@ class PedidoService {
     return await pedidoModel.create(sanitizedData);
   }
 
-  async getAllPedidos() {
-    return await pedidoModel.findAll();
+  async getAllPedidos(filters = {}) {
+    return await pedidoModel.findAll(filters);
   }
 
   async getPedidoById(id) {

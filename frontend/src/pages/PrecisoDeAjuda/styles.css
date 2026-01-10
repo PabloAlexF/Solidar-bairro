@@ -518,6 +518,32 @@ body {
   font-weight: 500;
 }
 
+.location-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: color-mix(in srgb, var(--success) 15%, var(--white));
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--success);
+}
+
+.location-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: color-mix(in srgb, var(--warning) 15%, var(--white));
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--warning);
+}
+
 /* Steps Indicators */
 .sidebar-steps-v2 {
   display: flex;
@@ -1599,11 +1625,25 @@ body {
 .review-details {
   color: var(--gray-600);
   font-size: 0.875rem;
+  margin-bottom: 12px;
 }
 
 .review-details strong {
   color: var(--gray-900);
   font-weight: 600;
+}
+
+.review-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gray-600);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  border-left: 3px solid var(--primary);
 }
 
 .review-meta {
