@@ -992,6 +992,7 @@ export default function QueroAjudarPage() {
       <AnimatedBackground />
       
       <div className="qa-main-wrapper" id="main-content">
+        
         <animated.header className="page-header" style={headerSpring} ref={headerRef}>
           <div className="brand-box">
             <div className="brand-logo">
