@@ -12,7 +12,7 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
-import '../../../styles/components/CadastroCidadao.css';
+import './CadastroCidadao.css';
 import '../../../styles/components/PasswordField.css';
 import '../../../styles/components/Toast.css';
 

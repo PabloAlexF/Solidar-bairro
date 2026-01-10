@@ -4,6 +4,12 @@ import { Users, Building2, Heart, Sparkles, User, Store, ArrowRight, Zap, Trendi
 import Header from '../../components/layout/Header';
 import './styles.css';
 
+// Exports dos componentes de cadastro
+export { default as CadastroCidadao } from './CadastroCidadao/CadastroCidadao';
+export { default as CadastroComercio } from './CadastroComercio/CadastroComercio';
+export { default as CadastroFamilia } from './CadastroFamilia/CadastroFamilia';
+export { default as CadastroONG } from './CadastroONG/CadastroONG';
+
 const cadastroTypes = [
   {
     id: "familia",
