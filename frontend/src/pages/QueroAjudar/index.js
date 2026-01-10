@@ -1,4 +1,10 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useSpring, animated, useTrail } from 'react-spring';
+import { useInView } from 'react-intersection-observer';
+import toast, { Toaster } from 'react-hot-toast';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+import { Tooltip } from 'react-tooltip';
 import { 
   MapPin, 
   Heart,
@@ -214,7 +220,7 @@ const MOCK_ORDERS = [
     category: 'Alimentos',
     title: 'Cesta Básica para Família',
     userType: 'Cidadão',
-    description: 'Somos uma família de 4 pessoas e meu marido está desempregado. Precisamos de ajuda with itens básicos de alimentação para as crianças passarem o mês.',
+    description: 'Somos uma família de 4 pessoas e meu marido está desempregado. Precisamos de ajuda com itens básicos de alimentação para as crianças passarem o mês.',
     subCategories: ['cesta', 'proteinas', 'frescos'],
     subQuestionAnswers: {
       itens_cesta: ['Arroz', 'Feijão', 'Leite', 'Óleo', 'Macarrão'],
@@ -316,6 +322,39 @@ function ModalDetalhes({ order, onClose, onHelp }) {
     { id: 'contato', label: 'Localização', icon: <MapPin size={18} /> },
   ];
 
+  // Animation refs
+  const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
+  const [contentRef, contentInView] = useInView({ threshold: 0.1, triggerOnce: true });
+
+  // Spring animations
+  const headerSpring = useSpring({
+    opacity: headerInView ? 1 : 0,
+    transform: headerInView ? 'translateY(0px)' : 'translateY(-20px)',
+    config: { tension: 280, friction: 60 }
+  });
+
+  const contentSpring = useSpring({
+    opacity: contentInView ? 1 : 0,
+    transform: contentInView ? 'translateX(0px)' : 'translateX(20px)',
+    config: { tension: 280, friction: 60 }
+  });
+
+  // Trail animation for specs
+  const allSpecs = { ...(order?.details || {}), ...(order?.subQuestionAnswers || {}) };
+  const specsArray = Object.entries(allSpecs);
+  const specsTrail = useTrail(specsArray.length, {
+    opacity: contentInView ? 1 : 0,
+    transform: contentInView ? 'translateY(0px)' : 'translateY(20px)',
+    config: { tension: 280, friction: 60 }
+  });
+
+  // Items trail animation
+  const itemsTrail = useTrail(order?.subCategories?.length || 0, {
+    opacity: contentInView ? 1 : 0,
+    transform: contentInView ? 'scale(1)' : 'scale(0.9)',
+    config: { tension: 280, friction: 60 }
+  });
+
   useEffect(() => {
     if (!order) return;
     
@@ -346,7 +385,6 @@ function ModalDetalhes({ order, onClose, onHelp }) {
   const urg = URGENCY_OPTIONS.find((u) => u.id === order.urgency);
   const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b', details: {}, icon: <Info size={24} /> };
 
-  const allSpecs = { ...(order.details || {}), ...(order.subQuestionAnswers || {}) };
   const hasSpecs = Object.keys(allSpecs).length > 0;
 
   const scrollToSection = (id) => {
@@ -354,6 +392,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
       setActiveTab(id);
+      toast.success(`Navegando para ${sections.find(s => s.id === id)?.label}`);
     }
   };
 
@@ -366,165 +405,276 @@ function ModalDetalhes({ order, onClose, onHelp }) {
         className="qa-modal-content-v3"
         onClick={e => e.stopPropagation()}
       >
-        <button className="modal-close-btn-v3" onClick={onClose} title="Fechar">
+        <button 
+          className="modal-close-btn-v3" 
+          onClick={onClose} 
+          data-tooltip-id="close-tooltip"
+          data-tooltip-content="Fechar detalhes"
+        >
           <X size={24} />
         </button>
         
-          <div className="modal-sidebar-v3">
-            <nav className="sidebar-nav-v3">
-            {sections.map(s => (
-              <button 
+        <div className="modal-sidebar-v3">
+          <nav className="sidebar-nav-v3">
+            {sections.map((s, index) => (
+              <motion.button 
                 key={s.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
                 className={`nav-item-v3 ${activeTab === s.id ? 'active' : ''}`}
                 onClick={() => scrollToSection(s.id)}
+                data-tooltip-id="nav-tooltip"
+                data-tooltip-content={`Ver ${s.label.toLowerCase()}`}
               >
                 {s.icon}
                 <span>{s.label}</span>
-              </button>
+                {activeTab === s.id && (
+                  <motion.div 
+                    className="nav-indicator"
+                    layoutId="nav-indicator"
+                    style={{ backgroundColor: catMeta.color }}
+                  />
+                )}
+              </motion.button>
             ))}
           </nav>
         </div>
 
         <div className="modal-main-v3">
-          <header className="main-header-v3">
+          <animated.header className="main-header-v3" style={headerSpring} ref={headerRef}>
             <div className="header-titles-v3">
-              <span className="cat-badge-v3" style={{ color: catMeta.color, backgroundColor: catMeta.color + '15' }}>
+              <motion.span 
+                className="cat-badge-v3" 
+                style={{ color: catMeta.color, backgroundColor: catMeta.color + '15' }}
+                whileHover={{ scale: 1.05 }}
+                data-tooltip-id="category-tooltip"
+                data-tooltip-content={`Categoria: ${order.category}`}
+              >
+                {catMeta.icon}
                 {order.category}
-              </span>
+              </motion.span>
               <h2>{order.title || order.category}</h2>
-              <p className="user-info-v3">Solicitado por <strong>{order.userName}</strong> • {order.userType || 'Cidadão'}</p>
+              <p className="user-info-v3">
+                Solicitado por <strong>{order.userName}</strong> • {order.userType || 'Cidadão'}
+              </p>
             </div>
-            <div className="header-urgency-v3" style={{ color: urg?.color, borderColor: urg?.color }}>
+            <motion.div 
+              className="header-urgency-v3" 
+              style={{ color: urg?.color, borderColor: urg?.color }}
+              whileHover={{ scale: 1.05 }}
+              data-tooltip-id="urgency-tooltip"
+              data-tooltip-content={urg?.desc}
+            >
               {urg?.icon}
               <span>{urg?.label}</span>
-            </div>
-          </header>
+            </motion.div>
+          </animated.header>
 
-          <div className="modal-scroll-v3" ref={scrollContainerRef}>
-            <section id="section-historia" className="content-section-v3">
-              <div className="section-title-v3">
-                <MessageSquare size={20} />
-                <h3>O Relato de {order.userName.split(' ')[0]}</h3>
-              </div>
-              <div className="story-card-v3">
-                <div className="quote-mark">"</div>
-                <p>{order.description}</p>
-                <div className="quote-mark-end">"</div>
-              </div>
-            </section>
+          <animated.div className="modal-scroll-v3" ref={scrollContainerRef} style={contentSpring}>
+            <div ref={contentRef}>
+              <section id="section-historia" className="content-section-v3">
+                <motion.div 
+                  className="section-title-v3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <MessageSquare size={20} />
+                  <h3>O Relato de {order.userName.split(' ')[0]}</h3>
+                </motion.div>
+                <motion.div 
+                  className="story-card-v3"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <div className="quote-mark">"</div>
+                  <p>{order.description}</p>
+                  <div className="quote-mark-end">"</div>
+                </motion.div>
+              </section>
 
-            <section id="section-necessidades" className="content-section-v3">
-              <div className="section-title-v3">
-                <ShoppingCart size={20} />
-                <h3>Itens Necessários</h3>
-              </div>
-              <div className="items-grid-v3">
-                {order.subCategories?.map((sc) => (
-                  <div key={sc} className="item-card-v3" style={{ borderLeftColor: catMeta.color }}>
-                    <div className="item-header-v3">
-                      <h4>{catMeta.details[sc]?.label || sc}</h4>
-                      {CONTEXT_INFO[sc] && (
-                        <div className="context-hint-v3" title={CONTEXT_INFO[sc]}>
-                          <Lightbulb size={14} />
+              <section id="section-necessidades" className="content-section-v3">
+                <motion.div 
+                  className="section-title-v3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <ShoppingCart size={20} />
+                  <h3>Itens Necessários</h3>
+                </motion.div>
+                <div className="items-grid-v3">
+                  {itemsTrail.map((style, index) => {
+                    const sc = order.subCategories?.[index];
+                    if (!sc) return null;
+                    
+                    return (
+                      <animated.div 
+                        key={sc} 
+                        className="item-card-v3" 
+                        style={{ ...style, borderLeftColor: catMeta.color }}
+                      >
+                        <div className="item-header-v3">
+                          <h4>{catMeta.details[sc]?.label || sc}</h4>
+                          {CONTEXT_INFO[sc] && (
+                            <div 
+                              className="context-hint-v3" 
+                              data-tooltip-id="context-tooltip"
+                              data-tooltip-content={CONTEXT_INFO[sc]}
+                            >
+                              <Lightbulb size={14} />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <p>{catMeta.details[sc]?.desc}</p>
-                    {CONTEXT_INFO[sc] && (
-                      <div className="context-text-v3">
-                        {CONTEXT_INFO[sc]}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section id="section-tecnico" className="content-section-v3">
-              <div className="section-title-v3">
-                <Info size={20} />
-                <h3>Detalhes e Especificações</h3>
-              </div>
-              {hasSpecs ? (
-                <div className="enhanced-specs-grid">
-                  {Object.entries(allSpecs).map(([key, val]) => (
-                    <div key={key} className="enhanced-spec-card">
-                      <div className="spec-header">
-                        <Info size={16} className="spec-icon" />
-                        <label className="spec-label">{SUB_QUESTION_LABELS[key] || key}</label>
-                      </div>
-                      <div className="spec-content">
-                        {Array.isArray(val) ? (
-                          <div className="spec-chips">
-                            {val.map(v => (
-                              <span key={v} className="spec-chip">{v}</span>
-                            ))}
+                        <p>{catMeta.details[sc]?.desc}</p>
+                        {CONTEXT_INFO[sc] && (
+                          <div className="context-text-v3">
+                            {CONTEXT_INFO[sc]}
                           </div>
-                        ) : (
-                          <div className="spec-value">{val}</div>
                         )}
-                      </div>
-                    </div>
-                  ))}
+                      </animated.div>
+                    );
+                  })}
                 </div>
-              ) : (
-                <div className="enhanced-empty-state">
-                  <Info size={48} className="empty-icon" />
-                  <h4>Sem especificações adicionais</h4>
-                  <p>Este pedido não possui detalhes técnicos específicos informados.</p>
-                </div>
-              )}
-            </section>
+              </section>
 
-            <section id="section-contato" className="content-section-v3">
-              <div className="section-title-v3">
-                <MapPin size={20} />
-                <h3>Localização e Contato</h3>
-              </div>
-              <div className="contact-card-v3">
-                <div className="loc-row-v3">
-                  <div className="loc-item-v3">
-                    <label>Bairro</label>
-                    <span>{order.neighborhood}</span>
+              <section id="section-tecnico" className="content-section-v3">
+                <motion.div 
+                  className="section-title-v3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Info size={20} />
+                  <h3>Detalhes e Especificações</h3>
+                </motion.div>
+                {hasSpecs ? (
+                  <div className="enhanced-specs-grid">
+                    {specsTrail.map((style, index) => {
+                      const [key, val] = specsArray[index];
+                      return (
+                        <animated.div key={key} className="enhanced-spec-card" style={style}>
+                          <div className="spec-header">
+                            <Info size={16} className="spec-icon" />
+                            <label className="spec-label">{SUB_QUESTION_LABELS[key] || key}</label>
+                          </div>
+                          <div className="spec-content">
+                            {Array.isArray(val) ? (
+                              <div className="spec-chips">
+                                {val.map(v => (
+                                  <motion.span 
+                                    key={v} 
+                                    className="spec-chip"
+                                    whileHover={{ scale: 1.05 }}
+                                    style={{ backgroundColor: catMeta.color + '20', color: catMeta.color }}
+                                  >
+                                    {v}
+                                  </motion.span>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="spec-value">{val}</div>
+                            )}
+                          </div>
+                        </animated.div>
+                      );
+                    })}
                   </div>
-                  <div className="loc-item-v3">
-                    <label>Cidade</label>
-                    <span>{order.city} - {order.state}</span>
-                  </div>
-                </div>
-                {order.subQuestionAnswers?.ponto_referencia && (
-                  <div className="loc-full-v3">
-                    <label>Ponto de Referência</label>
-                    <p>{order.subQuestionAnswers.ponto_referencia}</p>
-                  </div>
+                ) : (
+                  <motion.div 
+                    className="enhanced-empty-state"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <Info size={48} className="empty-icon" />
+                    <h4>Sem especificações adicionais</h4>
+                    <p>Este pedido não possui detalhes técnicos específicos informados.</p>
+                  </motion.div>
                 )}
-                <div className="contact-footer-v3">
-                  <div className="pref-v3">
-                    <MessageCircle size={14} />
-                    <span>Contato preferencial via chat ou {order.subQuestionAnswers?.contato_pref || 'telefone'}</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
+              </section>
 
-          <footer className="modal-footer-v3">
+              <section id="section-contato" className="content-section-v3">
+                <motion.div 
+                  className="section-title-v3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <MapPin size={20} />
+                  <h3>Localização e Contato</h3>
+                </motion.div>
+                <motion.div 
+                  className="contact-card-v3"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <div className="loc-row-v3">
+                    <div className="loc-item-v3">
+                      <label>Bairro</label>
+                      <span>{order.neighborhood}</span>
+                    </div>
+                    <div className="loc-item-v3">
+                      <label>Cidade</label>
+                      <span>{order.city} - {order.state}</span>
+                    </div>
+                  </div>
+                  {order.subQuestionAnswers?.ponto_referencia && (
+                    <div className="loc-full-v3">
+                      <label>Ponto de Referência</label>
+                      <p>{order.subQuestionAnswers.ponto_referencia}</p>
+                    </div>
+                  )}
+                  <div className="contact-footer-v3">
+                    <div className="pref-v3">
+                      <MessageCircle size={14} />
+                      <span>
+                        Contato preferencial via chat ou {order.subQuestionAnswers?.contato_pref || 'telefone'}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              </section>
+            </div>
+          </animated.div>
+
+          <motion.footer 
+            className="modal-footer-v3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+          >
             <button className="btn-cancel-v3" onClick={onClose}>
               Voltar
             </button>
-            <button 
+            <motion.button 
               className="btn-action-v3"
               onClick={() => {
                 onHelp(order);
                 onClose();
+                toast.success('Conectando vocês! 💚');
               }}
               style={{ backgroundColor: catMeta.color }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              data-tooltip-id="help-action-tooltip"
+              data-tooltip-content="Iniciar conversa para ajudar"
             >
               <Heart size={20} fill="white" />
               Quero Ajudar Agora
-            </button>
-          </footer>
+            </motion.button>
+          </motion.footer>
         </div>
+        
+        <Tooltip id="close-tooltip" />
+        <Tooltip id="nav-tooltip" />
+        <Tooltip id="category-tooltip" />
+        <Tooltip id="urgency-tooltip" />
+        <Tooltip id="context-tooltip" />
+        <Tooltip id="help-action-tooltip" />
       </motion.div>
     </div>
   );
@@ -543,21 +693,35 @@ export default function QueroAjudarPage() {
   const [onlyNew, setOnlyNew] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Animation hooks
+  const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
+  const [cardsRef, cardsInView] = useInView({ threshold: 0.1, triggerOnce: true });
+
+  // Spring animations
+  const headerSpring = useSpring({
+    opacity: headerInView ? 1 : 0,
+    transform: headerInView ? 'translateY(0px)' : 'translateY(-50px)',
+    config: { tension: 280, friction: 60 }
+  });
+
+  const filterButtonSpring = useSpring({
+    scale: showFiltersModal ? 1.05 : 1,
+    config: { tension: 300, friction: 10 }
+  });
 
   // Get user's location
   useEffect(() => {
+    setIsLoading(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // Use a real geocoding service to get state/city from coordinates
-          // For now, simulating based on coordinates
           const { latitude, longitude } = position.coords;
           
-          // Simple coordinate-based state detection (you should use a proper geocoding service)
           let detectedState = 'MG';
           let detectedCity = 'Belo Horizonte';
           
-          // Basic coordinate ranges for major states (simplified)
           if (latitude >= -23 && latitude <= -19 && longitude >= -51 && longitude <= -39) {
             detectedState = 'MG';
             detectedCity = 'Belo Horizonte';
@@ -570,16 +734,20 @@ export default function QueroAjudarPage() {
           }
           
           setUserLocation({ state: detectedState, city: detectedCity });
+          toast.success(`Localização detectada: ${detectedCity}, ${detectedState}`);
+          setTimeout(() => setIsLoading(false), 1000);
         },
         (error) => {
           console.log('Location access denied');
-          // Default to MG if location is denied
           setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
+          toast.error('Localização negada. Usando Belo Horizonte como padrão.');
+          setTimeout(() => setIsLoading(false), 1000);
         }
       );
     } else {
-      // Default to MG if geolocation is not supported
       setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
+      toast.error('Geolocalização não suportada.');
+      setTimeout(() => setIsLoading(false), 1000);
     }
   }, []);
 
@@ -622,6 +790,13 @@ export default function QueroAjudarPage() {
     });
   }, [selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation]);
 
+  // Trail animation for cards
+  const trail = useTrail(filteredOrders.length, {
+    opacity: cardsInView ? 1 : 0,
+    transform: cardsInView ? 'translateY(0px)' : 'translateY(50px)',
+    config: { tension: 280, friction: 60 }
+  });
+
   return (
     <div className="qa-page">
       <div className="floating-elements">
@@ -631,7 +806,7 @@ export default function QueroAjudarPage() {
       </div>
       
       <div className="qa-main-wrapper">
-        <header className="page-header">
+        <animated.header className="page-header" style={headerSpring} ref={headerRef}>
           <div className="brand-box">
             <div className="brand-logo">
               <Heart size={32} fill="#ef4444" color="#ef4444" />
@@ -642,15 +817,21 @@ export default function QueroAjudarPage() {
             </div>
           </div>
 
-          <button 
+          <animated.button 
             className={`btn-toggle-filters ${showFiltersModal ? 'active' : ''}`}
-            onClick={() => setShowFiltersModal(true)}
+            onClick={() => {
+              setShowFiltersModal(true);
+              toast.success('Filtros abertos!');
+            }}
+            style={filterButtonSpring}
+            data-tooltip-id="filter-tooltip"
+            data-tooltip-content="Clique para abrir filtros avançados"
           >
             <Filter size={20} />
             <span>Filtros Avançados</span>
             {(selectedCat !== 'Todas' || selectedUrgency || (selectedLocation !== 'brasil' && selectedLocation !== 'todas') || selectedTimeframe !== 'todos' || onlyNew) && <div className="active-filter-indicator" />}
-          </button>
-        </header>
+          </animated.button>
+        </animated.header>
 
         <AnimatePresence>
           {showFiltersModal && (
@@ -800,67 +981,127 @@ export default function QueroAjudarPage() {
         </AnimatePresence>
 
         <div className="results-count">
-          <p>Encontramos <strong>{filteredOrders.length}</strong> pedidos para você ajudar</p>
+          <p>Encontramos <strong>{isLoading ? <Skeleton width={30} /> : filteredOrders.length}</strong> pedidos para você ajudar</p>
         </div>
 
-        <div className="orders-grid-layout">
-          <AnimatePresence mode="popLayout">
-            {filteredOrders.map((order) => {
-              const urg = URGENCY_OPTIONS.find((u) => u.id === order.urgency);
-              const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b' };
-              
-              return (
-                <motion.div
-                  key={order.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className="vibrant-order-card"
-                >
-                  <div className="card-header">
-                    <span className="cat-label" style={{ backgroundColor: catMeta.color }}>
-                      {order.category}
-                    </span>
-                    {order.isNew && <span className="new-badge">NOVO</span>}
-                  </div>
-
-                  <div className="card-content">
-                    <h2>{order.title}</h2>
-                    <p>{order.description.substring(0, 120)}...</p>
-                    <div className="loc-info">
-                      <MapPin size={14} />
-                      <span>{order.neighborhood}, {order.city}</span>
-                    </div>
-                  </div>
-
-                  <div className="card-footer-info">
-                    <div className="user-snippet">
-                      <div className="user-avatar" style={{ backgroundColor: catMeta.color }}>
-                        {order.userName.charAt(0)}
+        <div className="orders-grid-layout" ref={cardsRef}>
+          {isLoading ? (
+            // Loading skeletons
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="vibrant-order-card">
+                <div className="card-header">
+                  <Skeleton height={24} width={80} />
+                  <Skeleton height={24} width={50} />
+                </div>
+                <div className="card-content">
+                  <Skeleton height={32} width="80%" />
+                  <Skeleton count={3} />
+                  <Skeleton height={20} width={120} />
+                </div>
+                <div className="card-footer-info">
+                  <Skeleton height={32} width={32} circle />
+                  <Skeleton height={24} width={60} />
+                </div>
+                <div className="card-buttons">
+                  <Skeleton height={48} />
+                </div>
+              </div>
+            ))
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {trail.map((style, index) => {
+                const order = filteredOrders[index];
+                if (!order) return null;
+                
+                const urg = URGENCY_OPTIONS.find((u) => u.id === order.urgency);
+                const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b' };
+                
+                return (
+                  <animated.div key={order.id} style={style}>
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="vibrant-order-card"
+                      whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                    >
+                      <div className="card-header">
+                        <span 
+                          className="cat-label" 
+                          style={{ backgroundColor: catMeta.color }}
+                          data-tooltip-id="category-tooltip"
+                          data-tooltip-content={`Categoria: ${order.category}`}
+                        >
+                          {order.category}
+                        </span>
+                        {order.isNew && (
+                          <span 
+                            className="new-badge"
+                            data-tooltip-id="new-tooltip"
+                            data-tooltip-content="Pedido recente!"
+                          >
+                            NOVO
+                          </span>
+                        )}
                       </div>
-                      <span className="user-name">{order.userName}</span>
-                    </div>
-                    <div className="urg-status" style={{ color: urg?.color }}>
-                      {urg?.icon}
-                      <span>{urg?.label}</span>
-                    </div>
-                  </div>
 
-                  <div className="card-buttons">
-                    <button className="btn-v-view" onClick={() => setSelectedOrder(order)}>
-                      <Eye size={18} />
-                      Ver Detalhes
-                    </button>
-                    <button className="btn-v-help" onClick={() => setOrderToHelp(order)}>
-                      <Heart size={18} />
-                      Ajudar
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                      <div className="card-content">
+                        <h2>{order.title}</h2>
+                        <p>{order.description.substring(0, 120)}...</p>
+                        <div className="loc-info">
+                          <MapPin size={14} />
+                          <span>{order.neighborhood}, {order.city}</span>
+                        </div>
+                      </div>
+
+                      <div className="card-footer-info">
+                        <div className="user-snippet">
+                          <div className="user-avatar" style={{ backgroundColor: catMeta.color }}>
+                            {order.userName.charAt(0)}
+                          </div>
+                          <span className="user-name">{order.userName}</span>
+                        </div>
+                        <div 
+                          className="urg-status" 
+                          style={{ color: urg?.color }}
+                          data-tooltip-id="urgency-tooltip"
+                          data-tooltip-content={urg?.desc}
+                        >
+                          {urg?.icon}
+                          <span>{urg?.label}</span>
+                        </div>
+                      </div>
+
+                      <div className="card-buttons">
+                        <button 
+                          className="btn-v-view" 
+                          onClick={() => setSelectedOrder(order)}
+                          data-tooltip-id="view-tooltip"
+                          data-tooltip-content="Ver detalhes completos"
+                        >
+                          <Eye size={18} />
+                          Ver Detalhes
+                        </button>
+                        <button 
+                          className="btn-v-help" 
+                          onClick={() => {
+                            setOrderToHelp(order);
+                            toast.success('Que gesto lindo! Vamos conectar vocês.');
+                          }}
+                          data-tooltip-id="help-tooltip"
+                          data-tooltip-content="Oferecer ajuda"
+                        >
+                          <Heart size={18} />
+                          Ajudar
+                        </button>
+                      </div>
+                    </motion.div>
+                  </animated.div>
+                );
+              })}
+            </AnimatePresence>
+          )}
         </div>
 
         <AnimatePresence>
@@ -903,6 +1144,40 @@ export default function QueroAjudarPage() {
             </div>
           )}
         </AnimatePresence>
+        
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#1e293b',
+              color: '#fff',
+              borderRadius: '12px',
+              padding: '16px',
+              fontSize: '14px',
+              fontWeight: '600'
+            },
+            success: {
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#fff'
+              }
+            },
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff'
+              }
+            }
+          }}
+        />
+        
+        <Tooltip id="filter-tooltip" />
+        <Tooltip id="category-tooltip" />
+        <Tooltip id="new-tooltip" />
+        <Tooltip id="urgency-tooltip" />
+        <Tooltip id="view-tooltip" />
+        <Tooltip id="help-tooltip" />
       </div>
     </div>
   );
