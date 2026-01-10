@@ -669,12 +669,36 @@ function ModalDetalhes({ order, onClose, onHelp }) {
           </motion.footer>
         </div>
         
-        <Tooltip id="close-tooltip" />
-        <Tooltip id="nav-tooltip" />
-        <Tooltip id="category-tooltip" />
-        <Tooltip id="urgency-tooltip" />
-        <Tooltip id="context-tooltip" />
-        <Tooltip id="help-action-tooltip" />
+        <Tooltip 
+          id="close-tooltip" 
+          place="left"
+          delayShow={200}
+        />
+        <Tooltip 
+          id="nav-tooltip" 
+          place="right"
+          delayShow={200}
+        />
+        <Tooltip 
+          id="category-tooltip" 
+          place="top"
+          delayShow={200}
+        />
+        <Tooltip 
+          id="urgency-tooltip" 
+          place="top"
+          delayShow={200}
+        />
+        <Tooltip 
+          id="context-tooltip" 
+          place="top"
+          delayShow={300}
+        />
+        <Tooltip 
+          id="help-action-tooltip" 
+          place="top"
+          delayShow={300}
+        />
       </motion.div>
     </div>
   );
@@ -1172,12 +1196,36 @@ export default function QueroAjudarPage() {
           }}
         />
         
-        <Tooltip id="filter-tooltip" />
-        <Tooltip id="category-tooltip" />
-        <Tooltip id="new-tooltip" />
-        <Tooltip id="urgency-tooltip" />
-        <Tooltip id="view-tooltip" />
-        <Tooltip id="help-tooltip" />
+        <Tooltip 
+          id="filter-tooltip" 
+          place="bottom"
+          delayShow={300}
+        />
+        <Tooltip 
+          id="category-tooltip" 
+          place="top"
+          delayShow={200}
+        />
+        <Tooltip 
+          id="new-tooltip" 
+          place="top"
+          delayShow={200}
+        />
+        <Tooltip 
+          id="urgency-tooltip" 
+          place="top"
+          delayShow={200}
+        />
+        <Tooltip 
+          id="view-tooltip" 
+          place="top"
+          delayShow={300}
+        />
+        <Tooltip 
+          id="help-tooltip" 
+          place="top"
+          delayShow={300}
+        />
       </div>
     </div>
   );
