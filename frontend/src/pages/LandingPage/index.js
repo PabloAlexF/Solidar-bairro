@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+import { Tooltip } from 'react-tooltip';
+import toast from 'react-hot-toast';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import createGlobe from 'cobe';
 import { 
   Heart, 
@@ -21,7 +26,9 @@ import {
   Locate,
   Info,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  Copy,
+  Share2
 } from 'lucide-react';
 
 import './styles.css';
@@ -35,14 +42,18 @@ const ActionCard = ({
   color, 
   delay 
 }) => {
+  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true });
+  
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
       transition={{ delay, duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] }}
       whileHover={{ y: -15 }}
       className={`action-card ${color}`}
+      data-tooltip-id={`card-${color}`}
+      data-tooltip-content={`Clique para ${buttonText.toLowerCase()}`}
     >
       <div className="action-card-gradient" />
       
@@ -71,6 +82,8 @@ const ActionCard = ({
       <div className="action-card-sparkle">
         <Sparkles size={40} />
       </div>
+      
+      <Tooltip id={`card-${color}`} place="top" />
     </motion.div>
   );
 };
@@ -141,6 +154,15 @@ export default function LandingPage() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const { ref: heroRef, inView: heroInView } = useInView({ threshold: 0.1, triggerOnce: true });
+  const { ref: featuresRef, inView: featuresInView } = useInView({ threshold: 0.1, triggerOnce: true });
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -226,6 +248,33 @@ export default function LandingPage() {
     );
     setNotifications(updatedNotifications);
     localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
+  };
+
+  const shareContent = async () => {
+    const shareData = {
+      title: 'SolidarBairro - Conectando Vizinhos',
+      text: 'Descubra a rede de ajuda da sua vizinhança!',
+      url: window.location.href
+    };
+    
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast.success('Compartilhado com sucesso!');
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          copyToClipboard();
+        }
+      }
+    } else {
+      copyToClipboard();
+    }
+  };
+  
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => toast.success('Link copiado!'))
+      .catch(() => toast.error('Erro ao copiar link'));
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -424,7 +473,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <header className="hero-section">
+      <header className="hero-section" ref={heroRef}>
         {/* Animated Background Mesh */}
         <div className="hero-atmosphere">
           <motion.div 
@@ -452,12 +501,12 @@ export default function LandingPage() {
         <div className="section-container hero-grid">
           <motion.div 
             initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
             transition={{ duration: 1.2, ease: [0.21, 0.47, 0.32, 0.98] }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
+              animate={heroInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
               transition={{ delay: 0.3 }}
               className="hero-badge"
             >
@@ -465,34 +514,60 @@ export default function LandingPage() {
               <span>TRANSFORMANDO VIZINHANÇAS</span>
             </motion.div>
 
-            <h1 className="hero-title">
-              Solidar<span className="title-accent">Bairro</span>
-            </h1>
+            {isLoading ? (
+              <Skeleton height={120} className="hero-title-skeleton" />
+            ) : (
+              <h1 className="hero-title">
+                Solidar<span className="title-accent">Bairro</span>
+              </h1>
+            )}
             
             <div className="hero-subtitle">
               <div className="subtitle-line" />
-              <p className="subtitle-text">
-                A rede de ajuda da <span className="text-highlight">sua vizinhança</span>
-              </p>
+              {isLoading ? (
+                <Skeleton height={40} width={300} />
+              ) : (
+                <p className="subtitle-text">
+                  A rede de ajuda da <span className="text-highlight">sua vizinhança</span>
+                </p>
+              )}
             </div>
             
-            <p className="hero-description">
-              Conecte-se com vizinhos, ofereça ou receba ajuda, e fortaleça os laços da sua comunidade. 
-              <span className="description-quote">Criamos pontes onde antes existiam apenas muros.</span>
-            </p>
+            {isLoading ? (
+              <Skeleton height={60} count={2} />
+            ) : (
+              <p className="hero-description">
+                Conecte-se com vizinhos, ofereça ou receba ajuda, e fortaleça os laços da sua comunidade. 
+                <span className="description-quote">Criamos pontes onde antes existiam apenas muros.</span>
+              </p>
+            )}
             
             <div className="hero-cta-wrapper">
               <motion.button 
                 whileHover={{ scale: 1.05, y: -5 }}
                 whileTap={{ scale: 0.95 }}
                 className="hero-btn-primary"
-                onClick={() => navigate('/painel-social')}
+                onClick={() => {
+                  toast.success('Redirecionando para o painel!');
+                  navigate('/painel-social');
+                }}
+                data-tooltip-id="hero-btn"
+                data-tooltip-content="Explore todas as funcionalidades da plataforma"
               >
                 Explorar Plataforma
                 <div className="btn-icon-wrapper">
                   <ArrowRight size={24} className="btn-arrow" />
                 </div>
               </motion.button>
+              
+              <button
+                onClick={shareContent}
+                className="share-btn"
+                data-tooltip-id="share-btn"
+                data-tooltip-content="Compartilhar SolidarBairro"
+              >
+                <Share2 size={20} />
+              </button>
               
               <div className="hero-stats-group">
                 <div className="stat-item">
@@ -510,16 +585,21 @@ export default function LandingPage() {
 
           <motion.div 
             initial={{ opacity: 0, scale: 0.9, rotate: 3 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            animate={heroInView ? { opacity: 1, scale: 1, rotate: 0 } : { opacity: 0, scale: 0.9, rotate: 3 }}
             transition={{ duration: 1.4, ease: [0.21, 0.47, 0.32, 0.98] }}
             className="hero-image-wrapper"
           >
             <div className="main-image-frame group">
-              <img 
-                src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1000" 
-                alt="Comunidade unida" 
-                className="hero-img"
-              />
+              {isLoading ? (
+                <Skeleton height="100%" />
+              ) : (
+                <img 
+                  src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1000" 
+                  alt="Comunidade unida" 
+                  className="hero-img"
+                  loading="lazy"
+                />
+              )}
               <div className="image-overlay" />
               
               {/* Image Caption/Badge */}
@@ -535,6 +615,8 @@ export default function LandingPage() {
               animate={{ y: [0, -15, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               className="floating-card impact-card"
+              data-tooltip-id="impact-card"
+              data-tooltip-content="Veja o impacto real da nossa comunidade"
             >
               <div className="card-icon impact">
                 <Heart size={20} fill="white" />
@@ -549,6 +631,8 @@ export default function LandingPage() {
               animate={{ y: [0, 15, 0] }}
               transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
               className="floating-card geo-card"
+              data-tooltip-id="geo-card"
+              data-tooltip-content={location ? 'Sua localização está sendo monitorada com segurança' : 'Ative a localização para melhor experiência'}
             >
               <div className="card-icon geo">
                 <Navigation size={20} fill="white" />
@@ -564,6 +648,11 @@ export default function LandingPage() {
             <div className="decoration-ring inner" />
           </motion.div>
         </div>
+        
+        <Tooltip id="hero-btn" place="top" />
+        <Tooltip id="share-btn" place="top" />
+        <Tooltip id="impact-card" place="top" />
+        <Tooltip id="geo-card" place="top" />
       </header>
 
       {/* Action Cards */}
@@ -820,7 +909,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="features-section">
+      <section id="features" className="features-section" ref={featuresRef}>
         <div className="features-bg-decoration">
           <div className="bg-blob-teal" />
           <div className="bg-blob-orange" />
@@ -831,8 +920,7 @@ export default function LandingPage() {
             <div className="header-left">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
+                animate={featuresInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
                 className="features-badge"
               >
                 <div className="badge-dot" />
@@ -840,8 +928,7 @@ export default function LandingPage() {
               </motion.div>
               <motion.h2 
                 initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                animate={featuresInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                 className="features-title"
               >
                 A essência do <br />
@@ -850,8 +937,7 @@ export default function LandingPage() {
             </div>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={featuresInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ delay: 0.1 }}
               className="features-intro"
             >
@@ -865,35 +951,40 @@ export default function LandingPage() {
                 icon: <Zap size={36} />,
                 title: "Simples",
                 desc: "Interface que acolhe. Uma experiência intuitiva para que vizinhos de todas as idades se conectem sem barreiras.",
-                color: "teal"
+                color: "teal",
+                tooltip: "Design pensado para todos os usuários"
               },
               {
                 icon: <MapPin size={36} />,
                 title: "Próximo",
                 desc: "Foco no que importa. Priorizamos pedidos e ofertas em um raio de 2km, fortalecendo os laços da sua própria rua.",
-                color: "orange"
+                color: "orange",
+                tooltip: "Conecte-se com vizinhos próximos"
               },
               {
                 icon: <ShieldCheck size={36} />,
                 title: "Seguro",
                 desc: "Privacidade total. Seus dados e localização exata nunca são expostos. Construímos confiança através de segurança.",
-                color: "purple"
+                color: "purple",
+                tooltip: "Seus dados estão protegidos"
               },
               {
                 icon: <Users size={36} />,
                 title: "Humano",
                 desc: "Pessoas ajudando pessoas. Resgatamos o calor das conexões reais e a satisfação de fazer o bem para quem está perto.",
-                color: "dark"
+                color: "dark",
+                tooltip: "Conexões reais entre vizinhos"
               }
             ].map((feature, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                animate={featuresInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
                 transition={{ delay: i * 0.1, duration: 0.8 }}
                 whileHover={{ y: -15, scale: 1.02 }}
                 className={`feature-card ${feature.color}`}
+                data-tooltip-id={`feature-${i}`}
+                data-tooltip-content={feature.tooltip}
               >
                 <div className="feature-icon-wrapper">
                   {feature.icon}
@@ -904,6 +995,7 @@ export default function LandingPage() {
                   <div className="footer-dot" />
                   {feature.title}
                 </div>
+                <Tooltip id={`feature-${i}`} place="top" />
               </motion.div>
             ))}
           </div>
