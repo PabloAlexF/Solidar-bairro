@@ -1,0 +1,1324 @@
+/* Cadastro Comércio - CSS com prefixos únicos para evitar conflitos */
+
+/* Base Container */
+.comercio-cadastro-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.comercio-theme {
+  --comercio-primary: #3b82f6;
+  --comercio-secondary: #0ea5e9;
+  --comercio-dark: #0f172a;
+  --comercio-light: #f8fafc;
+}
+
+/* Background Elements */
+.comercio-bg-blobs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.comercio-blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: comercio-float 20s infinite ease-in-out;
+}
+
+.comercio-blob-1 {
+  width: 400px;
+  height: 400px;
+  top: -100px;
+  right: -100px;
+}
+
+.comercio-blob-2 {
+  width: 300px;
+  height: 300px;
+  bottom: -50px;
+  left: -50px;
+  animation-delay: -10s;
+}
+
+/* Navigation */
+.comercio-top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  position: relative;
+  z-index: 10;
+}
+
+.comercio-back-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #64748b;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.comercio-back-link:hover {
+  color: #3b82f6;
+  transform: translateX(-4px);
+}
+
+.comercio-back-icon-box {
+  width: 40px;
+  height: 40px;
+  background: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.comercio-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.comercio-brand-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+}
+
+.comercio-brand-text {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+/* Main Layout */
+.comercio-main-layout {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 2rem;
+  padding: 0 2rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Sidebar Stepper */
+.comercio-sidebar-stepper {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+}
+
+.comercio-stepper-card {
+  background: white;
+  border-radius: 2rem;
+  padding: 2.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.comercio-stepper-title {
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #64748b;
+  letter-spacing: 0.1em;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.comercio-stepper-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.comercio-stepper-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+.comercio-stepper-icon {
+  width: 48px;
+  height: 48px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.comercio-stepper-item.comercio-active .comercio-stepper-icon {
+  background: linear-gradient(135deg, #3b82f6, #0ea5e9);
+  border-color: #3b82f6;
+  color: white;
+  transform: scale(1.1);
+}
+
+.comercio-stepper-item.comercio-completed .comercio-stepper-icon {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.comercio-stepper-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.comercio-stepper-step-num {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.comercio-stepper-step-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.comercio-stepper-item.comercio-active .comercio-stepper-step-num,
+.comercio-stepper-item.comercio-active .comercio-stepper-step-name {
+  color: #3b82f6;
+}
+
+.comercio-stepper-line {
+  position: absolute;
+  left: 23px;
+  top: 60px;
+  width: 2px;
+  height: 24px;
+  background: #e2e8f0;
+  transition: all 0.3s;
+}
+
+/* Form Container */
+.comercio-form-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.comercio-form-container-card {
+  background: white;
+  border-radius: 2.5rem;
+  padding: 3rem;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.08);
+  border: 1px solid #f1f5f9;
+}
+
+.comercio-form-header-section {
+  margin-bottom: 3rem;
+}
+
+.comercio-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.comercio-step-badge {
+  background: #eff6ff;
+  color: #3b82f6;
+  padding: 0.5rem 1.25rem;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.comercio-progress-bar-container {
+  flex: 1;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 100px;
+  margin-left: 2rem;
+  overflow: hidden;
+}
+
+.comercio-progress-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+
+.comercio-form-main-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.comercio-form-subtitle {
+  font-size: 1.1rem;
+  color: #64748b;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* Form Content */
+.comercio-form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.comercio-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.comercio-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.comercio-span-2 {
+  grid-column: span 2;
+}
+
+.comercio-field-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #374151;
+  letter-spacing: -0.01em;
+}
+
+.comercio-input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.comercio-field-icon {
+  position: absolute;
+  left: 16px;
+  color: #94a3b8;
+  z-index: 2;
+}
+
+.comercio-form-input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 1.25rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1e293b;
+  background: #fafbfc;
+  transition: all 0.3s;
+}
+
+.comercio-form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.comercio-form-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* Password Toggle */
+.comercio-password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  z-index: 10;
+}
+
+.comercio-password-toggle-btn:hover {
+  color: #3b82f6;
+}
+
+/* Info Box */
+.comercio-form-info-box {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  color: white;
+}
+
+.comercio-info-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.comercio-info-text {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+
+/* Selectable Grid */
+.comercio-selectable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.comercio-selectable-item {
+  cursor: pointer;
+}
+
+.comercio-selectable-item input {
+  display: none;
+}
+
+.comercio-selectable-card {
+  padding: 2rem 1.5rem;
+  background: #ffffff;
+  border-radius: 1.5rem;
+  border: 2px solid #f1f5f9;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.comercio-selectable-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.1);
+}
+
+.comercio-selectable-item input:checked + .comercio-selectable-card {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.comercio-selectable-card-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: #f8fafc;
+  color: #3b82f6;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.comercio-selectable-item input:checked + .comercio-selectable-card .comercio-selectable-card-icon {
+  background: linear-gradient(135deg, #3b82f6, #0ea5e9);
+  color: white;
+}
+
+.comercio-selectable-card-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.comercio-selectable-card-desc {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Final Box */
+.comercio-form-final-box {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2.5rem;
+  border-radius: 2rem;
+  color: white;
+}
+
+.comercio-final-icon {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.comercio-form-final-box p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Navigation */
+.comercio-form-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.comercio-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border-radius: 1.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+}
+
+.comercio-btn-prev {
+  background: #f8fafc;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+}
+
+.comercio-btn-prev:hover {
+  background: #f1f5f9;
+  color: #334155;
+  transform: translateX(-2px);
+}
+
+.comercio-btn-cancel {
+  background: #f8fafc;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+  text-decoration: none;
+}
+
+.comercio-btn-cancel:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.comercio-btn-next {
+  background: #0f172a;
+  color: white;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.3);
+}
+
+.comercio-btn-next:hover {
+  background: #1e293b;
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.4);
+}
+
+.comercio-btn-finish {
+  background: linear-gradient(to right, #3b82f6, #0ea5e9);
+  color: white;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+}
+
+.comercio-btn-finish:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+}
+
+.comercio-nav-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Success Page */
+.comercio-success-page-immersive {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  position: relative;
+  overflow-x: hidden;
+  padding: 2rem;
+}
+
+.comercio-floating-elements {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.comercio-float-shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  animation: comercio-float 20s infinite ease-in-out;
+}
+
+.comercio-s1-blue {
+  width: 450px;
+  height: 450px;
+  background: #3b82f6;
+  top: -150px;
+  right: -100px;
+}
+
+.comercio-s2-blue {
+  width: 350px;
+  height: 350px;
+  background: #60a5fa;
+  bottom: -80px;
+  left: -50px;
+  animation-delay: -3s;
+}
+
+.comercio-s3-blue {
+  width: 250px;
+  height: 250px;
+  background: #2563eb;
+  top: 15%;
+  left: 8%;
+  animation-delay: -6s;
+}
+
+.comercio-success-full-wrapper {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.comercio-success-hero-section {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.comercio-celebration-master-icon {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 2rem;
+}
+
+.comercio-icon-main-box-blue {
+  width: 160px;
+  height: 160px;
+  background: linear-gradient(135deg, #3b82f6, #0ea5e9);
+  border-radius: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 40px 80px rgba(59, 130, 246, 0.4);
+  transform: rotate(-3deg);
+  animation: comercio-float-icon 6s infinite ease-in-out;
+}
+
+.comercio-icon-pulse-ring-blue {
+  position: absolute;
+  inset: -25px;
+  border: 3px solid #3b82f6;
+  border-radius: 5.5rem;
+  opacity: 0.2;
+  animation: comercio-pulse-ring 2.5s infinite;
+}
+
+.comercio-success-main-title {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.comercio-text-gradient-blue {
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.comercio-success-description {
+  font-size: 1.25rem;
+  color: #64748b;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.comercio-success-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.comercio-premium-status-banner-blue {
+  grid-column: span 3;
+  background: #1e3a8a;
+  border-radius: 3rem;
+  padding: 3rem 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  box-shadow: 0 30px 60px rgba(30, 58, 138, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.comercio-premium-status-banner-blue::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  background: linear-gradient(to left, rgba(59, 130, 246, 0.2), transparent);
+  pointer-events: none;
+}
+
+.comercio-status-info {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.comercio-status-info h2 {
+  font-size: 1.75rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+}
+
+.comercio-status-info p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.comercio-status-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.comercio-stat-pill-blue {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.85rem 1.75rem;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+}
+
+.comercio-dashboard-column {
+  background: white;
+  border-radius: 2rem;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.comercio-column-header-blue {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+  color: #3b82f6;
+}
+
+.comercio-column-header-blue h3 {
+  color: #0f172a;
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.comercio-level-card-blue {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  background: #f8fafc;
+  padding: 2rem;
+  border-radius: 2rem;
+}
+
+.comercio-level-circle-blue {
+  width: 90px;
+  height: 90px;
+  border: 8px solid #3b82f6;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
+  flex-shrink: 0;
+}
+
+.comercio-lvl-num {
+  font-size: 1.8rem;
+  font-weight: 950;
+  color: #1e3a8a;
+  line-height: 1;
+}
+
+.comercio-lvl-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.comercio-xp-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.comercio-xp-bar-full {
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.comercio-xp-progress-blue {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+
+.comercio-xp-footer-text {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
+.comercio-achievements-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.comercio-achievement-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 1.25rem;
+  border: 1px solid #f1f5f9;
+}
+
+.comercio-achievement-icon {
+  width: 3rem;
+  height: 3rem;
+  background: #eff6ff;
+  color: #3b82f6;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.comercio-achievement-info h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.comercio-achievement-info p {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.comercio-side-text {
+  color: #64748b;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+}
+
+.comercio-success-actions-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.comercio-btn-go-home-blue {
+  background: #1e3a8a;
+  color: white;
+  padding: 1.75rem 3rem;
+  border-radius: 2rem;
+  font-size: 1.3rem;
+  font-weight: 950;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 25px 50px rgba(30, 58, 138, 0.5);
+}
+
+.comercio-btn-go-home-blue:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 35px 60px rgba(37, 99, 235, 0.6);
+}
+
+.comercio-btn-secondary-link {
+  text-align: center;
+  color: #64748b;
+  font-weight: 800;
+  font-size: 1rem;
+  text-decoration: none;
+  padding: 1rem;
+  transition: color 0.3s;
+}
+
+.comercio-btn-secondary-link:hover {
+  color: #3b82f6;
+}
+
+/* Alert Modal */
+.comercio-alert-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.5rem;
+}
+
+.comercio-alert-modal {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 2.5rem;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.25);
+  text-align: center;
+  position: relative;
+}
+
+.comercio-alert-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.comercio-alert-header h3 {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+}
+
+.comercio-close-alert-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.comercio-close-alert-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.comercio-alert-modal p {
+  color: #475569;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.comercio-alert-confirm-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 1.25rem;
+  font-weight: 800;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.comercio-alert-confirm-btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+}
+
+/* Animations */
+@keyframes comercio-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+@keyframes comercio-float-icon {
+  0%, 100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+}
+
+@keyframes comercio-pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.3;
+  }
+}
+
+.comercio-animate-slide-up {
+  animation: comercio-slide-up 0.6s ease-out;
+}
+
+@keyframes comercio-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.comercio-animate-bounce-in {
+  animation: comercio-bounce-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes comercio-bounce-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.comercio-animate-bounce {
+  animation: comercio-bounce 2s infinite;
+}
+
+@keyframes comercio-bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40%, 43% {
+    transform: translateY(-10px);
+  }
+  70% {
+    transform: translateY(-5px);
+  }
+  90% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1100px) {
+  .comercio-main-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .comercio-sidebar-stepper {
+    position: static;
+  }
+
+  .comercio-stepper-list {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+  }
+
+  .comercio-stepper-item {
+    flex-direction: column;
+    text-align: center;
+    min-width: 120px;
+  }
+
+  .comercio-stepper-line {
+    display: none;
+  }
+
+  .comercio-success-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comercio-premium-status-banner-blue {
+    grid-column: span 1;
+    flex-direction: column;
+    text-align: center;
+    gap: 2rem;
+  }
+
+  .comercio-success-main-title {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .comercio-cadastro-container,
+  .comercio-success-page-immersive {
+    padding: 1rem;
+  }
+
+  .comercio-main-layout {
+    padding: 0 1rem 1rem;
+  }
+
+  .comercio-form-container-card {
+    padding: 2rem;
+    border-radius: 2rem;
+  }
+
+  .comercio-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .comercio-form-main-title {
+    font-size: 2rem;
+  }
+
+  .comercio-form-navigation {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .comercio-nav-actions {
+    width: 100%;
+  }
+
+  .comercio-nav-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .comercio-success-main-title {
+    font-size: 2.5rem;
+  }
+
+  .comercio-level-card-blue {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .comercio-premium-status-banner-blue {
+    padding: 2rem;
+  }
+
+  .comercio-status-info {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* PC Compactness for Success Page */
+@media (min-width: 1101px) {
+  .comercio-success-page-immersive {
+    padding: 1rem;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .comercio-success-full-wrapper {
+    max-width: 1100px;
+    width: 95%;
+    margin: 0 auto;
+    transform: scale(0.9);
+  }
+
+  .comercio-success-hero-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .comercio-celebration-master-icon {
+    margin-bottom: 0.75rem;
+  }
+
+  .comercio-icon-main-box-blue {
+    width: 100px;
+    height: 100px;
+    border-radius: 2.5rem;
+  }
+
+  .comercio-success-main-title {
+    font-size: 3rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .comercio-success-description {
+    font-size: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .comercio-success-dashboard-grid {
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+  }
+
+  .comercio-premium-status-banner-blue {
+    padding: 1.25rem 2.5rem;
+    border-radius: 2rem;
+  }
+
+  .comercio-status-info {
+    gap: 1.25rem;
+  }
+
+  .comercio-status-info h2 {
+    font-size: 1.25rem;
+  }
+
+  .comercio-status-info p {
+    font-size: 0.85rem;
+  }
+
+  .comercio-dashboard-column {
+    padding: 1.25rem;
+    border-radius: 1.75rem;
+  }
+
+  .comercio-column-header-blue {
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+  }
+
+  .comercio-column-header-blue h3 {
+    font-size: 1.1rem;
+  }
+
+  .comercio-level-card-blue {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .comercio-level-circle-blue {
+    width: 60px;
+    height: 60px;
+    border-width: 5px;
+  }
+
+  .comercio-lvl-num {
+    font-size: 1.2rem;
+  }
+
+  .comercio-achievement-badge-item {
+    padding: 0.5rem 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .comercio-achievement-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.1rem;
+  }
+
+  .comercio-achievement-info h4 {
+    font-size: 0.95rem;
+  }
+
+  .comercio-achievement-info p {
+    font-size: 0.7rem;
+  }
+
+  .comercio-success-actions-vertical {
+    margin-top: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .comercio-btn-go-home-blue {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 1.25rem;
+  }
+
+  .comercio-side-text {
+    font-size: 0.85rem;
+  }
+}
