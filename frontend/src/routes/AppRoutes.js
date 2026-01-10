@@ -6,8 +6,8 @@ import AdminProtectedRoute from '../components/AdminProtectedRoute';
 // Feature-based imports
 import LandingPage from '../pages/LandingPage';
 import Login from '../pages/Login';
-import Cadastro from '../pages/Cadastro';
-import CadastroCidadao from '../pages/Cadastro/CadastroCidadao/CadastroCidadao';
+import CadastroWrapper from '../pages/Cadastro/CadastroWrapper';
+import CadastroCidadaoWrapper from '../pages/Cadastro/CadastroCidadao/CadastroCidadaoWrapper';
 import CadastroComercio from '../pages/Cadastro/CadastroComercio/CadastroComercio';
 import CadastroFamilia from '../pages/Cadastro/CadastroFamilia/CadastroFamilia';
 import CadastroONG from '../pages/Cadastro/CadastroONG/CadastroONG';
@@ -30,8 +30,8 @@ const AppRoutes = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/cadastro" element={<Cadastro />} />
-      <Route path="/cadastro/cidadao" element={<CadastroCidadao />} />
+      <Route path="/cadastro" element={<CadastroWrapper />} />
+      <Route path="/cadastro/cidadao" element={<CadastroCidadaoWrapper />} />
       <Route path="/cadastro/comercio" element={<CadastroComercio />} />
       <Route path="/cadastro/familia" element={<CadastroFamilia />} />
       <Route path="/cadastro/ong" element={<CadastroONG />} />
