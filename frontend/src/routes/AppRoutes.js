@@ -22,12 +22,14 @@ import Chat from '../pages/Chat';
 import NovoAnuncio from '../pages/NovoAnuncio';
 import Conversas from '../pages/Conversas';
 
+import AdminSimple from '../pages/AdminSimple';
+
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/admin/dashboard" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+      <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/cadastro" element={<Cadastro />} />
       <Route path="/cadastro/cidadao" element={<CadastroCidadao />} />
       <Route path="/cadastro/comercio" element={<CadastroComercio />} />
