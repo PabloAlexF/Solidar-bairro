@@ -232,13 +232,17 @@ const CATEGORY_DETAILS = {
   },
   Roupas: {
     options: [
-      { id: 'blusas', label: 'Blusas/Camisetas', desc: 'Peças para o tronco.', color: '#3b82f6' },
-      { id: 'calcas', label: 'Calças/Bermudas', desc: 'Peças para as pernas.', color: '#2563eb' },
-      { id: 'agasalhos', label: 'Agasalhos', desc: 'Casacos e blusas de frio.', color: '#1e40af', contextInfo: 'Agasalhos de lã ou sintéticos ajudam muito em frentes frias.' },
+      { 
+        id: 'agasalhos', 
+        label: 'Agasalhos', 
+        desc: 'Casacos pesados, blusas de lã.', 
+        color: '#1e40af',
+        contextInfo: 'Agasalhos de lã ou sintéticos ajudam muito em frentes frias.' 
+      },
       { 
         id: 'escolar', 
         label: 'Uniforme Escolar', 
-        desc: 'Roupas para escola.', 
+        desc: 'Kits da rede municipal/estadual.', 
         color: '#6366f1',
         contextInfo: 'Estar uniformizado ajuda na integração da criança no ambiente escolar e evita o desgaste de roupas civis.',
         subQuestions: [
@@ -246,16 +250,112 @@ const CATEGORY_DETAILS = {
           { id: 'escola_nome', label: 'Nome da Escola (se necessário)', type: 'input', placeholder: 'Ex: Escola Municipal...' }
         ]
       },
+      { id: 'calcados', label: 'Calçados', desc: 'Tênis, sapatos, botas ou chinelos.', color: '#2563eb' },
+      { id: 'enxoval', label: 'Enxoval de Bebê', desc: 'Body, mantas e fraldas pano.', color: '#ec4899' },
+      { id: 'intimas', label: 'Roupas Íntimas', desc: 'Novas: meias, cuecas, calcinhas.', color: '#f43f5e' },
+      { id: 'cama_banho', label: 'Cama & Banho', desc: 'Lençóis, cobertas, toalhas.', color: '#14b8a6' },
+      { id: 'verao', label: 'Roupas de Verão', desc: 'Camisetas, bermudas, vestidos.', color: '#f59e0b' },
+      { id: 'profissional', label: 'Roupa Profissional', desc: 'Social para entrevistas ou trabalho.', color: '#475569' },
+      { id: 'acessorios', label: 'Acessórios Inverno', desc: 'Toucas, luvas e cachecóis.', color: '#6b7280' },
     ],
     sizes: ['PP', 'P', 'M', 'G', 'GG', 'EXG', 'Infantil'],
     styles: ['Masculino', 'Feminino', 'Unissex', 'Infantil']
   },
+  Calçados: {
+    options: [
+      { 
+        id: 'tenis_esportivo', 
+        label: 'Tênis Esportivo', 
+        desc: 'Para exercícios e caminhadas.', 
+        color: '#10b981',
+        subQuestions: [
+          { id: 'numeracao', label: 'Numeração', type: 'input', placeholder: 'Ex: 38, 42...' },
+          { id: 'genero', label: 'Gênero', type: 'select', options: ['Masculino', 'Feminino', 'Infantil'] }
+        ]
+      },
+      { 
+        id: 'sapato_social', 
+        label: 'Sapato Social', 
+        desc: 'Para trabalho e entrevistas.', 
+        color: '#475569',
+        subQuestions: [
+          { id: 'numeracao', label: 'Numeração', type: 'input', placeholder: 'Ex: 38, 42...' },
+          { id: 'genero', label: 'Gênero', type: 'select', options: ['Masculino', 'Feminino'] }
+        ]
+      },
+      { 
+        id: 'chinelos', 
+        label: 'Chinelos/Sandálias', 
+        desc: 'Para uso doméstico e casual.', 
+        color: '#f59e0b',
+        subQuestions: [
+          { id: 'numeracao', label: 'Numeração', type: 'input', placeholder: 'Ex: 38, 42...' },
+          { id: 'tipo_chinelo', label: 'Tipo', type: 'select', options: ['Chinelo Simples', 'Sandália', 'Chinelo de Dedo'] }
+        ]
+      },
+      { 
+        id: 'botas', 
+        label: 'Botas/Botinas', 
+        desc: 'Para trabalho e proteção.', 
+        color: '#dc2626',
+        subQuestions: [
+          { id: 'numeracao', label: 'Numeração', type: 'input', placeholder: 'Ex: 38, 42...' },
+          { id: 'tipo_bota', label: 'Tipo', type: 'select', options: ['Bota de Segurança', 'Botina', 'Bota de Chuva'] }
+        ]
+      },
+      { 
+        id: 'calcados_infantis', 
+        label: 'Calçados Infantis', 
+        desc: 'Para crianças e bebês.', 
+        color: '#ec4899',
+        subQuestions: [
+          { id: 'numeracao', label: 'Numeração', type: 'input', placeholder: 'Ex: 20, 25, 30...' },
+          { id: 'idade_crianca', label: 'Idade da criança', type: 'input', placeholder: 'Ex: 2 anos, 5 anos...' },
+          { id: 'tipo_calcado', label: 'Tipo', type: 'select', options: ['Tênis', 'Sapato', 'Sandália', 'Chinelo'] }
+        ]
+      },
+      { 
+        id: 'calcados_especiais', 
+        label: 'Calçados Especiais', 
+        desc: 'Ortopédicos ou para necessidades específicas.', 
+        color: '#6366f1',
+        subQuestions: [
+          { id: 'numeracao', label: 'Numeração', type: 'input', placeholder: 'Ex: 38, 42...' },
+          { id: 'tipo_especial', label: 'Tipo especial', type: 'input', placeholder: 'Ex: Ortopédico, diabético...' }
+        ]
+      },
+    ],
+    sizes: ['34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45'],
+    styles: ['Masculino', 'Feminino', 'Infantil', 'Unissex']
+  },
   Medicamentos: {
     options: [
       { 
-        id: 'analgesico', 
+        id: 'pressao', 
+        label: 'Pressão Alta', 
+        desc: 'Losartana, Enalapril, etc.', 
+        color: '#ef4444',
+        contextInfo: 'Medicamentos para pressão alta devem ser tomados continuamente conforme prescrição médica.',
+        subQuestions: [
+          { id: 'medicamento_nome', label: 'Nome do Medicamento', type: 'input', placeholder: 'Ex: Losartana, Enalapril...' },
+          { id: 'dosagem', label: 'Dosagem (mg)?', type: 'input', placeholder: 'Ex: 50mg, 100mg...' }
+        ]
+      },
+      { 
+        id: 'diabetes', 
+        label: 'Diabetes', 
+        desc: 'Metformina, Insulinas.', 
+        color: '#dc2626',
+        contextInfo: 'Medicamentos para diabetes são essenciais para controle glicêmico.',
+        subQuestions: [
+          { id: 'medicamento_nome', label: 'Nome do Medicamento', type: 'input', placeholder: 'Ex: Metformina, Insulina...' },
+          { id: 'receita', label: 'Possui receita médica?', type: 'select', options: ['Sim, atualizada', 'Sim, vencida', 'Não possuo'] }
+        ]
+      },
+      { 
+        id: 'analgesicos', 
         label: 'Analgésicos', 
-        desc: 'Para dor e febre.', 
+        desc: 'Dipirona, Paracetamol, Ibuprofeno.', 
         color: '#10b981',
         contextInfo: 'Sempre verifique a data de validade e nunca se automedique sem orientação básica.',
         subQuestions: [
@@ -263,15 +363,61 @@ const CATEGORY_DETAILS = {
         ]
       },
       { 
-        id: 'continuo', 
-        label: 'Uso Contínuo', 
-        desc: 'Pressão, diabetes, etc.', 
-        color: '#059669',
-        contextInfo: 'Atenção: A interrupção de tratamentos contínuos pode agravar doenças crônicas rapidamente.',
+        id: 'bombinhas', 
+        label: 'Bombinhas/Asma', 
+        desc: 'Salbutamol, Beclometasona.', 
+        color: '#0ea5e9',
+        contextInfo: 'Medicamentos para asma são fundamentais para crises respiratórias.',
+        subQuestions: [
+          { id: 'medicamento_nome', label: 'Nome do Medicamento', type: 'input', placeholder: 'Ex: Salbutamol, Beclometasona...' }
+        ]
+      },
+      { 
+        id: 'antibioticos', 
+        label: 'Antibióticos', 
+        desc: 'Com receita médica atualizada.', 
+        color: '#8b5cf6',
+        contextInfo: 'Antibióticos só devem ser usados com receita médica válida.',
         subQuestions: [
           { id: 'receita', label: 'Possui receita médica?', type: 'select', options: ['Sim, atualizada', 'Sim, vencida', 'Não possuo'] },
-          { id: 'med_continuo', label: 'Qual o medicamento?', type: 'input', placeholder: 'Ex: Losartana, Metformina...' },
-          { id: 'dosagem', label: 'Dosagem (mg)?', type: 'input', placeholder: 'Ex: 50mg, 100mg...' }
+          { id: 'medicamento_nome', label: 'Nome do Medicamento', type: 'input', placeholder: 'Ex: Amoxicilina, Azitromicina...' }
+        ]
+      },
+      { 
+        id: 'saude_mental', 
+        label: 'Saúde Mental', 
+        desc: 'Controlados com receita.', 
+        color: '#ec4899',
+        contextInfo: 'Medicamentos controlados requerem receita especial e acompanhamento médico.',
+        subQuestions: [
+          { id: 'receita', label: 'Possui receita médica?', type: 'select', options: ['Sim, atualizada', 'Sim, vencida', 'Não possuo'] }
+        ]
+      },
+      { 
+        id: 'antialergicos', 
+        label: 'Antialérgicos', 
+        desc: 'Loratadina, Desloratadina, etc.', 
+        color: '#06b6d4',
+        subQuestions: [
+          { id: 'medicamento_nome', label: 'Nome do Medicamento', type: 'input', placeholder: 'Ex: Loratadina, Desloratadina...' }
+        ]
+      },
+      { 
+        id: 'suplementos', 
+        label: 'Suplemento Vitamínico', 
+        desc: 'Vitamina D, B12, Ferro.', 
+        color: '#f59e0b',
+        subQuestions: [
+          { id: 'tipo_suplemento', label: 'Tipo de Suplemento', type: 'chips', options: ['Vitamina D', 'Vitamina B12', 'Ferro', 'Cálcio', 'Multivitamínico'] }
+        ]
+      },
+      { 
+        id: 'curativos', 
+        label: 'Itens de Curativo', 
+        desc: 'Gaze, esparadrapo, álcool 70%.', 
+        color: '#64748b',
+        subQuestions: [
+          { id: 'itens_curativo', label: 'Itens necessários', type: 'chips', options: ['Gaze', 'Esparadrapo', 'Álcool 70%', 'Algodão', 'Band-Aid', 'Atadura'] }
         ]
       },
     ]
@@ -279,25 +425,96 @@ const CATEGORY_DETAILS = {
   Higiene: {
     options: [
       { 
-        id: 'banho', 
-        label: 'Banho & Corpo', 
-        desc: 'Sabonete, shampoo, etc.', 
+        id: 'kit_banho', 
+        label: 'Kit Banho', 
+        desc: 'Sabonete, shampoo, condicionador.', 
         color: '#14b8a6',
         contextInfo: 'A higiene corporal básica previne doenças de pele e contribui para o bem-estar mental.',
         subQuestions: [
           { id: 'itens_banho', label: 'O que falta?', type: 'chips', options: ['Sabonete', 'Shampoo', 'Condicionador', 'Desodorante', 'Papel Higiênico', 'Lâmina de Barbear'] }
         ]
       },
-      { id: 'bucal', label: 'Higiene Bucal', desc: 'Pasta, escova, fio dental.', color: '#0d9488' },
-      { id: 'feminina', label: 'Saúde Feminina', desc: 'Absorventes e higiene.', color: '#ec4899' },
+      { 
+        id: 'saude_bucal', 
+        label: 'Saúde Bucal', 
+        desc: 'Pasta, escova, fio dental.', 
+        color: '#0d9488',
+        subQuestions: [
+          { id: 'itens_bucal', label: 'Itens necessários', type: 'chips', options: ['Pasta de Dente', 'Escova de Dente', 'Fio Dental', 'Enxaguante Bucal'] }
+        ]
+      },
+      { 
+        id: 'higiene_intima', 
+        label: 'Higiene Íntima', 
+        desc: 'Absorventes e protetores.', 
+        color: '#ec4899',
+        subQuestions: [
+          { id: 'tipo_absorvente', label: 'Tipo necessário', type: 'chips', options: ['Absorvente Externo', 'Absorvente Interno', 'Protetor Diário', 'Absorvente Noturno'] }
+        ]
+      },
+      { 
+        id: 'fraldas_infantis', 
+        label: 'Fraldas Infantis', 
+        desc: 'Tamanhos P ao XXG.', 
+        color: '#6366f1',
+        subQuestions: [
+          { id: 'tamanho_fralda', label: 'Tamanho da Fralda', type: 'select', options: ['RN', 'P', 'M', 'G', 'GG', 'XG', 'XXG'] },
+          { id: 'idade_crianca', label: 'Idade da criança', type: 'input', placeholder: 'Ex: 6 meses, 2 anos...' }
+        ]
+      },
+      { 
+        id: 'fraldas_geriatricas', 
+        label: 'Fraldas Geriátricas', 
+        desc: 'Uso adulto (M, G, GG).', 
+        color: '#8b5cf6',
+        subQuestions: [
+          { id: 'tamanho_fralda_adulto', label: 'Tamanho', type: 'select', options: ['M', 'G', 'GG', 'EG'] }
+        ]
+      },
+      { 
+        id: 'barbear', 
+        label: 'Barbear', 
+        desc: 'Aparelhos e espuma.', 
+        color: '#475569',
+        subQuestions: [
+          { id: 'itens_barbear', label: 'Itens necessários', type: 'chips', options: ['Aparelho de Barbear', 'Espuma de Barbear', 'Gel de Barbear', 'Pós-Barba'] }
+        ]
+      },
+      { 
+        id: 'limpeza_casa', 
+        label: 'Limpeza Casa', 
+        desc: 'Detergente, sabão pó, amaciante.', 
+        color: '#059669',
+        subQuestions: [
+          { id: 'produtos_limpeza', label: 'Produtos necessários', type: 'chips', options: ['Detergente', 'Sabão em Pó', 'Amaciante', 'Desinfetante', 'Sabão em Barra', 'Esponja'] }
+        ]
+      },
+      { 
+        id: 'protecao', 
+        label: 'Proteção', 
+        desc: 'Repelente e protetor solar.', 
+        color: '#f59e0b',
+        subQuestions: [
+          { id: 'tipo_protecao', label: 'Tipo de proteção', type: 'chips', options: ['Repelente', 'Protetor Solar', 'Repelente Infantil', 'Protetor Solar Infantil'] }
+        ]
+      },
+      { 
+        id: 'desinfeccao', 
+        label: 'Desinfeção', 
+        desc: 'Álcool em gel ou líquido.', 
+        color: '#64748b',
+        subQuestions: [
+          { id: 'tipo_alcool', label: 'Tipo de álcool', type: 'chips', options: ['Álcool em Gel', 'Álcool Líquido 70%', 'Álcool Spray'] }
+        ]
+      },
     ]
   },
   Contas: {
     options: [
       { 
-        id: 'luz', 
-        label: 'Energia Elétrica', 
-        desc: 'Conta de luz atrasada.', 
+        id: 'conta_luz', 
+        label: 'Conta de Luz', 
+        desc: 'Evitar o desligamento imediato.', 
         color: '#ef4444',
         contextInfo: 'Se você recebe Bolsa Família ou tem baixa renda, pode ter direito a até 65% de desconto na luz (Tarifa Social).',
         subQuestions: [
@@ -305,38 +522,199 @@ const CATEGORY_DETAILS = {
           { id: 'atraso_luz', label: 'Meses em atraso?', type: 'select', options: ['1 mês', '2 meses', '3 ou mais', 'Aviso de corte'] }
         ]
       },
-      { id: 'agua', label: 'Água / Saneamento', desc: 'Conta de água.', color: '#3b82f6' },
-      { id: 'gas', label: 'Botijão de Gás', desc: 'Para cozinhar alimentos.', color: '#f97316' },
+      { 
+        id: 'conta_agua', 
+        label: 'Conta de Água', 
+        desc: 'Manter o abastecimento.', 
+        color: '#3b82f6',
+        subQuestions: [
+          { id: 'valor_agua', label: 'Valor aproximado (R$)?', type: 'input', placeholder: 'Ex: 80,00' },
+          { id: 'atraso_agua', label: 'Meses em atraso?', type: 'select', options: ['1 mês', '2 meses', '3 ou mais', 'Aviso de corte'] }
+        ]
+      },
+      { 
+        id: 'gas_cozinha', 
+        label: 'Gás de Cozinha', 
+        desc: 'Recarga de botijão 13kg.', 
+        color: '#f97316',
+        subQuestions: [
+          { id: 'tipo_gas', label: 'Tipo de gás', type: 'select', options: ['Botijão 13kg', 'Gás Encanado'] }
+        ]
+      },
+      { 
+        id: 'apoio_aluguel', 
+        label: 'Apoio Aluguel', 
+        desc: 'Ajuda para evitar despejo.', 
+        color: '#dc2626',
+        subQuestions: [
+          { id: 'valor_aluguel', label: 'Valor do aluguel (R$)?', type: 'input', placeholder: 'Ex: 800,00' },
+          { id: 'meses_atraso', label: 'Meses em atraso?', type: 'select', options: ['1 mês', '2 meses', '3 ou mais'] }
+        ]
+      },
+      { 
+        id: 'internet_estudo', 
+        label: 'Internet/Estudo', 
+        desc: 'Educação ou trabalho remoto.', 
+        color: '#6366f1',
+        subQuestions: [
+          { id: 'finalidade_internet', label: 'Finalidade principal', type: 'chips', options: ['Estudo Online', 'Trabalho Remoto', 'Busca de Emprego', 'Cursos'] }
+        ]
+      },
+      { 
+        id: 'telefone_recarga', 
+        label: 'Telefone/Recarga', 
+        desc: 'Para manter comunicação.', 
+        color: '#8b5cf6',
+        subQuestions: [
+          { id: 'tipo_recarga', label: 'Tipo de recarga', type: 'select', options: ['Crédito Celular', 'Pacote de Dados', 'Conta Fixa'] }
+        ]
+      },
+      { 
+        id: 'divida_transporte', 
+        label: 'Dívida Transporte', 
+        desc: 'Recarga de cartões de passagem.', 
+        color: '#0ea5e9',
+        subQuestions: [
+          { id: 'tipo_cartao', label: 'Tipo de cartão', type: 'chips', options: ['Bilhete Único', 'Cartão Estudante', 'Vale Transporte'] }
+        ]
+      },
     ]
   },
   Emprego: {
     options: [
       { 
         id: 'curriculo', 
-        label: 'Currículo Profissional', 
-        desc: 'Ajuda para criar ou imprimir.', 
+        label: 'Currículo', 
+        desc: 'Elaboração e impressão.', 
         color: '#8b5cf6',
         contextInfo: 'Destaque suas experiências, mesmo as informais. Um bom currículo abre portas inesperadas.',
         subQuestions: [
           { id: 'tipo_curr', label: 'Qual a ajuda exata?', type: 'select', options: ['Criar um do zero', 'Revisar o atual', 'Apenas imprimir'] }
         ]
       },
-      { id: 'vagas', label: 'Busca de Vagas', desc: 'Indicação de oportunidades.', color: '#7c3aed' },
+      { 
+        id: 'qualificacao', 
+        label: 'Qualificação', 
+        desc: 'Cursos técnicos ou básicos.', 
+        color: '#7c3aed',
+        subQuestions: [
+          { id: 'area_curso', label: 'Área de interesse', type: 'chips', options: ['Informática', 'Administração', 'Saúde', 'Educação', 'Construção', 'Beleza'] }
+        ]
+      },
+      { 
+        id: 'epis_uniforme', 
+        label: 'EPIs/Uniforme', 
+        desc: 'Botinas, luvas ou roupas.', 
+        color: '#059669',
+        subQuestions: [
+          { id: 'tipo_epi', label: 'Tipo de EPI', type: 'chips', options: ['Botina de Segurança', 'Luvas', 'Capacete', 'Uniforme', 'Óculos de Proteção'] }
+        ]
+      },
+      { 
+        id: 'ferramentas', 
+        label: 'Ferramentas', 
+        desc: 'Para pedreiro, eletricista, etc.', 
+        color: '#dc2626',
+        subQuestions: [
+          { id: 'profissao', label: 'Profissão/Área', type: 'input', placeholder: 'Ex: Pedreiro, Eletricista...' },
+          { id: 'ferramentas_especificas', label: 'Ferramentas necessárias', type: 'input', placeholder: 'Ex: Furadeira, Alicate...' }
+        ]
+      },
+      { 
+        id: 'estetica_beleza', 
+        label: 'Estética/Beleza', 
+        desc: 'Itens para cabeleireiro/manicure.', 
+        color: '#ec4899',
+        subQuestions: [
+          { id: 'area_beleza', label: 'Área específica', type: 'chips', options: ['Cabeleireiro', 'Manicure', 'Estética', 'Maquiagem', 'Barbeiro'] }
+        ]
+      },
+      { 
+        id: 'informatica', 
+        label: 'Informática', 
+        desc: 'Peças ou conserto de PC/Notebook.', 
+        color: '#3b82f6',
+        subQuestions: [
+          { id: 'tipo_ajuda_pc', label: 'Tipo de ajuda', type: 'select', options: ['Conserto', 'Peças', 'Software', 'Configuração'] }
+        ]
+      },
     ]
   },
   Móveis: {
     options: [
       { 
-        id: 'cama', 
-        label: 'Cama/Colchão', 
-        desc: 'Para dormir com dignidade.', 
+        id: 'cama_solteiro', 
+        label: 'Cama Solteiro', 
+        desc: 'Ou colchão de solteiro.', 
         color: '#f59e0b',
         contextInfo: 'Um sono de qualidade é essencial para a saúde física e mental de adultos e crianças.',
         subQuestions: [
-          { id: 'tipo_cama', label: 'Qual o tipo?', type: 'select', options: ['Solteiro', 'Casal', 'Berço', 'Apenas Colchão'] }
+          { id: 'tipo_cama', label: 'O que exatamente?', type: 'select', options: ['Cama Completa', 'Apenas Colchão', 'Apenas Estrutura'] }
         ]
       },
-      { id: 'mesa', label: 'Mesa & Cadeiras', desc: 'Para refeições e estudo.', color: '#d97706' },
+      { 
+        id: 'cama_casal', 
+        label: 'Cama Casal', 
+        desc: 'Ou colchão de casal.', 
+        color: '#d97706',
+        subQuestions: [
+          { id: 'tipo_cama', label: 'O que exatamente?', type: 'select', options: ['Cama Completa', 'Apenas Colchão', 'Apenas Estrutura'] }
+        ]
+      },
+      { 
+        id: 'berco', 
+        label: 'Berço', 
+        desc: 'Para recém-nascidos.', 
+        color: '#ec4899',
+        subQuestions: [
+          { id: 'idade_bebe', label: 'Idade do bebê', type: 'input', placeholder: 'Ex: Recém-nascido, 6 meses...' }
+        ]
+      },
+      { 
+        id: 'armario_cozinha', 
+        label: 'Armário Cozinha', 
+        desc: 'Ou paneleiro.', 
+        color: '#059669',
+        subQuestions: [
+          { id: 'tipo_armario', label: 'Tipo preferido', type: 'select', options: ['Armário Aéreo', 'Paneleiro', 'Balcão'] }
+        ]
+      },
+      { 
+        id: 'roupeiro', 
+        label: 'Roupeiro', 
+        desc: 'Guarda-roupa para o quarto.', 
+        color: '#6366f1',
+        subQuestions: [
+          { id: 'tamanho_roupeiro', label: 'Tamanho necessário', type: 'select', options: ['2 Portas', '3 Portas', '4 ou mais Portas'] }
+        ]
+      },
+      { 
+        id: 'mesa_cadeiras', 
+        label: 'Mesa/Cadeiras', 
+        desc: 'Para refeições.', 
+        color: '#8b5cf6',
+        subQuestions: [
+          { id: 'quantidade_lugares', label: 'Quantos lugares?', type: 'select', options: ['2 lugares', '4 lugares', '6 ou mais lugares'] }
+        ]
+      },
+      { 
+        id: 'sofa', 
+        label: 'Sofá', 
+        desc: 'Para a sala.', 
+        color: '#475569',
+        subQuestions: [
+          { id: 'tamanho_sofa', label: 'Tamanho preferido', type: 'select', options: ['2 lugares', '3 lugares', 'Canto/L'] }
+        ]
+      },
+      { 
+        id: 'escrivaninha', 
+        label: 'Escrivaninha', 
+        desc: 'Para estudos ou trabalho.', 
+        color: '#0ea5e9',
+        subQuestions: [
+          { id: 'finalidade_mesa', label: 'Finalidade principal', type: 'select', options: ['Estudo', 'Trabalho', 'Computador'] }
+        ]
+      },
     ]
   },
   Eletrodomésticos: {
@@ -344,22 +722,79 @@ const CATEGORY_DETAILS = {
       { 
         id: 'geladeira', 
         label: 'Geladeira', 
-        desc: 'Conservação de alimentos.', 
+        desc: 'Fundamental para alimentos.', 
         color: '#475569',
         contextInfo: 'Evite abrir a geladeira sem necessidade para economizar energia e manter os alimentos frescos.',
         subQuestions: [
-          { id: 'volts_geladeira', label: 'Qual a voltagem necessária?', type: 'select', options: ['110v', '220v', 'Bivolt'] }
+          { id: 'volts_geladeira', label: 'Qual a voltagem necessária?', type: 'select', options: ['110v', '220v', 'Bivolt'] },
+          { id: 'tamanho_geladeira', label: 'Tamanho preferido', type: 'select', options: ['Compacta', 'Média', 'Grande', 'Duplex'] }
         ]
       },
-      { id: 'fogao', label: 'Fogão', desc: 'Para cozinhar refeições.', color: '#334155' },
+      { 
+        id: 'fogao', 
+        label: 'Fogão', 
+        desc: 'Para preparo de refeições.', 
+        color: '#334155',
+        subQuestions: [
+          { id: 'tipo_fogao', label: 'Tipo preferido', type: 'select', options: ['4 Bocas', '5 Bocas', '6 Bocas', 'Cooktop'] },
+          { id: 'combustivel', label: 'Combustível', type: 'select', options: ['Gás', 'Elétrico'] }
+        ]
+      },
+      { 
+        id: 'maquina_lavar', 
+        label: 'Máquina Lavar', 
+        desc: 'Cuidado com as roupas.', 
+        color: '#0ea5e9',
+        subQuestions: [
+          { id: 'capacidade_maquina', label: 'Capacidade necessária', type: 'select', options: ['Até 8kg', '9-11kg', '12kg ou mais'] },
+          { id: 'voltagem', label: 'Voltagem', type: 'select', options: ['110v', '220v', 'Bivolt'] }
+        ]
+      },
+      { 
+        id: 'microondas', 
+        label: 'Micro-ondas', 
+        desc: 'Aquecimento rápido.', 
+        color: '#64748b',
+        subQuestions: [
+          { id: 'voltagem', label: 'Voltagem', type: 'select', options: ['110v', '220v', 'Bivolt'] }
+        ]
+      },
+      { 
+        id: 'ferro_passar', 
+        label: 'Ferro de Passar', 
+        desc: 'Cuidado com vestimentas.', 
+        color: '#6b7280',
+        subQuestions: [
+          { id: 'tipo_ferro', label: 'Tipo preferido', type: 'select', options: ['Ferro Seco', 'Ferro a Vapor', 'Ferro com Caldeira'] }
+        ]
+      },
+      { 
+        id: 'ventilador', 
+        label: 'Ventilador', 
+        desc: 'Para dias de calor.', 
+        color: '#06b6d4',
+        subQuestions: [
+          { id: 'tipo_ventilador', label: 'Tipo preferido', type: 'select', options: ['Mesa', 'Coluna', 'Parede', 'Teto'] }
+        ]
+      },
+      { 
+        id: 'chuveiro_eletrico', 
+        label: 'Chuveiro Elétrico', 
+        desc: 'Banho quente essencial.', 
+        color: '#f59e0b',
+        subQuestions: [
+          { id: 'potencia_chuveiro', label: 'Potência', type: 'select', options: ['4400W', '5500W', '6800W', '7500W'] },
+          { id: 'voltagem', label: 'Voltagem', type: 'select', options: ['110v', '220v'] }
+        ]
+      },
     ]
   },
   Transporte: {
     options: [
       { 
-        id: 'passagem', 
-        label: 'Passagem Urbana', 
-        desc: 'Ônibus, metrô ou trem.', 
+        id: 'passagens', 
+        label: 'Passagens', 
+        desc: 'Ônibus ou trem (TRI/TEU).', 
         color: '#0ea5e9',
         contextInfo: 'Muitos municípios oferecem gratuidade ou passe social para desempregados e estudantes.',
         subQuestions: [
@@ -367,7 +802,45 @@ const CATEGORY_DETAILS = {
           { id: 'freq_transp', label: 'Frequência da ajuda?', type: 'select', options: ['Única vez', 'Semanal', 'Mensal'] }
         ]
       },
-      { id: 'bike', label: 'Bicicleta', desc: 'Para trabalho ou estudo.', color: '#10b981' },
+      { 
+        id: 'bicicleta', 
+        label: 'Bicicleta', 
+        desc: 'Trabalho ou escola.', 
+        color: '#10b981',
+        subQuestions: [
+          { id: 'finalidade_bike', label: 'Finalidade principal', type: 'select', options: ['Trabalho', 'Estudo', 'Lazer', 'Exercício'] },
+          { id: 'tipo_bike', label: 'Tipo preferido', type: 'select', options: ['Urbana', 'Mountain Bike', 'Infantil'] }
+        ]
+      },
+      { 
+        id: 'apoio_carona', 
+        label: 'Apoio Carona', 
+        desc: 'Consultas médicas.', 
+        color: '#ec4899',
+        subQuestions: [
+          { id: 'tipo_carona', label: 'Tipo de carona', type: 'chips', options: ['Consulta Médica', 'Hospital', 'Exames', 'Emergência'] }
+        ]
+      },
+      { 
+        id: 'pecas_moto', 
+        label: 'Peças Moto', 
+        desc: 'Para quem trabalha com entrega.', 
+        color: '#f97316',
+        subQuestions: [
+          { id: 'tipo_peca', label: 'Tipo de peça', type: 'input', placeholder: 'Ex: Pneu, Corrente, Freio...' },
+          { id: 'modelo_moto', label: 'Modelo da moto', type: 'input', placeholder: 'Ex: Honda CG 160, Yamaha Factor...' }
+        ]
+      },
+      { 
+        id: 'combustivel', 
+        label: 'Combustível', 
+        desc: 'Ajuda pontual para emergências.', 
+        color: '#dc2626',
+        subQuestions: [
+          { id: 'tipo_combustivel', label: 'Tipo de combustível', type: 'select', options: ['Gasolina', 'Etanol', 'Diesel'] },
+          { id: 'motivo_combustivel', label: 'Motivo da emergência', type: 'input', placeholder: 'Ex: Consulta médica, entrevista de emprego...' }
+        ]
+      },
     ]
   },
   Outros: {

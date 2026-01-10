@@ -1,485 +1,909 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import apiService from '../../services/apiService';
-import { useToast } from '../../hooks/useToast';
-import { formatAddress, formatLocation, formatNeighborhood, safeRenderAddress } from '../../utils/addressUtils';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
   MapPin, 
   Heart,
-  User,
-  ChevronLeft,
-  ChevronRight,
   AlertTriangle, 
   Zap, 
   Calendar, 
   Coffee, 
   RefreshCcw,
-  X
+  MessageCircle,
+  Filter,
+  Eye,
+  X,
+  Info,
+  ShoppingCart,
+  MessageSquare,
+  Lightbulb,
+  Shirt,
+  Pill,
+  Plus,
+  Briefcase,
+  Bath,
+  Sofa,
+  Tv,
+  Car,
+  Receipt
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
 
-// --- Constants ---
-const DETAIL_LABELS = {
-  tamanho: 'Tamanho',
-  restricao: 'Restrição',
-  medicamento: 'Medicamento',
-  dosagem: 'Dosagem',
-  estilo: 'Estilo',
-  itens: 'Itens',
-  quantidade: 'Quantidade'
+// --- CONSTANTS ---
+const CATEGORY_METADATA = {
+  Alimentos: { 
+    color: '#0ea5e9', 
+    icon: <ShoppingCart size={24} />,
+    details: { 
+      cesta: { label: 'Cesta Básica', desc: 'Itens essenciais (arroz, feijão, óleo).' }, 
+      proteinas: { label: 'Proteínas & Ovos', desc: 'Carne, frango ou ovos para a família.' }, 
+      frescos: { label: 'Hortifruti', desc: 'Frutas e legumes frescos da estação.' }, 
+      padaria: { label: 'Padaria & Leite', desc: 'Pães, leite e laticínios básicos.' }, 
+      infantil: { label: 'Alimentação Infantil', desc: 'Fórmulas, papinhas e complementos.' }, 
+      cozinha: { label: 'Itens de Cozinha', desc: 'Temperos, sal, açúcar e farinhas.' } 
+    } 
+  },
+  Roupas: { 
+    color: '#3b82f6', 
+    icon: <Shirt size={24} />,
+    details: { 
+      agasalhos: { label: 'Agasalhos & Inverno', desc: 'Casacos, lãs e roupas pesadas.' }, 
+      escolar: { label: 'Material/Uniforme', desc: 'Kits escolares ou uniforme da rede.' }, 
+      calcados: { label: 'Calçados', desc: 'Tênis, sapatos ou chinelos.' },
+      bebe: { label: 'Roupas de Bebê', desc: 'Enxoval e roupinhas pequenas.' }
+    } 
+  },
+  Medicamentos: { 
+    color: '#10b981', 
+    icon: <Pill size={24} />,
+    details: { 
+      continuo: { label: 'Uso Contínuo', desc: 'Remédios para pressão, diabetes, etc.' }, 
+      analgesico: { label: 'Sintomáticos', desc: 'Para dor, febre ou resfriados.' },
+      especial: { label: 'Medicamento Especial', desc: 'Itens de alto custo ou específicos.' }
+    } 
+  },
+  Higiene: { 
+    color: '#14b8a6', 
+    icon: <Bath size={24} />,
+    details: { 
+      banho: { label: 'Banho & Limpeza', desc: 'Sabonete, shampoo e desodorante.' }, 
+      bucal: { label: 'Higiene Bucal', desc: 'Pasta e escovas de dente.' }, 
+      feminina: { label: 'Saúde Íntima', desc: 'Absorventes e cuidados femininos.' } 
+    } 
+  },
+  Contas: { 
+    color: '#ef4444', 
+    icon: <Receipt size={24} />,
+    details: { 
+      luz: { label: 'Energia Elétrica', desc: 'Evitar o corte de luz da residência.' }, 
+      agua: { label: 'Água & Esgoto', desc: 'Conta de água essencial.' }, 
+      gas: { label: 'Gás de Cozinha', desc: 'Botijão para preparo de alimentos.' } 
+    } 
+  },
+  Emprego: { 
+    color: '#8b5cf6', 
+    icon: <Briefcase size={24} />,
+    details: { 
+      curriculo: { label: 'Currículo & Docs', desc: 'Montagem e impressão de currículos.' }, 
+      vagas: { label: 'Oportunidades', desc: 'Indicação de vagas ou cursos.' } 
+    } 
+  },
+  Móveis: { 
+    color: '#f59e0b', 
+    icon: <Sofa size={24} />,
+    details: { 
+      cama: { label: 'Dormitório', desc: 'Camas, colchões ou berços.' }, 
+      cozinha_movel: { label: 'Cozinha', desc: 'Mesas, cadeiras ou armários.' } 
+    } 
+  },
+  Eletrodomésticos: { 
+    color: '#475569', 
+    icon: <Tv size={24} />,
+    details: { 
+      geladeira: { label: 'Geladeira', desc: 'Fundamental para conservar alimentos.' }, 
+      fogao: { label: 'Fogão', desc: 'Para preparo digno das refeições.' } 
+    } 
+  },
+  Transporte: { 
+    color: '#0ea5e9', 
+    icon: <Car size={24} />,
+    details: { 
+      passagem: { label: 'Passagem Social', desc: 'Créditos para ônibus ou trem.' }, 
+      bike: { label: 'Mobilidade', desc: 'Bicicleta para trabalho ou estudo.' } 
+    } 
+  },
+  Outros: { 
+    color: '#94a3b8', 
+    icon: <Plus size={24} />,
+    details: { 
+      apoio: { label: 'Apoio Geral', desc: 'Outras necessidades específicas.' } 
+    } 
+  },
 };
+
+const CONTEXT_INFO = {
+  cesta: 'Alimenta uma família por cerca de 15 dias.',
+  proteinas: 'Essencial para a saúde e desenvolvimento das crianças.',
+  frescos: 'Vitaminas cruciais para o sistema imunológico.',
+  infantil: 'Bebês precisam de nutrientes específicos para crescer.',
+  continuo: 'A interrupção pode agravar doenças crônicas.',
+  luz: 'Luz é segurança e dignidade para a família à noite.',
+  gas: 'Sem gás, a família não consegue preparar doações secas.',
+  curriculo: 'Um currículo bem feito é o primeiro passo para o emprego.',
+  geladeira: 'Evita desperdício de alimentos perecíveis.',
+  passagem: 'Permite que a pessoa chegue a entrevistas de emprego.',
+  padaria: 'O café da manhã é fundamental para manter a energia.',
+  agasalhos: 'Proteção essencial contra as baixas temperaturas.',
+  escolar: 'Estar uniformizado ajuda na integração da criança na escola.'
+};
+
+const CATEGORIES = [
+  { id: 'Todas', label: 'Todas Categorias', color: '#6366f1' },
+  { id: 'Alimentos', label: 'Alimentos', color: '#0ea5e9' },
+  { id: 'Roupas', label: 'Roupas', color: '#3b82f6' },
+  { id: 'Medicamentos', label: 'Medicamentos', color: '#10b981' },
+  { id: 'Contas', label: 'Contas', color: '#ef4444' },
+  { id: 'Higiene', label: 'Higiene', color: '#14b8a6' },
+  { id: 'Emprego', label: 'Emprego', color: '#8b5cf6' },
+  { id: 'Móveis', label: 'Móveis', color: '#f59e0b' },
+  { id: 'Transporte', label: 'Transporte', color: '#0ea5e9' },
+  { id: 'Outros', label: 'Outros', color: '#94a3b8' },
+];
 
 const URGENCY_OPTIONS = [
   { id: 'critico', label: 'CRÍTICO', desc: 'Risco imediato', icon: <AlertTriangle size={20} />, color: '#ef4444' },
-  { id: 'urgente', label: 'URGENTE', desc: 'Necessidade urgente', icon: <Zap size={20} />, color: '#f97316' },
-  { id: 'moderada', label: 'MODERADA', desc: 'Próximos dias', icon: <Calendar size={20} />, color: '#f59e0b' },
+  { id: 'urgente', label: 'URGENTE', desc: 'Próximas 24h', icon: <Zap size={20} />, color: '#f97316' },
+  { id: 'moderada', label: 'MODERADA', desc: 'Alguns dias', icon: <Calendar size={20} />, color: '#f59e0b' },
   { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem pressa', icon: <Coffee size={20} />, color: '#10b981' },
-  { id: 'recorrente', label: 'RECORRENTE', desc: 'Ajuda mensal', icon: <RefreshCcw size={20} />, color: '#6366f1' },
+  { id: 'recorrente', label: 'RECORRENTE', desc: 'Mensal', icon: <RefreshCcw size={20} />, color: '#9333ea' },
 ];
 
-const CATEGORIES = [
-  { id: 'Todas', label: 'Todas Categorias' },
-  { id: 'Alimentos', label: 'Alimentos' },
-  { id: 'Roupas', label: 'Roupas' },
-  { id: 'Calçados', label: 'Calçados' },
-  { id: 'Medicamentos', label: 'Medicamentos' },
-  { id: 'Higiene', label: 'Higiene' },
-  { id: 'Contas', label: 'Contas' },
-  { id: 'Emprego', label: 'Emprego' },
-  { id: 'Móveis', label: 'Móveis' },
-  { id: 'Eletrodomésticos', label: 'Eletrodomésticos' },
-  { id: 'Transporte', label: 'Transporte' },
-  { id: 'Outros', label: 'Outros' },
-];
+const SUB_QUESTION_LABELS = {
+  itens_cesta: 'Itens necessários',
+  familia: 'Tamanho da família',
+  restricao: 'Restrições alimentares',
+  tipo_proteina: 'Preferência de proteína',
+  armazenamento_prot: 'Possui geladeira?',
+  tipo_fresco: 'Hortifruti desejado',
+  itens_padaria: 'Itens de padaria',
+  fralda: 'Tamanho da fralda',
+  leite_especial: 'Leite específico',
+  idade_crianca: 'Idade da criança',
+  itens_coz: 'Temperos/Cozinha',
+  tipo_lanche: 'Tipos de lanche',
+  medicamento_nome: 'Nome do remédio',
+  receita: 'Possui receita?',
+  med_continuo: 'Medicamento contínuo',
+  dosagem: 'Dosagem',
+  itens_banho: 'Itens de banho',
+  itens_bucal: 'Itens de higiene bucal',
+  itens_fem: 'Itens de higiene feminina',
+  valor_luz: 'Valor aproximado (Luz)',
+  atraso_luz: 'Meses em atraso (Luz)',
+  valor_agua: 'Valor aproximado (Água)',
+  atraso_agua: 'Meses em atraso (Água)',
+  valor_gas: 'Valor aproximado (Gás)',
+  tipo_curr: 'Tipo de ajuda com currículo',
+  area_interesse: 'Área de interesse',
+  tipo_cama: 'Tipo de cama',
+  tipo_movel: 'Tipo de móvel',
+  volts_geladeira: 'Voltagem necessária',
+  tipo_eletro: 'Tipo de eletrodoméstico',
+  tipo_transp: 'Tipo de transporte',
+  freq_transp: 'Frequência da ajuda',
+  serie_escolar: 'Série Escolar',
+  escola_nome: 'Nome da Escola',
+  genero: 'Gênero',
+  especifique: 'Detalhes da ajuda',
+  size: 'Tamanho',
+  style: 'Estilo/Preferência',
+  quantidade: 'Quantidade',
+  observacoes: 'Observações Adicionais',
+  contato_pref: 'Contato Preferencial',
+  horario: 'Melhor Horário',
+  ponto_referencia: 'Ponto de Referência'
+};
 
-// --- Mock Data ---
 const MOCK_ORDERS = [
-  {
+    {
     id: '1',
     userName: 'Maria Silva',
-    city: 'São Paulo',
-    state: 'SP',
-    neighborhood: 'Jardins',
+    city: 'Porto Alegre',
+    state: 'RS',
+    neighborhood: 'Sarandi',
     urgency: 'urgente',
     category: 'Alimentos',
-    title: 'Cesta Básica, Alimentos Frescos',
+    title: 'Cesta Básica para Família',
     userType: 'Cidadão',
-    description: 'Somos uma família de 4 pessoas e meu marido está desempregado. Precisamos de ajuda com itens básicos de alimentação e hortifruti para as crianças.',
-    subCategories: ['Cesta Básica', 'Hortifruti', 'Proteínas'],
-    details: { tamanho: 'Família 4 pessoas', restricao: 'Sem açúcar' },
+    description: 'Somos uma família de 4 pessoas e meu marido está desempregado. Precisamos de ajuda with itens básicos de alimentação para as crianças passarem o mês.',
+    subCategories: ['cesta', 'proteinas', 'frescos'],
+    subQuestionAnswers: {
+      itens_cesta: ['Arroz', 'Feijão', 'Leite', 'Óleo', 'Macarrão'],
+      familia: '4 pessoas (2 adultos, 2 crianças)',
+      restricao: 'Diabetes (sem açúcar)',
+      tipo_proteina: ['Ovos', 'Frango'],
+      armazenamento_prot: 'Sim, possui geladeira',
+      tipo_fresco: 'Batata, cebola e frutas da época'
+    },
     isNew: true
   },
   {
     id: '2',
     userName: 'João Pereira',
-    city: 'São Paulo',
-    state: 'SP',
-    neighborhood: 'Capão Redondo',
+    city: 'Canoas',
+    state: 'RS',
+    neighborhood: 'Mathias Velho',
     urgency: 'critico',
     category: 'Medicamentos',
-    title: 'Insulina e Medidor de Glicemia',
+    title: 'Insulina de Uso Contínuo',
     userType: 'Cidadão',
     description: 'Sou diabético e minha medicação acabou. Não estou conseguindo pelo posto este mês e não tenho condições de comprar agora.',
-    subCategories: ['Uso Contínuo'],
-    details: { medicamento: 'Insulina NPH', dosagem: '100 UI' },
+    subCategories: ['continuo'],
+    subQuestionAnswers: {
+      medicamento_nome: 'Insulina NPH',
+      receita: 'Sim, receita válida por mais 3 meses',
+      dosagem: '30 UI pela manhã, 20 UI à noite',
+      med_continuo: 'Sim'
+    },
     isNew: true
   },
   {
     id: '3',
     userName: 'Ana Costa',
-    city: 'São Paulo',
-    state: 'SP',
-    neighborhood: 'Lapa',
+    city: 'Eldorado do Sul',
+    state: 'RS',
+    neighborhood: 'Centro',
     urgency: 'moderada',
-    category: 'Roupas',
-    title: 'Roupas de Inverno para Crianças',
+    category: 'Contas',
+    title: 'Conta de Luz em Atraso',
     userType: 'Cidadão',
-    description: 'Meus filhos cresceram e as roupas de frio do ano passado não servem mais. Qualquer doação de agasalhos tamanho 8 e 10 ajudaria muito.',
-    subCategories: ['Agasalhos', 'Blusas'],
-    details: { tamanho: '8 e 10', estilo: 'Infantil' }
+    description: 'Tivemos um imprevisto médico e a conta de luz acumulou. Estamos com aviso de corte para a próxima semana.',
+    subCategories: ['luz', 'agua'],
+    subQuestionAnswers: {
+      valor_luz: 'R$ 245,00',
+      atraso_luz: '2 meses',
+      valor_agua: 'R$ 80,00',
+      atraso_agua: '1 mês'
+    }
   },
   {
     id: '4',
-    userName: 'Roberto Santos',
-    city: 'São Paulo',
-    state: 'SP',
-    neighborhood: 'Itaquera',
-    urgency: 'recorrente',
-    category: 'Higiene',
-    title: 'Fraldas G e Itens de Banho',
+    userName: 'Carlos Oliveira',
+    city: 'Porto Alegre',
+    state: 'RS',
+    neighborhood: 'Partenon',
+    urgency: 'urgente',
+    category: 'Roupas',
+    title: 'Uniforme Escolar e Agasalho',
     userType: 'Cidadão',
-    description: 'Tenho um bebê de 1 ano e as fraldas pesam muito no orçamento. Se alguém puder ajudar com pacotes G ou sabonete infantil.',
-    subCategories: ['Fraldas', 'Banho'],
-    details: { tamanho: 'G', itens: 'Sabonete, Lenço' }
+    description: 'Meu filho começou na escola municipal e não temos o uniforme nem casaco para o frio que está chegando.',
+    subCategories: ['escolar', 'agasalhos'],
+    subQuestionAnswers: {
+      size: '10 (Infantil)',
+      style: 'Masculino',
+      serie_escolar: '4º ano do Fundamental',
+      escola_nome: 'Escola Estadual Júlio de Castilhos',
+      genero: 'Masculino'
+    }
+  },
+  {
+    id: '5',
+    userName: 'Fernanda Lima',
+    city: 'Guaíba',
+    state: 'RS',
+    neighborhood: 'Colina',
+    urgency: 'moderada',
+    category: 'Emprego',
+    title: 'Ajuda com Currículo',
+    userType: 'Cidadão',
+    description: 'Estou há muito tempo fora do mercado e preciso de ajuda para refazer meu currículo e algumas impressões para distribuir.',
+    subCategories: ['curriculo'],
+    subQuestionAnswers: {
+      tipo_curr: 'Criar um do zero e imprimir'
+    }
   },
 ];
 
-// --- Subcomponents ---
+// --- COMPONENTS ---
 
 function ModalDetalhes({ order, onClose, onHelp }) {
-  if (!order) return null;
+  const scrollContainerRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('historia');
+  
+  const sections = [
+    { id: 'historia', label: 'Relato', icon: <MessageSquare size={18} /> },
+    { id: 'necessidades', label: 'Itens', icon: <ShoppingCart size={18} /> },
+    { id: 'tecnico', label: 'Técnico', icon: <Info size={18} /> },
+    { id: 'contato', label: 'Localização', icon: <MapPin size={18} /> },
+  ];
 
-  const urg = URGENCY_OPTIONS.find(u => u.id === (order.urgencia || order.urgency));
+  useEffect(() => {
+    if (!order) return;
+    
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      let currentSection = sections[0].id;
+      for (const section of sections) {
+        const element = document.getElementById(`section-${section.id}`);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+          if (rect.top <= containerRect.top + 100) {
+            currentSection = section.id;
+          }
+        }
+      }
+      setActiveTab(currentSection);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [order, sections]);
+  
+  if (!order) return null;
+  
+  const urg = URGENCY_OPTIONS.find((u) => u.id === order.urgency);
+  const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b', details: {}, icon: <Info size={24} /> };
+
+  const allSpecs = { ...(order.details || {}), ...(order.subQuestionAnswers || {}) };
+  const hasSpecs = Object.keys(allSpecs).length > 0;
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(`section-${id}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setActiveTab(id);
+    }
+  };
 
   return (
-    <AnimatePresence>
-      <div className="qa-modal-overlay" onClick={onClose}>
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="qa-modal-content"
-          onClick={e => e.stopPropagation()}
-        >
-          <button className="modal-close-abs" onClick={onClose}><X size={20} /></button>
-          <div className="modal-hero-stripe" />
-          
-          <div className="modal-body-qa">
-            <header className="modal-header-qa">
-              <div className="modal-user-profile">
-                <div className="user-avatar-placeholder">
-                  {(order.usuarioNome || order.nomeUsuario || order.userName || 'U').charAt(0)}
-                </div>
-                <div className="user-meta-qa">
-                  <h3>{order.usuarioNome || order.nomeUsuario || order.userName || 'Usuário'}</h3>
-                  <div className="user-sub-meta">
-                    <span className="user-type-badge">{order.tipoUsuario || order.userType || 'Cidadão'}</span>
-                    <span className="user-loc-modal">
-                      <MapPin size={14} />
-                      {safeRenderAddress(formatLocation(order.endereco, order.cidade || order.city, order.estado || order.state))}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="urgency-status-modal" style={{ '--urg-color': urg?.color }}>
-                <div className="urg-icon-modal">{urg?.icon}</div>
-                <div className="urg-text-modal">
-                  <span className="urg-label-modal">{urg?.label}</span>
-                  <span className="urg-desc-modal">{urg?.desc}</span>
-                </div>
-              </div>
-            </header>
-
-            <div className="details-grid-qa">
-              <div className="detail-section-qa">
-                <h4>A História</h4>
-                <div className="detail-story-qa">
-                  <span className="quote-mark">“</span>
-                  {order.descricao || order.description || 'Sem descrição'}
-                  <span className="quote-mark-end">”</span>
-                </div>
-              </div>
-
-              <div className="modal-info-columns">
-                <div className="detail-section-qa">
-                  <h4>Itens Solicitados</h4>
-                  <div className="items-list-qa">
-                    {(order.subCategorias || order.subCategories || []).map((item) => (
-                      <span key={item} className="item-badge-qa">
-                        <Zap size={14} />
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="detail-section-qa">
-                  <h4>Detalhes Específicos</h4>
-                  <div className="specs-grid">
-                    {Object.entries(order.detalhes || order.details || {}).map(([key, val]) => (
-                      <div key={key} className="spec-item">
-                        <span className="spec-key">{DETAIL_LABELS[key] || key}</span>
-                        <span className="spec-val">{val}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="location-card-modal">
-                <div className="loc-icon-box">
-                  <MapPin size={24} />
-                </div>
-                <div className="loc-content-modal">
-                  <strong>Local de Retirada/Entrega</strong>
-                  <p>{safeRenderAddress(formatLocation(order.endereco, order.cidade || order.city, order.estado || order.state))}</p>
-                  <span>O endereço exato será compartilhado após o contato inicial.</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer-actions">
+    <div className="qa-modal-overlay" onClick={onClose}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="qa-modal-content-v3"
+        onClick={e => e.stopPropagation()}
+      >
+        <button className="modal-close-btn-v3" onClick={onClose} title="Fechar">
+          <X size={24} />
+        </button>
+        
+          <div className="modal-sidebar-v3">
+            <nav className="sidebar-nav-v3">
+            {sections.map(s => (
               <button 
-                className="btn-card-help-full" 
-                onClick={() => {
-                  onHelp(order);
-                  onClose();
-                }}
+                key={s.id}
+                className={`nav-item-v3 ${activeTab === s.id ? 'active' : ''}`}
+                onClick={() => scrollToSection(s.id)}
               >
-                Quero Ajudar Agora
+                {s.icon}
+                <span>{s.label}</span>
               </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="modal-main-v3">
+          <header className="main-header-v3">
+            <div className="header-titles-v3">
+              <span className="cat-badge-v3" style={{ color: catMeta.color, backgroundColor: catMeta.color + '15' }}>
+                {order.category}
+              </span>
+              <h2>{order.title || order.category}</h2>
+              <p className="user-info-v3">Solicitado por <strong>{order.userName}</strong> • {order.userType || 'Cidadão'}</p>
             </div>
+            <div className="header-urgency-v3" style={{ color: urg?.color, borderColor: urg?.color }}>
+              {urg?.icon}
+              <span>{urg?.label}</span>
+            </div>
+          </header>
+
+          <div className="modal-scroll-v3" ref={scrollContainerRef}>
+            <section id="section-historia" className="content-section-v3">
+              <div className="section-title-v3">
+                <MessageSquare size={20} />
+                <h3>O Relato de {order.userName.split(' ')[0]}</h3>
+              </div>
+              <div className="story-card-v3">
+                <div className="quote-mark">"</div>
+                <p>{order.description}</p>
+                <div className="quote-mark-end">"</div>
+              </div>
+            </section>
+
+            <section id="section-necessidades" className="content-section-v3">
+              <div className="section-title-v3">
+                <ShoppingCart size={20} />
+                <h3>Itens Necessários</h3>
+              </div>
+              <div className="items-grid-v3">
+                {order.subCategories?.map((sc) => (
+                  <div key={sc} className="item-card-v3" style={{ borderLeftColor: catMeta.color }}>
+                    <div className="item-header-v3">
+                      <h4>{catMeta.details[sc]?.label || sc}</h4>
+                      {CONTEXT_INFO[sc] && (
+                        <div className="context-hint-v3" title={CONTEXT_INFO[sc]}>
+                          <Lightbulb size={14} />
+                        </div>
+                      )}
+                    </div>
+                    <p>{catMeta.details[sc]?.desc}</p>
+                    {CONTEXT_INFO[sc] && (
+                      <div className="context-text-v3">
+                        {CONTEXT_INFO[sc]}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section id="section-tecnico" className="content-section-v3">
+              <div className="section-title-v3">
+                <Info size={20} />
+                <h3>Detalhes e Especificações</h3>
+              </div>
+              {hasSpecs ? (
+                <div className="enhanced-specs-grid">
+                  {Object.entries(allSpecs).map(([key, val]) => (
+                    <div key={key} className="enhanced-spec-card">
+                      <div className="spec-header">
+                        <Info size={16} className="spec-icon" />
+                        <label className="spec-label">{SUB_QUESTION_LABELS[key] || key}</label>
+                      </div>
+                      <div className="spec-content">
+                        {Array.isArray(val) ? (
+                          <div className="spec-chips">
+                            {val.map(v => (
+                              <span key={v} className="spec-chip">{v}</span>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="spec-value">{val}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="enhanced-empty-state">
+                  <Info size={48} className="empty-icon" />
+                  <h4>Sem especificações adicionais</h4>
+                  <p>Este pedido não possui detalhes técnicos específicos informados.</p>
+                </div>
+              )}
+            </section>
+
+            <section id="section-contato" className="content-section-v3">
+              <div className="section-title-v3">
+                <MapPin size={20} />
+                <h3>Localização e Contato</h3>
+              </div>
+              <div className="contact-card-v3">
+                <div className="loc-row-v3">
+                  <div className="loc-item-v3">
+                    <label>Bairro</label>
+                    <span>{order.neighborhood}</span>
+                  </div>
+                  <div className="loc-item-v3">
+                    <label>Cidade</label>
+                    <span>{order.city} - {order.state}</span>
+                  </div>
+                </div>
+                {order.subQuestionAnswers?.ponto_referencia && (
+                  <div className="loc-full-v3">
+                    <label>Ponto de Referência</label>
+                    <p>{order.subQuestionAnswers.ponto_referencia}</p>
+                  </div>
+                )}
+                <div className="contact-footer-v3">
+                  <div className="pref-v3">
+                    <MessageCircle size={14} />
+                    <span>Contato preferencial via chat ou {order.subQuestionAnswers?.contato_pref || 'telefone'}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
+
+          <footer className="modal-footer-v3">
+            <button className="btn-cancel-v3" onClick={onClose}>
+              Voltar
+            </button>
+            <button 
+              className="btn-action-v3"
+              onClick={() => {
+                onHelp(order);
+                onClose();
+              }}
+              style={{ backgroundColor: catMeta.color }}
+            >
+              <Heart size={20} fill="white" />
+              Quero Ajudar Agora
+            </button>
+          </footer>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
-// --- Main Page ---
+// --- MAIN PAGE ---
 
 export default function QueroAjudarPage() {
-  const navigate = useNavigate();
-  const { addToast } = useToast();
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderToHelp, setOrderToHelp] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const scrollRef = useRef(null);
+  const [selectedLocation, setSelectedLocation] = useState('brasil');
+  const [selectedTimeframe, setSelectedTimeframe] = useState('todos');
+  const [onlyNew, setOnlyNew] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
 
+  // Get user's location
   useEffect(() => {
-    const fetchPedidos = async () => {
-      try {
-        const response = await apiService.getPedidos();
-        console.log('Dados da API:', response);
-        if (response.success) {
-          const ordersWithUserData = (response.data || []).map(order => ({
-            ...order,
-            userName: order.usuario?.nome || 'Usuário',
-            userType: order.usuario?.tipo || 'cidadao',
-            items: order.subCategory || [],
-            urgencia: order.urgency,
-            descricao: order.description,
-            categoria: order.category,
-            subCategorias: order.subCategory || [],
-            detalhes: order.subQuestionAnswers || {},
-            location: order.location || 'São Paulo, SP'
-          }));
-          setOrders(ordersWithUserData);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Use a real geocoding service to get state/city from coordinates
+          // For now, simulating based on coordinates
+          const { latitude, longitude } = position.coords;
+          
+          // Simple coordinate-based state detection (you should use a proper geocoding service)
+          let detectedState = 'MG';
+          let detectedCity = 'Belo Horizonte';
+          
+          // Basic coordinate ranges for major states (simplified)
+          if (latitude >= -23 && latitude <= -19 && longitude >= -51 && longitude <= -39) {
+            detectedState = 'MG';
+            detectedCity = 'Belo Horizonte';
+          } else if (latitude >= -25 && latitude <= -22 && longitude >= -54 && longitude <= -44) {
+            detectedState = 'SP';
+            detectedCity = 'São Paulo';
+          } else if (latitude >= -33 && latitude <= -27 && longitude >= -58 && longitude <= -49) {
+            detectedState = 'RS';
+            detectedCity = 'Porto Alegre';
+          }
+          
+          setUserLocation({ state: detectedState, city: detectedCity });
+        },
+        (error) => {
+          console.log('Location access denied');
+          // Default to MG if location is denied
+          setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
         }
-      } catch (error) {
-        console.error('Erro ao buscar pedidos:', error);
-        setOrders(MOCK_ORDERS);
-      } finally {
-        setLoading(false);
-      }
-    };
+      );
+    } else {
+      // Default to MG if geolocation is not supported
+      setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
+    }
+  }, []);
 
-    fetchPedidos();
+  // Group cities by state
+  const citiesByState = useMemo(() => {
+    const grouped = {};
+    MOCK_ORDERS.forEach(order => {
+      if (!grouped[order.state]) {
+        grouped[order.state] = new Set();
+      }
+      grouped[order.state].add(order.city);
+    });
+    
+    // Convert Sets to sorted arrays
+    Object.keys(grouped).forEach(state => {
+      grouped[state] = Array.from(grouped[state]).sort();
+    });
+    
+    return grouped;
   }, []);
 
   const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
+    return MOCK_ORDERS.filter((order) => {
       const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
       const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
-      return catMatch && urgMatch;
+      
+      let locationMatch = true;
+      if (selectedLocation === 'meu_estado' && userLocation) {
+        locationMatch = order.state === userLocation.state;
+      } else if (selectedLocation === 'minha_cidade' && userLocation) {
+        locationMatch = order.city === userLocation.city && order.state === userLocation.state;
+      } else if (selectedLocation !== 'brasil' && selectedLocation !== 'meu_estado' && selectedLocation !== 'minha_cidade') {
+        locationMatch = `${order.city}, ${order.state}` === selectedLocation;
+      }
+      
+      const newMatch = !onlyNew || order.isNew;
+      const timeMatch = selectedTimeframe === 'todos' || (selectedTimeframe === 'hoje' && order.isNew);
+      
+      return catMatch && urgMatch && locationMatch && newMatch && timeMatch;
     });
-  }, [orders, selectedCat, selectedUrgency]);
-
-  const clearFilters = () => {
-    setSelectedCat('Todas');
-    setSelectedUrgency(null);
-  };
-
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const { scrollLeft } = scrollRef.current;
-      const scrollTo = direction === 'left' ? scrollLeft - 200 : scrollLeft + 200;
-      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
-    }
-  };
+  }, [selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation]);
 
   return (
-    <div className="quero-ajudar-container">
-      <header className="qa-header">
-        <motion.h1 initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          Pedidos perto de você
-        </motion.h1>
-        <motion.p initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          Explore as necessidades da sua comunidade e transforme vidas com pequenos gestos.
-        </motion.p>
-        <button className="btn-filters" onClick={() => setShowFilters(!showFilters)}>
-          {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-        </button>
-      </header>
-
-      {showFilters && (
-        <section className="qa-filters-section">
-          <div className="filter-group">
-            <label className="filter-label">Categorias</label>
-            <div className="categories-wrapper">
-              <button className="scroll-btn left" onClick={() => scroll('left')}><ChevronLeft size={20} /></button>
-              <div className="categories-scroll" ref={scrollRef}>
-                {CATEGORIES.map(cat => (
-                  <button
-                    key={cat.id}
-                    className={`filter-chip ${selectedCat === cat.id ? 'active' : ''}`}
-                    onClick={() => setSelectedCat(cat.id)}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-              <button className="scroll-btn right" onClick={() => scroll('right')}><ChevronRight size={20} /></button>
-            </div>
-          </div>
-
-          <div className="filter-group">
-            <label className="filter-label">Nível de Urgência</label>
-            <div className="urgency-grid">
-              {URGENCY_OPTIONS.map(opt => (
-                <button
-                  key={opt.id}
-                  className={`urgency-card-filter ${selectedUrgency === opt.id ? 'active' : ''}`}
-                  style={{ 
-                    '--accent-color': opt.color,
-                  }}
-                  onClick={() => setSelectedUrgency(selectedUrgency === opt.id ? null : opt.id)}
-                >
-                  <div className="urgency-icon">{opt.icon}</div>
-                  <div className="urgency-info">
-                    <span className="urgency-title">{opt.label}</span>
-                    <span className="urgency-desc">{opt.desc}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="filter-actions">
-            <button className="btn-qa-clear" onClick={clearFilters}>Limpar Filtros</button>
-            <button className="btn-qa-apply">Filtrar Pedidos</button>
-          </div>
-        </section>
-      )}
-
-      <div className="qa-stats">
-        {loading ? 'Carregando pedidos...' : `Encontramos ${filteredOrders.length} pedidos correspondentes`}
+    <div className="qa-page">
+      <div className="floating-elements">
+        {[...Array(9)].map((_, i) => (
+          <Heart key={i} className="floating-heart" size={Math.random() * 20 + 15} />
+        ))}
       </div>
+      
+      <div className="qa-main-wrapper">
+        <header className="page-header">
+          <div className="brand-box">
+            <div className="brand-logo">
+              <Heart size={32} fill="#ef4444" color="#ef4444" />
+            </div>
+            <div className="brand-info">
+              <h1>Solidariedade <span>Próxima</span></h1>
+              <p>Conectando quem precisa com quem pode ajudar</p>
+            </div>
+          </div>
 
-      <div className="orders-grid">
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>Carregando...</div>
-        ) : (
-          <AnimatePresence mode="popLayout">
-            {filteredOrders.map((order, idx) => (
-              <motion.div
-                key={order.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ delay: idx * 0.05 }}
-                className="order-card"
+          <button 
+            className={`btn-toggle-filters ${showFiltersModal ? 'active' : ''}`}
+            onClick={() => setShowFiltersModal(true)}
+          >
+            <Filter size={20} />
+            <span>Filtros Avançados</span>
+            {(selectedCat !== 'Todas' || selectedUrgency || (selectedLocation !== 'brasil' && selectedLocation !== 'todas') || selectedTimeframe !== 'todos' || onlyNew) && <div className="active-filter-indicator" />}
+          </button>
+        </header>
+
+        <AnimatePresence>
+          {showFiltersModal && (
+            <div className="filters-modal-overlay" onClick={() => setShowFiltersModal(false)}>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="filters-modal"
+                onClick={e => e.stopPropagation()}
               >
-                <div className="card-header">
-                  <div className="user-info">
-                    <div className="user-header-row">
-                      <span className="user-name">{order.userName || 'Usuário'}</span>
-                      {order.isNew && <span className="new-badge">Novo</span>}
+                <div className="filters-modal-header">
+                  <h2>Filtros Avançados</h2>
+                  <button className="modal-close-btn" onClick={() => setShowFiltersModal(false)}>
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="filters-modal-content">
+                  <div className="filter-section">
+                    <h3>Localização</h3>
+                    <div className="filter-options">
+                      <button
+                        className={`filter-option ${selectedLocation === 'brasil' ? 'active' : ''}`}
+                        onClick={() => setSelectedLocation('brasil')}
+                      >
+                        Todo o Brasil
+                      </button>
+                      {userLocation && (
+                        <>
+                          <button
+                            className={`filter-option ${selectedLocation === 'meu_estado' ? 'active' : ''}`}
+                            onClick={() => setSelectedLocation('meu_estado')}
+                          >
+                            Meu Estado ({userLocation.state})
+                          </button>
+                          <button
+                            className={`filter-option ${selectedLocation === 'minha_cidade' ? 'active' : ''}`}
+                            onClick={() => setSelectedLocation('minha_cidade')}
+                          >
+                            Minha Cidade ({userLocation.city})
+                          </button>
+                        </>
+                      )}
                     </div>
-                    <div className="user-loc">
-                      <MapPin size={14} />
-                      <span>{safeRenderAddress(formatNeighborhood(order.endereco, order.bairro || order.neighborhood) || order.location || 'Localização não informada')}</span>
+                    
+                    {userLocation && selectedLocation === 'meu_estado' && (
+                      <div className="state-section">
+                        <h4>Escolher cidade em {userLocation.state}:</h4>
+                        <select 
+                          className="city-dropdown"
+                          value={selectedLocation.startsWith(userLocation.state) ? selectedLocation : ''}
+                          onChange={(e) => setSelectedLocation(e.target.value)}
+                        >
+                          <option value="meu_estado">Todas as cidades do estado</option>
+                          {citiesByState[userLocation.state]?.map(city => (
+                            <option key={city} value={`${city}, ${userLocation.state}`}>
+                              {city}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="filter-section">
+                    <h3>Categorias</h3>
+                    <div className="filter-options">
+                      {CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.id}
+                          className={`filter-option ${selectedCat === cat.id ? 'active' : ''}`}
+                          onClick={() => setSelectedCat(cat.id)}
+                          style={{ '--filter-color': cat.color }}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                  {(() => {
-                    const urg = URGENCY_OPTIONS.find(u => u.id === order.urgency);
-                    return (
-                      <div className="urgency-tag" style={{ background: urg?.color + '15', color: urg?.color }}>
-                        {urg?.label || 'MODERADA'}
-                      </div>
-                    );
-                  })()}
+
+                  <div className="filter-section">
+                    <h3>Urgência</h3>
+                    <div className="filter-options">
+                      {URGENCY_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          className={`filter-option ${selectedUrgency === opt.id ? 'active' : ''}`}
+                          onClick={() => setSelectedUrgency(selectedUrgency === opt.id ? null : opt.id)}
+                          style={{ '--filter-color': opt.color }}
+                        >
+                          {opt.icon}
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="filter-section">
+                    <h3>Período</h3>
+                    <div className="filter-options">
+                      <button
+                        className={`filter-option ${selectedTimeframe === 'todos' ? 'active' : ''}`}
+                        onClick={() => setSelectedTimeframe('todos')}
+                      >
+                        Todos os Períodos
+                      </button>
+                      <button
+                        className={`filter-option ${selectedTimeframe === 'hoje' ? 'active' : ''}`}
+                        onClick={() => setSelectedTimeframe('hoje')}
+                      >
+                        Hoje
+                      </button>
+                      <button
+                        className={`filter-option ${onlyNew ? 'active' : ''}`}
+                        onClick={() => setOnlyNew(!onlyNew)}
+                      >
+                        Apenas Novos
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                <h3 className="card-title">{order.subCategory?.join(', ') || order.category}</h3>
-
-                <div className="user-type-tag">
-                  <User size={12} />
-                  <span>Categoria: {order.category}</span>
-                </div>
-
-                <p className="card-desc">{order.description || 'Sem descrição'}</p>
-
-                <div className="card-footer">
-                  <button className="btn-card-details" onClick={() => setSelectedOrder(order)}>
-                    Detalhes
+                <div className="filters-modal-footer">
+                  <button 
+                    className="btn-clear-filters"
+                    onClick={() => {
+                      setSelectedCat('Todas');
+                      setSelectedUrgency(null);
+                      setSelectedLocation('brasil');
+                      setSelectedTimeframe('todos');
+                      setOnlyNew(false);
+                    }}
+                  >
+                    Limpar Filtros
                   </button>
-                  <button className="btn-card-help" onClick={() => setOrderToHelp(order)}>
-                    Ajudar
+                  <button 
+                    className="btn-apply-filters"
+                    onClick={() => setShowFiltersModal(false)}
+                  >
+                    Aplicar Filtros
                   </button>
                 </div>
               </motion.div>
-            ))}
+            </div>
+          )}
+        </AnimatePresence>
+
+        <div className="results-count">
+          <p>Encontramos <strong>{filteredOrders.length}</strong> pedidos para você ajudar</p>
+        </div>
+
+        <div className="orders-grid-layout">
+          <AnimatePresence mode="popLayout">
+            {filteredOrders.map((order) => {
+              const urg = URGENCY_OPTIONS.find((u) => u.id === order.urgency);
+              const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b' };
+              
+              return (
+                <motion.div
+                  key={order.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="vibrant-order-card"
+                >
+                  <div className="card-header">
+                    <span className="cat-label" style={{ backgroundColor: catMeta.color }}>
+                      {order.category}
+                    </span>
+                    {order.isNew && <span className="new-badge">NOVO</span>}
+                  </div>
+
+                  <div className="card-content">
+                    <h2>{order.title}</h2>
+                    <p>{order.description.substring(0, 120)}...</p>
+                    <div className="loc-info">
+                      <MapPin size={14} />
+                      <span>{order.neighborhood}, {order.city}</span>
+                    </div>
+                  </div>
+
+                  <div className="card-footer-info">
+                    <div className="user-snippet">
+                      <div className="user-avatar" style={{ backgroundColor: catMeta.color }}>
+                        {order.userName.charAt(0)}
+                      </div>
+                      <span className="user-name">{order.userName}</span>
+                    </div>
+                    <div className="urg-status" style={{ color: urg?.color }}>
+                      {urg?.icon}
+                      <span>{urg?.label}</span>
+                    </div>
+                  </div>
+
+                  <div className="card-buttons">
+                    <button className="btn-v-view" onClick={() => setSelectedOrder(order)}>
+                      <Eye size={18} />
+                      Ver Detalhes
+                    </button>
+                    <button className="btn-v-help" onClick={() => setOrderToHelp(order)}>
+                      <Heart size={18} />
+                      Ajudar
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
-        )}
-      </div>
+        </div>
 
-      <ModalDetalhes 
-        order={selectedOrder} 
-        onClose={() => setSelectedOrder(null)} 
-        onHelp={(order) => setOrderToHelp(order)}
-      />
+        <AnimatePresence>
+          {selectedOrder && (
+            <ModalDetalhes 
+              order={selectedOrder} 
+              onClose={() => setSelectedOrder(null)} 
+              onHelp={(order) => setOrderToHelp(order)}
+            />
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence>
-        {orderToHelp && (
-          <div className="qa-modal-overlay" onClick={() => setOrderToHelp(null)}>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="qa-modal-content mini"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="confirm-help-content">
-                <div className="confirm-icon-box"><Heart size={48} fill="currentColor" /></div>
-                <h2>Gesto de Solidariedade</h2>
-                <p>Você escolheu ajudar <strong>{orderToHelp.nomeUsuario || orderToHelp.userName || 'este usuário'}</strong>. Deseja iniciar uma conversa para combinar os detalhes?</p>
-                <div className="confirm-actions-stack">
-                  <button className="btn-confirm-primary" onClick={async () => {
-                    try {
-                      addToast('Iniciando conversa...', 'info');
-                      
-                      // Criar ou encontrar conversa existente
-                      const conversationData = {
-                        participants: [orderToHelp.userId || orderToHelp.usuario?.id],
-                        pedidoId: orderToHelp.id,
-                        type: 'direct',
-                        title: `Ajuda: ${orderToHelp.category || 'Pedido'}`
-                      };
-                      
-                      const response = await apiService.createConversation(conversationData);
-                      
-                      if (response.success) {
-                        addToast('Conversa iniciada com sucesso!', 'success');
-                        navigate(`/chat/${response.data.id}`);
-                      } else {
-                        throw new Error(response.error || 'Erro ao criar conversa');
-                      }
-                    } catch (error) {
-                      console.error('Erro ao iniciar conversa:', error);
-                      addToast('Erro ao iniciar conversa. Tente novamente.', 'error');
-                    } finally {
-                      setOrderToHelp(null);
-                    }
-                  }}>
-                    Sim, vamos conversar!
+        <AnimatePresence>
+          {orderToHelp && (
+            <div className="qa-modal-overlay high-z" onClick={() => setOrderToHelp(null)}>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="confirm-help-modal"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="heart-icon-box">
+                  <Heart size={48} fill="#ef4444" color="#ef4444" />
+                </div>
+                <h2>Deseja ajudar {orderToHelp.userName}?</h2>
+                <p>
+                  Iremos abrir um chat para que vocês possam combinar a entrega ou doação diretamente.
+                </p>
+                <div className="modal-confirm-actions">
+                  <button className="btn-confirm-chat">
+                    <MessageCircle size={20} />
+                    Sim, conversar agora
                   </button>
-                  <button className="btn-confirm-ghost" onClick={() => setOrderToHelp(null)}>
-                    Voltar aos pedidos
+                  <button className="btn-cancel-modal" onClick={() => setOrderToHelp(null)}>
+                    Voltar
                   </button>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
