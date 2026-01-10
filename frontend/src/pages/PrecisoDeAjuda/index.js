@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion';
 import apiService from '../../services/apiService';
 import { AnalyzingModal, InconsistentModal, SuccessModal } from '../../components/ui/modals';
 import { 
@@ -42,10 +42,15 @@ import {
   MicOff,
   Volume2,
   Map as MapIcon,
-  Globe
+  Globe,
+  Star,
+  Wand2,
+  Target,
+  Rocket
 } from 'lucide-react';
 import MapaAlcance from '../../components/MapaAlcance';
 import './styles.css';
+import './styles-enhanced.css';
 
 const CATEGORIES = [
   { id: 'Alimentos', label: 'Alimentos', icon: <ShoppingCart size={24} />, color: '#f97316' },
@@ -894,6 +899,9 @@ export default function PrecisoDeAjuda() {
   const [recognition, setRecognition] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+  const [confettiTrigger, setConfettiTrigger] = useState(false);
   
   // Estados para análise de IA
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -929,6 +937,15 @@ export default function PrecisoDeAjuda() {
       setLocationError('Geolocalização não suportada');
       setUserLocation({ lat: -23.5505, lng: -46.6333 });
     }
+  }, []);
+
+  // Mouse tracking for interactive effects
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   // Initialize Speech Recognition
@@ -1122,26 +1139,132 @@ export default function PrecisoDeAjuda() {
   );
 
   const renderCategoryStep = () => (
-    <div className="compact-step">
-      <div className="step-intro">
-        <span className="step-badge">Passo 01</span>
-        <h2>Qual ajuda você precisa?</h2>
-        <p>Selecione a categoria principal do seu pedido.</p>
-      </div>
-      <div className="categories-grid-compact">
-        {CATEGORIES.map((cat) => (
-          <button
+    <motion.div 
+      className="compact-step"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
+      <motion.div 
+        className="step-intro"
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <motion.span 
+          className="step-badge magical-badge"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+        >
+          <Wand2 size={14} /> Passo 01
+        </motion.span>
+        <motion.h2
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          Qual ajuda você precisa?
+        </motion.h2>
+        <motion.p
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          Selecione a categoria principal do seu pedido.
+        </motion.p>
+      </motion.div>
+      <motion.div 
+        className="categories-grid-compact"
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.7, duration: 0.6 }}
+      >
+        {CATEGORIES.map((cat, index) => (
+          <motion.button
             key={cat.id}
-            onClick={() => updateData({ category: cat.id, subCategory: [] })}
-            className={`cat-item ${formData.category === cat.id ? 'active' : ''}`}
+            onClick={() => {
+              updateData({ category: cat.id, subCategory: [] });
+              setConfettiTrigger(true);
+              setTimeout(() => setConfettiTrigger(false), 1000);
+            }}
+            className={`cat-item enhanced ${formData.category === cat.id ? 'active' : ''}`}
             style={{ '--cat-color': cat.color }}
+            initial={{ scale: 0, rotate: -10 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ 
+              delay: 0.8 + (index * 0.1), 
+              type: "spring", 
+              stiffness: 150,
+              damping: 12
+            }}
+            whileHover={{ 
+              scale: 1.05, 
+              y: -8,
+              rotateY: 5,
+              transition: { type: "spring", stiffness: 400, damping: 10 }
+            }}
+            whileTap={{ scale: 0.95 }}
+            onHoverStart={() => setIsHovering(true)}
+            onHoverEnd={() => setIsHovering(false)}
           >
-            <div className="cat-icon-box">{cat.icon}</div>
+            <motion.div 
+              className="cat-icon-box"
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.6 }}
+            >
+              {cat.icon}
+            </motion.div>
             <span className="cat-text">{cat.label}</span>
-          </button>
+            {formData.category === cat.id && (
+              <motion.div
+                className="selection-indicator"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <Star size={16} fill="currentColor" />
+              </motion.div>
+            )}
+          </motion.button>
         ))}
-      </div>
-    </div>
+      </motion.div>
+      {confettiTrigger && (
+        <motion.div
+          className="confetti-burst"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {[...Array(12)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="confetti-piece"
+              initial={{ 
+                x: mousePosition.x - window.innerWidth / 2,
+                y: mousePosition.y - window.innerHeight / 2,
+                scale: 0,
+                rotate: 0
+              }}
+              animate={{
+                x: (Math.random() - 0.5) * 400,
+                y: (Math.random() - 0.5) * 400,
+                scale: [0, 1, 0],
+                rotate: Math.random() * 360
+              }}
+              transition={{
+                duration: 1,
+                delay: i * 0.05,
+                ease: "easeOut"
+              }}
+              style={{
+                backgroundColor: CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)].color
+              }}
+            />
+          ))}
+        </motion.div>
+      )}
+    </motion.div>
   );
 
   const toggleArrayItem = useCallback((array, item) => {
@@ -1237,188 +1360,192 @@ export default function PrecisoDeAjuda() {
         {/* Modal de Especificações */}
         <AnimatePresence>
           {showSpecsModal && (
-            <motion.div 
-              className="modal-overlay" 
-              onClick={() => setShowSpecsModal(false)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
+            <div className="modal-overlay-fullscreen">
               <motion.div 
-                className="sub-modal-v3 specs-modal"
-                style={{ '--modal-color': selectedCategory?.color }}
-                onClick={(e) => e.stopPropagation()}
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="modal-overlay" 
+                onClick={() => setShowSpecsModal(false)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
               >
-              <div className="modal-header">
-                <div className="header-info">
-                  <h3>Especificações Gerais</h3>
-                  <p>Defina o tamanho e a preferência para o seu pedido.</p>
-                </div>
-                <button className="close-btn" onClick={() => setShowSpecsModal(false)}>
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="modal-body">
-                <div className="specs-modal-content">
-                  <div className="spec-item">
-                    <label className="q-label"><Maximize2 size={16} /> Qual o tamanho?</label>
-                    <div className="chips-grid">
-                      {details.sizes.map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => updateData({ size: s })}
-                          className={`chip-item ${formData.size === s ? 'active' : ''}`}
-                        >
-                          {s}
-                        </button>
-                      ))}
+                <motion.div 
+                  className="sub-modal-v3 specs-modal"
+                  style={{ '--modal-color': selectedCategory?.color }}
+                  onClick={(e) => e.stopPropagation()}
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <div className="modal-header">
+                    <div className="header-info">
+                      <h3>Especificações Gerais</h3>
+                      <p>Defina o tamanho e a preferência para o seu pedido.</p>
+                    </div>
+                    <button className="close-btn" onClick={() => setShowSpecsModal(false)}>
+                      <X size={20} />
+                    </button>
+                  </div>
+                  
+                  <div className="modal-body">
+                    <div className="specs-modal-content">
+                      <div className="spec-item">
+                        <label className="q-label"><Maximize2 size={16} /> Qual o tamanho?</label>
+                        <div className="chips-grid">
+                          {details.sizes.map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => updateData({ size: s })}
+                              className={`chip-item ${formData.size === s ? 'active' : ''}`}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {details.styles && (
+                        <div className="spec-item" style={{ marginTop: '24px' }}>
+                          <label className="q-label"><User size={16} /> Qual a preferência?</label>
+                          <div className="chips-grid">
+                            {details.styles.map((s) => (
+                              <button
+                                key={s}
+                                onClick={() => updateData({ style: s })}
+                                className={`chip-item ${formData.style === s ? 'active' : ''}`}
+                              >
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {details.styles && (
-                    <div className="spec-item" style={{ marginTop: '24px' }}>
-                      <label className="q-label"><User size={16} /> Qual a preferência?</label>
-                      <div className="chips-grid">
-                        {details.styles.map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => updateData({ style: s })}
-                            className={`chip-item ${formData.style === s ? 'active' : ''}`}
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button 
-                  className="btn-v3 btn-modal-done"
-                  onClick={() => setShowSpecsModal(false)}
-                >
-                  Concluir <Check size={18} />
-                </button>
-              </div>
+                  <div className="modal-footer">
+                    <button 
+                      className="btn-v3 btn-modal-done"
+                      onClick={() => setShowSpecsModal(false)}
+                    >
+                      Concluir <Check size={18} />
+                    </button>
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
+            </div>
           )}
         </AnimatePresence>
 
         {/* Modal de Subperguntas */}
         <AnimatePresence>
           {selectedSubModal && subOptModal && (
-            <motion.div 
-              className="modal-overlay" 
-              onClick={() => setSelectedSubModal(null)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
+            <div className="modal-overlay-fullscreen">
               <motion.div 
-                className="sub-modal-v3"
-                style={{ '--modal-color': subOptModal.color }}
-                onClick={(e) => e.stopPropagation()}
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="modal-overlay" 
+                onClick={() => setSelectedSubModal(null)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
               >
-              <div className="modal-header">
-                <div className="header-info">
-                  <h3>Detalhes: {subOptModal.label}</h3>
-                  <p>{subOptModal.desc}</p>
-                </div>
-                <button className="close-btn" onClick={() => setSelectedSubModal(null)}>
-                  <X size={20} />
-                </button>
-              </div>
-              
-              <div className="modal-body scrollable-modal-content">
-                {subOptModal.contextInfo && (
-                  <div className="modal-context-info">
-                    <Lightbulb size={20} className="info-icon" />
-                    <p>{subOptModal.contextInfo}</p>
-                  </div>
-                )}
-                <div className="sub-q-grid-layout">
-                  {subOptModal.subQuestions?.map((q) => (
-                    <div key={q.id} className="q-item">
-                      <label className="q-label">{q.label}</label>
-                      
-                      {q.type === 'chips' && q.options && (
-                        <div className="chips-grid">
-                          {q.options.map((opt) => {
-                            const currentAnswers = (formData.subQuestionAnswers[q.id] || []);
-                            const isActive = Array.isArray(currentAnswers) ? currentAnswers.includes(opt) : false;
-                            return (
-                              <button
-                                key={opt}
-                                type="button"
-                                onClick={() => {
-                                  const current = formData.subQuestionAnswers[q.id] || [];
-                                  const next = isActive 
-                                    ? current.filter(a => a !== opt)
-                                    : [...current, opt];
-                                  updateSubAnswer(q.id, next);
-                                }}
-                                className={`chip-item ${isActive ? 'active' : ''}`}
-                              >
-                                {opt}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {q.type === 'select' && q.options && (
-                        <div className="chips-grid">
-                          {q.options.map((opt) => (
-                            <button
-                              key={opt}
-                              type="button"
-                              onClick={() => updateSubAnswer(q.id, opt)}
-                              className={`chip-item ${formData.subQuestionAnswers[q.id] === opt ? 'active' : ''}`}
-                            >
-                              {opt}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {q.type === 'input' && (
-                        <input 
-                          type="text"
-                          placeholder={q.placeholder}
-                          value={formData.subQuestionAnswers[q.id] || ''}
-                          onChange={(e) => updateSubAnswer(q.id, e.target.value)}
-                          className="sub-input-v3"
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button 
-                  className="btn-v3 btn-modal-done"
-                  onClick={() => setSelectedSubModal(null)}
+                <motion.div 
+                  className="sub-modal-v3"
+                  style={{ '--modal-color': subOptModal.color }}
+                  onClick={(e) => e.stopPropagation()}
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  Concluir <Check size={18} />
-                </button>
-              </div>
+                  <div className="modal-header">
+                    <div className="header-info">
+                      <h3>Detalhes: {subOptModal.label}</h3>
+                      <p>{subOptModal.desc}</p>
+                    </div>
+                    <button className="close-btn" onClick={() => setSelectedSubModal(null)}>
+                      <X size={20} />
+                    </button>
+                  </div>
+                  
+                  <div className="modal-body scrollable-modal-content">
+                    {subOptModal.contextInfo && (
+                      <div className="modal-context-info">
+                        <Lightbulb size={20} className="info-icon" />
+                        <p>{subOptModal.contextInfo}</p>
+                      </div>
+                    )}
+                    <div className="sub-q-grid-layout">
+                      {subOptModal.subQuestions?.map((q) => (
+                        <div key={q.id} className="q-item">
+                          <label className="q-label">{q.label}</label>
+                          
+                          {q.type === 'chips' && q.options && (
+                            <div className="chips-grid">
+                              {q.options.map((opt) => {
+                                const currentAnswers = (formData.subQuestionAnswers[q.id] || []);
+                                const isActive = Array.isArray(currentAnswers) ? currentAnswers.includes(opt) : false;
+                                return (
+                                  <button
+                                    key={opt}
+                                    type="button"
+                                    onClick={() => {
+                                      const current = formData.subQuestionAnswers[q.id] || [];
+                                      const next = isActive 
+                                        ? current.filter(a => a !== opt)
+                                        : [...current, opt];
+                                      updateSubAnswer(q.id, next);
+                                    }}
+                                    className={`chip-item ${isActive ? 'active' : ''}`}
+                                  >
+                                    {opt}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {q.type === 'select' && q.options && (
+                            <div className="chips-grid">
+                              {q.options.map((opt) => (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  onClick={() => updateSubAnswer(q.id, opt)}
+                                  className={`chip-item ${formData.subQuestionAnswers[q.id] === opt ? 'active' : ''}`}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {q.type === 'input' && (
+                            <input 
+                              type="text"
+                              placeholder={q.placeholder}
+                              value={formData.subQuestionAnswers[q.id] || ''}
+                              onChange={(e) => updateSubAnswer(q.id, e.target.value)}
+                              className="sub-input-v3"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button 
+                      className="btn-v3 btn-modal-done"
+                      onClick={() => setSelectedSubModal(null)}
+                    >
+                      Concluir <Check size={18} />
+                    </button>
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
+            </div>
           )}
         </AnimatePresence>
       </div>
@@ -1426,96 +1553,302 @@ export default function PrecisoDeAjuda() {
   };
 
   const renderDescriptionStep = () => (
-    <div className="compact-step">
-      <div className="step-intro">
-        <span className="step-badge">Passo 03</span>
-        <h2>Conte sua história</h2>
-        <p>Dê detalhes para que as pessoas entendam como ajudar.</p>
-      </div>
+    <motion.div 
+      className="compact-step"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
+      <motion.div 
+        className="step-intro"
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <motion.span 
+          className="step-badge storytelling-badge"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+        >
+          <PenTool size={14} /> Passo 03
+        </motion.span>
+        <motion.h2
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          Conte sua história
+        </motion.h2>
+        <motion.p
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          Dê detalhes para que as pessoas entendam como ajudar.
+        </motion.p>
+      </motion.div>
 
-      <div className="story-layout-v3">
+      <motion.div 
+        className="story-layout-v3"
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.7, duration: 0.6 }}
+      >
         <div className="story-main">
-          <div className="input-group">
-            <textarea
+          <motion.div 
+            className="input-group enhanced-input"
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <motion.textarea
               placeholder="Ex: Preciso de ajuda com alimentos para meus 3 filhos este mês. Estamos passando por um momento difícil..."
               value={formData.description}
               onChange={(e) => updateData({ description: e.target.value.slice(0, 500) })}
-              className={`compact-textarea v3 ${templateUsed && !isDescriptionValid ? 'warning' : ''}`}
+              className={`compact-textarea v3 enhanced ${templateUsed && !isDescriptionValid ? 'warning' : ''}`}
+              initial={{ borderColor: 'var(--gray-200)' }}
+              whileFocus={{ 
+                borderColor: 'var(--primary)',
+                boxShadow: '0 0 0 3px rgba(249, 115, 22, 0.1)'
+              }}
             />
-            <div className={`count-tag ${isDescriptionValid ? 'valid' : ''}`}>
+            <motion.div 
+              className={`count-tag enhanced ${isDescriptionValid ? 'valid' : ''}`}
+              animate={{ 
+                scale: formData.description.length > 0 ? 1 : 0.8,
+                opacity: formData.description.length > 0 ? 1 : 0.6
+              }}
+            >
               {formData.description.length}/500
-            </div>
+            </motion.div>
             
-            <button 
-              className={`voice-record-btn ${isRecording ? 'recording' : ''}`}
+            <motion.button 
+              className={`voice-record-btn enhanced ${isRecording ? 'recording' : ''}`}
               onClick={toggleRecording}
               title={isRecording ? "Parar Gravação" : "Gravar com Voz"}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              animate={isRecording ? {
+                boxShadow: [
+                  '0 0 0 0 rgba(239, 68, 68, 0.4)',
+                  '0 0 0 10px rgba(239, 68, 68, 0)',
+                  '0 0 0 0 rgba(239, 68, 68, 0.4)'
+                ]
+              } : {}}
+              transition={isRecording ? {
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              } : {}}
             >
-              {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
+              <motion.div
+                animate={isRecording ? { rotate: 360 } : { rotate: 0 }}
+                transition={isRecording ? { duration: 2, repeat: Infinity, ease: "linear" } : {}}
+              >
+                {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
+              </motion.div>
               <span>{isRecording ? 'Ouvindo...' : 'Falar (Gravar Voz)'}</span>
-            </button>
-          </div>
+              {isRecording && (
+                <motion.div
+                  className="recording-waves"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  {[...Array(3)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="wave"
+                      animate={{
+                        scaleY: [1, 2, 1],
+                        opacity: [0.3, 1, 0.3]
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        delay: i * 0.2,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              )}
+            </motion.button>
+          </motion.div>
 
           {templateUsed && !isDescriptionValid && (
-            <div className="template-warning">
-              <AlertTriangle size={16} />
+            <motion.div 
+              className="template-warning"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <motion.div
+                animate={{ rotate: [0, -5, 5, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
+              >
+                <AlertTriangle size={16} />
+              </motion.div>
               <span>Por favor, altere os dados entre colchetes [ ] com suas informações reais.</span>
-            </div>
+            </motion.div>
           )}
 
-          <div className="story-templates-box">
+          <motion.div 
+            className="story-templates-box"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.0, duration: 0.5 }}
+          >
             <span className="section-subtitle">Ou use um modelo (lembre-se de editar):</span>
             <div className="templates-grid-v3">
-              {STORY_TEMPLATES.map((t) => (
-                <button
+              {STORY_TEMPLATES.map((t, index) => (
+                <motion.button
                   key={t.id}
-                  className={`template-btn-v3 ${templateUsed === t.text ? 'active' : ''}`}
+                  className={`template-btn-v3 enhanced ${templateUsed === t.text ? 'active' : ''}`}
                   onClick={() => {
                     updateData({ description: t.text });
                     setTemplateUsed(t.text);
                   }}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ 
+                    delay: 1.1 + (index * 0.1),
+                    type: "spring",
+                    stiffness: 200
+                  }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    y: -2,
+                    transition: { type: "spring", stiffness: 400, damping: 10 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  {t.icon}
+                  <motion.div
+                    animate={templateUsed === t.text ? {
+                      rotate: [0, 360],
+                      transition: { duration: 0.6 }
+                    } : {}}
+                  >
+                    {t.icon}
+                  </motion.div>
                   {t.label}
-                </button>
+                </motion.button>
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 
   const renderUrgencyStep = () => (
-    <div className="compact-step">
-      <div className="step-intro">
-        <span className="step-badge">Passo 04</span>
-        <h2>Qual o nível de urgência?</h2>
-        <p>Isso ajuda a priorizar os pedidos mais críticos na comunidade.</p>
-      </div>
-      <div className="urgency-grid-v2">
-        {URGENCY_OPTIONS.map((opt) => (
-          <button
+    <motion.div 
+      className="compact-step"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
+      <motion.div 
+        className="step-intro"
+        initial={{ y: -30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <motion.span 
+          className="step-badge urgency-badge"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+        >
+          <Target size={14} /> Passo 04
+        </motion.span>
+        <motion.h2
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          Qual o nível de urgência?
+        </motion.h2>
+        <motion.p
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          Isso ajuda a priorizar os pedidos mais críticos na comunidade.
+        </motion.p>
+      </motion.div>
+      <motion.div 
+        className="urgency-grid-v2"
+        initial={{ y: 40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.7, duration: 0.6 }}
+      >
+        {URGENCY_OPTIONS.map((opt, index) => (
+          <motion.button
             key={opt.id}
             onClick={() => updateData({ urgency: opt.id })}
-            className={`urgency-card-v2 ${formData.urgency === opt.id ? 'active' : ''}`}
+            className={`urgency-card-v2 enhanced ${formData.urgency === opt.id ? 'active' : ''}`}
             style={{ '--urg-color': opt.color }}
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ 
+              delay: 0.8 + (index * 0.1),
+              type: "spring",
+              stiffness: 100
+            }}
+            whileHover={{ 
+              scale: 1.03,
+              y: -4,
+              transition: { type: "spring", stiffness: 400, damping: 10 }
+            }}
+            whileTap={{ scale: 0.97 }}
           >
-            <div className="urg-icon-v2">{opt.icon}</div>
+            <motion.div 
+              className="urg-icon-v2"
+              whileHover={{ 
+                rotate: [0, -10, 10, 0],
+                transition: { duration: 0.5 }
+              }}
+            >
+              {opt.icon}
+            </motion.div>
             <div className="urg-body-v2">
               <div className="urg-header-v2">
                 <strong>{opt.label}</strong>
-                <span className="urg-time-badge">{opt.time}</span>
+                <motion.span 
+                  className="urg-time-badge"
+                  animate={formData.urgency === opt.id ? {
+                    scale: [1, 1.1, 1],
+                    transition: { duration: 0.5 }
+                  } : {}}
+                >
+                  {opt.time}
+                </motion.span>
               </div>
               <span>{opt.desc}</span>
             </div>
-            <div className="urg-check-v2">
+            <motion.div 
+              className="urg-check-v2"
+              animate={formData.urgency === opt.id ? {
+                scale: [0, 1.2, 1],
+                rotate: [0, 180, 360]
+              } : { scale: 0 }}
+              transition={{ type: "spring", stiffness: 200 }}
+            >
               {formData.urgency === opt.id && <Check size={20} />}
-            </div>
-          </button>
+            </motion.div>
+            {formData.urgency === opt.id && (
+              <motion.div
+                className="urgency-glow"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+                style={{ backgroundColor: opt.color }}
+              />
+            )}
+          </motion.button>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 
   const renderVisibilityStep = () => (
@@ -1558,44 +1891,160 @@ export default function PrecisoDeAjuda() {
     const details = CATEGORY_DETAILS[formData.category];
     
     return (
-      <div className="compact-step">
-        <div className="finish-header-v2">
-          <div className="finish-check-v2"><Check size={32} /></div>
-          <h2>Confirme seus dados</h2>
-          <p>Veja como seu pedido aparecerá para os vizinhos.</p>
-        </div>
+      <motion.div 
+        className="compact-step"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <motion.div 
+          className="finish-header-v2"
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <motion.div 
+            className="finish-check-v2 enhanced"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ 
+              delay: 0.4, 
+              type: "spring", 
+              stiffness: 200,
+              damping: 10
+            }}
+          >
+            <motion.div
+              animate={{
+                rotate: [0, 360],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Rocket size={32} />
+            </motion.div>
+          </motion.div>
+          <motion.h2
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+          >
+            Confirme seus dados
+          </motion.h2>
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+          >
+            Veja como seu pedido aparecerá para os vizinhos.
+          </motion.p>
+        </motion.div>
 
-        <div className="review-card-v2">
+        <motion.div 
+          className="review-card-v2 enhanced"
+          initial={{ y: 40, opacity: 0, scale: 0.95 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{ delay: 0.7, duration: 0.6, type: "spring" }}
+          whileHover={{ 
+            scale: 1.02,
+            boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.15)'
+          }}
+        >
           <div className="review-main">
-            <div className="review-tags">
-              <span className="tag-v2" style={{ background: catColor + '15', color: catColor }}>{formData.category}</span>
+            <motion.div 
+              className="review-tags"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.4 }}
+            >
+              <motion.span 
+                className="tag-v2 enhanced" 
+                style={{ background: catColor + '15', color: catColor }}
+                whileHover={{ scale: 1.05 }}
+              >
+                {formData.category}
+              </motion.span>
               {selectedUrgency && (
-                <span className="tag-v2" style={{ background: selectedUrgency.color + '15', color: selectedUrgency.color }}>
+                <motion.span 
+                  className="tag-v2 enhanced" 
+                  style={{ background: selectedUrgency.color + '15', color: selectedUrgency.color }}
+                  whileHover={{ scale: 1.05 }}
+                  animate={{
+                    boxShadow: [
+                      `0 0 0 0 ${selectedUrgency.color}20`,
+                      `0 0 0 4px ${selectedUrgency.color}20`,
+                      `0 0 0 0 ${selectedUrgency.color}20`
+                    ]
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
                   {selectedUrgency.icon} {formData.urgency.toUpperCase()}
-                </span>
+                </motion.span>
               )}
-            </div>
-            <div className="review-quote"><p>&ldquo;{formData.description}&rdquo;</p></div>
+            </motion.div>
+            <motion.div 
+              className="review-quote enhanced"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.9, duration: 0.4 }}
+            >
+              <p>&ldquo;{formData.description}&rdquo;</p>
+            </motion.div>
             {formData.subCategory.length > 0 && (
-              <div className="review-details">
+              <motion.div 
+                className="review-details"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 1.0, duration: 0.4 }}
+              >
                 <strong>Itens:</strong> {formData.subCategory.map(id => details?.options.find(o => o.id === id)?.label).join(', ')}
-              </div>
+              </motion.div>
             )}
           </div>
-          <div className="review-meta">
-            <div className="meta-item-v2"><MapPin size={16} /> <span>{formData.radius}km de alcance</span></div>
+          <motion.div 
+            className="review-meta"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 1.1, duration: 0.4 }}
+          >
+            <motion.div 
+              className="meta-item-v2"
+              whileHover={{ scale: 1.05 }}
+            >
+              <MapPin size={16} /> <span>{formData.radius}km de alcance</span>
+            </motion.div>
             <div className="meta-toggle-review">
-              <label className="vis-switch-v3">
+              <label className="vis-switch-v3 enhanced">
                 <input type="checkbox" checked={formData.isPublic} onChange={(e) => updateData({ isPublic: e.target.checked })} />
-                <div className="vis-switch-body-v3">
-                  <div className="vis-switch-handle-v3">{formData.isPublic ? <Globe size={14} /> : <ShieldCheck size={14} />}</div>
+                <motion.div 
+                  className="vis-switch-body-v3"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <motion.div 
+                    className="vis-switch-handle-v3"
+                    animate={formData.isPublic ? {
+                      rotate: [0, 360],
+                      transition: { duration: 0.5 }
+                    } : {}}
+                  >
+                    {formData.isPublic ? <Globe size={14} /> : <ShieldCheck size={14} />}
+                  </motion.div>
                   <span>{formData.isPublic ? 'Pedido Público' : 'Pedido Privado'}</span>
-                </div>
+                </motion.div>
               </label>
             </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        </motion.div>
+      </motion.div>
     );
   };
 
