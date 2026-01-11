@@ -97,6 +97,13 @@ const ApiService = {
     return this.request('/interesses/meus');
   },
 
+  async createInteresse(data) {
+    return this.request('/interesses', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
   async createConversation(data) {
     return this.request('/chat/conversations', {
       method: 'POST',
