@@ -36,9 +36,9 @@ import {
   CATEGORY_METADATA, 
   CATEGORIES, 
   URGENCY_OPTIONS, 
-  SUB_QUESTION_LABELS, 
-  MOCK_ORDERS 
+  SUB_QUESTION_LABELS
 } from './constants';
+import ApiService from '../../services/apiService';
 
 // Import the existing components from the original file
 function ModalDetalhes({ order, onClose, onHelp }) {
@@ -453,6 +453,9 @@ export default function DesktopQueroAjudar() {
   const [fontSize, setFontSize] = useState('normal');
   const [highContrast, setHighContrast] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
+  const [pedidos, setPedidos] = useState([]);
+  const [loadingPedidos, setLoadingPedidos] = useState(true);
+  const [error, setError] = useState(null);
 
   const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
   const [cardsRef, cardsInView] = useInView({ threshold: 0.1, triggerOnce: true });
@@ -468,6 +471,84 @@ export default function DesktopQueroAjudar() {
     config: { tension: 300, friction: 10 }
   });
 
+  const loadPedidos = async (filters = {}) => {
+    try {
+      setLoadingPedidos(true);
+      setError(null);
+      
+      const response = await ApiService.getPedidos();
+      
+      if (response.success && response.data) {
+        // Transformar dados do backend para o formato esperado pelo frontend
+        const transformedPedidos = response.data.map(pedido => ({
+          id: pedido.id,
+          userId: pedido.userId, // ID do usuário que criou o pedido
+          userName: pedido.usuario?.nome || 'Usuário',
+          userType: pedido.usuario?.tipo || 'Cidadão',
+          city: pedido.city || extractCityFromLocation(pedido.location),
+          state: pedido.state || extractStateFromLocation(pedido.location),
+          neighborhood: pedido.neighborhood || extractNeighborhoodFromLocation(pedido.location),
+          urgency: pedido.urgency,
+          category: pedido.category,
+          title: pedido.title || pedido.category,
+          description: pedido.description,
+          subCategories: pedido.subCategory || [],
+          subQuestionAnswers: pedido.subQuestionAnswers || {},
+          isNew: isNewPedido(pedido.createdAt),
+          createdAt: pedido.createdAt
+        }));
+        
+        setPedidos(transformedPedidos);
+      } else {
+        throw new Error('Erro ao carregar pedidos');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+      setError(error.message);
+      toast.error('Erro ao carregar pedidos: ' + error.message);
+    } finally {
+      setLoadingPedidos(false);
+    }
+  };
+
+  const extractCityFromLocation = (location) => {
+    if (!location) return 'Não informado';
+    const parts = location.split(',');
+    if (parts.length >= 2) {
+      const secondPart = parts[1].trim();
+      if (secondPart.includes('-')) {
+        return secondPart.split('-')[0].trim();
+      }
+      return secondPart;
+    }
+    return 'Não informado';
+  };
+
+  const extractStateFromLocation = (location) => {
+    if (!location) return 'BR';
+    const parts = location.split(',');
+    if (parts.length >= 2) {
+      const secondPart = parts[1].trim();
+      if (secondPart.includes('-')) {
+        return secondPart.split('-')[1].trim();
+      }
+    }
+    return 'BR';
+  };
+
+  const extractNeighborhoodFromLocation = (location) => {
+    if (!location) return 'Não informado';
+    const parts = location.split(',');
+    return parts[0]?.trim() || 'Não informado';
+  };
+
+  const isNewPedido = (createdAt) => {
+    if (!createdAt) return false;
+    const created = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return created > yesterday;
+  };
+
   useEffect(() => {
     const savedFontSize = localStorage.getItem('fontSize') || 'normal';
     const savedContrast = localStorage.getItem('highContrast') === 'true';
@@ -477,6 +558,10 @@ export default function DesktopQueroAjudar() {
     document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
     
     setIsLoading(true);
+    
+    // Carregar pedidos
+    loadPedidos();
+    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -516,7 +601,7 @@ export default function DesktopQueroAjudar() {
 
   const citiesByState = useMemo(() => {
     const grouped = {};
-    MOCK_ORDERS.forEach(order => {
+    pedidos.forEach(order => {
       if (!grouped[order.state]) {
         grouped[order.state] = new Set();
       }
@@ -528,10 +613,10 @@ export default function DesktopQueroAjudar() {
     });
     
     return grouped;
-  }, []);
+  }, [pedidos]);
 
   const filteredOrders = useMemo(() => {
-    return MOCK_ORDERS.filter((order) => {
+    return pedidos.filter((order) => {
       const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
       const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
       
@@ -549,7 +634,7 @@ export default function DesktopQueroAjudar() {
       
       return catMatch && urgMatch && locationMatch && newMatch && timeMatch;
     });
-  }, [selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation]);
+  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation]);
 
   const trail = useTrail(filteredOrders.length, {
     opacity: cardsInView ? 1 : 0,
@@ -762,7 +847,12 @@ export default function DesktopQueroAjudar() {
         )}
 
         <div className="results-count">
-          <p>Encontramos <strong>{isLoading ? <Skeleton width={30} /> : filteredOrders.length}</strong> pedidos para você ajudar</p>
+          <p>Encontramos <strong>{loadingPedidos ? <Skeleton width={30} /> : filteredOrders.length}</strong> pedidos para você ajudar</p>
+          {error && (
+            <div className="error-message" style={{ color: '#ef4444', marginTop: '8px' }}>
+              {error}
+            </div>
+          )}
         </div>
 
         <div className="orders-grid-layout" ref={cardsRef}>
@@ -819,7 +909,7 @@ export default function DesktopQueroAjudar() {
               </div>
             </div>
           )}
-          {isLoading ? (
+          {loadingPedidos ? (
             [...Array(6)].map((_, i) => (
               <div key={i} className="vibrant-order-card">
                 <div className="card-header">
@@ -968,7 +1058,46 @@ export default function DesktopQueroAjudar() {
                 Iremos abrir um chat para que vocês possam combinar a entrega ou doação diretamente.
               </p>
               <div className="modal-confirm-actions">
-                <button className="btn-confirm-chat">
+                <button 
+                  className="btn-confirm-chat"
+                  onClick={async () => {
+                    try {
+                      // Primeiro registrar interesse
+                      const interesseData = {
+                        pedidoId: orderToHelp.id,
+                        tipo: 'ajuda',
+                        observacoes: 'Interesse em ajudar através da plataforma'
+                      };
+                      
+                      await ApiService.createInteresse(interesseData);
+                      
+                      // Depois criar conversa
+                      const conversationData = {
+                        participantId: orderToHelp.userId,
+                        type: 'ajuda',
+                        metadata: {
+                          pedidoId: orderToHelp.id,
+                          categoria: orderToHelp.category,
+                          titulo: orderToHelp.title
+                        }
+                      };
+                      
+                      const response = await ApiService.createConversation(conversationData);
+                      
+                      if (response.success) {
+                        toast.success('Conversa iniciada! Redirecionando...');
+                        // Redirecionar para o chat
+                        window.location.href = `/chat/${response.data.id}`;
+                      } else {
+                        throw new Error(response.error || 'Erro ao criar conversa');
+                      }
+                    } catch (error) {
+                      console.error('Erro ao iniciar conversa:', error);
+                      toast.error('Erro ao iniciar conversa: ' + error.message);
+                    }
+                    setOrderToHelp(null);
+                  }}
+                >
                   <MessageCircle size={20} />
                   Sim, conversar agora
                 </button>

@@ -25,9 +25,9 @@ import {
   CATEGORY_METADATA, 
   CATEGORIES, 
   URGENCY_OPTIONS, 
-  SUB_QUESTION_LABELS, 
-  MOCK_ORDERS 
+  SUB_QUESTION_LABELS
 } from './constants';
+import ApiService from '../../services/apiService';
 
 export const MobileQueroAjudar = () => {
   const [selectedCat, setSelectedCat] = useState('Todas');
@@ -40,6 +40,86 @@ export const MobileQueroAjudar = () => {
   const [fontSize, setFontSize] = useState('normal');
   const [highContrast, setHighContrast] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
+  const [pedidos, setPedidos] = useState([]);
+  const [loadingPedidos, setLoadingPedidos] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadPedidos = async () => {
+    try {
+      setLoadingPedidos(true);
+      setError(null);
+      
+      const response = await ApiService.getPedidos();
+      
+      if (response.success && response.data) {
+        const transformedPedidos = response.data.map(pedido => ({
+          id: pedido.id,
+          userId: pedido.userId, // ID do usuário que criou o pedido
+          userName: pedido.usuario?.nome || 'Usuário',
+          userType: pedido.usuario?.tipo || 'Cidadão',
+          city: pedido.city || extractCityFromLocation(pedido.location),
+          state: pedido.state || extractStateFromLocation(pedido.location),
+          neighborhood: pedido.neighborhood || extractNeighborhoodFromLocation(pedido.location),
+          urgency: pedido.urgency,
+          category: pedido.category,
+          title: pedido.title || pedido.category,
+          description: pedido.description,
+          subCategories: pedido.subCategory || [],
+          subQuestionAnswers: pedido.subQuestionAnswers || {},
+          isNew: isNewPedido(pedido.createdAt),
+          createdAt: pedido.createdAt
+        }));
+        
+        setPedidos(transformedPedidos);
+      } else {
+        throw new Error('Erro ao carregar pedidos');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+      setError(error.message);
+      toast.error('Erro ao carregar pedidos');
+    } finally {
+      setLoadingPedidos(false);
+    }
+  };
+
+  const extractCityFromLocation = (location) => {
+    if (!location) return 'Não informado';
+    const parts = location.split(',');
+    if (parts.length >= 2) {
+      const secondPart = parts[1].trim();
+      if (secondPart.includes('-')) {
+        return secondPart.split('-')[0].trim();
+      }
+      return secondPart;
+    }
+    return 'Não informado';
+  };
+
+  const extractStateFromLocation = (location) => {
+    if (!location) return 'BR';
+    const parts = location.split(',');
+    if (parts.length >= 2) {
+      const secondPart = parts[1].trim();
+      if (secondPart.includes('-')) {
+        return secondPart.split('-')[1].trim();
+      }
+    }
+    return 'BR';
+  };
+
+  const extractNeighborhoodFromLocation = (location) => {
+    if (!location) return 'Não informado';
+    const parts = location.split(',');
+    return parts[0]?.trim() || 'Não informado';
+  };
+
+  const isNewPedido = (createdAt) => {
+    if (!createdAt) return false;
+    const created = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    return created > yesterday;
+  };
 
   useEffect(() => {
     const savedFontSize = localStorage.getItem('fontSize') || 'normal';
@@ -47,6 +127,8 @@ export const MobileQueroAjudar = () => {
     setFontSize(savedFontSize);
     setHighContrast(savedContrast);
     document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
+    
+    loadPedidos();
     
     const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
@@ -57,7 +139,7 @@ export const MobileQueroAjudar = () => {
   const [activeTab, setActiveTab] = useState('relato');
 
   const filteredOrders = useMemo(() => {
-    return MOCK_ORDERS.filter((order) => {
+    return pedidos.filter((order) => {
       const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
       const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
       
@@ -72,7 +154,7 @@ export const MobileQueroAjudar = () => {
       
       return catMatch && urgMatch && locationMatch && timeMatch;
     });
-  }, [selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, userLocation]);
+  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, userLocation]);
 
   const changeFontSize = (size) => {
     setFontSize(size);
@@ -300,7 +382,7 @@ export const MobileQueroAjudar = () => {
         </header>
 
         <div className="orders-grid-mobile" ref={ref}>
-          {isLoading ? (
+          {loadingPedidos ? (
             [...Array(4)].map((_, i) => (
               <div key={i} className="skeleton-card-mobile">
                 <Skeleton height={180} borderRadius={16} />
@@ -546,7 +628,45 @@ export const MobileQueroAjudar = () => {
               <h2>Ajudar {orderToHelp.userName}?</h2>
               <p>Você será conectado diretamente para combinar os detalhes da doação ou ajuda.</p>
               <div className="confirm-actions-v4-mobile">
-                <button className="btn-confirm-chat-v4-mobile" onClick={() => { toast.success('Iniciando chat...'); setOrderToHelp(null); }}>
+                <button 
+                  className="btn-confirm-chat-v4-mobile" 
+                  onClick={async () => {
+                    try {
+                      // Primeiro registrar interesse
+                      const interesseData = {
+                        pedidoId: orderToHelp.id,
+                        tipo: 'ajuda',
+                        observacoes: 'Interesse em ajudar através da plataforma'
+                      };
+                      
+                      await ApiService.createInteresse(interesseData);
+                      
+                      // Depois criar conversa
+                      const conversationData = {
+                        participantId: orderToHelp.userId,
+                        type: 'ajuda',
+                        metadata: {
+                          pedidoId: orderToHelp.id,
+                          categoria: orderToHelp.category,
+                          titulo: orderToHelp.title
+                        }
+                      };
+                      
+                      const response = await ApiService.createConversation(conversationData);
+                      
+                      if (response.success) {
+                        toast.success('Conversa iniciada!');
+                        window.location.href = `/chat/${response.data.id}`;
+                      } else {
+                        throw new Error(response.error || 'Erro ao criar conversa');
+                      }
+                    } catch (error) {
+                      console.error('Erro ao iniciar conversa:', error);
+                      toast.error('Erro ao iniciar conversa');
+                    }
+                    setOrderToHelp(null);
+                  }}
+                >
                   <MessageCircle size={20} /> Conversar Agora
                 </button>
                 <button className="btn-cancel-help-v4-mobile" onClick={() => setOrderToHelp(null)}>
