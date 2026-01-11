@@ -400,26 +400,63 @@ export function PrecisoDeAjudaDesktop() {
     setIsAnalyzing(true);
     setAnalysisStage(0);
     
-    for (let i = 0; i < stages.length; i++) {
-      setAnalysisStage(i);
-      await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Simulate analysis stages
+      for (let i = 0; i < stages.length; i++) {
+        setAnalysisStage(i);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+      
+      setIsAnalyzing(false);
+      
+      // Prepare data for API
+      const pedidoData = {
+        category: formData.category,
+        subCategory: formData.subCategory,
+        description: formData.description,
+        urgency: formData.urgency,
+        visibility: formData.visibility,
+        radius: formData.radius,
+        location: {
+          coordinates: formData.userLocation,
+          address: formData.locationString,
+          city: formData.city,
+          state: formData.state,
+          neighborhood: formData.neighborhood
+        },
+        isPublic: formData.isPublic,
+        subQuestionAnswers: formData.subQuestionAnswers
+      };
+      
+      // Import ApiService dynamically
+      const { default: ApiService } = await import('../../../services/apiService');
+      
+      // Call API to create pedido
+      const response = await ApiService.createPedido(pedidoData);
+      
+      if (response.success) {
+        setAnalysis({
+          reason: 'Pedido criado com sucesso! Sua solicitação já está visível na rede Solidar.'
+        });
+        setIsPublished(true);
+      } else {
+        throw new Error(response.error || 'Erro ao criar pedido');
+      }
+    } catch (error) {
+      console.error('Erro ao publicar pedido:', error);
+      setIsAnalyzing(false);
+      
+      // Check if it's a validation error or server error
+      if (error.message.includes('validação') || error.message.includes('inconsistent')) {
+        setIsInconsistent(true);
+      } else {
+        // Show generic error
+        alert('Erro ao publicar pedido: ' + error.message);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    const isValid = Math.random() > 0.2;
-    
-    setIsAnalyzing(false);
-    
-    if (isValid) {
-      setAnalysis({
-        reason: 'Pedido validado com sucesso. Todas as informações estão claras e condizem com a categoria selecionada.'
-      });
-      setIsPublished(true);
-    } else {
-      setIsInconsistent(true);
-    }
-    
-    setIsSubmitting(false);
-  }, [stages.length]);
+  }, [formData, stages.length]);
 
   const selectedCategory = useMemo(() => 
     CATEGORIES.find(c => c.id === formData.category), 

@@ -21,10 +21,22 @@ class ChatService {
       }
     }
 
-    return await chatModel.createConversation({
+    const conversation = await chatModel.createConversation({
       ...data,
       participants: validParticipants
     });
+
+    // Se há uma mensagem inicial, enviá-la
+    if (data.initialMessage && data.senderId) {
+      await chatModel.createMessage({
+        conversationId: conversation.id,
+        senderId: data.senderId,
+        type: 'text',
+        content: data.initialMessage
+      });
+    }
+
+    return conversation;
   }
 
   async findConversationByPedido(pedidoId, participants) {

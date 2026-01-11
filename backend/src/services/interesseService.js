@@ -1,7 +1,7 @@
 const interesseModel = require('../models/interesseModel');
 
 class InteresseService {
-  validateInteresseData(data) {
+  validateInteresseData(data, isForConversation = false) {
     const errors = [];
     
     if (!data.pedidoId?.trim()) {
@@ -12,8 +12,13 @@ class InteresseService {
       errors.push('ID do ajudante é obrigatório');
     }
     
-    if (!data.mensagem?.trim() || data.mensagem.length < 10) {
-      errors.push('Mensagem deve ter pelo menos 10 caracteres');
+    // Se for para conversa, mensagem é opcional
+    if (!isForConversation) {
+      if (!data.mensagem?.trim()) {
+        errors.push('Mensagem é obrigatória');
+      } else if (data.mensagem.trim().length < 5) {
+        errors.push('Mensagem deve ter pelo menos 5 caracteres');
+      }
     }
     
     return errors;
@@ -28,9 +33,9 @@ class InteresseService {
     };
   }
 
-  async createInteresse(interesseData) {
+  async createInteresse(interesseData, isForConversation = false) {
     const sanitizedData = this.sanitizeInteresseData(interesseData);
-    const errors = this.validateInteresseData(sanitizedData);
+    const errors = this.validateInteresseData(sanitizedData, isForConversation);
     
     if (errors.length > 0) {
       throw new Error(errors.join(', '));
