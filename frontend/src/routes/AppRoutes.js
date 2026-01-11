@@ -13,7 +13,7 @@ import CadastroFamilia from '../pages/Cadastro/CadastroFamilia/CadastroFamilia';
 import CadastroONG from '../pages/Cadastro/CadastroONG/CadastroONG';
 import AdminDashboard from '../pages/AdminDashboard';
 import QueroAjudar from '../pages/QueroAjudar/ResponsiveQueroAjudar';
-import PrecisoDeAjudaDesktop from '../pages/PrecisoDeAjuda/PrecisoDeAjudaDesktop';
+import PrecisoDeAjuda from '../pages/PrecisoDeAjuda';
 import AchadosEPerdidos from '../pages/AchadosEPerdidos';
 import Perfil from '../pages/Perfil';
 import Chat from '../pages/Chat';
@@ -36,7 +36,7 @@ const AppRoutes = () => {
       <Route path="/cadastro/familia" element={<CadastroFamilia />} />
       <Route path="/cadastro/ong" element={<CadastroONG />} />
       <Route path="/quero-ajudar" element={<Layout showHeader={false}><QueroAjudar /></Layout>} />
-      <Route path="/preciso-de-ajuda" element={<Layout showHeader={false}><PrecisoDeAjudaDesktop /></Layout>} />
+      <Route path="/preciso-de-ajuda" element={<PrecisoDeAjuda />} />
       <Route path="/achados-e-perdidos" element={<AchadosEPerdidos />} />
       <Route path="/achados-e-perdidos/novo" element={<Layout><NovoAnuncio /></Layout>} />
       <Route path="/perfil" element={<Perfil />} />

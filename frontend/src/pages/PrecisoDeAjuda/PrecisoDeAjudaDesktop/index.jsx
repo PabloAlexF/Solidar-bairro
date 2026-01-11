@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapaAlcance } from './MapaAlcance';
 import { AnalyzingModal, InconsistentModal, SuccessModal } from './modals';
+import AnimatedParticles from '../AnimatedParticles';
 import { 
   ShoppingCart, 
   Shirt, 

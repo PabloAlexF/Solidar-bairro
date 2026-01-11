@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnalyzingModal, InconsistentModal, SuccessModal } from '../modals';
 import MapaAlcance from '../MapaAlcance';
+import AnimatedParticles from '../AnimatedParticles';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -469,7 +470,7 @@ export function PrecisoDeAjudaMobile() {
                   className="pdam-progress-fill-v4" 
                   style={{ 
                     width: `${(formData.description.length / 500) * 100}%`,
-                    background: formData.description.length > 450 ? 'var(--pda-danger)' : 'var(--pda-primary)'
+                    background: formData.description.length > 450 ? '#ef4444' : '#f97316'
                   }} 
                 />
               </div>
@@ -607,11 +608,242 @@ export function PrecisoDeAjudaMobile() {
       </div>
 
       <div className="pdam-map-section-v2">
-        <MapaAlcance 
-          radius={formData.radius} 
-          onRadiusChange={(r) => updateData({ radius: r })}
-          userLocation={formData.userLocation}
-        />
+        <div style={{
+          position: 'relative',
+          height: '100%',
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          borderRadius: '20px',
+          overflow: 'hidden'
+        }}>
+          {/* Animated Background Particles */}
+          <AnimatedParticles radius={formData.radius} isActive={true} />
+          
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `
+              radial-gradient(circle at 20% 20%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 40% 60%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)
+            `,
+            animation: 'backgroundShift 8s ease-in-out infinite'
+          }} />
+          
+          {/* Header with Stats */}
+          <div style={{
+            position: 'absolute',
+            top: '16px',
+            left: '16px',
+            right: '16px',
+            zIndex: 10,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(12px)',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: '#374151',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+            >
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#f97316'
+                }} 
+              />
+              Alcance: {formData.radius}km
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                backdropFilter: 'blur(12px)',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                color: '#10b981',
+                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+                border: '1px solid rgba(16, 185, 129, 0.3)'
+              }}
+            >
+              <Users size={14} />
+              {Math.floor(formData.radius / 2) + 2} pessoas
+            </motion.div>
+          </div>
+          
+          <MapaAlcance 
+            radius={formData.radius} 
+            onRadiusChange={(r) => updateData({ radius: r })}
+            userLocation={formData.userLocation}
+          />
+          
+          {/* Interactive Radius Indicator */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            style={{
+              position: 'absolute',
+              bottom: '20px',
+              left: '20px',
+              right: '20px',
+              zIndex: 10,
+              background: 'rgba(15, 23, 42, 0.95)',
+              backdropFilter: 'blur(16px)',
+              padding: '20px',
+              borderRadius: '16px',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                color: 'white'
+              }}>
+                <Globe size={16} color="#f97316" />
+                <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Ajustar Visibilidade</span>
+              </div>
+              
+              <motion.div 
+                key={formData.radius}
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                style={{
+                  background: 'linear-gradient(135deg, #f97316, #ea580c)',
+                  padding: '6px 12px',
+                  borderRadius: '12px',
+                  fontSize: '0.875rem',
+                  fontWeight: '700',
+                  color: 'white',
+                  boxShadow: '0 2px 8px rgba(249, 115, 22, 0.3)'
+                }}
+              >
+                {formData.radius}km
+              </motion.div>
+            </div>
+            
+            <input
+              type="range"
+              min="1"
+              max="50"
+              value={formData.radius}
+              onChange={(e) => updateData({ radius: Number(e.target.value) })}
+              style={{
+                width: '100%',
+                height: '8px',
+                borderRadius: '4px',
+                background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.3) 0%, rgba(249, 115, 22, 0.3) 50%, rgba(239, 68, 68, 0.3) 100%)',
+                outline: 'none',
+                WebkitAppearance: 'none',
+                cursor: 'pointer'
+              }}
+            />
+            
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginTop: '8px',
+              fontSize: '0.7rem',
+              color: 'rgba(255,255,255,0.6)'
+            }}>
+              <span>Bairro</span>
+              <span>Região</span>
+              <span>Cidade</span>
+            </div>
+            
+            {/* Impact Indicator */}
+            <motion.div 
+              key={`impact-${Math.floor(formData.radius / 10)}`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                marginTop: '16px',
+                padding: '12px',
+                background: 'rgba(255,255,255,0.05)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '8px'
+              }}>
+                <motion.div 
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: formData.radius <= 5 ? '#10b981' : formData.radius <= 15 ? '#f59e0b' : '#ef4444'
+                  }} 
+                />
+                <span style={{
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  color: 'white'
+                }}>
+                  Impacto: {
+                    formData.radius <= 5 ? 'Focado no Bairro' :
+                    formData.radius <= 15 ? 'Alcance Regional' :
+                    'Visibilidade Ampla'
+                  }
+                </span>
+              </div>
+              <p style={{
+                fontSize: '0.7rem',
+                color: 'rgba(255,255,255,0.7)',
+                margin: 0,
+                lineHeight: '1.4'
+              }}>
+                {
+                  formData.radius <= 5 ? 'Ideal para necessidades locais e construção de vínculos comunitários.' :
+                  formData.radius <= 15 ? 'Equilibra alcance e proximidade, ótimo para a maioria dos casos.' :
+                  'Máxima visibilidade, recomendado para urgências críticas.'
+                }
+              </p>
+            </motion.div>
+          </motion.div>
+        </div>
       </div>
     </motion.div>
   );

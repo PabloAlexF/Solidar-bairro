@@ -9,15 +9,36 @@ export const useIsMobile = () => {
       const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
       const isMobileDevice = mobileRegex.test(userAgent.toLowerCase());
       const isSmallScreen = window.innerWidth <= 768;
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       
-      console.log('Device check:', { isMobileDevice, isSmallScreen, width: window.innerWidth });
-      setIsMobile(isMobileDevice || isSmallScreen);
+      const shouldUseMobile = isMobileDevice || isSmallScreen || isTouchDevice;
+      
+      console.log('Device check:', { 
+        isMobileDevice, 
+        isSmallScreen, 
+        isTouchDevice,
+        shouldUseMobile,
+        width: window.innerWidth 
+      });
+      
+      setIsMobile(shouldUseMobile);
     };
 
     checkDevice();
-    window.addEventListener('resize', checkDevice);
     
-    return () => window.removeEventListener('resize', checkDevice);
+    const debouncedResize = () => {
+      clearTimeout(window.resizeTimeout);
+      window.resizeTimeout = setTimeout(checkDevice, 150);
+    };
+    
+    window.addEventListener('resize', debouncedResize);
+    window.addEventListener('orientationchange', checkDevice);
+    
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      window.removeEventListener('orientationchange', checkDevice);
+      clearTimeout(window.resizeTimeout);
+    };
   }, []);
 
   return isMobile;

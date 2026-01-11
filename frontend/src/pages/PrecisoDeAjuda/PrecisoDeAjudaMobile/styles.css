@@ -1,9 +1,20 @@
 .pdam-container {
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
   background: linear-gradient(135deg, #f8fafc, #f0f9ff);
   display: flex;
   flex-direction: column;
   position: relative;
+  width: 100%;
+  overflow-x: hidden;
+  
+  /* CSS Variables */
+  --pda-primary: #f97316;
+  --pda-danger: #ef4444;
+  --pda-success: #10b981;
+  --pda-warning: #f59e0b;
+  --pda-info: #3b82f6;
+  --pda-dark: #0f172a;
 }
 
 .pdam-header {
@@ -91,6 +102,7 @@
   padding: 20px;
   overflow-y: auto;
   padding-bottom: 100px;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
 .pdam-step {
@@ -140,6 +152,13 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .pdam-categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
 }
 
 .pdam-cat-btn {
@@ -845,9 +864,216 @@
   border: 1.5px solid #1e293b;
   overflow: hidden;
   position: relative;
-  height: 380px;
+  height: 450px;
   margin-top: 20px;
   box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .pdam-map-section-v2 {
+    height: 380px;
+    margin: 16px -20px 20px -20px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .pdam-map-section-v2 {
+    height: 350px;
+  }
+}
+
+/* Custom Leaflet Styles */
+.leaflet-container {
+  background: #f8fafc !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border: none;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+
+.leaflet-popup-tip {
+  background: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.custom-marker {
+  animation: markerPulse 2s ease-in-out infinite;
+}
+
+@keyframes markerPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Range Slider Styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-track {
+  background: rgba(255, 255, 255, 0.2);
+  height: 6px;
+  border-radius: 3px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #f97316;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
+input[type="range"]::-moz-range-track {
+  background: rgba(255, 255, 255, 0.2);
+  height: 6px;
+  border-radius: 3px;
+  border: none;
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #f97316;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  cursor: pointer;
+  border: none;
+}
+
+/* Map Animation Effects */
+.map-radius-animation {
+  animation: radiusExpand 0.6s ease-out;
+}
+
+@keyframes radiusExpand {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Floating Elements Animation */
+.floating-overlay {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Pulse Effect for Active Elements */
+.pulse-effect {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Background Animation */
+@keyframes backgroundShift {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  33% {
+    transform: rotate(1deg) scale(1.02);
+  }
+  66% {
+    transform: rotate(-1deg) scale(0.98);
+  }
+}
+
+/* Glow Effect for Interactive Elements */
+.glow-effect {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+.glow-effect:hover {
+  box-shadow: 0 0 30px rgba(249, 115, 22, 0.5);
+}
+
+/* Smooth Transitions for Map Elements */
+.map-transition {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive adjustments for map */
+@media (max-width: 480px) {
+  .pdam-map-section-v2 {
+    height: 360px;
+  }
+  
+  .leaflet-popup-content-wrapper {
+    font-size: 0.875rem;
+  }
+}
+
+/* Particle Animation */
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  25% {
+    transform: translateY(-10px) translateX(5px);
+  }
+  50% {
+    transform: translateY(-5px) translateX(-5px);
+  }
+  75% {
+    transform: translateY(-15px) translateX(3px);
+  }
 }
 
 .pdam-map-label-v2 {

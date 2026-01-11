@@ -110,6 +110,7 @@
   --sidebar-ring: #94a3b8 !important;
 }
 
+/* Mobile-first responsive design */
 * {
   margin: 0;
   padding: 0;
@@ -123,6 +124,9 @@ html, body, #root, .App {
   max-width: none !important;
   margin: 0 !important;
   padding: 0 !important;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Forçar tema claro por padrão */
@@ -133,6 +137,7 @@ html, body {
   max-width: none !important;
   margin: 0 !important;
   padding: 0 !important;
+  overflow-x: hidden;
 }
 
 /* Garantir que elementos principais tenham fundo claro */
@@ -147,6 +152,7 @@ body {
   background-color: #ffffff;
   color: #0f172a;
   font-family: 'Outfit', sans-serif;
+  touch-action: manipulation; /* Improve touch responsiveness */
 }
 
 /* SolidarBairro Enhanced Styles */

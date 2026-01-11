@@ -1,0 +1,1 @@
+import React from 'react';\nimport { BrowserRouter } from 'react-router-dom';\nimport PrecisoDeAjuda from '../src/pages/PrecisoDeAjuda';\n\nfunction TestApp() {\n  return (\n    <BrowserRouter>\n      <div className=\"App\">\n        <PrecisoDeAjuda />\n      </div>\n    </BrowserRouter>\n  );\n}\n\nexport default TestApp;
