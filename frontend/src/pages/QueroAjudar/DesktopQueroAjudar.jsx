@@ -1062,31 +1062,18 @@ export default function DesktopQueroAjudar() {
                   className="btn-confirm-chat"
                   onClick={async () => {
                     try {
-                      // Primeiro registrar interesse
-                      const interesseData = {
-                        pedidoId: orderToHelp.id,
-                        tipo: 'ajuda',
-                        observacoes: 'Interesse em ajudar através da plataforma'
-                      };
-                      
-                      await ApiService.createInteresse(interesseData);
-                      
-                      // Depois criar conversa
+                      // Criar conversa diretamente
                       const conversationData = {
-                        participantId: orderToHelp.userId,
+                        participants: [orderToHelp.userId],
+                        pedidoId: orderToHelp.id,
                         type: 'ajuda',
-                        metadata: {
-                          pedidoId: orderToHelp.id,
-                          categoria: orderToHelp.category,
-                          titulo: orderToHelp.title
-                        }
+                        title: `Ajuda: ${orderToHelp.title}`
                       };
                       
                       const response = await ApiService.createConversation(conversationData);
                       
                       if (response.success) {
                         toast.success('Conversa iniciada! Redirecionando...');
-                        // Redirecionar para o chat
                         window.location.href = `/chat/${response.data.id}`;
                       } else {
                         throw new Error(response.error || 'Erro ao criar conversa');

@@ -3,7 +3,7 @@ const chatService = require('../services/chatService');
 class ChatController {
   async createConversation(req, res) {
     try {
-      const { participants, pedidoId, type, title } = req.body;
+      const { participants, pedidoId, type, title, initialMessage } = req.body;
       
       // Garantir array válido e adicionar usuário atual
       const validParticipants = Array.isArray(participants) ? [...participants] : [];
@@ -19,7 +19,9 @@ class ChatController {
         participants: validParticipants.filter(p => p),
         pedidoId,
         type,
-        title
+        title,
+        initialMessage,
+        senderId: currentUserId
       });
       
       res.status(201).json({ success: true, data: conversation });

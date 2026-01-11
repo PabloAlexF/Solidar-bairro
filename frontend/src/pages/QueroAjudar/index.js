@@ -1785,15 +1785,19 @@ export default function QueroAjudarPage() {
                           title: `Ajuda: ${orderToHelp.title}`
                         };
                         
-                        await apiService.createConversation(conversationData);
-                        toast.success('Conversa iniciada! Redirecionando...');
+                        const response = await apiService.createConversation(conversationData);
                         
-                        setTimeout(() => {
-                          navigate('/conversas');
-                        }, 1500);
+                        if (response.success) {
+                          toast.success('Conversa iniciada! Redirecionando...');
+                          setTimeout(() => {
+                            navigate('/conversas');
+                          }, 1500);
+                        } else {
+                          throw new Error(response.error || 'Erro ao criar conversa');
+                        }
                       } catch (error) {
                         console.error('Erro ao criar conversa:', error);
-                        toast.error('Erro ao iniciar conversa');
+                        toast.error('Erro ao iniciar conversa: ' + error.message);
                       }
                       setOrderToHelp(null);
                     }}
