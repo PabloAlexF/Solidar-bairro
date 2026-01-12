@@ -8,6 +8,7 @@
   padding: 40px 20px;
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
+  padding-top: 120px;
 }
 
 @keyframes gradientShift {

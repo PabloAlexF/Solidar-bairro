@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import LandingHeader from '../../components/layout/LandingHeader';
 import { 
   Users, Building2, Heart, Sparkles, User, Store, 
   ArrowRight, MessageCircle, Info, ShieldCheck, ArrowLeft 
@@ -107,20 +108,9 @@ export default function CadastroMobile() {
 
   return (
     <div className="vlt-reg-wrapper" id="vlt-reg-root">
-      <header className="vlt-reg-header">
-        <Link to="/" className="vlt-reg-back-btn" id="vlt-reg-back-btn">
-          <ArrowLeft size={20} />
-          <span>Início</span>
-        </Link>
-        <div className="vlt-reg-header-spacer" />
-      </header>
+      <LandingHeader scrolled={true} />
       
-      <div className="vlt-reg-bg-decoration">
-        <div className="vlt-reg-blob-o" />
-        <div className="vlt-reg-blob-i" />
-      </div>
-
-      <main id="vlt-reg-main-content">
+      <main id="vlt-reg-main-content" style={{ paddingTop: '80px' }}>
         <div className="vlt-reg-hero">
           <div className="vlt-reg-badge-sparkles">
             <Sparkles />

@@ -31,6 +31,7 @@ import {
   Car,
   Receipt
 } from 'lucide-react';
+import LandingHeader from '../../components/layout/LandingHeader';
 import './styles.css';
 import { 
   CATEGORY_METADATA, 
@@ -662,7 +663,9 @@ export default function DesktopQueroAjudar() {
       <a href="#main-content" className="skip-link">Pular para o conteúdo principal</a>
       <AnimatedBackground />
       
-      <div className="qa-main-wrapper" id="main-content">
+      <LandingHeader scrolled={true} />
+      
+      <div className="qa-main-wrapper" id="main-content" style={{ paddingTop: '80px' }}>
         
         <animated.header className="page-header" style={headerSpring} ref={headerRef}>
           <div className="brand-box">

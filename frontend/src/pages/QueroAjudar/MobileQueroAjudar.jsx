@@ -3,6 +3,7 @@ import { useInView } from 'react-intersection-observer';
 import toast, { Toaster } from 'react-hot-toast';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import LandingHeader from '../../components/layout/LandingHeader';
 import { 
   MapPin, 
   Heart,
@@ -363,7 +364,8 @@ export const MobileQueroAjudar = () => {
 
   return (
     <div className="qa-page-mobile">
-      <div className="qa-main-wrapper-mobile">
+      <LandingHeader scrolled={true} />
+      <div className="qa-main-wrapper-mobile" style={{ paddingTop: '80px' }}>
         <header className="page-header-mobile">
           <div className="brand-box-mobile">
             <Heart size={24} fill="#ef4444" color="#ef4444" />

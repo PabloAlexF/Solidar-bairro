@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapaAlcance } from './MapaAlcance';
 import { AnalyzingModal, InconsistentModal, SuccessModal } from './modals';
 import AnimatedParticles from '../AnimatedParticles';
+import LandingHeader from '../../../components/layout/LandingHeader';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -799,6 +800,7 @@ export function PrecisoDeAjudaDesktop() {
 
   return (
     <div className="pda-novo-pedido-container">
+      <LandingHeader />
       {isAnalyzing && <AnalyzingModal stages={stages} analysisStage={analysisStage} />}
       
       {isPublished && <SuccessModal urgencyColor={selectedUrgency?.color || '#f97316'} urgencyLabel={selectedUrgency?.label || ''} urgencyIcon={selectedUrgency?.icon} reason={analysis?.reason || ''} onClose={() => navigate('/')} />}

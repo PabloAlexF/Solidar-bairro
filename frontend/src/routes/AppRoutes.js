@@ -36,7 +36,7 @@ const AppRoutes = () => {
       <Route path="/cadastro/comercio" element={<CadastroComercio />} />
       <Route path="/cadastro/familia" element={<CadastroFamilia />} />
       <Route path="/cadastro/ong" element={<CadastroONG />} />
-      <Route path="/quero-ajudar" element={<Layout showHeader={false}><QueroAjudar /></Layout>} />
+      <Route path="/quero-ajudar" element={<QueroAjudar />} />
       <Route path="/preciso-de-ajuda" element={<PrecisoDeAjuda />} />
       <Route path="/achados-e-perdidos" element={<AchadosEPerdidos />} />
       <Route path="/achados-e-perdidos/novo" element={<Layout><NovoAnuncio /></Layout>} />

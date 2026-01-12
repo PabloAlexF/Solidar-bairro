@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import DashboardMobile from './DashboardMobile';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -148,6 +150,7 @@ const mockApiService = {
 };
 
 export default function AdminDashboard() {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [ongs, setOngs] = useState([]);
   const [commerces, setCommerces] = useState([]);
@@ -306,6 +309,11 @@ export default function AdminDashboard() {
     if (activeTab === 'citizens') return matchesSearch && (profile.role === 'citizen' || profile.role === 'user' || !profile.role);
     return false;
   });
+
+  // Render mobile version if on mobile device
+  if (isMobile) {
+    return <DashboardMobile />;
+  }
 
   return (
     <div className="admin-dashboard-wrapper">

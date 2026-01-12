@@ -7,6 +7,7 @@ import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { Tooltip } from 'react-tooltip';
 import apiService from '../../services/apiService';
+import LandingHeader from '../../components/layout/LandingHeader';
 import { 
   MapPin, 
   Heart,
@@ -1267,10 +1268,11 @@ export default function QueroAjudarPage() {
 
   return (
     <div className="qa-page">
+      <LandingHeader />
       <a href="#main-content" className="skip-link">Pular para o conteúdo principal</a>
       <AnimatedBackground />
       
-      <div className="qa-main-wrapper" id="main-content">
+      <div className="qa-main-wrapper" id="main-content" style={{ paddingTop: '80px' }}>
         
         <animated.header className="page-header" style={headerSpring} ref={headerRef}>
           <div className="brand-box">

@@ -28,6 +28,7 @@
 
 /* Base Container - Immersive */
 .pda-novo-pedido-container {
+  padding-top: 100px;
   min-height: 100vh;
   background: radial-gradient(circle at top left, #fdfcfb, #e2d1c3);
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -36,7 +37,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 120px 40px 40px 40px;
   font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
 }
 

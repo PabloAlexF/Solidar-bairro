@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Building2, Heart, Sparkles, User, Store, ArrowRight, Zap, TrendingUp } from 'lucide-react';
-import Header from '../../components/layout/Header';
+import LandingHeader from '../../components/layout/LandingHeader';
 import './styles.css';
 
 // Exports dos componentes de cadastro
@@ -116,7 +116,7 @@ export default function CadastroPage() {
         <div className="blob-indigo animate-pulse-slow" style={{ animationDelay: '-5s' }} />
       </div>
 
-      <Header />
+      <LandingHeader scrolled={true} />
 
       <main>
         <div className="cadastro-hero">

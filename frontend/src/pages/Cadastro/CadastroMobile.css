@@ -33,6 +33,7 @@
   overflow-x: hidden;
   position: relative;
   padding: 0 1rem;
+  padding-top: 80px;
 }
 
 .vlt-reg-header {

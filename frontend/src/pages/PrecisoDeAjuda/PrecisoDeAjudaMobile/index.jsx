@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AnalyzingModal, InconsistentModal, SuccessModal } from '../modals';
 import MapaAlcance from '../MapaAlcance';
 import AnimatedParticles from '../AnimatedParticles';
+import LandingHeader from '../../../components/layout/LandingHeader';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -956,6 +957,7 @@ export function PrecisoDeAjudaMobile() {
 
   return (
     <div className="pdam-container">
+      <LandingHeader />
       {isAnalyzing && <AnalyzingModal stages={stages} analysisStage={analysisStage} />}
       {isPublished && (
         <SuccessModal 

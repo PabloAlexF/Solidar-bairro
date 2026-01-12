@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatLocation } from '../../utils/addressUtils';
 import apiService from '../../services/apiService';
+import LandingHeader from '../../components/layout/LandingHeader';
 import { 
   Search, 
   Plus, 
@@ -617,70 +618,10 @@ export default function DesktopAchadosEPerdidos() {
     <div className="lost-found-wrapper">
       <div className="lf-bg-mesh"></div>
       
-      {/* Header Navigation */}
-      <nav className={`lf-nav ${scrolled ? 'scrolled' : ''}`}>
-        <div className="lf-nav-container">
-          <div className="lf-nav-left">
-            <button 
-              onClick={() => navigate('/')}
-              className="lf-back-btn"
-            >
-              <ArrowLeft size={20} />
-              <span>Início</span>
-            </button>
-            
-            <div className="lf-nav-divider" />
-            
-            <div className="lf-logo" onClick={() => navigate('/')}>
-              <Heart size={24} fill="#0d9488" />
-              <span>Solidar<span className="logo-accent">Bairro</span></span>
-            </div>
-          </div>
-          
-          <div className="lf-nav-right">
-            {!isAuthenticated() ? (
-              <div className="lf-auth-buttons">
-                <button 
-                  className="lf-login-btn"
-                  onClick={() => navigate('/login')}
-                >
-                  Entrar
-                </button>
-                <button 
-                  className="lf-register-btn" 
-                  onClick={() => navigate('/cadastro')}
-                >
-                  Cadastrar
-                </button>
-              </div>
-            ) : (
-              <div className="lf-user-section">
-                <button 
-                  className="lf-notification-btn"
-                  onClick={() => setShowNotifications(!showNotifications)}
-                >
-                  <Bell size={20} />
-                  {unreadCount > 0 && (
-                    <span className="lf-notification-badge">{unreadCount}</span>
-                  )}
-                </button>
-                
-                <button 
-                  className="lf-user-btn"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                >
-                  <div className="lf-user-avatar">
-                    {userName?.substring(0, 2).toUpperCase()}
-                  </div>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
+      <LandingHeader scrolled={scrolled} />
       
       {/* Hero Section */}
-      <header className="lf-header">
+      <header className="lf-header" style={{ paddingTop: '80px' }}>
         <div className="lf-container">
           <div className="lf-header-content">
             <div className="lf-title-group">

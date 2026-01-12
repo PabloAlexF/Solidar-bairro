@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/apiService';
+import LandingHeader from '../../components/layout/LandingHeader';
 import { 
   Search, 
   Plus, 
@@ -563,24 +564,9 @@ export default function MobileAchadosEPerdidos() {
     <div className="mobile-lost-found-wrapper">
       <div className="mobile-lf-bg-mesh"></div>
       
-      <nav className="mobile-lf-nav">
-        <div className="mobile-lf-nav-container">
-          <button className="mobile-lf-back-btn">
-            <ArrowLeft size={18} />
-            <span>Voltar</span>
-          </button>
-          
-          <div className="mobile-lf-logo">
-            <span>Achados<span className="mobile-logo-accent">&Perdidos</span></span>
-          </div>
-
-          <button className="mobile-lf-nav-action-btn" onClick={() => setIsModalOpen(true)}>
-            <Plus size={18} />
-          </button>
-        </div>
-      </nav>
+      <LandingHeader scrolled={true} />
       
-      <header className="mobile-lf-header">
+      <header className="mobile-lf-header" style={{ paddingTop: '80px' }}>
         <div className="mobile-lf-container">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}

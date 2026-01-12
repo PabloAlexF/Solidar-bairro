@@ -32,6 +32,7 @@
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
   overflow: hidden;
   position: relative;
+  padding-top: 80px;
 }
 
 .cadastro-wrapper::selection {
