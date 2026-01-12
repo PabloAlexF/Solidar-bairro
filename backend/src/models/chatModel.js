@@ -11,6 +11,8 @@ class ChatModel {
     const cleanData = {
       participants: (data.participants || []).filter(p => p && typeof p === 'string'),
       pedidoId: data.pedidoId || null,
+      itemId: data.itemId || null,
+      itemType: data.itemType || null,
       type: data.type || 'direct',
       title: data.title || null,
       createdAt: new Date(),

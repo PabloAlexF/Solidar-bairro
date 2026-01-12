@@ -54,7 +54,7 @@ const STATS = [
 
 // --- Sub-components ---
 
-const ItemCard = ({ item, onOpenDetails, isPreview = false }) => {
+const ItemCard = ({ item, onOpenDetails, handleOpenChat, isPreview = false }) => {
   return (
     <motion.div 
       layout
@@ -121,7 +121,7 @@ const ItemCard = ({ item, onOpenDetails, isPreview = false }) => {
         <button className="lf-details-btn" onClick={() => onOpenDetails && onOpenDetails(item)}>
           VER DETALHES
         </button>
-        <button className="lf-chat-btn">
+        <button className="lf-chat-btn" onClick={() => handleOpenChat && handleOpenChat(item)}>
           ABRIR CHAT
         </button>
       </div>
@@ -294,6 +294,32 @@ export default function DesktopAchadosEPerdidos() {
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 5));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+  const handleOpenChat = async (item) => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+
+    // Para demonstração, vamos usar um ID fictício se não houver user_id
+    const targetUserId = item.user_id || item.created_by || 'demo-user-' + item.id;
+    
+    try {
+      const response = await apiService.createOrGetConversation({
+        participantId: targetUserId,
+        itemId: item.id,
+        itemType: 'achado_perdido',
+        title: `Achados e Perdidos: ${item.title}`
+      });
+
+      if (response.success) {
+        navigate(`/chat/${response.data.id}`);
+      }
+    } catch (error) {
+      console.error('Erro ao abrir chat:', error);
+      alert('Erro ao abrir chat. Tente novamente.');
+    }
+  };
 
   // Refetch when filters change
   useEffect(() => {
@@ -802,6 +828,7 @@ export default function DesktopAchadosEPerdidos() {
                     key={item.id} 
                     item={item} 
                     onOpenDetails={(item) => setSelectedItem(item)}
+                    handleOpenChat={handleOpenChat}
                   />
                 ))
               ) : (
@@ -907,7 +934,7 @@ export default function DesktopAchadosEPerdidos() {
                         <span>{selectedItem.contact_info}</span>
                       </div>
                     </div>
-                    <button className="lf-main-btn" style={{ width: '100%', marginTop: '1.5rem' }}>
+                    <button className="lf-main-btn" style={{ width: '100%', marginTop: '1.5rem' }} onClick={() => handleOpenChat(selectedItem)}>
                       <Sparkles size={20} />
                       ABRIR CHAT AGORA
                     </button>
@@ -987,7 +1014,7 @@ export default function DesktopAchadosEPerdidos() {
                       <span style={{ marginLeft: '8px' }}>PRÉ-VISUALIZAÇÃO EM TEMPO REAL</span>
                     </div>
                     <div style={{ width: '100%', maxWidth: '320px' }}>
-                      <ItemCard item={formData} isPreview />
+                      <ItemCard item={formData} isPreview handleOpenChat={() => {}} />
                     </div>
                   </div>
                 </div>

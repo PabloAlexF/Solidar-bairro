@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import apiService from '../../services/apiService';
 import { 
   Search, 
   Plus, 
@@ -36,7 +39,7 @@ const CATEGORIES = [
   'Outros'
 ];
 
-const ItemCard = ({ item, onOpenDetails, isPreview = false }) => {
+const ItemCard = ({ item, onOpenDetails, handleOpenChat, isPreview = false }) => {
   return (
     <motion.div 
       layout
@@ -102,7 +105,7 @@ const ItemCard = ({ item, onOpenDetails, isPreview = false }) => {
         <button className="mobile-lf-details-btn" onClick={() => onOpenDetails && onOpenDetails(item)}>
           VER DETALHES
         </button>
-        <button className="mobile-lf-chat-btn">
+        <button className="mobile-lf-chat-btn" onClick={() => handleOpenChat && handleOpenChat(item)}>
           ABRIR CHAT
         </button>
       </div>
@@ -111,6 +114,8 @@ const ItemCard = ({ item, onOpenDetails, isPreview = false }) => {
 };
 
 export default function MobileAchadosEPerdidos() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -247,6 +252,32 @@ export default function MobileAchadosEPerdidos() {
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 5));
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+  const handleOpenChat = async (item) => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+
+    // Para demonstração, vamos usar um ID fictício se não houver user_id
+    const targetUserId = item.user_id || item.created_by || 'demo-user-' + item.id;
+    
+    try {
+      const response = await apiService.createOrGetConversation({
+        participantId: targetUserId,
+        itemId: item.id,
+        itemType: 'achado_perdido',
+        title: `Achados e Perdidos: ${item.title}`
+      });
+
+      if (response.success) {
+        navigate(`/chat/${response.data.id}`);
+      }
+    } catch (error) {
+      console.error('Erro ao abrir chat:', error);
+      alert('Erro ao abrir chat. Tente novamente.');
+    }
+  };
 
   useEffect(() => {
     fetchItems();
@@ -669,6 +700,7 @@ export default function MobileAchadosEPerdidos() {
                     key={item.id} 
                     item={item} 
                     onOpenDetails={(item) => setSelectedItem(item)}
+                    handleOpenChat={handleOpenChat}
                   />
                 ))
               ) : (
@@ -769,7 +801,7 @@ export default function MobileAchadosEPerdidos() {
                         <span>{selectedItem.contact_info}</span>
                       </div>
                     </div>
-                    <button className="mobile-lf-main-btn full-width">
+                    <button className="mobile-lf-main-btn full-width" onClick={() => handleOpenChat(selectedItem)}>
                       <Sparkles size={18} />
                       ABRIR CHAT
                     </button>

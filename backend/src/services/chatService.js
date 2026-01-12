@@ -53,6 +53,25 @@ class ChatService {
     }
   }
 
+  async findConversationByItem(currentUserId, participantId, itemId, itemType) {
+    try {
+      // Buscar conversas do usuário atual
+      const conversations = await chatModel.getConversationsByUser(currentUserId);
+      
+      // Procurar conversa que contenha os dois participantes e o mesmo item
+      return conversations.find(conv => {
+        const hasParticipants = conv.participants.includes(currentUserId) && 
+                              conv.participants.includes(participantId);
+        const sameItem = conv.itemId === itemId && conv.itemType === itemType;
+        
+        return hasParticipants && sameItem;
+      });
+    } catch (error) {
+      console.error('Erro ao buscar conversa por item:', error);
+      return null;
+    }
+  }
+
   async findExistingConversation(participants, pedidoId = null) {
     // Buscar todas as conversas do primeiro participante
     const snapshot = await chatModel.getConversationsByUser(participants[0]);

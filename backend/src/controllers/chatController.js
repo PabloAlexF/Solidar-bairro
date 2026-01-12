@@ -31,6 +31,39 @@ class ChatController {
     }
   }
 
+  async createOrGetConversation(req, res) {
+    try {
+      const { participantId, itemId, itemType, title } = req.body;
+      const currentUserId = req.user.uid || req.user.id;
+      
+      // Buscar conversa existente
+      const existingConversation = await chatService.findConversationByItem(
+        currentUserId, 
+        participantId, 
+        itemId, 
+        itemType
+      );
+      
+      if (existingConversation) {
+        return res.json({ success: true, data: existingConversation });
+      }
+      
+      // Criar nova conversa
+      const conversation = await chatService.createConversation({
+        participants: [currentUserId, participantId],
+        itemId,
+        itemType,
+        title,
+        senderId: currentUserId
+      });
+      
+      res.status(201).json({ success: true, data: conversation });
+    } catch (error) {
+      console.error('Erro ao criar/buscar conversa:', error);
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
   async getConversations(req, res) {
     try {
       const conversations = await chatService.getConversations(req.user.uid);

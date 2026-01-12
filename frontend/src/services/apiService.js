@@ -115,6 +115,13 @@ const ApiService = {
     });
   },
 
+  async createOrGetConversation(data) {
+    return this.request('/chat/conversations/create-or-get', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
   async getConversations() {
     return this.request('/chat/conversations');
   },
