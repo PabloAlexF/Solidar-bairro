@@ -60,6 +60,14 @@ class InteresseService {
     return await interesseModel.findByUserId(userId);
   }
 
+  async getInteresseById(id) {
+    if (!id?.trim()) {
+      throw new Error('ID do interesse é obrigatório');
+    }
+    
+    return await interesseModel.findById(id);
+  }
+
   async updateInteresse(id, updateData) {
     if (!id?.trim()) {
       throw new Error('ID do interesse é obrigatório');

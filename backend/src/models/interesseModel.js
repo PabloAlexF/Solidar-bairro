@@ -52,6 +52,23 @@ class InteresseModel {
     }
   }
 
+  async findById(id) {
+    try {
+      const doc = await this.collection.doc(id).get();
+      
+      if (!doc.exists) {
+        return null;
+      }
+      
+      return {
+        id: doc.id,
+        ...doc.data()
+      };
+    } catch (error) {
+      throw new Error(`Erro ao buscar interesse: ${error.message}`);
+    }
+  }
+
   async update(id, updateData) {
     try {
       await this.collection.doc(id).update({

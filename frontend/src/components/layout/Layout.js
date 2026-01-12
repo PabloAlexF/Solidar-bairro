@@ -1,6 +1,6 @@
 import React from 'react';
 import LandingHeader from './LandingHeader';
-import '../../styles/components/Layout.css';
+import '../../styles/components/layout.css';
 
 const Layout = ({ children, showHeader = true }) => {
   return (

@@ -1,0 +1,248 @@
+.chat-context-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.chat-context-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.chat-context-card.loading,
+.chat-context-card.error {
+  justify-content: center;
+  padding: 24px;
+}
+
+.loading-spinner {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.card-left-section {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.card-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  margin-right: 12px;
+  color: #6b7280;
+}
+
+.card-info-text h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.help-title {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.help-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.urgency-pill {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.urgency-pill.high {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.urgency-pill.medium {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fed7aa;
+}
+
+.urgency-pill.low {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.neighborhood-pill {
+  padding: 4px 8px;
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.card-middle-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.status-progress-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.status-step.completed .step-dot {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.step-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+  text-align: center;
+}
+
+.status-step.completed .step-label {
+  color: #10b981;
+}
+
+.progress-line {
+  width: 24px;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 4px;
+}
+
+.card-right-section {
+  display: flex;
+  align-items: center;
+}
+
+.finish-collaboration-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.finish-collaboration-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.finish-collaboration-btn:active {
+  transform: translateY(0);
+}
+
+.collaboration-completed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chat-context-card {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .card-middle-section {
+    padding: 0;
+  }
+  
+  .status-progress-bar {
+    justify-content: center;
+  }
+  
+  .card-right-section {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .help-tags {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .status-progress-bar {
+    gap: 4px;
+  }
+  
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+  
+  .progress-line {
+    width: 16px;
+  }
+}

@@ -103,15 +103,15 @@ const Chat = () => {
     } : chatContacts[0]);
 
   const helpInfo = {
-    type: pedidoData?.titulo || pedidoData?.category || "Doação de Cesta Básica",
-    urgency: pedidoData?.urgencia || pedidoData?.priority || "high",
-    bairro: pedidoData?.endereco?.bairro || pedidoData?.bairro || "São Lucas",
-    distance: "450 m",
+    type: pedidoData?.titulo || pedidoData?.category || pedidoData?.description || "Aguardando informações...",
+    urgency: pedidoData?.urgency || pedidoData?.urgencia || "medium",
+    bairro: pedidoData?.location?.split(',')[0] || pedidoData?.endereco?.bairro || pedidoData?.bairro || "Carregando...",
+    distance: pedidoData?.distance || "Calculando...",
     status: deliveryStatus,
+    categoria: pedidoData?.category || "Geral",
+    descricao: pedidoData?.description || pedidoData?.descricao || "",
+    cidade: pedidoData?.city || (pedidoData?.location ? pedidoData.location.split(',')[1]?.split('-')[0]?.trim() : "")
   };
-  
-  console.log('helpInfo atual:', helpInfo);
-  console.log('pedidoData atual:', pedidoData);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -484,13 +484,21 @@ const Chat = () => {
                 <div className="card-info-text">
                   <h4>Resumo da Colaboração</h4>
                   <p className="help-title">{helpInfo.type}</p>
+                  {helpInfo.descricao && (
+                    <p className="help-description">{helpInfo.descricao}</p>
+                  )}
                   <div className="help-tags">
                     <span className={`urgency-pill ${helpInfo.urgency}`}>
-                      Urgência {helpInfo.urgency === "high" ? "Alta" : "Média"}
+                      Urgência {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
                     </span>
                     <span className="neighborhood-pill">
-                      {helpInfo.bairro}
+                      {helpInfo.bairro}{helpInfo.cidade && `, ${helpInfo.cidade}`}
                     </span>
+                    {helpInfo.categoria && helpInfo.categoria !== "Geral" && (
+                      <span className="category-pill">
+                        {helpInfo.categoria}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

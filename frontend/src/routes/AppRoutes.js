@@ -40,7 +40,8 @@ const AppRoutes = () => {
       <Route path="/achados-e-perdidos" element={<AchadosEPerdidos />} />
       <Route path="/achados-e-perdidos/novo" element={<Layout><NovoAnuncio /></Layout>} />
       <Route path="/perfil" element={<Perfil />} />
-      <Route path="/chat/:id" element={<Layout><Chat /></Layout>} />
+      <Route path="/conversas" element={<Conversas />} />
+      <Route path="/chat/:id" element={<Layout showHeader={false}><Chat /></Layout>} />
     </Routes>
   );
 };

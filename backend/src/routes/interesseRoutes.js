@@ -9,6 +9,9 @@ router.use(authenticateToken);
 // POST /api/interesses - Registrar interesse em ajudar
 router.post('/', interesseController.create);
 
+// GET /api/interesses/:id - Buscar interesse específico
+router.get('/:id', interesseController.getById);
+
 // GET /api/interesses/pedido/:pedidoId - Listar interesses de um pedido
 router.get('/pedido/:pedidoId', interesseController.getByPedido);
 

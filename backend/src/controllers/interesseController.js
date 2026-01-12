@@ -60,6 +60,31 @@ class InteresseController {
     }
   }
 
+  async getById(req, res) {
+    try {
+      const { id } = req.params;
+      const interesse = await interesseService.getInteresseById(id);
+      
+      if (!interesse) {
+        return res.status(404).json({
+          success: false,
+          error: 'Interesse não encontrado'
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: interesse
+      });
+    } catch (error) {
+      console.error('Erro ao buscar interesse:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
   async update(req, res) {
     try {
       const { id } = req.params;
