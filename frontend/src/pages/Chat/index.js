@@ -40,6 +40,8 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [conversation, setConversation] = useState(null);
   const [pedidoData, setPedidoData] = useState(null);
+  const [achadoPerdidoData, setAchadoPerdidoData] = useState(null);
+  const [contextType, setContextType] = useState(null); // 'pedido' ou 'achado-perdido'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -102,16 +104,52 @@ const Chat = () => {
       online: Math.random() > 0.5
     } : chatContacts[0]);
 
-  const helpInfo = {
-    type: pedidoData?.titulo || pedidoData?.category || pedidoData?.description || "Aguardando informações...",
-    urgency: pedidoData?.urgency || pedidoData?.urgencia || "medium",
-    bairro: pedidoData?.location?.split(',')[0] || pedidoData?.endereco?.bairro || pedidoData?.bairro || "Carregando...",
-    distance: pedidoData?.distance || "Calculando...",
-    status: deliveryStatus,
-    categoria: pedidoData?.category || "Geral",
-    descricao: pedidoData?.description || pedidoData?.descricao || "",
-    cidade: pedidoData?.city || (pedidoData?.location ? pedidoData.location.split(',')[1]?.split('-')[0]?.trim() : "")
+  // Função para obter informações do contexto (pedido ou achado/perdido)
+  const getContextInfo = () => {
+    if (contextType === 'pedido' && pedidoData) {
+      return {
+        type: pedidoData?.titulo || pedidoData?.category || pedidoData?.description || "Aguardando informações...",
+        urgency: pedidoData?.urgency || pedidoData?.urgencia || "medium",
+        bairro: pedidoData?.location?.split(',')[0] || pedidoData?.endereco?.bairro || pedidoData?.bairro || "Carregando...",
+        distance: pedidoData?.distance || "Calculando...",
+        status: deliveryStatus,
+        categoria: pedidoData?.category || "Geral",
+        descricao: pedidoData?.description || pedidoData?.descricao || "",
+        cidade: pedidoData?.city || (pedidoData?.location ? pedidoData.location.split(',')[1]?.split('-')[0]?.trim() : ""),
+        contextType: 'pedido',
+        title: 'Resumo da Colaboração'
+      };
+    } else if (contextType === 'achado-perdido' && achadoPerdidoData) {
+      return {
+        type: achadoPerdidoData?.title || achadoPerdidoData?.description || "Item de Achados e Perdidos",
+        urgency: achadoPerdidoData?.type === 'perdido' ? 'high' : 'medium',
+        bairro: achadoPerdidoData?.location?.split(',')[0] || achadoPerdidoData?.endereco?.bairro || achadoPerdidoData?.bairro || "Carregando...",
+        distance: achadoPerdidoData?.distance || "Calculando...",
+        status: achadoPerdidoData?.resolved ? 'resolvido' : (achadoPerdidoData?.status || 'ativo'),
+        categoria: achadoPerdidoData?.category || "Objeto",
+        descricao: achadoPerdidoData?.description || "",
+        cidade: achadoPerdidoData?.city || (achadoPerdidoData?.location ? achadoPerdidoData.location.split(',')[1]?.split('-')[0]?.trim() : ""),
+        contextType: 'achado-perdido',
+        title: achadoPerdidoData?.type === 'perdido' ? 'Item Perdido' : 'Item Encontrado',
+        itemType: achadoPerdidoData?.type || 'perdido'
+      };
+    }
+    
+    return {
+      type: "Aguardando informações...",
+      urgency: "medium",
+      bairro: "Carregando...",
+      distance: "Calculando...",
+      status: deliveryStatus,
+      categoria: "Geral",
+      descricao: "",
+      cidade: "",
+      contextType: null,
+      title: 'Contexto da Conversa'
+    };
   };
+
+  const helpInfo = getContextInfo();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -157,6 +195,10 @@ const Chat = () => {
       
       if (conversationResponse.success) {
         const convData = conversationResponse.data;
+        console.log('Dados completos da conversa:', convData);
+        console.log('pedidoId:', convData.pedidoId);
+        console.log('itemId:', convData.itemId);
+        console.log('itemType:', convData.itemType);
         
         // Se não há dados dos participantes, buscar via API
         if (!convData.participantsData?.length && convData.participants?.length > 0) {
@@ -173,7 +215,7 @@ const Chat = () => {
           }
         }
         
-        // Buscar dados do pedido se existir
+        // Buscar dados do contexto (pedido ou achado/perdido)
         if (convData.pedidoId) {
           console.log('Buscando dados do pedido:', convData.pedidoId);
           try {
@@ -182,12 +224,34 @@ const Chat = () => {
             if (pedidoResponse.success && pedidoResponse.data) {
               console.log('Dados do pedido carregados:', pedidoResponse.data);
               setPedidoData(pedidoResponse.data);
+              setContextType('pedido');
             }
           } catch (error) {
             console.error('Erro ao buscar dados do pedido:', error);
           }
+        } else if (convData.itemId && convData.itemType === 'achado_perdido') {
+          console.log('Buscando dados do achado/perdido:', convData.itemId);
+          console.log('Tipo do item:', convData.itemType);
+          try {
+            const achadoResponse = await ApiService.getAchadoPerdido(convData.itemId);
+            console.log('Resposta do achado/perdido:', achadoResponse);
+            if (achadoResponse.success && achadoResponse.data) {
+              console.log('Dados do achado/perdido carregados:', achadoResponse.data);
+              setAchadoPerdidoData(achadoResponse.data);
+              setContextType('achado-perdido');
+            } else {
+              console.log('Resposta sem dados válidos:', achadoResponse);
+            }
+          } catch (error) {
+            console.error('Erro ao buscar dados do achado/perdido:', error);
+          }
         } else {
-          console.log('Conversa sem pedidoId');
+          console.log('Conversa sem contexto específico');
+          console.log('Dados da conversa:', {
+            pedidoId: convData.pedidoId,
+            itemId: convData.itemId,
+            itemType: convData.itemType
+          });
         }
         
         setConversation(convData);
@@ -213,6 +277,11 @@ const Chat = () => {
       setError('Erro ao carregar mensagens');
     } finally {
       setLoading(false);
+      console.log('Estado final do contexto:', {
+        contextType,
+        pedidoData: !!pedidoData,
+        achadoPerdidoData: !!achadoPerdidoData
+      });
     }
   };
 
@@ -285,13 +354,29 @@ const Chat = () => {
     }
   };
 
-  const handleFinishDelivery = () => {
+  const handleFinishDelivery = async () => {
     setShowFinishModal(false);
-    setShowConfirmation(true);
-    setDeliveryStatus("entregue");
-    setTimeout(() => {
-      setShowConfirmation(false);
-    }, 3000);
+    
+    try {
+      if (helpInfo.contextType === 'achado-perdido' && conversation?.itemId) {
+        // Marcar achado/perdido como resolvido
+        const response = await ApiService.resolverAchadoPerdido(conversation.itemId);
+        if (response.success) {
+          setAchadoPerdidoData(prev => ({ ...prev, resolved: true, status: 'resolvido' }));
+        }
+      } else {
+        // Finalizar pedido
+        setDeliveryStatus("entregue");
+      }
+      
+      setShowConfirmation(true);
+      setTimeout(() => {
+        setShowConfirmation(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Erro ao finalizar:', error);
+      alert('Erro ao finalizar. Tente novamente.');
+    }
   };
 
   const handleSendLocation = () => {
@@ -476,68 +561,110 @@ const Chat = () => {
 
           <div className="chat-content-scroll">
             {/* Context Info Card */}
-            <div className="chat-context-card">
-              <div className="card-left-section">
-                <div className="card-icon-box">
-                  <Package size={24} />
-                </div>
-                <div className="card-info-text">
-                  <h4>Resumo da Colaboração</h4>
-                  <p className="help-title">{helpInfo.type}</p>
-                  {helpInfo.descricao && (
-                    <p className="help-description">{helpInfo.descricao}</p>
-                  )}
-                  <div className="help-tags">
-                    <span className={`urgency-pill ${helpInfo.urgency}`}>
-                      Urgência {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
-                    </span>
-                    <span className="neighborhood-pill">
-                      {helpInfo.bairro}{helpInfo.cidade && `, ${helpInfo.cidade}`}
-                    </span>
-                    {helpInfo.categoria && helpInfo.categoria !== "Geral" && (
-                      <span className="category-pill">
-                        {helpInfo.categoria}
-                      </span>
+            {(contextType === 'pedido' || contextType === 'achado-perdido') && (
+              <div className="chat-context-card">
+                <div className="card-left-section">
+                  <div className="card-icon-box">
+                    {helpInfo.contextType === 'achado-perdido' ? (
+                      helpInfo.itemType === 'perdido' ? (
+                        <Search size={24} />
+                      ) : (
+                        <Package size={24} />
+                      )
+                    ) : (
+                      <Package size={24} />
                     )}
                   </div>
+                  <div className="card-info-text">
+                    <h4>{helpInfo.title}</h4>
+                    <p className="help-title">{helpInfo.type}</p>
+                    {helpInfo.descricao && (
+                      <p className="help-description">{helpInfo.descricao}</p>
+                    )}
+                    <div className="help-tags">
+                      {helpInfo.contextType === 'achado-perdido' ? (
+                        <>
+                          <span className={`type-pill ${helpInfo.itemType}`}>
+                            {helpInfo.itemType === 'perdido' ? '🔍 Perdido' : '📦 Encontrado'}
+                          </span>
+                          <span className={`status-pill ${helpInfo.status}`}>
+                            {helpInfo.status === 'resolvido' ? '✅ Resolvido' : '🔄 Ativo'}
+                          </span>
+                        </>
+                      ) : (
+                        <span className={`urgency-pill ${helpInfo.urgency}`}>
+                          Urgência {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
+                        </span>
+                      )}
+                      <span className="neighborhood-pill">
+                        {helpInfo.bairro}{helpInfo.cidade && `, ${helpInfo.cidade}`}
+                      </span>
+                      {helpInfo.categoria && helpInfo.categoria !== "Geral" && (
+                        <span className="category-pill">
+                          {helpInfo.categoria}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="card-middle-section">
-                <div className="status-progress-bar">
-                  <div className={`status-step ${['aguardando', 'andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                    <div className="step-dot" onClick={() => setDeliveryStatus("aguardando")}>1</div>
-                    <span className="step-label">Pendente</span>
+                
+                {helpInfo.contextType === 'pedido' && (
+                  <div className="card-middle-section">
+                    <div className="status-progress-bar">
+                      <div className={`status-step ${['aguardando', 'andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
+                        <div className="step-dot" onClick={() => setDeliveryStatus("aguardando")}>1</div>
+                        <span className="step-label">Pendente</span>
+                      </div>
+                      <div className="progress-line" />
+                      <div className={`status-step ${['andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
+                        <div className="step-dot" onClick={() => setDeliveryStatus("andamento")}>2</div>
+                        <span className="step-label">Em curso</span>
+                      </div>
+                      <div className="progress-line" />
+                      <div className={`status-step ${deliveryStatus === "entregue" ? 'completed' : ''}`}>
+                        <div className="step-dot" onClick={() => setDeliveryStatus("entregue")}>3</div>
+                        <span className="step-label">Concluído</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="progress-line" />
-                  <div className={`status-step ${['andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                    <div className="step-dot" onClick={() => setDeliveryStatus("andamento")}>2</div>
-                    <span className="step-label">Em curso</span>
-                  </div>
-                  <div className="progress-line" />
-                  <div className={`status-step ${deliveryStatus === "entregue" ? 'completed' : ''}`}>
-                    <div className="step-dot" onClick={() => setDeliveryStatus("entregue")}>3</div>
-                    <span className="step-label">Concluído</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="card-right-section">
-                {deliveryStatus === "andamento" ? (
-                  <button 
-                    className="finish-collaboration-btn"
-                    onClick={() => setShowFinishModal(true)}
-                  >
-                    <Heart size={16} fill="white" />
-                    Finalizar Ajuda
-                  </button>
-                ) : (
-                  <button className="details-btn">
-                    Detalhes <ChevronRight size={16} />
-                  </button>
                 )}
+                
+                <div className="card-right-section">
+                  {helpInfo.contextType === 'pedido' ? (
+                    deliveryStatus === "andamento" ? (
+                      <button 
+                        className="finish-collaboration-btn"
+                        onClick={() => setShowFinishModal(true)}
+                      >
+                        <Heart size={16} fill="white" />
+                        Finalizar Ajuda
+                      </button>
+                    ) : (
+                      <button className="details-btn">
+                        Detalhes <ChevronRight size={16} />
+                      </button>
+                    )
+                  ) : (
+                    <button 
+                      className={`resolve-btn ${helpInfo.status === 'resolvido' ? 'resolved' : ''}`}
+                      onClick={() => {
+                        if (helpInfo.status !== 'resolvido') {
+                          // Lógica para marcar como resolvido
+                          setShowFinishModal(true);
+                        }
+                      }}
+                      disabled={helpInfo.status === 'resolvido'}
+                    >
+                      {helpInfo.status === 'resolvido' ? (
+                        <>✅ Resolvido</>
+                      ) : (
+                        <>🔄 Marcar como Resolvido</>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Messages Feed */}
             <div className="messages-container">
@@ -719,12 +846,27 @@ const Chat = () => {
               <div className="modal-icon-circle success">
                 <Heart size={24} fill="white" />
               </div>
-              <h3>Finalizar Doação</h3>
+              <h3>
+                {helpInfo.contextType === 'achado-perdido' 
+                  ? 'Marcar como Resolvido' 
+                  : 'Finalizar Doação'
+                }
+              </h3>
             </div>
             <div className="modal-body">
-              <p>Você confirma que a entrega foi realizada com sucesso?</p>
+              <p>
+                {helpInfo.contextType === 'achado-perdido'
+                  ? helpInfo.itemType === 'perdido'
+                    ? 'Você encontrou o item perdido ou ele foi devolvido ao dono?'
+                    : 'O item encontrado foi entregue ao dono ou às autoridades?'
+                  : 'Você confirma que a entrega foi realizada com sucesso?'
+                }
+              </p>
               <p className="modal-subtext">
-                Isso conclui este ciclo de solidariedade no seu bairro.
+                {helpInfo.contextType === 'achado-perdido'
+                  ? 'Isso marcará o item como resolvido e encerrará as buscas.'
+                  : 'Isso conclui este ciclo de solidariedade no seu bairro.'
+                }
               </p>
             </div>
             <div className="modal-footer">
@@ -735,7 +877,7 @@ const Chat = () => {
                 Ainda não
               </button>
               <button className="btn-solid-success" onClick={handleFinishDelivery}>
-                Sim, concluído!
+                {helpInfo.contextType === 'achado-perdido' ? 'Sim, resolvido!' : 'Sim, concluído!'}
               </button>
             </div>
           </div>
@@ -840,9 +982,21 @@ const Chat = () => {
               <Check size={64} strokeWidth={4} />
             </div>
             
-            <h2>Solidariedade Concluída!</h2>
+            <h2>
+              {helpInfo.contextType === 'achado-perdido' 
+                ? 'Item Resolvido!' 
+                : 'Solidariedade Concluída!'
+              }
+            </h2>
             
-            <p>Mais um vizinho ajudado com sucesso. ❤️</p>
+            <p>
+              {helpInfo.contextType === 'achado-perdido'
+                ? helpInfo.itemType === 'perdido'
+                  ? 'Item perdido foi encontrado e devolvido! 🎉'
+                  : 'Item encontrado foi entregue ao dono! 🎉'
+                : 'Mais um vizinho ajudado com sucesso. ❤️'
+              }
+            </p>
 
             <div className="reward-badge">
               <Star className="star-icon" size={20} fill="currentColor" />
