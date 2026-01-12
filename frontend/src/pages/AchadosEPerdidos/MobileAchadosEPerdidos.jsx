@@ -22,7 +22,7 @@ import {
   Image as ImageIcon,
   ArrowLeft,
 } from 'lucide-react';
-import './mobile-styles.css';
+import './mobile-styles-new.css';
 
 const CATEGORIES = [
   'Eletrônicos',
@@ -43,46 +43,46 @@ const ItemCard = ({ item, onOpenDetails, isPreview = false }) => {
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className={`lf-card ${isPreview ? 'preview' : ''}`}
+      className={`mobile-lf-card ${isPreview ? 'preview' : ''}`}
     >
-      <div className="lf-card-image">
+      <div className="mobile-lf-card-image">
         {item.image_url ? (
-          <img src={item.image_url} alt={item.title} className="lf-card-img" />
+          <img src={item.image_url} alt={item.title} className="mobile-lf-card-img" />
         ) : (
-          <div className="lf-card-placeholder">
+          <div className="mobile-lf-card-placeholder">
             <Camera size={32} strokeWidth={1} />
           </div>
         )}
-        <div className={`lf-type-badge ${item.type}`}>
+        <div className={`mobile-lf-type-badge ${item.type}`}>
           {item.type === 'lost' ? (
-            <span className="badge-content"><Search size={12} /> PERDIDO</span>
+            <span className="mobile-badge-content"><Search size={12} /> PERDIDO</span>
           ) : (
-            <span className="badge-content"><CheckCircle2 size={12} /> ACHADO</span>
+            <span className="mobile-badge-content"><CheckCircle2 size={12} /> ACHADO</span>
           )}
         </div>
       </div>
 
-      <div className="lf-card-body">
-        <div className="lf-card-header">
-          <span className="lf-category-tag">{item.category}</span>
-          <span className="lf-card-date">
+      <div className="mobile-lf-card-body">
+        <div className="mobile-lf-card-header">
+          <span className="mobile-lf-category-tag">{item.category}</span>
+          <span className="mobile-lf-card-date">
             <Clock size={12} />
             {item.date_occurrence ? new Date(item.date_occurrence).toLocaleDateString('pt-BR') : 'Recentemente'}
           </span>
         </div>
         
-        <h3 className="lf-card-title">
+        <h3 className="mobile-lf-card-title">
           {item.title || 'Novo Item'}
         </h3>
-        <p className="lf-card-desc">{item.description || 'Descreva os detalhes importantes aqui...'}</p>
+        <p className="mobile-lf-card-desc">{item.description || 'Descreva os detalhes importantes aqui...'}</p>
       
-        <div className="lf-card-meta">
-          <div className="lf-meta-item">
+        <div className="mobile-lf-card-meta">
+          <div className="mobile-lf-meta-item">
             <MapPin size={14} />
             <span>{item.location || 'Local a definir'}</span>
           </div>
           {item.reward && item.type === 'lost' && (
-            <div className="lf-meta-item reward">
+            <div className="mobile-lf-meta-item reward">
               <Gift size={14} />
               <span>Recompensa: {item.reward}</span>
             </div>
@@ -90,19 +90,19 @@ const ItemCard = ({ item, onOpenDetails, isPreview = false }) => {
         </div>
 
         {item.tags && item.tags.length > 0 && (
-          <div className="lf-card-tags">
+          <div className="mobile-lf-card-tags">
             {item.tags.map((tag, i) => (
-              <span key={i} className="lf-tag">#{tag}</span>
+              <span key={i} className="mobile-lf-tag">#{tag}</span>
             ))}
           </div>
         )}
       </div>
 
-      <div className="lf-card-footer">
-        <button className="lf-details-btn" onClick={() => onOpenDetails && onOpenDetails(item)}>
+      <div className="mobile-lf-card-footer">
+        <button className="mobile-lf-details-btn" onClick={() => onOpenDetails && onOpenDetails(item)}>
           VER DETALHES
         </button>
-        <button className="lf-chat-btn">
+        <button className="mobile-lf-chat-btn">
           ABRIR CHAT
         </button>
       </div>
@@ -264,40 +264,40 @@ export default function MobileAchadosEPerdidos() {
     switch (currentStep) {
       case 1:
         return (
-          <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="lf-step">
-            <h3 className="lf-step-title">O que aconteceu?</h3>
-            <p className="lf-step-subtitle">Selecione o tipo de ocorrência</p>
-            <div className="lf-type-grid">
+          <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mobile-lf-step">
+            <h3 className="mobile-lf-step-title">O que aconteceu?</h3>
+            <p className="mobile-lf-step-subtitle">Selecione o tipo de ocorrência</p>
+            <div className="mobile-lf-type-grid">
               <button 
-                className={`lf-type-option ${formData.type === 'lost' ? 'active lost' : ''}`}
+                className={`mobile-lf-type-option ${formData.type === 'lost' ? 'active lost' : ''}`}
                 onClick={() => setFormData({ ...formData, type: 'lost' })}
               >
-                <div className="lf-type-icon-wrapper">
+                <div className="mobile-lf-type-icon-wrapper">
                   <Search size={32} />
                 </div>
-                <div className="lf-type-content">
-                  <span className="lf-type-title">Perdi Algo</span>
-                  <span className="lf-type-desc">Estou procurando um objeto que perdi</span>
+                <div className="mobile-lf-type-content">
+                  <span className="mobile-lf-type-title">Perdi Algo</span>
+                  <span className="mobile-lf-type-desc">Estou procurando um objeto que perdi</span>
                 </div>
                 {formData.type === 'lost' && (
-                  <motion.div layoutId="type-check" className="lf-type-check">
+                  <motion.div layoutId="type-check" className="mobile-lf-type-check">
                     <CheckCircle2 size={20} />
                   </motion.div>
                 )}
               </button>
               <button 
-                className={`lf-type-option ${formData.type === 'found' ? 'active found' : ''}`}
+                className={`mobile-lf-type-option ${formData.type === 'found' ? 'active found' : ''}`}
                 onClick={() => setFormData({ ...formData, type: 'found' })}
               >
-                <div className="lf-type-icon-wrapper">
+                <div className="mobile-lf-type-icon-wrapper">
                   <CheckCircle2 size={32} />
                 </div>
-                <div className="lf-type-content">
-                  <span className="lf-type-title">Encontrei Algo</span>
-                  <span className="lf-type-desc">Quero devolver um objeto ao dono</span>
+                <div className="mobile-lf-type-content">
+                  <span className="mobile-lf-type-title">Encontrei Algo</span>
+                  <span className="mobile-lf-type-desc">Quero devolver um objeto ao dono</span>
                 </div>
                 {formData.type === 'found' && (
-                  <motion.div layoutId="type-check" className="lf-type-check">
+                  <motion.div layoutId="type-check" className="mobile-lf-type-check">
                     <CheckCircle2 size={20} />
                   </motion.div>
                 )}
@@ -307,14 +307,14 @@ export default function MobileAchadosEPerdidos() {
         );
       case 2:
         return (
-          <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="lf-step">
-            <h3 className="lf-step-title">Qual a Categoria?</h3>
-            <p className="lf-step-subtitle">Isso ajuda as pessoas a filtrarem sua busca</p>
-            <div className="lf-category-grid">
+          <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mobile-lf-step">
+            <h3 className="mobile-lf-step-title">Qual a Categoria?</h3>
+            <p className="mobile-lf-step-subtitle">Isso ajuda as pessoas a filtrarem sua busca</p>
+            <div className="mobile-lf-category-grid">
               {CATEGORIES.map(cat => (
                 <button 
                   key={cat}
-                  className={`lf-cat-option ${formData.category === cat ? 'active' : ''}`}
+                  className={`mobile-lf-cat-option ${formData.category === cat ? 'active' : ''}`}
                   onClick={() => setFormData({ ...formData, category: cat })}
                 >
                   {cat}
@@ -325,58 +325,58 @@ export default function MobileAchadosEPerdidos() {
         );
       case 3:
         return (
-          <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="lf-step">
-            <h3 className="lf-step-title">Detalhes do Item</h3>
-            <p className="lf-step-subtitle">Dê um nome claro e uma boa descrição</p>
-            <div className="lf-form-group">
-              <div className="lf-label-row">
-                <label className="lf-label">Título do Anúncio</label>
-                <span className={`lf-char-count ${formData.title.length >= 24 ? 'limit' : ''}`}>
+          <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mobile-lf-step">
+            <h3 className="mobile-lf-step-title">Detalhes do Item</h3>
+            <p className="mobile-lf-step-subtitle">Dê um nome claro e uma boa descrição</p>
+            <div className="mobile-lf-form-group">
+              <div className="mobile-lf-label-row">
+                <label className="mobile-lf-label">Título do Anúncio</label>
+                <span className={`mobile-lf-char-count ${formData.title.length >= 24 ? 'limit' : ''}`}>
                   {formData.title.length}/24
                 </span>
               </div>
               <input 
                 type="text" 
-                className="lf-input-premium"
+                className="mobile-lf-input-premium"
                 placeholder="Ex: Carteira de couro marrom"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 maxLength={24}
               />
             </div>
-            <div className="lf-form-group">
-              <div className="lf-label-row">
-                <label className="lf-label">Descrição Detalhada</label>
-                <span className={`lf-char-count ${formData.description.length >= 500 ? 'limit' : ''}`}>
+            <div className="mobile-lf-form-group">
+              <div className="mobile-lf-label-row">
+                <label className="mobile-lf-label">Descrição Detalhada</label>
+                <span className={`mobile-lf-char-count ${formData.description.length >= 500 ? 'limit' : ''}`}>
                   {formData.description.length}/500
                 </span>
               </div>
               <textarea 
-                className="lf-textarea-premium"
+                className="mobile-lf-textarea-premium"
                 placeholder="Ex: Contém RG em nome de João Silva..."
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 maxLength={500}
               />
             </div>
-            <div className="lf-form-group">
-              <label className="lf-label">Palavras-chave (Tags)</label>
-              <div className="lf-tag-input-row">
+            <div className="mobile-lf-form-group">
+              <label className="mobile-lf-label">Palavras-chave (Tags)</label>
+              <div className="mobile-lf-tag-input-row">
                 <input 
                   type="text" 
-                  className="lf-input-premium"
+                  className="mobile-lf-input-premium"
                   placeholder="Pressione Enter para adicionar"
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                 />
-                <button type="button" onClick={addTag} className="lf-add-tag-btn">
+                <button type="button" onClick={addTag} className="mobile-lf-add-tag-btn">
                   ADD
                 </button>
               </div>
-              <div className="lf-tags-list">
+              <div className="mobile-lf-tags-list">
                 {formData.tags.map(tag => (
-                  <span key={tag} className="lf-tag-item">
+                  <span key={tag} className="mobile-lf-tag-item">
                     #{tag} <X size={12} onClick={() => removeTag(tag)} />
                   </span>
                 ))}
@@ -386,29 +386,29 @@ export default function MobileAchadosEPerdidos() {
         );
       case 4:
         return (
-          <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="lf-step">
-            <h3 className="lf-step-title">Local e Data</h3>
-            <p className="lf-step-subtitle">Onde e quando isso aconteceu?</p>
-            <div className="lf-form-group">
-              <label className="lf-label">Localização Aproximada</label>
-              <div className="lf-input-icon-wrapper">
-                <MapPin size={18} className="lf-input-icon" />
+          <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mobile-lf-step">
+            <h3 className="mobile-lf-step-title">Local e Data</h3>
+            <p className="mobile-lf-step-subtitle">Onde e quando isso aconteceu?</p>
+            <div className="mobile-lf-form-group">
+              <label className="mobile-lf-label">Localização Aproximada</label>
+              <div className="mobile-lf-input-icon-wrapper">
+                <MapPin size={18} className="mobile-lf-input-icon" />
                 <input 
                   type="text" 
-                  className="lf-input-premium with-icon"
+                  className="mobile-lf-input-premium with-icon"
                   placeholder="Ex: Praça Central, próximo ao banco"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 />
               </div>
             </div>
-            <div className="lf-form-group">
-              <label className="lf-label">Data da Ocorrência</label>
-              <div className="lf-input-icon-wrapper">
-                <Calendar size={18} className="lf-input-icon" />
+            <div className="mobile-lf-form-group">
+              <label className="mobile-lf-label">Data da Ocorrência</label>
+              <div className="mobile-lf-input-icon-wrapper">
+                <Calendar size={18} className="mobile-lf-input-icon" />
                 <input 
                   type="date" 
-                  className="lf-input-premium with-icon"
+                  className="mobile-lf-input-premium with-icon"
                   value={formData.date_occurrence}
                   onChange={(e) => setFormData({ ...formData, date_occurrence: e.target.value })}
                 />
@@ -418,13 +418,13 @@ export default function MobileAchadosEPerdidos() {
         );
       case 5:
         return (
-          <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="lf-step">
-            <h3 className="lf-step-title">Contatos e Imagem</h3>
-            <p className="lf-step-subtitle">Como as pessoas podem te encontrar?</p>
+          <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="mobile-lf-step">
+            <h3 className="mobile-lf-step-title">Contatos e Imagem</h3>
+            <p className="mobile-lf-step-subtitle">Como as pessoas podem te encontrar?</p>
             
-            <div className="lf-form-group">
-              <label className="lf-label">Foto do Item</label>
-              <div className="lf-upload-container">
+            <div className="mobile-lf-form-group">
+              <label className="mobile-lf-label">Foto do Item</label>
+              <div className="mobile-lf-upload-container">
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -442,10 +442,10 @@ export default function MobileAchadosEPerdidos() {
                 />
                 
                 {formData.image_url ? (
-                  <div className="lf-upload-preview">
+                  <div className="mobile-lf-upload-preview">
                     <img src={formData.image_url} alt="Preview" />
                     <button 
-                      className="lf-remove-photo"
+                      className="mobile-lf-remove-photo"
                       onClick={() => {
                         setFormData({ ...formData, image_url: '' });
                         setShowImageError(false);
@@ -455,9 +455,9 @@ export default function MobileAchadosEPerdidos() {
                     </button>
                   </div>
                 ) : (
-                  <div className={`lf-upload-options ${showImageError ? 'error-pulse' : ''}`}>
+                  <div className={`mobile-lf-upload-options ${showImageError ? 'mobile-error-pulse' : ''}`}>
                     <button 
-                      className="lf-upload-btn gallery"
+                      className="mobile-lf-upload-btn gallery"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                     >
@@ -465,7 +465,7 @@ export default function MobileAchadosEPerdidos() {
                       <span>Galeria</span>
                     </button>
                     <button 
-                      className="lf-upload-btn camera"
+                      className="mobile-lf-upload-btn camera"
                       onClick={() => cameraInputRef.current?.click()}
                       disabled={uploading}
                     >
@@ -481,7 +481,7 @@ export default function MobileAchadosEPerdidos() {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="lf-image-warning"
+                    className="mobile-lf-image-warning"
                   >
                     <Info size={16} />
                     <p>
@@ -493,13 +493,13 @@ export default function MobileAchadosEPerdidos() {
               </AnimatePresence>
             </div>
 
-            <div className="lf-form-group">
-              <label className="lf-label">Seu Contato</label>
-              <div className="lf-input-icon-wrapper">
-                <Phone size={18} className="lf-input-icon" />
+            <div className="mobile-lf-form-group">
+              <label className="mobile-lf-label">Seu Contato</label>
+              <div className="mobile-lf-input-icon-wrapper">
+                <Phone size={18} className="mobile-lf-input-icon" />
                 <input 
                   type="text" 
-                  className="lf-input-premium with-icon"
+                  className="mobile-lf-input-premium with-icon"
                   placeholder="WhatsApp ou Telefone"
                   value={formData.contact_info}
                   onChange={(e) => setFormData({ ...formData, contact_info: e.target.value })}
@@ -507,13 +507,13 @@ export default function MobileAchadosEPerdidos() {
               </div>
             </div>
             {formData.type === 'lost' && (
-              <div className="lf-form-group">
-                <label className="lf-label">Recompensa (Opcional)</label>
-                <div className="lf-input-icon-wrapper">
-                  <Gift size={18} className="lf-input-icon gift" />
+              <div className="mobile-lf-form-group">
+                <label className="mobile-lf-label">Recompensa (Opcional)</label>
+                <div className="mobile-lf-input-icon-wrapper">
+                  <Gift size={18} className="mobile-lf-input-icon gift" />
                   <input 
                     type="text" 
-                    className="lf-input-premium with-icon"
+                    className="mobile-lf-input-premium with-icon"
                     placeholder="Ex: R$ 50,00 ou Gratificação"
                     value={formData.reward}
                     onChange={(e) => setFormData({ ...formData, reward: e.target.value })}
@@ -529,41 +529,41 @@ export default function MobileAchadosEPerdidos() {
   };
 
   return (
-    <div className="lost-found-wrapper">
-      <div className="lf-bg-mesh"></div>
+    <div className="mobile-lost-found-wrapper">
+      <div className="mobile-lf-bg-mesh"></div>
       
-      <nav className="lf-nav">
-        <div className="lf-nav-container">
-          <button className="lf-back-btn">
+      <nav className="mobile-lf-nav">
+        <div className="mobile-lf-nav-container">
+          <button className="mobile-lf-back-btn">
             <ArrowLeft size={18} />
             <span>Voltar</span>
           </button>
           
-          <div className="lf-logo">
-            <span>Achados<span className="logo-accent">&Perdidos</span></span>
+          <div className="mobile-lf-logo">
+            <span>Achados<span className="mobile-logo-accent">&Perdidos</span></span>
           </div>
 
-          <button className="lf-nav-action-btn" onClick={() => setIsModalOpen(true)}>
+          <button className="mobile-lf-nav-action-btn" onClick={() => setIsModalOpen(true)}>
             <Plus size={18} />
           </button>
         </div>
       </nav>
       
-      <header className="lf-header">
-        <div className="lf-container">
+      <header className="mobile-lf-header">
+        <div className="mobile-lf-container">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="lf-title"
+            className="mobile-lf-title"
           >
-            Recupere o que é <span className="text-teal">Seu.</span>
+            Recupere o que é <span className="mobile-text-teal">Seu.</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="lf-subtitle"
+            className="mobile-lf-subtitle"
           >
             A plataforma mais rápida para reunir objetos e seus donos.
           </motion.p>
@@ -571,7 +571,7 @@ export default function MobileAchadosEPerdidos() {
           <motion.button 
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            className="lf-main-btn"
+            className="mobile-lf-main-btn"
             onClick={() => setIsModalOpen(true)}
           >
             <Plus size={20} />
@@ -580,27 +580,27 @@ export default function MobileAchadosEPerdidos() {
         </div>
       </header>
 
-      <section className="lf-filter-section">
-        <div className="lf-container">
-          <div className="lf-location-status-bar">
-            <div className="lf-location-info">
-              <div className="lf-location-icon-pulse">
+      <section className="mobile-lf-filter-section">
+        <div className="mobile-lf-container">
+          <div className="mobile-lf-location-status-bar">
+            <div className="mobile-lf-location-info">
+              <div className="mobile-lf-location-icon-pulse">
                 <MapPin size={20} />
               </div>
-              <div className="lf-location-text">
-                <span className="lf-location-label">Sua Localização</span>
-                <span className="lf-location-value">São Paulo, SP</span>
+              <div className="mobile-lf-location-text">
+                <span className="mobile-lf-location-label">Sua Localização</span>
+                <span className="mobile-lf-location-value">São Paulo, SP</span>
               </div>
             </div>
-            <div className="lf-location-scope-toggle">
+            <div className="mobile-lf-location-scope-toggle">
               <button 
-                className={`lf-scope-btn ${locationScope === 'city' ? 'active' : ''}`} 
+                className={`mobile-lf-scope-btn ${locationScope === 'city' ? 'active' : ''}`} 
                 onClick={() => setLocationScope('city')}
               >
                 Cidade
               </button>
               <button 
-                className={`lf-scope-btn ${locationScope === 'global' ? 'active' : ''}`} 
+                className={`mobile-lf-scope-btn ${locationScope === 'global' ? 'active' : ''}`} 
                 onClick={() => setLocationScope('global')}
               >
                 Brasil
@@ -608,20 +608,20 @@ export default function MobileAchadosEPerdidos() {
             </div>
           </div>
 
-          <div className="lf-filter-bar">
-            <div className="lf-search-box">
-              <Search className="lf-search-icon" size={18} />
+          <div className="mobile-lf-filter-bar">
+            <div className="mobile-lf-search-box">
+              <Search className="mobile-lf-search-icon" size={18} />
               <input 
                 type="text" 
                 placeholder="O que você está procurando?" 
-                className="lf-filter-input"
+                className="mobile-lf-filter-input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             
-            <div className="lf-filter-group">
-              <div className="lf-select-wrapper">
+            <div className="mobile-lf-filter-group">
+              <div className="mobile-lf-select-wrapper">
                 <Filter size={16} />
                 <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
                   <option value="all">Todas Categorias</option>
@@ -629,21 +629,21 @@ export default function MobileAchadosEPerdidos() {
                 </select>
               </div>
               
-              <div className="lf-type-filters">
+              <div className="mobile-lf-type-filters">
                 <button 
-                  className={`lf-type-btn ${typeFilter === 'all' ? 'active' : ''}`}
+                  className={`mobile-lf-type-btn ${typeFilter === 'all' ? 'active' : ''}`}
                   onClick={() => setTypeFilter('all')}
                 >
                   Tudo
                 </button>
                 <button 
-                  className={`lf-type-btn lost ${typeFilter === 'lost' ? 'active' : ''}`}
+                  className={`mobile-lf-type-btn lost ${typeFilter === 'lost' ? 'active' : ''}`}
                   onClick={() => setTypeFilter('lost')}
                 >
                   Perdidos
                 </button>
                 <button 
-                  className={`lf-type-btn found ${typeFilter === 'found' ? 'active' : ''}`}
+                  className={`mobile-lf-type-btn found ${typeFilter === 'found' ? 'active' : ''}`}
                   onClick={() => setTypeFilter('found')}
                 >
                   Achados
@@ -654,14 +654,14 @@ export default function MobileAchadosEPerdidos() {
         </div>
       </section>
 
-      <main className="lf-container">
+      <main className="mobile-lf-container">
         {loading ? (
-          <div className="lf-loading">
-            <div className="lf-spinner"></div>
+          <div className="mobile-lf-loading">
+            <div className="mobile-lf-spinner"></div>
             <p>Carregando...</p>
           </div>
         ) : (
-          <div className="lf-grid">
+          <div className="mobile-lf-grid">
             <AnimatePresence mode="popLayout">
               {filteredItems.length > 0 ? (
                 filteredItems.map((item) => (
@@ -675,14 +675,14 @@ export default function MobileAchadosEPerdidos() {
                 <motion.div 
                   initial={{ opacity: 0 }} 
                   animate={{ opacity: 1 }} 
-                  className="lf-empty-state"
+                  className="mobile-lf-empty-state"
                 >
                   <Package size={60} />
                   <h2>Nada encontrado</h2>
                   <p>Tente ajustar seus filtros ou pesquisar por outro termo.</p>
                   <button 
                     onClick={() => {setSearchTerm(''); setCategoryFilter('all'); setTypeFilter('all');}}
-                    className="lf-reset-btn"
+                    className="mobile-lf-reset-btn"
                   >
                     Resetar Filtros
                   </button>
@@ -695,41 +695,41 @@ export default function MobileAchadosEPerdidos() {
 
       <AnimatePresence>
         {selectedItem && (
-          <div className="lf-modal-backdrop" onClick={() => setSelectedItem(null)}>
+          <div className="mobile-lf-modal-backdrop" onClick={() => setSelectedItem(null)}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 50 }}
-              className="lf-details-modal"
+              className="mobile-lf-details-modal"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="lf-details-content">
-                <div className="lf-details-image">
+              <div className="mobile-lf-details-content">
+                <div className="mobile-lf-details-image">
                   {selectedItem.image_url ? (
                     <img src={selectedItem.image_url} alt={selectedItem.title} />
                   ) : (
-                    <div className="lf-card-placeholder"><Camera size={50} /></div>
+                    <div className="mobile-lf-card-placeholder"><Camera size={50} /></div>
                   )}
-                  <div className={`lf-details-badge ${selectedItem.type}`}>
+                  <div className={`mobile-lf-details-badge ${selectedItem.type}`}>
                     {selectedItem.type === 'lost' ? 'PERDIDO' : 'ACHADO'}
                   </div>
-                  <button className="lf-modal-close-btn" onClick={() => setSelectedItem(null)}>
+                  <button className="mobile-lf-modal-close-btn" onClick={() => setSelectedItem(null)}>
                     <X size={20} />
                   </button>
                 </div>
-                <div className="lf-details-info">
-                  <span className="lf-category-tag">{selectedItem.category}</span>
-                  <h2 className="lf-details-title">{selectedItem.title}</h2>
+                <div className="mobile-lf-details-info">
+                  <span className="mobile-lf-category-tag">{selectedItem.category}</span>
+                  <h2 className="mobile-lf-details-title">{selectedItem.title}</h2>
                   
-                  <div className="lf-details-meta-grid">
-                    <div className="lf-details-meta-box">
+                  <div className="mobile-lf-details-meta-grid">
+                    <div className="mobile-lf-details-meta-box">
                       <MapPin size={18} />
                       <div>
                         <label>Localização</label>
                         <span>{selectedItem.location}</span>
                       </div>
                     </div>
-                    <div className="lf-details-meta-box">
+                    <div className="mobile-lf-details-meta-box">
                       <Calendar size={18} />
                       <div>
                         <label>Data</label>
@@ -738,13 +738,13 @@ export default function MobileAchadosEPerdidos() {
                     </div>
                   </div>
                   
-                  <div className="lf-details-description">
+                  <div className="mobile-lf-details-description">
                     <h3>Descrição</h3>
                     <p>{selectedItem.description}</p>
                   </div>
 
                   {selectedItem.reward && selectedItem.type === 'lost' && (
-                    <div className="lf-details-reward">
+                    <div className="mobile-lf-details-reward">
                       <Gift size={20} />
                       <div>
                         <label>Recompensa</label>
@@ -754,22 +754,22 @@ export default function MobileAchadosEPerdidos() {
                   )}
 
                   {selectedItem.tags && selectedItem.tags.length > 0 && (
-                    <div className="lf-details-tags">
+                    <div className="mobile-lf-details-tags">
                       {selectedItem.tags.map((tag, i) => (
-                        <span key={i} className="lf-tag">#{tag}</span>
+                        <span key={i} className="mobile-lf-tag">#{tag}</span>
                       ))}
                     </div>
                   )}
 
-                  <div className="lf-details-footer">
-                    <div className="lf-contact-box">
+                  <div className="mobile-lf-details-footer">
+                    <div className="mobile-lf-contact-box">
                       <label>Contato</label>
-                      <div className="lf-contact-value">
+                      <div className="mobile-lf-contact-value">
                         <Phone size={18} />
                         <span>{selectedItem.contact_info}</span>
                       </div>
                     </div>
-                    <button className="lf-main-btn full-width">
+                    <button className="mobile-lf-main-btn full-width">
                       <Sparkles size={18} />
                       ABRIR CHAT
                     </button>
@@ -783,47 +783,47 @@ export default function MobileAchadosEPerdidos() {
 
       <AnimatePresence>
         {isModalOpen && (
-          <div className="lf-modal-backdrop">
+          <div className="mobile-lf-modal-backdrop">
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 100 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 100 }}
-              className="lf-modal-container"
+              className="mobile-lf-modal-container"
             >
-              <div className="lf-modal-content">
-                <div className="lf-modal-head">
-                  <div className="lf-modal-info">
+              <div className="mobile-lf-modal-content">
+                <div className="mobile-lf-modal-head">
+                  <div className="mobile-lf-modal-info">
                     <h2>Reportar Ocorrência</h2>
-                    <div className="lf-stepper-dots">
+                    <div className="mobile-lf-stepper-dots">
                       {[1, 2, 3, 4, 5].map(step => (
-                        <div key={step} className={`lf-dot ${currentStep >= step ? 'active' : ''}`} />
+                        <div key={step} className={`mobile-lf-dot ${currentStep >= step ? 'active' : ''}`} />
                       ))}
                     </div>
                   </div>
-                  <button className="lf-modal-close" onClick={() => setIsModalOpen(false)}>
+                  <button className="mobile-lf-modal-close" onClick={() => setIsModalOpen(false)}>
                     <X size={20} />
                   </button>
                 </div>
 
-                <div className="lf-modal-body">
+                <div className="mobile-lf-modal-body">
                   <AnimatePresence mode="wait">
                     {renderStep()}
                   </AnimatePresence>
                 </div>
 
-                <div className="lf-modal-actions">
+                <div className="mobile-lf-modal-actions">
                   {currentStep > 1 && (
-                    <button className="lf-btn-secondary" onClick={prevStep}>
+                    <button className="mobile-lf-btn-secondary" onClick={prevStep}>
                       <ChevronLeft size={18} /> Voltar
                     </button>
                   )}
                   {currentStep < 5 ? (
-                    <button className="lf-btn-primary" onClick={nextStep}>
+                    <button className="mobile-lf-btn-primary" onClick={nextStep}>
                       Próximo <ChevronRight size={18} />
                     </button>
                   ) : (
                     <button 
-                      className="lf-btn-submit" 
+                      className="mobile-lf-btn-submit" 
                       onClick={handleCreateItem}
                       disabled={isSubmitting || !formData.title || !formData.contact_info}
                     >
