@@ -38,9 +38,15 @@ const ProfileComponent = () => {
   const navigate = useNavigate();
   
   const [isEditingBio, setIsEditingBio] = useState(false);
-  const [bio, setBio] = useState(user?.bio || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
+  const [bio, setBio] = useState(user?.bio || user?.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
   const [isPhoneVerified, setIsPhoneVerified] = useState(user?.phoneVerified || false);
-  const [email] = useState(user?.email || "usuario@exemplo.com");
+  const [email, setEmail] = useState(user?.email || "Email não informado");
+  
+  // Atualizar bio quando dados do usuário mudarem
+  useEffect(() => {
+    setBio(user?.bio || user?.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
+    setEmail(user?.email || "Email não informado");
+  }, [user]);
   
   const [avatarUrl, setAvatarUrl] = useState("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
   const [bannerConfig, setBannerConfig] = useState({
@@ -68,8 +74,29 @@ const ProfileComponent = () => {
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate('/login');
+    } else {
+      // Recarregar dados do usuário do backend
+      loadUserData();
     }
   }, [isAuthenticated, navigate]);
+
+  const loadUserData = async () => {
+    try {
+      if (!user?.uid && !user?.id) return;
+      
+      const endpoint = user.tipo === 'comercio' ? '/comercios' : 
+                      user.tipo === 'ong' ? '/ongs' : 
+                      user.tipo === 'familia' ? '/familias' : '/cidadaos';
+      
+      const response = await apiService.request(`${endpoint}/${user.uid || user.id}`);
+      
+      if (response.success && response.data) {
+        updateUser(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do usuário:', error);
+    }
+  };
 
   useEffect(() => {
     const profileContainer = document.querySelector('.profile-container');
@@ -102,17 +129,20 @@ const ProfileComponent = () => {
 
   const handleSaveBio = async () => {
     try {
-      // Salvar no banco via API
       const endpoint = user.tipo === 'comercio' ? '/comercios' : 
                       user.tipo === 'ong' ? '/ongs' : 
                       user.tipo === 'familia' ? '/familias' : '/cidadaos';
       
-      await apiService.request(`${endpoint}/${user.uid || user.id}`, {
+      const response = await apiService.request(`${endpoint}/${user.uid || user.id}`, {
         method: 'PUT',
         body: JSON.stringify({ bio })
       });
       
-      setIsEditingBio(false);
+      if (response.success) {
+        // Atualizar dados locais
+        updateUser({ ...user, bio });
+        setIsEditingBio(false);
+      }
     } catch (error) {
       console.error('Erro ao salvar bio:', error);
       alert('Erro ao salvar. Tente novamente.');
@@ -423,9 +453,25 @@ const ProfileComponent = () => {
             <div className="card-padding" style={{ paddingTop: '24px', textAlign: 'left' }}>
               <div className="meta-item" style={{ marginBottom: '16px' }}>
                 <MapPin size={18} color="var(--primary)" />
-                {typeof user?.endereco === 'object' 
-                  ? `${user.endereco.cidade || user?.cidade || 'Lagoa Santa'}, ${user.endereco.estado || user?.estado || 'MG'}`
-                  : `${user?.cidade || 'Lagoa Santa'}, ${user?.estado || 'MG'}`
+                {(() => {
+                  if (typeof user?.endereco === 'object' && user.endereco) {
+                    const { rua, numero, bairro, cidade, estado } = user.endereco;
+                    const parts = [];
+                    if (rua) parts.push(rua);
+                    if (numero) parts.push(numero);
+                    if (bairro) parts.push(bairro);
+                    if (cidade) parts.push(cidade);
+                    if (estado) parts.push(estado);
+                    return parts.length > 0 ? parts.join(', ') : 'Endereço não informado';
+                  }
+                  if (typeof user?.endereco === 'string' && user.endereco) {
+                    return user.endereco;
+                  }
+                  if (user?.cidade && user?.estado) {
+                    return `${user.cidade}, ${user.estado}`;
+                  }
+                  return 'Endereço não informado';
+                })()
                 }
               </div>
               <div className="meta-item">
