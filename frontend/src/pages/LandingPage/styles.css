@@ -904,7 +904,7 @@
 .geo-showcase {
   position: relative;
   padding: 6rem 0;
-  overflow: hidden;
+  overflow: visible;
   background: white;
 }
 
@@ -922,7 +922,7 @@
 
 @media (min-width: 1024px) {
   .geo-grid {
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -947,12 +947,17 @@
   align-items: center;
   justify-content: center;
   overflow: visible;
+  min-height: 500px;
+  padding: 2rem;
 }
 
 @media (min-width: 1024px) {
   .geo-visual-display {
-    height: 650px;
-    aspect-ratio: auto;
+    height: 600px;
+    aspect-ratio: 1;
+    padding: 3rem;
+    max-width: 600px;
+    margin: 0 auto;
   }
 }
 
@@ -965,39 +970,51 @@
   border-radius: 80px;
 }
 
-.geo-visual-display:hover .geo-atmosphere {
-  opacity: 1;
-}
-
 .globe-container {
   position: relative;
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  background: radial-gradient(circle at center, 
-    rgba(59, 130, 246, 0.05) 0%, 
-    rgba(13, 148, 136, 0.03) 40%, 
-    transparent 70%);
+  padding: 0;
+  min-height: 600px;
+  overflow: visible;
 }
 
-@media (min-width: 1024px) {
-  .globe-container {
-    padding: 3rem;
-  }
-}
-
-.globe-inner {
+.globe-center-wrapper {
   position: relative;
   width: 100%;
-  max-width: 550px;
-  aspect-ratio: 1;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  max-width: 700px;
+  max-height: 700px;
+  margin: 0 auto;
+}
+
+.globe-final-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.globe-wrapper {
+  position: relative;
+  width: 600px;
+  height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  margin: 0 auto;
 }
 
 .geo-info-tag-wrapper {
@@ -1350,11 +1367,7 @@
   transition: filter 0.5s ease;
 }
 
-.globe-canvas:hover {
-  filter: drop-shadow(0 0 60px rgba(13, 148, 136, 0.3)) 
-          drop-shadow(0 0 120px rgba(59, 130, 246, 0.15))
-          saturate(1.3) contrast(1.2);
-}
+
 
 .globe-fade-overlay {
   position: absolute;
@@ -2051,6 +2064,11 @@
   z-index: 10;
   opacity: 0.9;
   filter: saturate(1.5) contrast(1.2) brightness(1.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .globe-fade-overlay {
@@ -2059,6 +2077,95 @@
   background: radial-gradient(circle at center, transparent 30%, white 70%);
   pointer-events: none;
 }
+/* Globe Fallback Styles */
+.globe-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.fallback-circle {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.fallback-rings {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring {
+  position: absolute;
+  border: 2px solid rgba(13, 148, 136, 0.2);
+  border-radius: 50%;
+  animation: ping 2s linear infinite;
+}
+
+.ring-1 {
+  width: 200px;
+  height: 200px;
+}
+
+.ring-2 {
+  width: 250px;
+  height: 250px;
+  animation-delay: 0.5s;
+}
+
+.ring-3 {
+  width: 300px;
+  height: 300px;
+  animation-delay: 1s;
+}
+
+.fallback-center {
+  position: relative;
+  z-index: 10;
+  width: 120px;
+  height: 120px;
+  background: var(--sb-teal);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 20px 40px rgba(13, 148, 136, 0.3);
+}
+
+.fallback-icon {
+  animation: bounce 2s infinite;
+}
+
+.fallback-text {
+  text-align: center;
+  max-width: 300px;
+}
+
+.fallback-text h4 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--sb-text);
+  margin: 0 0 0.5rem 0;
+}
+
+.fallback-text p {
+  font-size: 1rem;
+  color: var(--sb-text-light);
+  margin: 0;
+}
+
 /* Additional animations for desktop version without framer-motion */
 @keyframes fadeInUp {
   from {

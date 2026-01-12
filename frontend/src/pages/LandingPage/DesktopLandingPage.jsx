@@ -92,57 +92,120 @@ const ActionCard = ({
 
 const Globe = () => {
   const canvasRef = useRef(null);
+  const globeRef = useRef(null);
+  const [globeError, setGlobeError] = useState(false);
 
   useEffect(() => {
     let phi = 0;
 
-    if (!canvasRef.current) return;
+    const initGlobe = () => {
+      if (!canvasRef.current) return;
 
-    const globe = createGlobe(canvasRef.current, {
-      devicePixelRatio: 2,
-      width: 550 * 2,
-      height: 550 * 2,
-      phi: 0,
-      theta: 0,
-      dark: 0,
-      diffuse: 1.8,
-      mapSamples: 20000,
-      mapBrightness: 8,
-      baseColor: [0.8, 0.7, 0.5],
-      markerColor: [0.2, 0.8, 0.4],
-      glowColor: [0.2, 0.8, 0.9],
-      markers: [
-        { location: [-23.5505, -46.6333], size: 0.12 },
-        { location: [-22.9068, -43.1729], size: 0.08 },
-        { location: [-15.7975, -47.8919], size: 0.08 },
-        { location: [40.7128, -74.0060], size: 0.04 },
-        { location: [48.8566, 2.3522], size: 0.04 },
-        { location: [-34.6037, -58.3816], size: 0.06 },
-      ],
-      onRender: (state) => {
-        state.phi = phi;
-        phi += 0.007;
-      },
-    });
+      try {
+        if (globeRef.current) {
+          globeRef.current.destroy();
+        }
+
+        globeRef.current = createGlobe(canvasRef.current, {
+          devicePixelRatio: 2,
+          width: 600,
+          height: 600,
+          phi: 0,
+          theta: 0.3,
+          dark: 0,
+          diffuse: 1.2,
+          mapSamples: 16000,
+          mapBrightness: 6,
+          baseColor: [0.3, 0.3, 0.3],
+          markerColor: [0.1, 0.8, 0.5],
+          glowColor: [1, 1, 1],
+          markers: [
+            { location: [-23.5505, -46.6333], size: 0.08 },
+            { location: [-22.9068, -43.1729], size: 0.06 },
+            { location: [-15.7975, -47.8919], size: 0.05 },
+            { location: [40.7128, -74.0060], size: 0.03 },
+            { location: [48.8566, 2.3522], size: 0.03 },
+            { location: [-34.6037, -58.3816], size: 0.04 },
+          ],
+          onRender: (state) => {
+            state.phi = phi;
+            phi += 0.005;
+          },
+        });
+        setGlobeError(false);
+      } catch (error) {
+        console.warn('Globe initialization failed:', error);
+        setGlobeError(true);
+      }
+    };
+
+    const timer = setTimeout(initGlobe, 100);
 
     return () => {
-      globe.destroy();
+      clearTimeout(timer);
+      if (globeRef.current) {
+        try {
+          globeRef.current.destroy();
+        } catch (error) {
+          console.warn('Globe cleanup failed:', error);
+        }
+      }
     };
   }, []);
 
+  if (globeError) {
+    return (
+      <div className="globe-wrapper">
+        <div className="globe-fallback">
+          <div className="fallback-circle">
+            <div className="fallback-rings">
+              <div className="ring ring-1" />
+              <div className="ring ring-2" />
+              <div className="ring ring-3" />
+            </div>
+            <div className="fallback-center">
+              <MapPin size={48} className="fallback-icon" />
+            </div>
+          </div>
+          <div className="fallback-text">
+            <h4>Conectando Vizinhança</h4>
+            <p>Mapeando sua região...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="globe-wrapper">
+    <div className="globe-wrapper globe-canvas">
       <div className="globe-decoration">
         <div className="radar-ring-1" />
         <div className="radar-ring-2" />
         <div className="scan-line" />
       </div>
 
-      <canvas
-        ref={canvasRef}
-        style={{ width: 550, height: 550, maxWidth: "100%", aspectRatio: "1" }}
-        className="globe-canvas"
-      />
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        width: '100%', 
+        height: '100%',
+        position: 'relative',
+        zIndex: 10
+      }}>
+        <canvas
+          ref={canvasRef}
+          width={600}
+          height={600}
+          style={{ 
+            width: '100%', 
+            height: '100%',
+            maxWidth: '700px',
+            maxHeight: '700px',
+            display: 'block'
+          }}
+        />
+      </div>
       <div className="globe-fade-overlay"></div>
     </div>
   );
@@ -702,19 +765,9 @@ export default function DesktopLandingPage() {
               <div className="geo-atmosphere" />
               
               <div className="globe-container">
-                <div className="globe-inner">
-                  <Globe />
-                  
-                  <div className="geo-info-tag-wrapper">
-                    <div className="geo-info-tag animate-bounce-slow">
-                      <div className="geo-info-icon">
-                        <Locate size={32} />
-                      </div>
-                      <div>
-                        <p className="geo-info-title">Geo-Proteção Ativa</p>
-                        <p className="geo-info-text">Sua rua, seu refúgio seguro.</p>
-                      </div>
-                    </div>
+                <div className="globe-center-wrapper">
+                  <div className="globe-final-wrapper">
+                    <Globe />
                   </div>
                 </div>
               </div>
