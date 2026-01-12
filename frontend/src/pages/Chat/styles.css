@@ -569,6 +569,78 @@
   color: #0369a1;
 }
 
+/* Estilos específicos para achados e perdidos */
+.type-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+  border-radius: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.type-pill.perdido {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.type-pill.encontrado {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+.status-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+  border-radius: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-pill.ativo {
+  background-color: #fff7ed;
+  color: #f97316;
+}
+
+.status-pill.resolvido {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+.resolve-btn {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.resolve-btn:hover {
+  background: #ea580c;
+  transform: translateY(-1px);
+}
+
+.resolve-btn.resolved {
+  background: #16a34a;
+  cursor: not-allowed;
+}
+
+.resolve-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .card-middle-section {
   flex: 1;
   max-width: 300px;
