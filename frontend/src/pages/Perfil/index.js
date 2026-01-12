@@ -30,12 +30,15 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import apiService from '../../services/apiService';
+import ProfileMobile from './ProfileMobile';
 import '../../styles/pages/profile.css';
 
 const ProfileComponent = () => {
   const { user, isAuthenticated, updateUser } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bio, setBio] = useState(user?.bio || user?.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
@@ -165,6 +168,11 @@ const ProfileComponent = () => {
       overlay: preset.type === 'gradient'
     });
   };
+
+  // Render mobile version if on mobile device
+  if (isMobile) {
+    return <ProfileMobile />;
+  }
 
   return (
     <div className={`profile-container animate-fade-in ${isDarkMode ? 'dark-mode' : ''}`}>

@@ -316,6 +316,22 @@
   --sb-shadow-lg: 0 40px 80px -20px rgba(15, 23, 42, 0.1);
 }
 
+/* Reset and base styles */
+.lost-found-wrapper * {
+  box-sizing: border-box;
+}
+
+.lost-found-wrapper button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.lost-found-wrapper input,
+.lost-found-wrapper textarea,
+.lost-found-wrapper select {
+  font-family: inherit;
+}
+
 .lost-found-wrapper {
   min-height: 100vh;
   background-color: var(--sb-bg);
@@ -397,12 +413,15 @@
   letter-spacing: -0.04em;
   margin-bottom: 1.5rem;
   color: var(--sb-text);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 .text-teal { 
   background: linear-gradient(135deg, var(--sb-teal), #2dd4bf);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: var(--sb-teal); /* Fallback for browsers that don't support background-clip */
 }
 
 .lf-subtitle {
@@ -442,6 +461,8 @@
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+  text-decoration: none;
+  font-family: inherit;
 }
 
 .lf-main-btn:hover {
@@ -1708,4 +1729,47 @@
   .lf-location-scope-toggle {
     justify-content: center;
   }
+}
+/* Força aplicação dos estilos importantes no desktop */
+.lost-found-wrapper .lf-main-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 1rem !important;
+  padding: 1.25rem 2.5rem !important;
+  background: var(--sb-text) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 1.5rem !important;
+  font-weight: 800 !important;
+  font-size: 1.15rem !important;
+  cursor: pointer !important;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2) !important;
+  text-decoration: none !important;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+}
+
+.lost-found-wrapper .lf-main-btn:hover {
+  background: var(--sb-teal) !important;
+  transform: translateY(-5px) scale(1.02) !important;
+  box-shadow: 0 25px 50px -12px rgba(13, 148, 136, 0.35) !important;
+}
+
+.lost-found-wrapper .lf-title {
+  font-size: clamp(3rem, 6vw, 5.5rem) !important;
+  font-weight: 900 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.04em !important;
+  margin-bottom: 1.5rem !important;
+  color: var(--sb-text) !important;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+}
+
+.lost-found-wrapper .text-teal { 
+  background: linear-gradient(135deg, var(--sb-teal), #2dd4bf) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: var(--sb-teal) !important;
 }

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/apiService';
 import LandingHeader from '../../components/layout/LandingHeader';
+import MobileHeader from '../../components/layout/MobileHeader';
 import { 
   Search, 
   Plus, 
@@ -564,36 +565,30 @@ export default function MobileAchadosEPerdidos() {
     <div className="mobile-lost-found-wrapper">
       <div className="mobile-lf-bg-mesh"></div>
       
-      <LandingHeader scrolled={true} />
+      <MobileHeader title="Achados e Perdidos" />
       
-      <header className="mobile-lf-header" style={{ paddingTop: '80px' }}>
+      <header className="mobile-lf-header-compact">
         <div className="mobile-lf-container">
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mobile-lf-title"
-          >
-            Recupere o que é <span className="mobile-text-teal">Seu.</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mobile-lf-subtitle"
-          >
-            A plataforma mais rápida para reunir objetos e seus donos.
-          </motion.p>
-          
-          <motion.button 
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="mobile-lf-main-btn"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <Plus size={20} />
-            ANUNCIAR AGORA
-          </motion.button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mobile-lf-title-compact"
+            >
+              Recupere o que é <span className="mobile-text-teal">Seu.</span>
+            </motion.h1>
+            
+            <motion.button 
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="mobile-lf-main-btn-compact"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <Plus size={18} />
+              ANUNCIAR
+            </motion.button>
+          </div>
         </div>
       </header>
 
