@@ -244,6 +244,43 @@ const ApiService = {
     return this.request(`/achados-perdidos/${id}/resolve`, {
       method: 'PATCH'
     });
+  },
+
+  // Notificações
+  async getNotifications(limit = 50) {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit);
+    
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/notifications${query}`);
+  },
+
+  async getUnreadNotificationsCount() {
+    return this.request('/notifications/unread-count');
+  },
+
+  async markNotificationAsRead(id) {
+    return this.request(`/notifications/${id}/read`, {
+      method: 'PUT'
+    });
+  },
+
+  async markAllNotificationsAsRead() {
+    return this.request('/notifications/mark-all-read', {
+      method: 'PUT'
+    });
+  },
+
+  async deleteNotification(id) {
+    return this.request(`/notifications/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async deleteAllNotifications() {
+    return this.request('/notifications', {
+      method: 'DELETE'
+    });
   }
 };
 

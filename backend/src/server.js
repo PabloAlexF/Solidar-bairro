@@ -10,6 +10,7 @@ const interesseRoutes = require('./routes/interesseRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const userRoutes = require('./routes/userRoutes');
 const achadosPerdidosRoutes = require('./routes/achadosPerdidosRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/interesses', interesseRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/achados-perdidos', achadosPerdidosRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });

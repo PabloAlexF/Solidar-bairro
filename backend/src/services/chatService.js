@@ -1,4 +1,5 @@
 const chatModel = require('../models/chatModel');
+const notificationService = require('./notificationService');
 const firebase = require('../config/firebase');
 
 class ChatService {
@@ -197,6 +198,23 @@ class ChatService {
       content: messageData.text || messageData.content,
       metadata: messageData.metadata
     });
+
+    // Criar notificações para outros participantes
+    try {
+      const otherParticipants = conversation.participants.filter(p => p !== senderId);
+      
+      for (const participantId of otherParticipants) {
+        await notificationService.createChatNotification(
+          conversationId,
+          senderId,
+          participantId,
+          messageData.text || messageData.content || 'Nova mensagem'
+        );
+      }
+    } catch (error) {
+      console.error('Erro ao criar notificações de chat:', error);
+      // Não falhar o envio da mensagem por causa da notificação
+    }
 
     return message;
   }

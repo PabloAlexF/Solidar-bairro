@@ -80,11 +80,13 @@ const Login = () => {
       if (formData.email === 'admin@solidar.com' && formData.senha === 'admin123') {
         localStorage.setItem('authToken', 'admin-token');
         localStorage.setItem('userRole', 'admin');
-        navigate('/admin/dashboard');
+        navigate('/admin');
         return;
       }
       
       await login(formData.email, formData.senha);
+      
+      // Redirecionar para a página principal após login bem-sucedido
       navigate('/');
     } catch (error) {
       console.error('Erro no login:', error);

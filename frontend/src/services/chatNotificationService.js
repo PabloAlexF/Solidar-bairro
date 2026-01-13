@@ -5,6 +5,18 @@ class ChatNotificationService {
     this.listeners = new Map();
     this.pollingIntervals = new Map();
     this.lastMessageTimes = new Map();
+    this.notificationCallback = null;
+    this.currentUserId = null;
+  }
+
+  // Configurar callback para notificações
+  setNotificationCallback(callback) {
+    this.notificationCallback = callback;
+  }
+
+  // Configurar usuário atual
+  setCurrentUser(userId) {
+    this.currentUserId = userId;
   }
 
   // Iniciar escuta de uma conversa
@@ -54,17 +66,23 @@ class ChatNotificationService {
         if (!storedLastTime || lastMessageTime > storedLastTime) {
           this.lastMessageTimes.set(conversationId, lastMessageTime);
           
-          // Notificar apenas se não for a primeira verificação
-          if (storedLastTime) {
+          // Notificar apenas se não for a primeira verificação e não for mensagem própria
+          if (storedLastTime && lastMessage.senderId !== this.currentUserId) {
             const callback = this.listeners.get(conversationId);
             if (callback) {
               const newMessages = messages.filter(msg => {
                 const msgTime = new Date(msg.createdAt.seconds * 1000).getTime();
-                return msgTime > storedLastTime;
+                return msgTime > storedLastTime && msg.senderId !== this.currentUserId;
               });
               
               if (newMessages.length > 0) {
                 callback(newMessages);
+                
+                // Adicionar notificação se não estiver na conversa ativa
+                if (this.notificationCallback && !this.isCurrentConversation(conversationId)) {
+                  const senderName = await this.getSenderName(lastMessage.senderId);
+                  this.notificationCallback(conversationId, senderName, lastMessage.content);
+                }
               }
             }
           }
@@ -73,6 +91,25 @@ class ChatNotificationService {
     } catch (error) {
       console.error('Erro ao verificar mensagens:', error);
     }
+  }
+
+  // Verificar se é a conversa atual (usuário está vendo)
+  isCurrentConversation(conversationId) {
+    const currentPath = window.location.pathname;
+    return currentPath.includes(`/chat/${conversationId}`);
+  }
+
+  // Obter nome do remetente
+  async getSenderName(senderId) {
+    try {
+      const response = await apiService.getUserData(senderId);
+      if (response.success && response.data) {
+        return response.data.nome || response.data.nomeCompleto || response.data.nomeFantasia || 'Usuário';
+      }
+    } catch (error) {
+      console.error('Erro ao buscar nome do usuário:', error);
+    }
+    return 'Usuário';
   }
 
   // Limpar todos os listeners
@@ -103,6 +140,30 @@ class ChatNotificationService {
     }, 10000); // A cada 10 segundos
 
     return interval;
+  }
+
+  // Iniciar monitoramento global de mensagens
+  startGlobalMessageMonitoring(userId, notificationCallback) {
+    this.setCurrentUser(userId);
+    this.setNotificationCallback(notificationCallback);
+    
+    // Polling global para novas mensagens em todas as conversas
+    const globalInterval = setInterval(async () => {
+      try {
+        const conversationsResponse = await apiService.getConversations();
+        if (conversationsResponse.success && conversationsResponse.data) {
+          for (const conversation of conversationsResponse.data) {
+            if (!this.listeners.has(conversation.id)) {
+              await this.checkForNewMessages(conversation.id);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Erro no monitoramento global:', error);
+      }
+    }, 5000); // A cada 5 segundos
+
+    return globalInterval;
   }
 }
 

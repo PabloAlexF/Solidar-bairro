@@ -1,27 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import apiService from '../../services/apiService';
+import chatNotificationService from '../../services/chatNotificationService';
 import LogoutButton from '../LogoutButton';
 import '../../styles/components/Header.css';
 
 const Header = ({ showLoginButton = false }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [notifications, setNotifications] = useState([]);
+  const { 
+    notifications, 
+    addChatNotification, 
+    markAsRead, 
+    markAllAsRead, 
+    clearNotifications, 
+    getUnreadCount 
+  } = useNotifications();
+  
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userStats, setUserStats] = useState({ helpedCount: 0, receivedHelpCount: 0 });
+  const [globalMonitoringInterval, setGlobalMonitoringInterval] = useState(null);
 
   useEffect(() => {
-    // Load notifications from localStorage
-    const loadNotifications = () => {
-      const savedNotifications = localStorage.getItem('solidar-notifications');
-      if (savedNotifications) {
-        setNotifications(JSON.parse(savedNotifications));
-      }
-    };
-    
     // Load user stats
     const loadUserStats = async () => {
       if (user?.uid || user?.id) {
@@ -41,16 +44,31 @@ const Header = ({ showLoginButton = false }) => {
       }
     };
     
-    loadNotifications();
-    if (isAuthenticated()) {
-      loadUserStats();
-    }
-
-    // Listen for new notifications
-    const handleNotificationAdded = () => {
-      loadNotifications();
+    // Iniciar monitoramento global de mensagens
+    const startChatMonitoring = () => {
+      if (isAuthenticated() && (user?.uid || user?.id)) {
+        const userId = user.uid || user.id;
+        
+        // Callback para novas mensagens
+        const handleNewChatMessage = (conversationId, senderName, message) => {
+          addChatNotification(conversationId, senderName, message);
+        };
+        
+        // Iniciar monitoramento global
+        const interval = chatNotificationService.startGlobalMessageMonitoring(
+          userId, 
+          handleNewChatMessage
+        );
+        
+        setGlobalMonitoringInterval(interval);
+      }
     };
     
+    if (isAuthenticated()) {
+      loadUserStats();
+      startChatMonitoring();
+    }
+
     // Close dropdowns when clicking outside
     const handleClickOutside = (event) => {
       if (showUserMenu || showNotifications) {
@@ -67,35 +85,35 @@ const Header = ({ showLoginButton = false }) => {
       }
     };
     
-    window.addEventListener('notificationAdded', handleNotificationAdded);
     document.addEventListener('mousedown', handleClickOutside);
     
     return () => {
-      window.removeEventListener('notificationAdded', handleNotificationAdded);
       document.removeEventListener('mousedown', handleClickOutside);
+      
+      // Limpar monitoramento global
+      if (globalMonitoringInterval) {
+        clearInterval(globalMonitoringInterval);
+      }
+      
+      // Limpar serviço de chat
+      chatNotificationService.cleanup();
     };
-  }, [showUserMenu, showNotifications]);
+  }, [showUserMenu, showNotifications, isAuthenticated, user, addChatNotification]);
 
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
+  const handleNotificationClick = (notification) => {
+    // Marcar como lida
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+    
+    // Se for notificação de chat, navegar para a conversa
+    if (notification.type === 'chat' && notification.conversationId) {
+      navigate(`/chat/${notification.conversationId}`);
+      setShowNotifications(false);
+    }
   };
 
-  const clearAllNotifications = () => {
-    setNotifications([]);
-    localStorage.removeItem('solidar-notifications');
-  };
-
-  const markAsRead = (notificationId) => {
-    const updatedNotifications = notifications.map(n => 
-      n.id === notificationId ? { ...n, read: true } : n
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = getUnreadCount();
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial;
 
   return (
@@ -159,7 +177,7 @@ const Header = ({ showLoginButton = false }) => {
                           )}
                           <button 
                             className="action-btn clear-btn"
-                            onClick={clearAllNotifications}
+                            onClick={clearNotifications}
                             title="Limpar todas"
                           >
                             🗑️
@@ -176,20 +194,25 @@ const Header = ({ showLoginButton = false }) => {
                         notifications.map((notification) => (
                           <div 
                             key={notification.id} 
-                            className={`notification-item ${notification.read ? 'read' : 'unread'}`}
-                            onClick={() => !notification.read && markAsRead(notification.id)}
+                            className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.type === 'chat' ? 'chat-notification' : ''}`}
+                            onClick={() => handleNotificationClick(notification)}
                           >
                             <div className="notification-content">
-                              <p className="notification-title">{notification.title}</p>
-                              <p className="notification-message">{notification.message}</p>
-                              <span className="notification-time">
-                                {new Date(notification.timestamp).toLocaleString('pt-BR', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </span>
+                              <div className="notification-icon">
+                                {notification.type === 'chat' ? '💬' : '🔔'}
+                              </div>
+                              <div className="notification-text">
+                                <p className="notification-title">{notification.title}</p>
+                                <p className="notification-message">{notification.message}</p>
+                                <span className="notification-time">
+                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
                             </div>
                             {!notification.read && <div className="unread-dot"></div>}
                           </div>
@@ -259,6 +282,9 @@ const Header = ({ showLoginButton = false }) => {
                         }}
                       >
                         💬 Minhas conversas
+                        {unreadCount > 0 && (
+                          <span className="menu-badge">{unreadCount}</span>
+                        )}
                       </button>
                       
                       <LogoutButton className="menu-item logout-btn">

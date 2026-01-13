@@ -228,6 +228,63 @@
   border-left: 3px solid #f97316;
 }
 
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.notification-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-item.chat-notification {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification-item.chat-notification:hover {
+  background-color: #f8fafc;
+  transform: translateX(2px);
+}
+
+.menu-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+  min-width: 16px;
+  text-align: center;
+}
+
+/* Animação para novas notificações */
+@keyframes notification-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.notification-badge {
+  animation: notification-pulse 2s infinite;
+}
+
 .notification-title {
   font-size: 14px;
   font-weight: 500;

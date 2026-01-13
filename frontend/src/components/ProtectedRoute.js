@@ -1,26 +1,17 @@
 import React from 'react';
-import { useAuthGuard } from '../middleware/auth';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuthGuard();
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '50vh',
-        fontSize: '18px',
-        color: '#666'
-      }}>
-        Carregando...
-      </div>
-    );
+    return <div>Carregando...</div>;
   }
 
-  if (!isAuthenticated) {
-    return null; // useAuthGuard já redirecionou
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children;

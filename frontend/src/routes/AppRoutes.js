@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
+import ProtectedRoute from '../components/ProtectedRoute';
 import AdminProtectedRoute from '../components/AdminProtectedRoute';
 
 // Feature-based imports
@@ -30,19 +31,21 @@ const AppRoutes = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/solidar-bairro" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/cadastro" element={<CadastroWrapper />} />
       <Route path="/cadastro/cidadao" element={<CadastroCidadaoWrapper />} />
       <Route path="/cadastro/comercio" element={<CadastroComercio />} />
       <Route path="/cadastro/familia" element={<CadastroFamilia />} />
       <Route path="/cadastro/ong" element={<CadastroONG />} />
-      <Route path="/quero-ajudar" element={<QueroAjudar />} />
-      <Route path="/preciso-de-ajuda" element={<PrecisoDeAjuda />} />
-      <Route path="/achados-e-perdidos" element={<AchadosEPerdidos />} />
-      <Route path="/achados-e-perdidos/novo" element={<Layout><NovoAnuncio /></Layout>} />
-      <Route path="/perfil" element={<Perfil />} />
-      <Route path="/conversas" element={<Conversas />} />
-      <Route path="/chat/:id" element={<Layout showHeader={false}><Chat /></Layout>} />
+      
+      {/* Rotas protegidas */}
+      <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+      <Route path="/quero-ajudar" element={<ProtectedRoute><QueroAjudar /></ProtectedRoute>} />
+      <Route path="/preciso-de-ajuda" element={<ProtectedRoute><PrecisoDeAjuda /></ProtectedRoute>} />
+      <Route path="/achados-e-perdidos" element={<ProtectedRoute><AchadosEPerdidos /></ProtectedRoute>} />
+      <Route path="/achados-e-perdidos/novo" element={<ProtectedRoute><Layout><NovoAnuncio /></Layout></ProtectedRoute>} />
+      <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
+      <Route path="/conversas" element={<ProtectedRoute><Conversas /></ProtectedRoute>} />
+      <Route path="/chat/:id" element={<ProtectedRoute><Layout showHeader={false}><Chat /></Layout></ProtectedRoute>} />
     </Routes>
   );
 };

@@ -1,30 +1,51 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import { Heart, Bell, User, LogOut } from 'lucide-react';
+import chatNotificationService from '../../services/chatNotificationService';
 import './LandingHeader.css';
 
 const LandingHeader = ({ scrolled = false }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const [notifications, setNotifications] = useState([]);
+  const { 
+    notifications, 
+    addChatNotification, 
+    markAsRead, 
+    markAllAsRead, 
+    clearNotifications, 
+    getUnreadCount 
+  } = useNotifications();
+  
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [globalMonitoringInterval, setGlobalMonitoringInterval] = useState(null);
 
   useEffect(() => {
-    const loadNotifications = () => {
-      const savedNotifications = typeof window !== 'undefined' ? localStorage.getItem('solidar-notifications') : null;
-      if (savedNotifications) {
-        try {
-          setNotifications(JSON.parse(savedNotifications));
-        } catch (error) {
-          console.error('Error parsing notifications:', error);
-          setNotifications([]);
-        }
+    // Iniciar monitoramento global de mensagens
+    const startChatMonitoring = () => {
+      if (isAuthenticated() && (user?.uid || user?.id)) {
+        const userId = user.uid || user.id;
+        
+        // Callback para novas mensagens
+        const handleNewChatMessage = (conversationId, senderName, message) => {
+          addChatNotification(conversationId, senderName, message);
+        };
+        
+        // Iniciar monitoramento global
+        const interval = chatNotificationService.startGlobalMessageMonitoring(
+          userId, 
+          handleNewChatMessage
+        );
+        
+        setGlobalMonitoringInterval(interval);
       }
     };
     
-    loadNotifications();
+    if (isAuthenticated()) {
+      startChatMonitoring();
+    }
 
     const handleClickOutside = (event) => {
       if (showUserMenu || showNotifications) {
@@ -41,35 +62,35 @@ const LandingHeader = ({ scrolled = false }) => {
       }
     };
     
-    window.addEventListener('notificationAdded', loadNotifications);
     document.addEventListener('mousedown', handleClickOutside);
     
     return () => {
-      window.removeEventListener('notificationAdded', loadNotifications);
       document.removeEventListener('mousedown', handleClickOutside);
+      
+      // Limpar monitoramento global
+      if (globalMonitoringInterval) {
+        clearInterval(globalMonitoringInterval);
+      }
+      
+      // Limpar serviço de chat
+      chatNotificationService.cleanup();
     };
-  }, [showUserMenu, showNotifications]);
+  }, [showUserMenu, showNotifications, isAuthenticated, user, addChatNotification]);
 
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
+  const handleNotificationClick = (notification) => {
+    // Marcar como lida
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+    
+    // Se for notificação de chat, navegar para a conversa
+    if (notification.type === 'chat' && notification.conversationId) {
+      navigate(`/chat/${notification.conversationId}`);
+      setShowNotifications(false);
+    }
   };
 
-  const clearAllNotifications = () => {
-    setNotifications([]);
-    localStorage.removeItem('solidar-notifications');
-  };
-
-  const markAsRead = (notificationId) => {
-    const updatedNotifications = notifications.map(n => 
-      n.id === notificationId ? { ...n, read: true } : n
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = getUnreadCount();
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
 
   return (
@@ -141,7 +162,7 @@ const LandingHeader = ({ scrolled = false }) => {
                           )}
                           <button 
                             className="action-btn clear-btn"
-                            onClick={clearAllNotifications}
+                            onClick={clearNotifications}
                             title="Limpar todas"
                           >
                             🗑️
@@ -158,20 +179,25 @@ const LandingHeader = ({ scrolled = false }) => {
                         notifications.map((notification) => (
                           <div 
                             key={notification.id} 
-                            className={`notification-item ${notification.read ? 'read' : 'unread'}`}
-                            onClick={() => !notification.read && markAsRead(notification.id)}
+                            className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.type === 'chat' ? 'chat-notification' : ''}`}
+                            onClick={() => handleNotificationClick(notification)}
                           >
                             <div className="notification-content">
-                              <p className="notification-title">{notification.title}</p>
-                              <p className="notification-message">{notification.message}</p>
-                              <span className="notification-time">
-                                {new Date(notification.timestamp).toLocaleString('pt-BR', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </span>
+                              <div className="notification-icon">
+                                {notification.type === 'chat' ? '💬' : '🔔'}
+                              </div>
+                              <div className="notification-text">
+                                <p className="notification-title">{notification.title}</p>
+                                <p className="notification-message">{notification.message}</p>
+                                <span className="notification-time">
+                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
                             </div>
                             {!notification.read && <div className="unread-dot"></div>}
                           </div>
@@ -239,6 +265,9 @@ const LandingHeader = ({ scrolled = false }) => {
                         }}
                       >
                         💬 Minhas conversas
+                        {unreadCount > 0 && (
+                          <span className="menu-badge">{unreadCount}</span>
+                        )}
                       </button>
                       
                       <button 
