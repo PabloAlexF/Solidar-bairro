@@ -342,7 +342,7 @@ export function PrecisoDeAjudaMobile() {
       };
       
       // Import ApiService dynamically
-      const { default: ApiService } = await import('../../services/apiService');
+      const { default: ApiService } = await import('../../../services/apiService');
       
       // Call API to create pedido
       const response = await ApiService.createPedido(pedidoData);

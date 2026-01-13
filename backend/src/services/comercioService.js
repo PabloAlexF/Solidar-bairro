@@ -38,6 +38,7 @@ class ComercioService {
       tipo: comercio.tipo,
       ativo: comercio.ativo,
       verificado: comercio.verificado,
+      status: 'pending', // Aguardando aprovação
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };

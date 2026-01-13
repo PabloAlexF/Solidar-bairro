@@ -37,6 +37,7 @@ class ONGService {
       ativo: ong.ativo,
       verificado: ong.verificado,
       statusVerificacao: ong.statusVerificacao,
+      status: 'pending', // Aguardando aprovação
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };

@@ -59,7 +59,12 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      navigate('/');
+      const userData = JSON.parse(localStorage.getItem('solidar-user'));
+      if (userData && userData.tipo === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     }
   }, [isAuthenticated, navigate]);
 
@@ -84,10 +89,17 @@ const Login = () => {
         return;
       }
       
-      await login(formData.email, formData.senha);
+      const result = await login(formData.email, formData.senha);
+      console.log('Login result:', result);
       
-      // Redirecionar para a página principal após login bem-sucedido
-      navigate('/');
+      // Verificar se é admin e redirecionar apropriadamente
+      if (result && result.user && result.user.tipo === 'admin') {
+        console.log('Admin detected, redirecting to /admin');
+        navigate('/admin');
+      } else {
+        console.log('Regular user, redirecting to /');
+        navigate('/');
+      }
     } catch (error) {
       console.error('Erro no login:', error);
       setError(error.message || 'Erro ao fazer login. Tente novamente.');

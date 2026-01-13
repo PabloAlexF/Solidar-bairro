@@ -37,115 +37,40 @@ ChartJS.register(
   ArcElement
 );
 
-// Mock data service with test users
-const mockApiService = {
+// Real API service
+const apiService = {
   async request(endpoint) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const token = localStorage.getItem('solidar-token');
+    const response = await fetch(`http://localhost:3001/api${endpoint}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
     
-    if (endpoint === '/ongs') {
-      return {
-        data: [
-          {
-            id: '1',
-            nome_fantasia: 'Instituto Esperança',
-            razao_social: 'Instituto Esperança de Desenvolvimento Social LTDA',
-            cnpj: '12.345.678/0001-90',
-            email: 'contato@institutoesperanca.org',
-            telefone: '(11) 98765-4321',
-            data_fundacao: '2015-03-15',
-            website: 'https://institutoesperanca.org',
-            sede: 'Rua das Flores, 123 - Centro, São Paulo - SP',
-            areas_cobertura: ['Centro', 'Zona Norte', 'Periferia'],
-            num_voluntarios: 45,
-            colaboradores_fixos: 8,
-            causas: ['Segurança Alimentar', 'Educação e Cultura', 'Direitos Humanos'],
-            status: 'pending',
-            created_at: new Date().toISOString()
-          }
-        ]
-      };
+    if (!response.ok) {
+      throw new Error('Erro na requisição');
     }
     
-    if (endpoint === '/comercios') {
-      return {
-        data: [
-          {
-            id: '2',
-            nome_fantasia: 'Padaria do Bairro',
-            razao_social: 'Padaria e Confeitaria do Bairro LTDA',
-            cnpj: '98.765.432/0001-10',
-            segmento: 'Alimentação',
-            responsavel_legal: 'João Silva Santos',
-            telefone: '(11) 91234-5678',
-            email: 'contato@padariabairro.com',
-            endereco: 'Av. Principal, 456 - Vila Nova, São Paulo - SP',
-            horario_funcionamento: 'Segunda a Sábado das 06h às 20h',
-            contribuicoes: ['Ponto de Coleta de Doações', 'Descontos para Famílias Cadastradas', 'Doação de Excedentes (Alimentos)'],
-            observacoes: 'Disponível para parcerias sociais',
-            status: 'pending',
-            created_at: new Date().toISOString()
-          }
-        ]
-      };
+    return await response.json();
+  },
+  
+  async updateStatus(entityType, entityId, status, reason) {
+    const token = localStorage.getItem('solidar-token');
+    const response = await fetch(`http://localhost:3001/api/admin/entity/${entityType}/${entityId}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status, reason })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar status');
     }
     
-    if (endpoint === '/familias') {
-      return {
-        data: [
-          {
-            id: '3',
-            nomeCompleto: 'Maria Santos Silva',
-            dataNascimento: '1985-07-20',
-            estadoCivil: 'Casado(a)',
-            profissao: 'Diarista',
-            cpf: '123.456.789-00',
-            rg: '12.345.678-9',
-            nis: '123.45678.90-1',
-            rendaFamiliar: '501_1000',
-            telefone: '(11) 99876-5432',
-            whatsapp: '(11) 99876-5432',
-            email: 'maria.santos@email.com',
-            horarioContato: 'Tarde',
-            endereco: 'Rua das Palmeiras, 789',
-            bairro: 'Jardim Esperança',
-            pontoReferencia: 'Próximo ao posto de saúde',
-            tipoMoradia: 'Casa Alugada',
-            criancas: 2,
-            jovens: 1,
-            adultos: 2,
-            idosos: 0,
-            necessidades: ['Alimentação', 'Material Escolar', 'Roupas'],
-            status: 'pending',
-            created_at: new Date().toISOString()
-          }
-        ]
-      };
-    }
-    
-    if (endpoint === '/cidadaos') {
-      return {
-        data: [
-          {
-            id: '4',
-            nomeCompleto: 'Carlos Eduardo Oliveira',
-            email: 'carlos.oliveira@email.com',
-            telefone: '(11) 94567-8901',
-            cpf: '987.654.321-00',
-            dataNascimento: '1990-12-10',
-            profissao: 'Engenheiro de Software',
-            endereco: 'Rua dos Desenvolvedores, 321 - Tech Valley, São Paulo - SP',
-            disponibilidade: ['Fins de semana', 'Noites'],
-            interesses: ['Educação e Cultura', 'Meio Ambiente', 'Tecnologia Social'],
-            proposito: 'Quero usar minhas habilidades técnicas para ajudar ONGs com soluções digitais',
-            status: 'pending',
-            created_at: new Date().toISOString()
-          }
-        ]
-      };
-    }
-    
-    return { data: [] };
+    return await response.json();
   }
 };
 
@@ -201,7 +126,7 @@ export default function AdminDashboard() {
 
   const fetchOngs = async () => {
     try {
-      const response = await mockApiService.request('/ongs');
+      const response = await apiService.request('/admin/entities/ongs');
       const data = response.data || [];
       setOngs(data);
       const pending = data.filter(o => o.status === 'pending').length;
@@ -214,7 +139,7 @@ export default function AdminDashboard() {
 
   const fetchCommerces = async () => {
     try {
-      const response = await mockApiService.request('/comercios');
+      const response = await apiService.request('/admin/entities/comercios');
       const data = response.data || [];
       setCommerces(data);
       const pending = data.filter(c => c.status === 'pending').length;
@@ -227,27 +152,32 @@ export default function AdminDashboard() {
 
   const fetchProfiles = async () => {
     try {
-      const response = await mockApiService.request('/familias');
-      const data = response.data || [];
-      setProfiles(data);
-      const families = data.filter(p => p.role === 'family' || !p.role).length;
-      const pendingFamilies = data.filter(p => (p.role === 'family' || !p.role) && p.status === 'pending').length;
+      const [familiasResponse, cidadaosResponse] = await Promise.all([
+        apiService.request('/admin/entities/familias'),
+        apiService.request('/admin/entities/cidadaos')
+      ]);
       
-      // Get citizens from cidadaos endpoint
-      try {
-        const citizensResponse = await mockApiService.request('/cidadaos');
-        const citizensData = citizensResponse.data || [];
-        const pendingCitizens = citizensData.filter(c => c.status === 'pending').length;
-        setStats(prev => ({ 
-          ...prev, 
-          totalFamilies: families, 
-          pendingFamilies,
-          totalCitizens: citizensData.length,
-          pendingCitizens
-        }));
-      } catch (e) {
-        console.error('Error fetching citizens:', e);
+      const familias = familiasResponse.data || [];
+      const cidadaos = cidadaosResponse.data || [];
+      
+      if (activeTab === 'families') {
+        setProfiles(familias);
+      } else if (activeTab === 'citizens') {
+        setProfiles(cidadaos);
+      } else {
+        setProfiles([...familias, ...cidadaos]);
       }
+      
+      const pendingFamilies = familias.filter(f => f.status === 'pending').length;
+      const pendingCitizens = cidadaos.filter(c => c.status === 'pending').length;
+      
+      setStats(prev => ({ 
+        ...prev, 
+        totalFamilies: familias.length, 
+        pendingFamilies,
+        totalCitizens: cidadaos.length,
+        pendingCitizens
+      }));
     } catch (error) {
       console.error('Error fetching profiles:', error);
       setProfiles([]);
@@ -256,12 +186,10 @@ export default function AdminDashboard() {
 
   const handleUpdateStatus = async (id, status, type, reason) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Status updated:', { id, status, type, reason });
+      await apiService.updateStatus(type, id, status, reason);
       
       if (type === 'ongs') fetchOngs();
-      else if (type === 'commerces') fetchCommerces();
+      else if (type === 'comercios') fetchCommerces();
       else fetchProfiles();
       
       setSelectedOng(null);
@@ -271,7 +199,7 @@ export default function AdminDashboard() {
       setRejectionReason('');
       setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false });
       
-      alert(`${type === 'ongs' ? 'ONG' : type === 'commerces' ? 'Comércio' : 'Família'} ${status === 'verified' ? 'aprovada' : 'rejeitada'} com sucesso!`);
+      alert(`${type === 'ongs' ? 'ONG' : type === 'comercios' ? 'Comércio' : type === 'cidadaos' ? 'Cidadão' : 'Família'} ${status === 'verified' ? 'aprovado' : 'rejeitado'} com sucesso!`);
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Erro ao atualizar status. Tente novamente.');
@@ -301,13 +229,12 @@ export default function AdminDashboard() {
 
   const filteredProfiles = profiles.filter(profile => {
     const matchesSearch = 
-      profile.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.nomeCompleto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       profile.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       profile.cpf?.includes(searchTerm);
     
-    if (activeTab === 'families') return matchesSearch && profile.role === 'family';
-    if (activeTab === 'citizens') return matchesSearch && (profile.role === 'citizen' || profile.role === 'user' || !profile.role);
-    return false;
+    return matchesSearch;
   });
 
   // Render mobile version if on mobile device
@@ -831,16 +758,46 @@ export default function AdminDashboard() {
                     <td><button onClick={() => { setSelectedCommerce(commerce); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn"><Eye size={16} /> Avaliar</button></td>
                   </tr>
                 ))
-              ) : (
+              ) : activeTab === 'citizens' ? (
+                filteredProfiles.map((citizen) => (
+                  <tr key={citizen.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+                        <div style={{ width: '36px', height: '36px', background: '#f0fdf4', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(0,0,0,0.05)' }}>
+                          <UserCircle size={18} color="#15803d" />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700 }}>{citizen.nome || citizen.nomeCompleto}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--admin-secondary)' }}>{citizen.email}</div>
+                          {citizen.interesses && citizen.interesses.length > 0 && (
+                            <div style={{ fontSize: '0.7rem', color: 'var(--admin-success)', marginTop: '0.25rem' }}>
+                              {citizen.interesses.slice(0, 2).join(', ')}{citizen.interesses.length > 2 && '...'}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td><code>{citizen.cpf || '---'}</code></td>
+                    <td>
+                      <div>{citizen.telefone || '---'}</div>
+                      {citizen.ocupacao && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--admin-secondary)' }}>Ocupação: {citizen.ocupacao}</div>
+                      )}
+                    </td>
+                    <td><span className={`status-badge ${citizen.status || 'pending'}`}>{(citizen.status || 'pending') === 'pending' ? 'Pendente' : citizen.status === 'verified' ? 'Verificado' : 'Rejeitado'}</span></td>
+                    <td><button onClick={() => { setSelectedProfile(citizen); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn"><Eye size={16} /> Detalhes</button></td>
+                  </tr>
+                ))
+              ) : activeTab === 'families' ? (
                 filteredProfiles.map((profile) => (
                   <tr key={profile.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                        <div style={{ width: '36px', height: '36px', background: profile.role === 'family' ? '#fff7ed' : '#f0fdf4', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(0,0,0,0.05)' }}>
-                          {profile.role === 'family' ? <Users size={18} color="#c2410c" /> : <UserCircle size={18} color="#15803d" />}
+                        <div style={{ width: '36px', height: '36px', background: '#fff7ed', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(0,0,0,0.05)' }}>
+                          <Users size={18} color="#c2410c" />
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700 }}>{profile.nomeCompleto || profile.full_name}</div>
+                          <div style={{ fontWeight: 700 }}>{profile.nomeCompleto || profile.nome}</div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--admin-secondary)' }}>{profile.email}</div>
                           {profile.necessidades && profile.necessidades.length > 0 && (
                             <div style={{ fontSize: '0.7rem', color: 'var(--admin-danger)', marginTop: '0.25rem' }}>
@@ -852,7 +809,7 @@ export default function AdminDashboard() {
                     </td>
                     <td><code>{profile.cpf || profile.nis || '---'}</code></td>
                     <td>
-                      <div>{profile.telefone || profile.phone || profile.whatsapp || '---'}</div>
+                      <div>{profile.telefone || '---'}</div>
                       {profile.rendaFamiliar && (
                         <div style={{ fontSize: '0.7rem', color: 'var(--admin-secondary)' }}>Renda: {profile.rendaFamiliar}</div>
                       )}
@@ -861,7 +818,7 @@ export default function AdminDashboard() {
                     <td><button onClick={() => { setSelectedProfile(profile); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn"><Eye size={16} /> Detalhes</button></td>
                   </tr>
                 ))
-              )}
+              ) : null}
               {!loading && filteredOngs.length === 0 && activeTab === 'ongs' && (
                 <tr><td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--admin-secondary)' }}>Nenhuma ONG encontrada.</td></tr>
               )}
@@ -1124,10 +1081,10 @@ export default function AdminDashboard() {
               {!isRejecting ? (
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <button onClick={() => setIsRejecting(true)} className="admin-action-btn btn-reject"><XCircle size={18} /><span>Rejeitar</span></button>
-                  <button onClick={() => handleUpdateStatus(selectedProfile.id, 'verified', 'profiles')} className="admin-action-btn btn-approve" style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }} disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2 || !evaluationChecklist.check3 || !evaluationChecklist.check4}><CheckCircle size={18} /><span>Aprovar Família</span></button>
+                  <button onClick={() => handleUpdateStatus(selectedProfile.id, 'verified', activeTab === 'citizens' ? 'cidadaos' : 'familias')} className="admin-action-btn btn-approve" style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }} disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2 || !evaluationChecklist.check3 || !evaluationChecklist.check4}><CheckCircle size={18} /><span>Aprovar {activeTab === 'citizens' ? 'Cidadão' : 'Família'}</span></button>
                 </div>
               ) : (
-                <button onClick={() => handleUpdateStatus(selectedProfile.id, 'rejected', 'profiles', rejectionReason)} className="admin-action-btn btn-reject" disabled={!rejectionReason.trim()}><AlertCircle size={18} /><span>Confirmar Rejeição</span></button>
+                <button onClick={() => handleUpdateStatus(selectedProfile.id, 'rejected', activeTab === 'citizens' ? 'cidadaos' : 'familias', rejectionReason)} className="admin-action-btn btn-reject" disabled={!rejectionReason.trim()}><AlertCircle size={18} /><span>Confirmar Rejeição</span></button>
               )}
             </footer>
           </div>

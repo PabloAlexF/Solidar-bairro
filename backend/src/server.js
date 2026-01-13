@@ -11,6 +11,7 @@ const chatRoutes = require('./routes/chatRoutes');
 const userRoutes = require('./routes/userRoutes');
 const achadosPerdidosRoutes = require('./routes/achadosPerdidosRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -41,6 +42,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/familias', familiaRoutes);
 app.use('/api/cidadaos', cidadaoRoutes);
 app.use('/api/comercios', comercioRoutes);

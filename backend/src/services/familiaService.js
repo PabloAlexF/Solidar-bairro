@@ -47,6 +47,7 @@ class FamiliaService {
       necessidades: familia.necessidades,
       tipo: familia.tipo,
       ativo: familia.ativo,
+      status: 'pending', // Aguardando aprovação
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };

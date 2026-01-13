@@ -28,6 +28,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
 
 const formatTime = (date) => {
+  if (!date) return 'Agora';
+  
+  // Se for um timestamp do Firestore
+  if (date.seconds) {
+    date = new Date(date.seconds * 1000);
+  }
+  
+  // Se não for uma instância de Date válida
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    return 'Agora';
+  }
+  
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
 
@@ -311,7 +323,7 @@ const Chat = () => {
         chatNotificationService.stopListening(conversaId);
       }
     };
-  }, [conversaId, user?.uid]);
+  }, [conversaId, user?.uid, loadConversations, loadMessages]);
 
   useEffect(() => {
     scrollToBottom();

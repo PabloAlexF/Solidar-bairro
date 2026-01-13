@@ -34,6 +34,7 @@ class CidadaoService {
       ajudasConcluidas: cidadao.ajudasConcluidas,
       tipo: cidadao.tipo,
       ativo: cidadao.ativo,
+      status: 'pending', // Aguardando aprovação
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };

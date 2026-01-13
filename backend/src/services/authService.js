@@ -38,11 +38,22 @@ class AuthService {
         throw new Error('Senha incorreta');
       }
 
+      // Verificar se o usuário está aprovado (exceto admin)
+      if (userData.tipo !== 'admin' && userData.status !== 'verified') {
+        const statusMessage = userData.status === 'pending' 
+          ? 'Seu cadastro está aguardando aprovação do administrador'
+          : userData.status === 'rejected'
+          ? 'Seu cadastro foi rejeitado. Entre em contato conosco'
+          : 'Seu cadastro precisa ser aprovado antes do primeiro acesso';
+        throw new Error(statusMessage);
+      }
+
       // Gerar tokens JWT
       const payload = {
         id: userData.uid,
         email: userData.email,
         type: userData.tipo,
+        role: userData.tipo === 'admin' ? 'admin' : 'user',
         nome: userData.nome || userData.nomeEstabelecimento || userData.nomeEntidade
       };
 
@@ -103,7 +114,7 @@ class AuthService {
   }
 
   async getUserDataByEmail(email) {
-    const collections = ['cidadaos', 'comercios', 'ongs', 'familias'];
+    const collections = ['admins', 'cidadaos', 'comercios', 'ongs', 'familias'];
     
     for (const collection of collections) {
       try {
@@ -117,7 +128,7 @@ class AuthService {
           return {
             uid: doc.id,
             ...doc.data(),
-            tipo: collection.slice(0, -1)
+            tipo: collection === 'admins' ? 'admin' : collection.slice(0, -1)
           };
         }
       } catch (error) {
