@@ -6,6 +6,7 @@ import MapaAlcance from '../MapaAlcance';
 import AnimatedParticles from '../AnimatedParticles';
 import LandingHeader from '../../../components/layout/LandingHeader';
 import MobileHeader from '../../../components/layout/MobileHeader';
+import { useNotifications } from '../../../contexts/NotificationContext';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -169,6 +170,7 @@ const TOTAL_STEPS = 6;
 
 export function PrecisoDeAjudaMobile() {
   const navigate = useNavigate();
+  const { addNotification } = useNotifications();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -346,6 +348,10 @@ export function PrecisoDeAjudaMobile() {
       const response = await ApiService.createPedido(pedidoData);
       
       if (response.success) {
+        addNotification({
+          title: 'Pedido criado com sucesso!',
+          message: `Seu pedido de "${formData.category}" foi publicado e já está visível para a comunidade.`
+        });
         setAnalysis({ 
           reason: 'Pedido criado com sucesso! Sua solicitação já está visível na rede Solidar.' 
         });

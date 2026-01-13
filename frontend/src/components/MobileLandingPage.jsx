@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { NotificationDropdown } from './NotificationDropdown';
 import { 
   Heart, 
   HandHelping, 
@@ -161,8 +162,7 @@ export const MobileLandingPage = () => {
             <span>Solidar<b>Bairro</b></span>
           </div>
           <div className="header-actions">
-            <Bell size={24} />
-            <User size={24} />
+            <NotificationDropdown />
           </div>
         </div>
 

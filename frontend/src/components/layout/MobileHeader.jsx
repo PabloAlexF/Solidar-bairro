@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { NotificationDropdown } from '../NotificationDropdown';
 import { 
   Menu, 
   X, 
@@ -72,11 +73,14 @@ const MobileHeader = ({ title = "Solidar Bairro", showBackButton = false, backPa
         <div className="mob-header-title">
           <h1>{title}</h1>
         </div>
-        {showBackButton && (
-          <button className="mob-back-btn" onClick={() => navigate(backPath)}>
-            <ArrowRight size={22} />
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <NotificationDropdown />
+          {showBackButton && (
+            <button className="mob-back-btn" onClick={() => navigate(backPath)}>
+              <ArrowRight size={22} />
+            </button>
+          )}
+        </div>
       </header>
     </>
   );
