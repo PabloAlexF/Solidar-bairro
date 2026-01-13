@@ -5,6 +5,7 @@ import { AnalyzingModal, InconsistentModal, SuccessModal } from '../modals';
 import MapaAlcance from '../MapaAlcance';
 import AnimatedParticles from '../AnimatedParticles';
 import LandingHeader from '../../../components/layout/LandingHeader';
+import MobileHeader from '../../../components/layout/MobileHeader';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -957,7 +958,7 @@ export function PrecisoDeAjudaMobile() {
 
   return (
     <div className="pdam-container">
-      <LandingHeader />
+      <MobileHeader title="Preciso de Ajuda" />
       {isAnalyzing && <AnalyzingModal stages={stages} analysisStage={analysisStage} />}
       {isPublished && (
         <SuccessModal 
