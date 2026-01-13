@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Heart, 
   HandHelping, 
@@ -149,6 +150,7 @@ const MobileNav = () => {
 
 export const MobileLandingPage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="mobile-landing-exclusive">
@@ -242,15 +244,27 @@ export const MobileLandingPage = () => {
       </section>
 
         <section className="mobile-cta-section">
-          <div className="cta-card" onClick={() => navigate('/cadastro')}>
-            <div className="cta-text">
-              <h3>Faça parte da rede</h3>
-              <p>Junte-se a +2k vizinhos</p>
+          {isAuthenticated() ? (
+            <div className="cta-card" onClick={() => navigate('/quero-ajudar')}>
+              <div className="cta-text">
+                <h3>Comece ajudando o próximo</h3>
+                <p>Veja quem precisa de você</p>
+              </div>
+              <div className="cta-icon">
+                <ArrowRight size={24} />
+              </div>
             </div>
-            <div className="cta-icon">
-              <ArrowRight size={24} />
+          ) : (
+            <div className="cta-card" onClick={() => navigate('/cadastro')}>
+              <div className="cta-text">
+                <h3>Faça parte da rede</h3>
+                <p>Junte-se a +2k vizinhos</p>
+              </div>
+              <div className="cta-icon">
+                <ArrowRight size={24} />
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
         <footer className="landing-footer mobile-footer">
