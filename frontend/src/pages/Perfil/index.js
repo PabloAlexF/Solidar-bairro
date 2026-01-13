@@ -49,6 +49,7 @@ const ProfileComponent = () => {
   useEffect(() => {
     setBio(user?.bio || user?.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
     setEmail(user?.email || "Email não informado");
+    setAjudasConcluidas(user?.ajudasConcluidas || 0);
   }, [user]);
   
   const [avatarUrl, setAvatarUrl] = useState("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
@@ -73,12 +74,12 @@ const ProfileComponent = () => {
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [ajudasConcluidas, setAjudasConcluidas] = useState(0);
   
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate('/login');
     } else {
-      // Recarregar dados do usuário do backend
       loadUserData();
     }
   }, [isAuthenticated, navigate]);
@@ -95,6 +96,7 @@ const ProfileComponent = () => {
       
       if (response.success && response.data) {
         updateUser(response.data);
+        setAjudasConcluidas(response.data.ajudasConcluidas || 0);
       }
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
@@ -550,12 +552,12 @@ const ProfileComponent = () => {
             {!zenMode && (
               <div className="impact-stats-grid">
                 <div className="impact-stat-item">
-                  <span className="value">0</span>
-                  <span className="label">Pontos</span>
+                  <span className="value">{ajudasConcluidas}</span>
+                  <span className="label">Ajudas Concluídas</span>
                 </div>
                 <div className="impact-stat-item">
                   <span className="value">0</span>
-                  <span className="label">Ajudas</span>
+                  <span className="label">Pontos</span>
                 </div>
                 <div className="impact-stat-item">
                   <span className="value">0</span>

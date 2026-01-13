@@ -281,6 +281,17 @@ const ApiService = {
     return this.request('/notifications', {
       method: 'DELETE'
     });
+  },
+
+  async finalizarAjuda(pedidoId, ajudanteId) {
+    return this.request(`/pedidos/${pedidoId}/finalizar`, {
+      method: 'POST',
+      body: JSON.stringify({ ajudanteId })
+    });
+  },
+
+  async getAjudasConcluidas(userId) {
+    return this.request(`/cidadaos/${userId}/ajudas-concluidas`);
   }
 };
 

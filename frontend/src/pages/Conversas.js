@@ -29,6 +29,7 @@ const Conversas = () => {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ajudasConcluidas, setAjudasConcluidas] = useState(0);
 
   // Carregar conversas
   const loadConversations = async () => {
@@ -89,6 +90,7 @@ const Conversas = () => {
   useEffect(() => {
     if (user) {
       loadConversations();
+      loadUserStats();
       
       // Configurar polling para novas conversas
       const interval = chatNotificationService.startConversationPolling(
@@ -128,6 +130,19 @@ const Conversas = () => {
     }
   }, [user]);
 
+  const loadUserStats = async () => {
+    try {
+      if (user?.uid) {
+        const response = await ApiService.getAjudasConcluidas(user.uid);
+        if (response.success) {
+          setAjudasConcluidas(response.data.ajudasConcluidas || 0);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
+
   const filteredConversations = conversations.filter(conv => {
     const matchesFilter = 
       activeFilter === 'todas' || 
@@ -157,7 +172,7 @@ const Conversas = () => {
                 <p className="profile-rank">⭐ Super Vizinho</p>
                 <div className="profile-stats-mini">
                   <div className="stat-mini-item">
-                    <span className="stat-value">{user?.ajudasRealizadas || 0}</span>
+                    <span className="stat-value">{ajudasConcluidas}</span>
                     <span className="stat-label">Ajudas</span>
                   </div>
                   <div className="stat-mini-item">
@@ -312,7 +327,7 @@ const Conversas = () => {
               </div>
               <div className="insight-text">
                 <h4>Conquista da Semana</h4>
-                <p>Você ajudou {user?.ajudasRealizadas || 0} vizinhos nos últimos 7 dias. Continue assim!</p>
+                <p>Você ajudou {ajudasConcluidas} vizinhos nos últimos 7 dias. Continue assim!</p>
               </div>
             </div>
 

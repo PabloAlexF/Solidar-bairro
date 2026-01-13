@@ -364,8 +364,18 @@ const Chat = () => {
         if (response.success) {
           setAchadoPerdidoData(prev => ({ ...prev, resolved: true, status: 'resolvido' }));
         }
+      } else if (helpInfo.contextType === 'pedido' && conversation?.pedidoId) {
+        // Finalizar ajuda - incrementar contador e remover pedido
+        const response = await ApiService.finalizarAjuda(conversation.pedidoId, user?.uid);
+        if (response.success) {
+          setDeliveryStatus("entregue");
+          // Redirecionar para página de conversas após finalizar
+          setTimeout(() => {
+            navigate('/conversas');
+          }, 3000);
+        }
       } else {
-        // Finalizar pedido
+        // Fallback para casos sem contexto específico
         setDeliveryStatus("entregue");
       }
       

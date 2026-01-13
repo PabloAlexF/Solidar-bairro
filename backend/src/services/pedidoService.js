@@ -117,6 +117,39 @@ class PedidoService {
     
     return await pedidoModel.delete(id);
   }
+
+  async finalizarAjuda(pedidoId, ajudanteId) {
+    if (!pedidoId?.trim()) {
+      throw new Error('ID do pedido é obrigatório');
+    }
+    
+    if (!ajudanteId?.trim()) {
+      throw new Error('ID do ajudante é obrigatório');
+    }
+    
+    const existingPedido = await pedidoModel.findById(pedidoId);
+    if (!existingPedido) {
+      throw new Error('Pedido não encontrado');
+    }
+    
+    // Incrementar contador de ajudas do cidadão
+    const cidadaoModel = require('../models/cidadaoModel');
+    const { db } = require('../config/firebase');
+    
+    const cidadaoRef = db.collection('cidadaos').doc(ajudanteId);
+    const cidadaoDoc = await cidadaoRef.get();
+    
+    if (cidadaoDoc.exists) {
+      const currentCount = cidadaoDoc.data().ajudasConcluidas || 0;
+      await cidadaoRef.update({
+        ajudasConcluidas: currentCount + 1,
+        atualizadoEm: new Date()
+      });
+    }
+    
+    // Remover o pedido da lista
+    return await pedidoModel.delete(pedidoId);
+  }
 }
 
 module.exports = new PedidoService();

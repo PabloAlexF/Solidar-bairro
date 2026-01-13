@@ -43,6 +43,21 @@ class CidadaoController {
       res.status(400).json({ success: false, error: error.message });
     }
   }
+
+  async getAjudasConcluidas(req, res) {
+    try {
+      const { uid } = req.params;
+      const cidadao = await cidadaoService.getCidadaoById(uid);
+      res.json({ 
+        success: true, 
+        data: { 
+          ajudasConcluidas: cidadao.ajudasConcluidas || 0 
+        } 
+      });
+    } catch (error) {
+      res.status(404).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new CidadaoController();

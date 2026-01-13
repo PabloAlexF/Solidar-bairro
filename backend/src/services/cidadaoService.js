@@ -31,6 +31,7 @@ class CidadaoService {
       interesses: cidadao.interesses,
       proposito: cidadao.proposito,
       senha: data.senha, // Senha já vem hasheada do controller
+      ajudasConcluidas: cidadao.ajudasConcluidas,
       tipo: cidadao.tipo,
       ativo: cidadao.ativo,
       criadoEm: new Date(),

@@ -131,6 +131,27 @@ class PedidoController {
       });
     }
   }
+
+  async finalizarAjuda(req, res) {
+    try {
+      const { id } = req.params;
+      const { ajudanteId } = req.body;
+      
+      await pedidoService.finalizarAjuda(id, ajudanteId);
+      
+      res.json({
+        success: true,
+        message: 'Ajuda finalizada com sucesso'
+      });
+    } catch (error) {
+      console.error('Erro ao finalizar ajuda:', error);
+      const status = error.message.includes('não encontrado') ? 404 : 500;
+      res.status(status).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new PedidoController();

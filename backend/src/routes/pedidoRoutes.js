@@ -19,6 +19,9 @@ router.put('/:id', authenticateToken, pedidoController.update);
 // DELETE /api/pedidos/:id - Deletar pedido
 router.delete('/:id', authenticateToken, pedidoController.delete);
 
+// POST /api/pedidos/:id/finalizar - Finalizar ajuda
+router.post('/:id/finalizar', authenticateToken, pedidoController.finalizarAjuda);
+
 // GET /api/pedidos/:id - Buscar pedido por ID (público)
 router.get('/:id', pedidoController.getById);
 

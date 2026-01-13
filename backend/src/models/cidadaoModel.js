@@ -12,6 +12,7 @@ class Cidadao {
     this.interesses = data.interesses || [];
     this.proposito = data.proposito || '';
     this.senha = data.senha; // Campo para senha hasheada
+    this.ajudasConcluidas = data.ajudasConcluidas !== undefined ? data.ajudasConcluidas : 0;
     this.tipo = 'cidadao';
     this.ativo = true;
     this.criadoEm = new Date();
