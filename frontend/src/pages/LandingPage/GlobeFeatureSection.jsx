@@ -1,6 +1,7 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { ShieldCheck, Zap, Search, Navigation, MapPin, MessageCircle, Users } from "lucide-react";
 import { Globe } from "./Globe";
+import { Radar } from "./Radar";
 import { useEffect, useRef } from "react";
 import "./home.css";
 
@@ -51,28 +52,28 @@ export default function GlobeFeatureSection() {
 
   const features = [
     { 
-      icon: <MapPin className="w-8 h-8" />, 
+      icon: <MapPin />, 
       title: "Localização Inteligente", 
       desc: "O SolidarBairro detecta sua vizinhança e mostra o que está acontecendo em um raio seguro de 2km.",
       color: "blue",
       tag: "Proximidade"
     },
     { 
-      icon: <MessageCircle className="w-8 h-8" />, 
+      icon: <MessageCircle />, 
       title: "Conexão de Impacto", 
       desc: "Escolha entre ajudar alguém próximo ou pedir um auxílio. Nossa interface facilita o primeiro contato.",
       color: "pink",
       tag: "Diálogo"
     },
     { 
-      icon: <Navigation className="w-8 h-8" />, 
+      icon: <Navigation />, 
       title: "Raio Personalizado", 
       desc: "Veja apenas o que importa no seu bairro. Filtre por distância, tipo de ajuda ou urgência.",
       color: "purple",
       tag: "Focado"
     },
     { 
-      icon: <Search className="w-8 h-8" />, 
+      icon: <Search />, 
       title: "Busca Amigável", 
       desc: "Encontre ajuda ou vizinhos sem complicações com nossa busca semântica por necessidade.",
       color: "teal",
@@ -132,20 +133,32 @@ export default function GlobeFeatureSection() {
           </motion.div>
 
           <div className="main-layout">
-            <motion.div 
-              style={{ rotateX, rotateY, perspective: 1200 }}
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className="globe-column"
-            >
-              <div className="globe-wrapper">
+            <div className="globe-column">
+              <motion.div 
+                style={{ rotateX, rotateY, perspective: 1200 }}
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                className="globe-wrapper"
+              >
                 <div className="globe-card">
                   <Globe />
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="radar-wrapper"
+              >
+                <div className="radar-card">
+                  <Radar />
+                </div>
+              </motion.div>
+            </div>
 
             <div className="features-column">
               <div className="features-staggered">
