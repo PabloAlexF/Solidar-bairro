@@ -222,8 +222,9 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    // Clear any auth tokens/data
+    localStorage.removeItem('solidar-token');
     localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
     navigate('/login');
   };
 
@@ -316,10 +317,16 @@ export default function AdminDashboard() {
           </div>
         </nav>
 
-        <button onClick={handleLogout} className="admin-nav-item" style={{ background: 'transparent', border: 'none', width: '100%', marginTop: 'auto' }}>
-          <LogOut size={20} />
-          <span>Sair</span>
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: 'auto' }}>
+          <button onClick={() => navigate('/')} className="admin-nav-item" style={{ background: 'transparent', border: 'none', width: '100%' }}>
+            <Globe size={20} />
+            <span>Site</span>
+          </button>
+          <button onClick={handleLogout} className="admin-nav-item" style={{ background: 'transparent', border: 'none', width: '100%' }}>
+            <LogOut size={20} />
+            <span>Sair</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
