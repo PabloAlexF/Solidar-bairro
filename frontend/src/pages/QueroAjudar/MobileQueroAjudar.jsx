@@ -369,7 +369,6 @@ export const MobileQueroAjudar = () => {
       <div className="qa-main-wrapper-mobile">
         <header className="page-header-mobile">
           <div className="brand-box-mobile">
-            <Heart size={24} fill="#ef4444" color="#ef4444" />
             <h1>Solidariedade <span>Próxima</span></h1>
           </div>
 

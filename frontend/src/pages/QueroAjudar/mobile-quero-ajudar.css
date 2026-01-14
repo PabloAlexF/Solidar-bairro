@@ -26,7 +26,6 @@
   top: 0;
   background: rgba(248, 250, 252, 0.9);
   backdrop-filter: blur(10px);
-  z-index: 100;
   padding: 10px 0;
 }
 
@@ -251,6 +250,7 @@
 .font-options-mobile {
   display: flex;
   gap: 10px;
+  margin-bottom: 10px;
 }
 
 .font-options-mobile button {
