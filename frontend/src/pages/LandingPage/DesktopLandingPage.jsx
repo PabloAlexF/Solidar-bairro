@@ -538,7 +538,7 @@ export default function DesktopLandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <header className="hero-section" ref={heroRef}>
+      <header className="hero-section" ref={heroRef} style={{ paddingTop: '10rem' }}>
         <div className="hero-atmosphere">
           <div 
             className="mesh-blob teal"

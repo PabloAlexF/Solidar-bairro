@@ -663,15 +663,12 @@ export default function DesktopQueroAjudar() {
       <a href="#main-content" className="skip-link">Pular para o conteúdo principal</a>
       <AnimatedBackground />
       
-      <LandingHeader scrolled={true} />
+      {!selectedOrder && <LandingHeader scrolled={true} />}
       
       <div className="qa-main-wrapper" id="main-content" style={{ paddingTop: '80px' }}>
         
         <animated.header className="page-header" style={headerSpring} ref={headerRef}>
           <div className="brand-box">
-            <div className="brand-logo">
-              <Heart size={32} fill="#ef4444" color="#ef4444" />
-            </div>
             <div className="brand-info">
               <h1>Solidariedade <span>Próxima</span></h1>
               <p>Conectando quem precisa com quem pode ajudar</p>
@@ -987,7 +984,7 @@ export default function DesktopQueroAjudar() {
 
                       <div className="card-footer-info">
                         <div className="user-snippet">
-                          <div className="user-avatar" style={{ backgroundColor: catMeta.color }}>
+                          <div className="qa-user-avatar">
                             {order.userName.charAt(0)}
                           </div>
                           <span className="user-name">{order.userName}</span>
