@@ -479,7 +479,7 @@ export function PrecisoDeAjudaDesktop() {
         <span className="pda-step-badge" style={{ background: 'var(--pda-primary)' }}>
           CATEGORIA PRINCIPAL
         </span>
-        <h2>Qual o foco da<br/>sua necessidade?</h2>
+        <h2>Qual o foco da sua necessidade?</h2>
         <p>A Solidar conecta você com vizinhos dispostos a ajudar. Escolha uma categoria para começar.</p>
       </div>
 
