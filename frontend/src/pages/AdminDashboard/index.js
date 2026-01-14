@@ -228,14 +228,18 @@ export default function AdminDashboard() {
   };
 
   const filteredOngs = ongs.filter(ong => 
+    ong.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    ong.razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ong.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ong.cnpj?.includes(searchTerm) ||
     ong.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredCommerces = commerces.filter(commerce => 
+    commerce.nomeEstabelecimento?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     commerce.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     commerce.cnpj?.includes(searchTerm) ||
+    commerce.contato?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     commerce.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -363,7 +367,7 @@ export default function AdminDashboard() {
                           <div key={ong.id} className="notification-item" onClick={() => { setSelectedOng(ong); setActiveTab('ongs'); setShowNotifications(false); }}>
                             <div className="notification-icon" style={{ background: '#fef3c7', color: '#92400e' }}><Building2 size={18} /></div>
                             <div className="notification-content">
-                              <p className="notification-title">ONG: {ong.nome_fantasia}</p>
+                              <p className="notification-title">ONG: {ong.razaoSocial || ong.razao_social || ong.nome_fantasia}</p>
                               <p className="notification-desc">Aguardando aprovação</p>
                             </div>
                           </div>
@@ -372,7 +376,7 @@ export default function AdminDashboard() {
                           <div key={commerce.id} className="notification-item" onClick={() => { setSelectedCommerce(commerce); setActiveTab('commerces'); setShowNotifications(false); }}>
                             <div className="notification-icon" style={{ background: '#e0f2fe', color: '#0369a1' }}><Store size={18} /></div>
                             <div className="notification-content">
-                              <p className="notification-title">Comércio: {commerce.nome_fantasia}</p>
+                              <p className="notification-title">Comércio: {commerce.nomeEstabelecimento || commerce.nome_fantasia}</p>
                               <p className="notification-desc">Novo pedido de parceria</p>
                             </div>
                           </div>
@@ -497,14 +501,14 @@ export default function AdminDashboard() {
                 <h3 className="dashboard-section-title">
                   <Clock size={18} color="var(--admin-warning)" /> 
                   Pendentes de Aprovação 
-                  <span className="pending-count-badge">{pendingOngs.length + pendingCommerces.length + profiles.filter(p => p.status === 'pending').length}</span>
+                  <span className="pending-count-badge">{pendingOngs.length + pendingCommerces.length + stats.pendingFamilies + stats.pendingCitizens}</span>
                 </h3>
                 <div className="dashboard-pending-list">
                   {pendingOngs.map(ong => (
                     <div key={ong.id} className="dashboard-pending-item" onClick={() => { setSelectedOng(ong); setActiveTab('ongs'); }}>
                       <div className="pending-icon ong-icon"><Building2 size={16} /></div>
                       <div className="pending-info">
-                        <span className="pending-name">{ong.nome_fantasia}</span>
+                        <span className="pending-name">{ong.razaoSocial || ong.razao_social || ong.nome_fantasia}</span>
                         <span className="pending-type">ONG</span>
                       </div>
                       <div className="pending-badge">Novo</div>
@@ -515,14 +519,14 @@ export default function AdminDashboard() {
                     <div key={commerce.id} className="dashboard-pending-item" onClick={() => { setSelectedCommerce(commerce); setActiveTab('commerces'); }}>
                       <div className="pending-icon commerce-icon"><Store size={16} /></div>
                       <div className="pending-info">
-                        <span className="pending-name">{commerce.nome_fantasia}</span>
+                        <span className="pending-name">{commerce.nomeEstabelecimento || commerce.nome_fantasia}</span>
                         <span className="pending-type">Comércio</span>
                       </div>
                       <div className="pending-badge">Parceria</div>
                       <ArrowRight size={14} />
                     </div>
                   ))}
-                  {profiles.filter(p => p.status === 'pending').map(profile => (
+                  {profiles.filter(p => p.status === 'pending' && (p.nomeCompleto || p.necessidades)).map(profile => (
                     <div key={profile.id} className="dashboard-pending-item" onClick={() => { setSelectedProfile(profile); setActiveTab('families'); }}>
                       <div className="pending-icon family-icon"><Users size={16} /></div>
                       <div className="pending-info">
@@ -533,7 +537,18 @@ export default function AdminDashboard() {
                       <ArrowRight size={14} />
                     </div>
                   ))}
-                  {(pendingOngs.length + pendingCommerces.length + profiles.filter(p => p.status === 'pending').length) === 0 && (
+                  {profiles.filter(p => p.status === 'pending' && p.nome && !p.nomeCompleto).map(citizen => (
+                    <div key={citizen.id} className="dashboard-pending-item" onClick={() => { setSelectedProfile(citizen); setActiveTab('citizens'); }}>
+                      <div className="pending-icon family-icon"><UserCircle size={16} /></div>
+                      <div className="pending-info">
+                        <span className="pending-name">{citizen.nome}</span>
+                        <span className="pending-type">Cidadão</span>
+                      </div>
+                      <div className="pending-badge">Cadastro</div>
+                      <ArrowRight size={14} />
+                    </div>
+                  ))}
+                  {(pendingOngs.length + pendingCommerces.length + stats.pendingFamilies + stats.pendingCitizens) === 0 && (
                     <div className="dashboard-empty">
                       <CheckCircle size={32} color="var(--admin-success)" />
                       <p>Todas as solicitações foram processadas!</p>
@@ -551,8 +566,12 @@ export default function AdminDashboard() {
                     <span className="summary-label">Comércios</span>
                   </div>
                   <div className="summary-item">
-                    <span className="summary-number">{profiles.filter(p => p.status === 'pending').length}</span>
+                    <span className="summary-number">{stats.pendingFamilies}</span>
                     <span className="summary-label">Famílias</span>
+                  </div>
+                  <div className="summary-item">
+                    <span className="summary-number">{stats.pendingCitizens}</span>
+                    <span className="summary-label">Cidadãos</span>
                   </div>
                 </div>
               </div>
@@ -740,7 +759,7 @@ export default function AdminDashboard() {
                 filteredOngs.map((ong) => (
                   <tr key={ong.id}>
                     <td>
-                      <div style={{ fontWeight: 700, color: 'var(--admin-primary)' }}>{ong.nome_fantasia || ong.nomeFantasia}</div>
+                      <div style={{ fontWeight: 700, color: 'var(--admin-primary)' }}>{ong.razaoSocial || ong.razao_social || ong.nome_fantasia || ong.nomeFantasia}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--admin-secondary)' }}>{ong.email}</div>
                       <div style={{ fontSize: '0.7rem', color: 'var(--admin-accent)', marginTop: '0.25rem' }}>
                         {ong.causas && ong.causas.length > 0 && (
@@ -758,8 +777,8 @@ export default function AdminDashboard() {
                 filteredCommerces.map((commerce) => (
                   <tr key={commerce.id}>
                     <td>
-                      <div style={{ fontWeight: 700, color: 'var(--admin-primary)' }}>{commerce.nome_fantasia || commerce.nomeFantasia}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--admin-secondary)' }}>{commerce.email}</div>
+                      <div style={{ fontWeight: 700, color: 'var(--admin-primary)' }}>{commerce.nomeEstabelecimento || commerce.nome_fantasia || commerce.nomeFantasia}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--admin-secondary)' }}>{commerce.contato?.email || commerce.email}</div>
                       <div style={{ fontSize: '0.7rem', color: 'var(--admin-accent)', marginTop: '0.25rem' }}>
                         {commerce.segmento && <span>Segmento: {commerce.segmento}</span>}
                         {commerce.contribuicoes && commerce.contribuicoes.length > 0 && (
@@ -849,7 +868,7 @@ export default function AdminDashboard() {
           <div className="admin-modal-content animate-scale-in">
             <header className="admin-modal-header" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)', color: 'white' }}>
               <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedOng.nome_fantasia || selectedOng.nomeFantasia}</h2>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedOng.razaoSocial || selectedOng.razao_social || selectedOng.nome_fantasia || selectedOng.nomeFantasia}</h2>
                 <p style={{ opacity: 0.8, fontSize: '0.75rem' }}>Avaliação Institucional</p>
               </div>
               <button onClick={() => setSelectedOng(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: 'white', width: '32px', height: '32px', borderRadius: '8px' }}><X size={20} /></button>
@@ -859,7 +878,7 @@ export default function AdminDashboard() {
               <div className="detail-section">
                 <h3 className="detail-section-title"><Building2 size={18} /> Dados Institucionais</h3>
                 <div className="detail-grid">
-                  <div className="detail-item"><label>Nome Fantasia</label><p>{selectedOng.nome_fantasia || selectedOng.nomeFantasia}</p></div>
+                  <div className="detail-item"><label>Nome Fantasia</label><p>{selectedOng.razaoSocial || selectedOng.razao_social || selectedOng.nome_fantasia || selectedOng.nomeFantasia}</p></div>
                   <div className="detail-item"><label>Razão Social</label><p>{selectedOng.razao_social || selectedOng.razaoSocial || '---'}</p></div>
                   <div className="detail-item"><label>CNPJ</label><p>{selectedOng.cnpj}</p></div>
                   <div className="detail-item"><label>Data Fundação</label><p>{selectedOng.data_fundacao ? new Date(selectedOng.data_fundacao).toLocaleDateString('pt-BR') : '---'}</p></div>
@@ -932,7 +951,7 @@ export default function AdminDashboard() {
           <div className="admin-modal-content animate-scale-in">
             <header className="admin-modal-header" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%)', color: 'white' }}>
               <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedCommerce.nome_fantasia || selectedCommerce.nomeFantasia}</h2>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedCommerce.nomeEstabelecimento || selectedCommerce.nome_fantasia || selectedCommerce.nomeFantasia}</h2>
                 <p style={{ opacity: 0.8, fontSize: '0.75rem' }}>Verificação de Parceiro</p>
               </div>
               <button onClick={() => setSelectedCommerce(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: 'white', width: '32px', height: '32px', borderRadius: '8px' }}><X size={20} /></button>
@@ -942,14 +961,13 @@ export default function AdminDashboard() {
               <div className="detail-section">
                 <h3 className="detail-section-title"><Store size={18} /> Dados do Comércio</h3>
                 <div className="detail-grid">
-                  <div className="detail-item"><label>Nome Fantasia</label><p>{selectedCommerce.nome_fantasia || selectedCommerce.nomeFantasia}</p></div>
+                  <div className="detail-item"><label>Nome Fantasia</label><p>{selectedCommerce.nomeEstabelecimento || selectedCommerce.nome_fantasia || selectedCommerce.nomeFantasia}</p></div>
                   <div className="detail-item"><label>CNPJ</label><p>{selectedCommerce.cnpj}</p></div>
-                  <div className="detail-item"><label>Segmento</label><p>{selectedCommerce.segmento || '---'}</p></div>
-                  <div className="detail-item"><label>Responsável</label><p>{selectedCommerce.responsavel_legal || selectedCommerce.responsavelLegal || '---'}</p></div>
-                  <div className="detail-item"><label>Telefone</label><p>{selectedCommerce.telefone}</p></div>
-                  <div className="detail-item"><label>E-mail</label><p>{selectedCommerce.email}</p></div>
-                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Endereço</label><p>{selectedCommerce.endereco || '---'}</p></div>
-                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Horário</label><p>{selectedCommerce.horario_funcionamento || selectedCommerce.horarioFuncionamento || '---'}</p></div>
+                  <div className="detail-item"><label>Segmento</label><p>{selectedCommerce.descricaoAtividade || selectedCommerce.segmento || '---'}</p></div>
+                  <div className="detail-item"><label>Responsável</label><p>{selectedCommerce.responsavel?.nome || selectedCommerce.responsavel_legal || selectedCommerce.responsavelLegal || '---'}</p></div>
+                  <div className="detail-item"><label>Telefone</label><p>{selectedCommerce.contato?.telefone || selectedCommerce.telefone}</p></div>
+                  <div className="detail-item"><label>E-mail</label><p>{selectedCommerce.contato?.email || selectedCommerce.email}</p></div>
+                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Endereço</label><p>{typeof selectedCommerce.endereco === 'object' ? `${selectedCommerce.endereco.endereco || ''}, ${selectedCommerce.endereco.bairro || ''} - ${selectedCommerce.endereco.cidade || ''}/${selectedCommerce.endereco.uf || ''}` : (selectedCommerce.endereco || '---')}</p></div>
                 </div>
               </div>
 
@@ -989,10 +1007,10 @@ export default function AdminDashboard() {
               {!isRejecting ? (
                 <div style={{ display: 'flex', gap: '1rem' }}>
                   <button onClick={() => setIsRejecting(true)} className="admin-action-btn btn-reject"><XCircle size={18} /><span>Rejeitar</span></button>
-                  <button onClick={() => handleUpdateStatus(selectedCommerce.id, 'verified', 'commerces')} className="admin-action-btn btn-approve" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2 || !evaluationChecklist.check3 || !evaluationChecklist.check4}><CheckCircle size={18} /><span>Aprovar Parceiro</span></button>
+                  <button onClick={() => handleUpdateStatus(selectedCommerce.id, 'verified', 'comercios')} className="admin-action-btn btn-approve" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2 || !evaluationChecklist.check3 || !evaluationChecklist.check4}><CheckCircle size={18} /><span>Aprovar Parceiro</span></button>
                 </div>
               ) : (
-                <button onClick={() => handleUpdateStatus(selectedCommerce.id, 'rejected', 'commerces', rejectionReason)} className="admin-action-btn btn-reject" disabled={!rejectionReason.trim()}><AlertCircle size={18} /><span>Confirmar Rejeição</span></button>
+                <button onClick={() => handleUpdateStatus(selectedCommerce.id, 'rejected', 'comercios', rejectionReason)} className="admin-action-btn btn-reject" disabled={!rejectionReason.trim()}><AlertCircle size={18} /><span>Confirmar Rejeição</span></button>
               )}
             </footer>
           </div>
@@ -1008,7 +1026,7 @@ export default function AdminDashboard() {
                   <Users size={32} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{selectedProfile.nomeCompleto || selectedProfile.full_name}</h2>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{selectedProfile.nome || selectedProfile.nomeCompleto || selectedProfile.full_name}</h2>
                   <p style={{ opacity: 0.9, fontWeight: 600 }}>Cadastro Familiar</p>
                 </div>
               </div>
@@ -1019,10 +1037,10 @@ export default function AdminDashboard() {
               <div className="detail-section">
                 <h3 className="detail-section-title"><User size={18} /> Dados Pessoais</h3>
                 <div className="detail-grid">
-                  <div className="detail-item"><label>Nome Completo</label><p>{selectedProfile.nomeCompleto || selectedProfile.full_name}</p></div>
+                  <div className="detail-item"><label>Nome Completo</label><p>{selectedProfile.nome || selectedProfile.nomeCompleto || selectedProfile.full_name}</p></div>
                   <div className="detail-item"><label>Data Nascimento</label><p>{selectedProfile.dataNascimento || selectedProfile.data_nascimento || '---'}</p></div>
                   <div className="detail-item"><label>Estado Civil</label><p>{selectedProfile.estadoCivil || selectedProfile.estado_civil || '---'}</p></div>
-                  <div className="detail-item"><label>Profissão</label><p>{selectedProfile.profissao || '---'}</p></div>
+                  <div className="detail-item"><label>Profissão</label><p>{selectedProfile.ocupacao || selectedProfile.profissao || '---'}</p></div>
                   <div className="detail-item"><label>CPF</label><p>{selectedProfile.cpf || '---'}</p></div>
                   <div className="detail-item"><label>RG</label><p>{selectedProfile.rg || '---'}</p></div>
                   <div className="detail-item"><label>NIS</label><p>{selectedProfile.nis || '---'}</p></div>
@@ -1034,7 +1052,7 @@ export default function AdminDashboard() {
                 <h3 className="detail-section-title"><Phone size={18} /> Contato</h3>
                 <div className="detail-grid">
                   <div className="detail-item"><label>Telefone</label><p>{selectedProfile.telefone || selectedProfile.phone || '---'}</p></div>
-                  <div className="detail-item"><label>WhatsApp</label><p>{selectedProfile.whatsapp || '---'}</p></div>
+                  <div className="detail-item"><label>WhatsApp</label><p>{selectedProfile.telefone || selectedProfile.phone || '---'}</p></div>
                   <div className="detail-item"><label>E-mail</label><p>{selectedProfile.email || '---'}</p></div>
                   <div className="detail-item"><label>Horário Contato</label><p>{selectedProfile.horarioContato || selectedProfile.horario_contato || '---'}</p></div>
                 </div>
@@ -1043,10 +1061,10 @@ export default function AdminDashboard() {
               <div className="detail-section">
                 <h3 className="detail-section-title"><Home size={18} /> Residência</h3>
                 <div className="detail-grid">
-                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Endereço</label><p>{selectedProfile.endereco || '---'}</p></div>
-                  <div className="detail-item"><label>Bairro</label><p>{selectedProfile.bairro || '---'}</p></div>
-                  <div className="detail-item"><label>Tipo Moradia</label><p>{selectedProfile.tipoMoradia || selectedProfile.tipo_moradia || '---'}</p></div>
-                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Ponto Referência</label><p>{selectedProfile.pontoReferencia || selectedProfile.ponto_referencia || '---'}</p></div>
+                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Endereço</label><p>{typeof selectedProfile.endereco === 'object' ? `${selectedProfile.endereco.endereco || ''}, ${selectedProfile.endereco.bairro || ''} - ${selectedProfile.endereco.cidade || ''}/${selectedProfile.endereco.uf || ''}` : (selectedProfile.endereco || '---')}</p></div>
+                  <div className="detail-item"><label>Bairro</label><p>{typeof selectedProfile.endereco === 'object' ? selectedProfile.endereco.bairro : (selectedProfile.bairro || '---')}</p></div>
+                  <div className="detail-item"><label>Tipo Moradia</label><p>{typeof selectedProfile.endereco === 'object' ? selectedProfile.endereco.tipoMoradia : (selectedProfile.tipoMoradia || selectedProfile.tipo_moradia || '---')}</p></div>
+                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Ponto Referência</label><p>{typeof selectedProfile.endereco === 'object' ? selectedProfile.endereco.pontoReferencia : (selectedProfile.pontoReferencia || selectedProfile.ponto_referencia || '---')}</p></div>
                 </div>
               </div>
 

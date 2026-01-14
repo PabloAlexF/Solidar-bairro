@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const familiaRoutes = require('./routes/familiaRoutes');
 const cidadaoRoutes = require('./routes/cidadaoRoutes');
 const comercioRoutes = require('./routes/comercioRoutes');
@@ -29,19 +31,26 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-app.use(cors(corsOptions));
-app.use(express.json({ limit: '1mb' }));
-
-// Middleware de segurança
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  next();
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // 100 requisições por IP
+  message: 'Muitas requisições, tente novamente mais tarde'
 });
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // 5 tentativas de login
+  message: 'Muitas tentativas de login, tente novamente mais tarde'
+});
+
+app.use(helmet());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '1mb' }));
+app.use('/api/', limiter);
+
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/familias', familiaRoutes);
 app.use('/api/cidadaos', cidadaoRoutes);
