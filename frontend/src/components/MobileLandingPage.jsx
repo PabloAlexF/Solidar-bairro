@@ -162,8 +162,12 @@ export const MobileLandingPage = () => {
             <span>Solidar<b>Bairro</b></span>
           </div>
           <div className="header-actions">
+            <button className="header-cta" onClick={() => navigate('/cadastro')}>
+              Cadastrar
+            </button>
             <NotificationDropdown />
           </div>
+
         </div>
 
         <div className="hero-content">

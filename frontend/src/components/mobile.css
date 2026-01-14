@@ -60,6 +60,25 @@
   color: var(--sb-text);
 }
 
+.header-cta{
+  padding: 10px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6a5cff, #4b3cff);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(106, 92, 255, 0.35);
+}
+
+.header-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(106, 92, 255, 0.5);
+  background: linear-gradient(135deg, #7b6dff, #5a4dff);
+}
+
 .hero-tag {
   display: inline-flex;
   align-items: center;

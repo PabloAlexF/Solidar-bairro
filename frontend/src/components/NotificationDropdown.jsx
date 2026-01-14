@@ -10,7 +10,7 @@ export const NotificationDropdown = () => {
     <div style={{ position: 'relative' }}>
       <button 
         onClick={() => setShowNotifications(!showNotifications)} 
-        style={{ background: 'none', border: 'none', color: 'inherit', position: 'relative' }}
+        style={{ background: 'none', border: 'none', color: 'inherit', position: 'relative', top: '8px' }}
       >
         <Bell size={24} />
         {notifications.length > 0 && (

@@ -316,6 +316,7 @@
 /* ===== MENU DO USUÁRIO ===== */
 .user-menu-wrapper {
   position: relative;
+
 }
 
 .user-btn {
@@ -334,17 +335,39 @@
 }
 
 .user-avatar {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  color: white;
+  width: 36px;
+  height: 36px;
+
+  background: linear-gradient(135deg, #0040ff, #ea580c);
+  color: #ffffff !important;
+
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
+
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+/* Hover sutil */
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    0 6px 16px rgba(0, 213, 255, 0.45),
+    inset 0 1px 2px rgba(255, 255, 255, 0.25);
+}
+
+/* Opcional: foco (acessibilidade) */
+.user-avatar:focus-visible {
+  outline: 2px solid #fdba74;
+  outline-offset: 3px;
+}
+
 
 .user-avatar-large {
   width: 40px;
