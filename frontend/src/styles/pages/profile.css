@@ -516,13 +516,15 @@
 }
 
 .profile-container .modal-content {
-  background: var(--card-bg);
-  width: 100%;
-  max-width: 600px;
-  border-radius: 32px;
-  box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
-  animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    background: var(--card-bg);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 32px;
+    box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modalIn {
