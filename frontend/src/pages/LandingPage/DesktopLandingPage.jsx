@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import createGlobe from 'cobe';
-import Pagina from './GlobeSection';
+import GlobeFeatureSection from './GlobeFeatureSection';
 import { 
   Heart, 
   HandHelping, 
@@ -753,10 +753,7 @@ export default function DesktopLandingPage() {
         </div>
       </section>
 
-      {/* Geolocation Section */}
-      <section className="home-container">
-        <Pagina />
-      </section>
+      <GlobeFeatureSection />
 
       {/* Footer */}
       <footer id="about" className="landing-footer">
