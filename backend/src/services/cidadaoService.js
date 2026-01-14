@@ -47,8 +47,14 @@ class CidadaoService {
     };
   }
 
-  async getCidadaos() {
-    const snapshot = await this.db.collection(this.collection).get();
+  async getCidadaos(filters = {}) {
+    let query = this.db.collection(this.collection);
+    
+    if (filters.status) {
+      query = query.where('status', '==', filters.status);
+    }
+    
+    const snapshot = await query.get();
     return snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
   }
 

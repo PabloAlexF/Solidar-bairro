@@ -22,17 +22,21 @@ const ApiService = {
       
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Resposta não-JSON:', text);
         throw new Error(`Servidor retornou ${response.status}. Verifique se a API está rodando em ${this.baseURL}`);
       }
       
       const data = await response.json();
       
       if (!response.ok) {
+        console.error('Erro na API:', data);
         throw new Error(data.error || `Erro HTTP: ${response.status}`);
       }
       
       return data;
     } catch (error) {
+      console.error('Erro na requisição:', { endpoint, error: error.message });
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         throw new Error('Não foi possível conectar com a API. Verifique se o servidor está rodando.');
       }

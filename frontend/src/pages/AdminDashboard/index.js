@@ -41,18 +41,33 @@ ChartJS.register(
 const apiService = {
   async request(endpoint) {
     const token = localStorage.getItem('solidar-token');
-    const response = await fetch(`http://localhost:3001/api${endpoint}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+    try {
+      const response = await fetch(`http://localhost:3001/api${endpoint}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Resposta não-JSON:', text);
+        throw new Error(`Servidor retornou ${response.status}. Resposta: ${text.substring(0, 100)}`);
       }
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erro na requisição');
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Erro na API:', data);
+        throw new Error(data.error || `Erro HTTP: ${response.status}`);
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Erro na requisição:', { endpoint, error: error.message });
+      throw error;
     }
-    
-    return await response.json();
   },
   
   async updateStatus(entityType, entityId, status, reason) {
@@ -784,7 +799,7 @@ export default function AdminDashboard() {
                         <div style={{ fontSize: '0.7rem', color: 'var(--admin-secondary)' }}>Ocupação: {citizen.ocupacao}</div>
                       )}
                     </td>
-                    <td><span className={`status-badge ${citizen.status || 'pending'}`}>{(citizen.status || 'pending') === 'pending' ? 'Pendente' : citizen.status === 'verified' ? 'Verificado' : 'Rejeitado'}</span></td>
+                    <td><span className={`status-badge ${citizen.status || 'pending'}`}>{citizen.status === 'pending' ? 'Pendente' : citizen.status === 'verified' ? 'Verificado' : citizen.status === 'rejected' ? 'Rejeitado' : 'Pendente'}</span></td>
                     <td><button onClick={() => { setSelectedProfile(citizen); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn"><Eye size={16} /> Detalhes</button></td>
                   </tr>
                 ))

@@ -1,4 +1,5 @@
-const db = require('../config/database');
+const firebase = require('../config/firebase');
+const db = firebase.getDb();
 
 class AdminController {
   async getDashboardStats(req, res) {
@@ -108,7 +109,6 @@ class AdminController {
 
       const snapshot = await db.collection(entityType)
         .where('status', '==', 'pending')
-        .orderBy('criadoEm', 'desc')
         .get();
 
       const entities = [];
@@ -117,6 +117,13 @@ class AdminController {
           id: doc.id,
           ...doc.data()
         });
+      });
+
+      // Sort in memory by creation date
+      entities.sort((a, b) => {
+        const dateA = new Date(a.criadoEm || a.created_at || a.createdAt || 0);
+        const dateB = new Date(b.criadoEm || b.created_at || b.createdAt || 0);
+        return dateB - dateA;
       });
 
       res.json({
@@ -143,16 +150,40 @@ class AdminController {
         });
       }
 
-      const snapshot = await db.collection(entityType)
-        .orderBy('criadoEm', 'desc')
-        .get();
+      const snapshot = await db.collection(entityType).get();
 
       const entities = [];
+      const updatePromises = [];
+      
       snapshot.forEach(doc => {
+        const data = doc.data();
+        
+        // Se não tem status, adiciona 'pending' como padrão
+        if (!data.status) {
+          updatePromises.push(
+            db.collection(entityType).doc(doc.id).update({ status: 'pending' })
+          );
+          data.status = 'pending';
+        }
+        
         entities.push({
           id: doc.id,
-          ...doc.data()
+          ...data
         });
+      });
+      
+      // Atualiza documentos sem status em background
+      if (updatePromises.length > 0) {
+        Promise.all(updatePromises).catch(err => 
+          console.error('Erro ao atualizar status:', err)
+        );
+      }
+
+      // Sort in memory by creation date
+      entities.sort((a, b) => {
+        const dateA = new Date(a.criadoEm || a.created_at || a.createdAt || 0);
+        const dateB = new Date(b.criadoEm || b.created_at || b.createdAt || 0);
+        return dateB - dateA;
       });
 
       res.json({

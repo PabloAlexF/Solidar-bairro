@@ -19,7 +19,11 @@ class CidadaoController {
 
   async getCidadaos(req, res) {
     try {
-      const cidadaos = await cidadaoService.getCidadaos();
+      const filters = {};
+      if (req.query.status) {
+        filters.status = req.query.status;
+      }
+      const cidadaos = await cidadaoService.getCidadaos(filters);
       res.json({ success: true, data: cidadaos });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
