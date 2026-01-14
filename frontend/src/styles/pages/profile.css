@@ -75,6 +75,7 @@
 }
 
 .profile-container .card {
+  padding: 3rem;
   background: var(--card-bg);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
