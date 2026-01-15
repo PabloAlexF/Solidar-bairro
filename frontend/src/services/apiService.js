@@ -4,10 +4,10 @@ const ApiService = {
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
 
-  async request(endpoint, options = {}) {
+  async request(endpoint, options = {}, retryCount = 0) {
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem('solidar-token');
-    
+
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -19,21 +19,33 @@ const ApiService = {
 
     try {
       const response = await fetch(url, config);
-      
+
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
         console.error('Resposta não-JSON:', text);
         throw new Error(`Servidor retornou ${response.status}. Verifique se a API está rodando em ${this.baseURL}`);
       }
-      
+
       const data = await response.json();
-      
+
+      if (response.status === 429) {
+        // Rate limit exceeded - implement exponential backoff
+        if (retryCount < 3) {
+          const delay = Math.min(1000 * Math.pow(2, retryCount) + Math.random() * 1000, 30000); // Max 30 seconds
+          console.warn(`Rate limit atingido. Tentando novamente em ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return this.request(endpoint, options, retryCount + 1);
+        } else {
+          throw new Error('Limite de requisições excedido. Tente novamente mais tarde.');
+        }
+      }
+
       if (!response.ok) {
         console.error('Erro na API:', data);
         throw new Error(data.error || `Erro HTTP: ${response.status}`);
       }
-      
+
       return data;
     } catch (error) {
       console.error('Erro na requisição:', { endpoint, error: error.message });

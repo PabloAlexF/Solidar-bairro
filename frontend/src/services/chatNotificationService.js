@@ -27,14 +27,14 @@ class ChatNotificationService {
 
     this.listeners.set(conversationId, callback);
     
-    // Polling a cada 5 segundos para novas mensagens
+    // Polling a cada 15 segundos para novas mensagens (reduzido para evitar rate limiting)
     const interval = setInterval(async () => {
       try {
         await this.checkForNewMessages(conversationId);
       } catch (error) {
         console.error('Erro ao verificar novas mensagens:', error);
       }
-    }, 5000);
+    }, 15000);
 
     this.pollingIntervals.set(conversationId, interval);
   }
@@ -137,7 +137,7 @@ class ChatNotificationService {
   startConversationPolling(userId, callback) {
     const interval = setInterval(async () => {
       await this.checkForNewConversations(userId, callback);
-    }, 15000); // A cada 15 segundos
+    }, 30000); // A cada 30 segundos (reduzido para evitar rate limiting)
 
     return interval;
   }
@@ -161,7 +161,7 @@ class ChatNotificationService {
       } catch (error) {
         console.error('Erro no monitoramento global:', error);
       }
-    }, 10000); // A cada 10 segundos
+    }, 30000); // A cada 30 segundos (reduzido para evitar rate limiting)
 
     return globalInterval;
   }
