@@ -18,6 +18,7 @@ import PrecisoDeAjuda from '../pages/PrecisoDeAjuda';
 import AchadosEPerdidos from '../pages/AchadosEPerdidos';
 import Perfil from '../pages/Perfil';
 import Chat from '../pages/Chat';
+import PainelSocial from '../pages/PainelSocial';
 
 // Remaining pages (not yet refactored)
 import NovoAnuncio from '../pages/NovoAnuncio';
@@ -44,6 +45,7 @@ const AppRoutes = () => {
       <Route path="/achados-e-perdidos" element={<ProtectedRoute><AchadosEPerdidos /></ProtectedRoute>} />
       <Route path="/achados-e-perdidos/novo" element={<ProtectedRoute><Layout><NovoAnuncio /></Layout></ProtectedRoute>} />
       <Route path="/perfil" element={<ProtectedRoute><Perfil /></ProtectedRoute>} />
+      <Route path="/painel-social" element={<ProtectedRoute><PainelSocial /></ProtectedRoute>} />
       <Route path="/conversas" element={<ProtectedRoute><Conversas /></ProtectedRoute>} />
       <Route path="/chat/:id" element={<ProtectedRoute><Layout showHeader={false}><Chat /></Layout></ProtectedRoute>} />
     </Routes>
