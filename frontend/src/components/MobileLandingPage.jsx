@@ -21,7 +21,8 @@ import {
   Key,
   Instagram,
   Twitter,
-  Facebook
+  Facebook,
+  Settings
 } from 'lucide-react';
 
 import './mobile.css';
@@ -152,6 +153,17 @@ const MobileNav = () => {
 export const MobileLandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  
+  // Verificar se é administrador
+  const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
+  const isAdmin = user?.role === 'admin' || 
+                  user?.isAdmin || 
+                  user?.tipo === 'admin' || 
+                  user?.email === 'admin@solidarbairro.com' ||
+                  storedUser?.role === 'admin' || 
+                  storedUser?.isAdmin || 
+                  storedUser?.tipo === 'admin' ||
+                  storedUser?.email === 'admin@solidarbairro.com';
 
   return (
     <div className="mobile-landing-exclusive">
@@ -162,6 +174,27 @@ export const MobileLandingPage = () => {
             <span>Solidar<b>Bairro</b></span>
           </div>
           <div className="header-actions">
+            {isAdmin && (
+              <button 
+                onClick={() => navigate('/admin')}
+                style={{
+                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                  border: 'none',
+                  color: 'white',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  marginRight: '8px',
+                  boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
+                }}
+              >
+                <Settings size={18} />
+              </button>
+            )}
             {!isAuthenticated() ? (
               <button className="header-cta" onClick={() => navigate('/cadastro')}>
                 Cadastrar
