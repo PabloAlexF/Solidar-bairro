@@ -28,7 +28,8 @@ import {
   ExternalLink,
   Sparkles,
   Copy,
-  Share2
+  Share2,
+  Settings
 } from 'lucide-react';
 
 import './styles.css';
@@ -345,6 +346,17 @@ export default function DesktopLandingPage() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
+  
+  // Verificar se é administrador
+  const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
+  const isAdmin = user?.role === 'admin' || 
+                  user?.isAdmin || 
+                  user?.tipo === 'admin' || 
+                  user?.email === 'admin@solidarbairro.com' ||
+                  storedUser?.role === 'admin' || 
+                  storedUser?.isAdmin || 
+                  storedUser?.tipo === 'admin' ||
+                  storedUser?.email === 'admin@solidarbairro.com';
 
   return (
     <div className="landing-wrapper">
@@ -390,6 +402,39 @@ export default function DesktopLandingPage() {
               </div>
             ) : (
               <div className="user-section">
+                {isAdmin && (
+                  <button 
+                    className="admin-dashboard-btn"
+                    onClick={() => navigate('/admin')}
+                    title="Dashboard Admin"
+                    style={{
+                      background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                      border: 'none',
+                      color: 'white',
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+                      marginRight: '1rem'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
+                    }}
+                  >
+                    <Settings size={20} />
+                  </button>
+                )}
+                
                 <div className="notification-wrapper">
                   <button 
                     className="notification-btn"
@@ -517,6 +562,18 @@ export default function DesktopLandingPage() {
                         >
                           💬 Minhas conversas
                         </button>
+                        
+                        {isAdmin && (
+                          <button 
+                            className="menu-item"
+                            onClick={() => {
+                              navigate('/admin');
+                              setShowUserMenu(false);
+                            }}
+                          >
+                            ⚙️ Dashboard Admin
+                          </button>
+                        )}
                         
                         <button 
                           className="menu-item logout-btn"

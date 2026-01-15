@@ -144,6 +144,37 @@
   gap: 1rem;
 }
 
+.admin-dashboard-btn {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  border: none;
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.admin-dashboard-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.menu-item.admin-btn {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  margin-top: 0.5rem;
+}
+
+.menu-item.admin-btn:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: white;
+}
+
 .notification-wrapper {
   position: relative;
 }

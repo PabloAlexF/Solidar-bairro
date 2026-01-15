@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { Heart, Bell, User, LogOut } from 'lucide-react';
+import { Heart, Bell, User, LogOut, Settings } from 'lucide-react';
 import chatNotificationService from '../../services/chatNotificationService';
 import './LandingHeader.css';
 
@@ -21,6 +21,21 @@ const LandingHeader = ({ scrolled = false }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [globalMonitoringInterval, setGlobalMonitoringInterval] = useState(null);
+
+  // Verificar se é administrador
+  const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
+  console.log('User data:', { user, storedUser }); // Debug
+  
+  const isAdmin = user?.role === 'admin' || 
+                  user?.isAdmin || 
+                  user?.tipo === 'admin' || 
+                  user?.email === 'admin@solidarbairro.com' ||
+                  storedUser?.role === 'admin' || 
+                  storedUser?.isAdmin || 
+                  storedUser?.tipo === 'admin' ||
+                  storedUser?.email === 'admin@solidarbairro.com';
+  
+  const showAdminButton = true; // Forçar sempre
 
   useEffect(() => {
     // Iniciar monitoramento global de mensagens
@@ -138,6 +153,16 @@ const LandingHeader = ({ scrolled = false }) => {
             </div>
           ) : (
             <div className="user-section">
+              {showAdminButton && (
+                <button 
+                  className="admin-dashboard-btn"
+                  onClick={() => navigate('/admin')}
+                  title="Dashboard Admin"
+                >
+                  <Settings size={20} />
+                </button>
+              )}
+              
               <div className="notification-wrapper">
                 <button 
                   className="notification-btn"
@@ -273,6 +298,18 @@ const LandingHeader = ({ scrolled = false }) => {
                           <span className="menu-badge">{unreadCount}</span>
                         )}
                       </button>
+                      
+                      {showAdminButton && (
+                        <button 
+                          className="menu-item admin-btn"
+                          onClick={() => {
+                            navigate('/admin');
+                            setShowUserMenu(false);
+                          }}
+                        >
+                          ⚙️ Dashboard Admin
+                        </button>
+                      )}
                       
                       <button 
                         className="menu-item logout-btn"

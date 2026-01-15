@@ -10,13 +10,18 @@ import {
   HandHelping, 
   MapPin,
   Home,
-  MessageSquare
+  MessageSquare,
+  Settings
 } from 'lucide-react';
 import './MobileHeader.css';
 
 const MobileHeader = ({ title = "Solidar Bairro", showBackButton = false, backPath = "/" }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Verificar se é administrador
+  const user = JSON.parse(localStorage.getItem('solidar-user') || '{}');
+  const isAdmin = user?.role === 'admin' || user?.isAdmin || user?.tipo === 'admin';
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -39,6 +44,12 @@ const MobileHeader = ({ title = "Solidar Bairro", showBackButton = false, backPa
             <Home size={20} />
             <span>Início</span>
           </button>
+          {isAdmin && (
+            <button className="mob-nav-btn" onClick={() => handleNavigation('/admin')}>
+              <Settings size={20} />
+              <span>Dashboard Admin</span>
+            </button>
+          )}
           <button className="mob-nav-btn" onClick={() => handleNavigation('/perfil')}>
             <User size={20} />
             <span>Meu Perfil</span>
