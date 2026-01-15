@@ -931,7 +931,7 @@ export function PrecisoDeAjudaDesktop() {
 
       <div className="pda-review-card-v2">
         <div className="pda-review-quote">
-          <p>{formData.description}</p>
+          <p style={{ whiteSpace: 'pre-wrap' }}>{formData.description}</p>
         </div>
         
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>

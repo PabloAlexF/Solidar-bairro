@@ -215,7 +215,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                   }}
                 >
                   <div className="quote-mark">"</div>
-                  <p>{order.description}</p>
+                  <p style={{ whiteSpace: 'pre-wrap' }}>{order.description}</p>
                   <div className="quote-mark-end">"</div>
                 </div>
               </section>
@@ -982,7 +982,7 @@ export default function DesktopQueroAjudar() {
 
                       <div className="card-content">
                         <h2>{order.title}</h2>
-                        <p>{order.description.substring(0, 120)}...</p>
+                        <p style={{ whiteSpace: 'pre-wrap' }}>{order.description.substring(0, 120)}...</p>
                         <div className="loc-info">
                           <MapPin size={14} />
                           <span>{order.neighborhood}, {order.city}</span>

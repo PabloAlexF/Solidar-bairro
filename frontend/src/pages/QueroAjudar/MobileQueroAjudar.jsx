@@ -216,7 +216,7 @@ export const MobileQueroAjudar = () => {
               }}
             >
               <div className="quote-icon-v4-mobile" style={{ color: catMeta.color }}>"</div>
-              <p className="story-text-v4-mobile">{selectedOrder.description}</p>
+              <p className="story-text-v4-mobile" style={{ whiteSpace: 'pre-wrap' }}>{selectedOrder.description}</p>
               <div className="story-footer-v4-mobile">
                 <div className="author-v4-mobile">
                   <div className="avatar-v4-mobile" style={{ backgroundColor: catMeta.color }}>
