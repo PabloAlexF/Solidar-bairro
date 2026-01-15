@@ -108,14 +108,18 @@ const LandingHeader = ({ scrolled = false }) => {
             Funcionalidades
             <span className="link-underline" />
           </a>
-          <a href="/#how-it-works" className="nav-link">
-            Como Funciona
+          <button className="nav-link" onClick={() => navigate('/quero-ajudar')}>
+            Quero Ajudar
             <span className="link-underline" />
-          </a>
-          <a href="/#about" className="nav-link">
-            Missão
+          </button>
+          <button className="nav-link" onClick={() => navigate('/preciso-de-ajuda')}>
+            Preciso de Ajuda
             <span className="link-underline" />
-          </a>
+          </button>
+          <button className="nav-link" onClick={() => navigate('/achados-perdidos')}>
+            Achados e Perdidos
+            <span className="link-underline" />
+          </button>
           
           {!isAuthenticated() ? (
             <div className="auth-group">

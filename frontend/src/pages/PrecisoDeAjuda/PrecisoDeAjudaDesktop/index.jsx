@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../../../contexts/NotificationContext';
 import { MapaAlcance } from './MapaAlcance';
 import { AnalyzingModal, InconsistentModal, SuccessModal } from './modals';
 import AnimatedParticles from '../AnimatedParticles';
@@ -43,7 +44,8 @@ import {
   Wand2,
   Target,
   Rocket,
-  ChevronDown
+  ChevronDown,
+  Bell
 } from 'lucide-react';
 import './styles.css';
 
@@ -62,11 +64,61 @@ const CATEGORIES = [
 ];
 
 const URGENCY_OPTIONS = [
-  { id: 'critico', label: 'CRÍTICO', desc: 'Risco imediato à saúde ou vida', icon: <AlertTriangle size={32} />, color: '#ef4444', time: 'Imediato' },
-  { id: 'urgente', label: 'URGENTE', desc: 'Necessário para as próximas 24h', icon: <Zap size={32} />, color: '#f97316', time: '24 horas' },
-  { id: 'moderada', label: 'MODERADA', desc: 'Pode aguardar alguns dias', icon: <Calendar size={32} />, color: '#f59e0b', time: '3-5 dias' },
-  { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem prazo rígido', icon: <Coffee size={32} />, color: '#10b981', time: 'Sem pressa' },
-  { id: 'recorrente', label: 'RECORRENTE', desc: 'Necessidade mensal constante', icon: <RefreshCcw size={32} />, color: '#6366f1', time: 'Mensal' },
+  { 
+    id: 'critico', 
+    label: 'CRÍTICO', 
+    desc: 'Risco imediato à saúde ou vida', 
+    icon: <AlertTriangle size={32} />, 
+    color: '#ef4444', 
+    time: 'Imediato',
+    examples: ['Falta de medicamento vital', 'Risco de despejo hoje', 'Sem comida há 2+ dias'],
+    priority: 'Máxima',
+    response: '< 2 horas'
+  },
+  { 
+    id: 'urgente', 
+    label: 'URGENTE', 
+    desc: 'Necessário para as próximas 24h', 
+    icon: <Zap size={32} />, 
+    color: '#f97316', 
+    time: '24 horas',
+    examples: ['Conta vencendo hoje', 'Entrevista amanhã', 'Medicamento acabando'],
+    priority: 'Alta',
+    response: '< 24 horas'
+  },
+  { 
+    id: 'moderada', 
+    label: 'MODERADA', 
+    desc: 'Pode aguardar alguns dias', 
+    icon: <Calendar size={32} />, 
+    color: '#f59e0b', 
+    time: '3-5 dias',
+    examples: ['Roupas para inverno', 'Móveis básicos', 'Documentos'],
+    priority: 'Média',
+    response: '2-5 dias'
+  },
+  { 
+    id: 'tranquilo', 
+    label: 'TRANQUILO', 
+    desc: 'Sem prazo rígido', 
+    icon: <Coffee size={32} />, 
+    color: '#10b981', 
+    time: 'Sem pressa',
+    examples: ['Melhorias gerais', 'Itens extras', 'Complementos'],
+    priority: 'Baixa',
+    response: '1-2 semanas'
+  },
+  { 
+    id: 'recorrente', 
+    label: 'RECORRENTE', 
+    desc: 'Necessidade mensal constante', 
+    icon: <RefreshCcw size={32} />, 
+    color: '#6366f1', 
+    time: 'Mensal',
+    examples: ['Cesta básica mensal', 'Medicamentos contínuos', 'Transporte regular'],
+    priority: 'Contínua',
+    response: 'Agendado'
+  },
 ];
 
 const VISIBILITY_OPTIONS = [
@@ -207,6 +259,7 @@ const TOTAL_STEPS = 6;
 
 export function PrecisoDeAjudaDesktop() {
   const navigate = useNavigate();
+  const { notifications, getUnreadCount, markAsRead, markAllAsRead, clearNotifications } = useNotifications();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -216,6 +269,8 @@ export function PrecisoDeAjudaDesktop() {
   const [recognition, setRecognition] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [locationError, setLocationError] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStage, setAnalysisStage] = useState(0);
@@ -265,6 +320,26 @@ export function PrecisoDeAjudaDesktop() {
       }
     }));
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showNotifications) {
+        const notificationElement = document.querySelector('.pda-notifications');
+        if (notificationElement && !notificationElement.contains(event.target)) {
+          setShowNotifications(false);
+        }
+      }
+      if (showUserMenu) {
+        const userElement = document.querySelector('.pda-user-avatar');
+        if (userElement && !userElement.contains(event.target)) {
+          setShowUserMenu(false);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotifications, showUserMenu]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -692,8 +767,13 @@ export function PrecisoDeAjudaDesktop() {
               <div className="pda-urg-body-v3">
                 <strong>{opt.label}</strong>
                 <p>{opt.desc}</p>
-                <div className="pda-urg-time-v3">
-                  Tempo estimado: {opt.time}
+                <div className="pda-urg-examples">
+                  <span className="pda-examples-label">Exemplos:</span>
+                  <ul>
+                    {opt.examples.map((example, i) => (
+                      <li key={i}>{example}</li>
+                    ))}
+                  </ul>
                 </div>
               </div>
               <div className="pda-urg-check-v3">
@@ -800,7 +880,6 @@ export function PrecisoDeAjudaDesktop() {
 
   return (
     <div className="pda-novo-pedido-container">
-      <LandingHeader />
       {isAnalyzing && <AnalyzingModal stages={stages} analysisStage={analysisStage} />}
       
       {isPublished && <SuccessModal urgencyColor={selectedUrgency?.color || '#f97316'} urgencyLabel={selectedUrgency?.label || ''} urgencyIcon={selectedUrgency?.icon} reason={analysis?.reason || ''} onClose={() => navigate('/')} />}
@@ -849,6 +928,130 @@ export function PrecisoDeAjudaDesktop() {
                 style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
               />
             </div>
+            
+            <div className="pda-user-section">
+              <div className="pda-user-avatar" onClick={() => setShowUserMenu(!showUserMenu)}>
+                <div className="pda-avatar-image">
+                  <User size={18} />
+                </div>
+                <div className="pda-user-info">
+                  <span className="pda-user-name">Usuário</span>
+                  <span className="pda-user-status">Online</span>
+                </div>
+                
+                {showUserMenu && (
+                  <div className="pda-user-dropdown">
+                    <button 
+                      className="pda-menu-item"
+                      onClick={() => {
+                        navigate('/conversas');
+                        setShowUserMenu(false);
+                      }}
+                    >
+                      💬 Conversas
+                    </button>
+                    <button 
+                      className="pda-menu-item"
+                      onClick={() => {
+                        navigate('/perfil');
+                        setShowUserMenu(false);
+                      }}
+                    >
+                      👤 Perfil
+                    </button>
+                    <button 
+                      className="pda-menu-item pda-logout-btn"
+                      onClick={() => {
+                        localStorage.removeItem('solidar-user');
+                        window.location.reload();
+                      }}
+                    >
+                      🚪 Sair
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="pda-notifications">
+                <button 
+                  className="pda-notification-btn"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#dcb000ff" stroke="none">
+                    <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>
+                  </svg>
+                  {getUnreadCount() > 0 && (
+                    <span className="pda-notification-badge">{getUnreadCount()}</span>
+                  )}
+                </button>
+                
+                {showNotifications && (
+                  <div className="pda-notification-dropdown">
+                    <div className="pda-notification-header">
+                      <h3>Notificações</h3>
+                      {notifications.length > 0 && (
+                        <div className="pda-notification-actions">
+                          {getUnreadCount() > 0 && (
+                            <button 
+                              className="pda-action-btn pda-mark-read-btn"
+                              onClick={markAllAsRead}
+                              title="Marcar todas como lidas"
+                            >
+                              ✓
+                            </button>
+                          )}
+                          <button 
+                            className="pda-action-btn pda-clear-btn"
+                            onClick={clearNotifications}
+                            title="Limpar todas"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="pda-notification-list">
+                      {notifications.length === 0 ? (
+                        <div className="pda-no-notifications">
+                          Nenhuma notificação ainda
+                        </div>
+                      ) : (
+                        notifications.map((notification) => (
+                          <div 
+                            key={notification.id} 
+                            className={`pda-notification-item ${notification.read ? 'read' : 'unread'}`}
+                            onClick={() => {
+                              if (!notification.read) {
+                                markAsRead(notification.id);
+                              }
+                            }}
+                          >
+                            <div className="pda-notification-content">
+                              <div className="pda-notification-icon">
+                                {notification.type === 'chat' ? '💬' : '🔔'}
+                              </div>
+                              <div className="pda-notification-text">
+                                <p className="pda-notification-title">{notification.title}</p>
+                                <p className="pda-notification-message">{notification.message}</p>
+                                <span className="pda-notification-time">
+                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                            {!notification.read && <div className="pda-unread-dot"></div>}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -874,10 +1077,8 @@ export function PrecisoDeAjudaDesktop() {
 
           <div className="pda-content-actions-v2">
             <button 
-              onClick={prevStep} 
-              disabled={step === 1} 
+              onClick={step === 1 ? () => navigate('/') : prevStep} 
               className="pda-btn-v2 pda-btn-ghost"
-              style={{ visibility: step === 1 ? 'hidden' : 'visible' }}
             >
               <ChevronLeft size={20} /> VOLTAR
             </button>

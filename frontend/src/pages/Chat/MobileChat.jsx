@@ -23,7 +23,8 @@ import {
   Phone,
   User,
   Sparkles,
-  Home
+  Home,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './MobileChat.css';
@@ -508,6 +509,10 @@ const Chat = () => {
              <button className="sb-home-btn" onClick={() => navigate('/')}>
                <Home size={18} />
                <span>Voltar para Home</span>
+             </button>
+             <button className="sb-conversations-btn" onClick={() => navigate('/conversas')}>
+               <MessageSquare size={18} />
+               <span>Voltar para Conversas</span>
              </button>
              <div className="sb-mini-profile" onClick={() => setShowUserProfile(true)}>
                <div className="mini-avatar">EU</div>

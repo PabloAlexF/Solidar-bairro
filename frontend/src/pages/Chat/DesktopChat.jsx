@@ -22,7 +22,9 @@ import {
   Mail,
   Phone,
   User,
-  Sparkles
+  Sparkles,
+  Home,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
@@ -502,6 +504,14 @@ const Chat = () => {
           </div>
           
           <div className="sidebar-footer">
+             <button className="home-btn" onClick={() => navigate('/')} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: '#f1f5f9', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-main)', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', marginBottom: '0.75rem'}}>
+               <Home size={18} />
+               <span>Voltar para Home</span>
+             </button>
+             <button className="conversations-btn" onClick={() => navigate('/conversas')} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: '#f1f5f9', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-main)', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', marginBottom: '0.75rem'}}>
+               <MessageSquare size={18} />
+               <span>Voltar para Conversas</span>
+             </button>
              <div className="mini-profile" onClick={() => setShowUserProfile(true)}>
                <div className="mini-avatar">EU</div>
                <div className="mini-info">

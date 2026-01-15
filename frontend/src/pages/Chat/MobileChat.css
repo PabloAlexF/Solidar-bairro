@@ -1095,3 +1095,26 @@
 .sb-chat-context-card {
   display: none;
 }
+
+.sb-conversations-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #f1f5f9;
+  border: 1px solid var(--sb-border-color);
+  border-radius: 10px;
+  color: var(--sb-text-main);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sb-conversations-btn:hover {
+  background: var(--sb-primary-teal-light);
+  border-color: var(--sb-primary-teal);
+  color: var(--sb-primary-teal);
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/layout/Header';
+import Header from '../../components/layout/LandingHeader';
 import { useAuth } from '../../contexts/AuthContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
@@ -158,6 +158,7 @@ const Conversas = () => {
 
   return (
     <div className="conv-page-wrapper">
+      <Header scrolled={true} />
       <main className="conv-main-content">
         <div className="conv-dashboard-grid">
           {/* Left Column: Stats & Profile (Desktop) */}
