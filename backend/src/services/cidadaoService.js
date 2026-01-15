@@ -80,6 +80,14 @@ class CidadaoService {
     await this.db.collection(this.collection).doc(uid).update(updateData);
     return { uid, ...updateData };
   }
+
+  async getUsuariosAtivosByBairro(bairro) {
+    const snapshot = await this.db.collection(this.collection)
+      .where('endereco.bairro', '==', bairro)
+      .get();
+    
+    return snapshot.size;
+  }
 }
 
 module.exports = new CidadaoService();

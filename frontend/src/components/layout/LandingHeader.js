@@ -77,6 +77,13 @@ const LandingHeader = ({ showNavLinks = false }) => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
+  
+  // Verificar se a foto existe e é válida
+  const hasValidPhoto = user?.fotoPerfil && 
+                       user.fotoPerfil.trim() !== '' && 
+                       user.fotoPerfil !== 'undefined' && 
+                       user.fotoPerfil !== 'null' &&
+                       (user.fotoPerfil.startsWith('http') || user.fotoPerfil.startsWith('data:'));
 
   return (
     <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
@@ -198,7 +205,20 @@ const LandingHeader = ({ showNavLinks = false }) => {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
                   <div className="user-avatar">
-                    {userName?.substring(0, 2).toUpperCase()}
+                    {hasValidPhoto ? (
+                      <img 
+                        src={user.fotoPerfil} 
+                        alt="Foto do perfil" 
+                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                        onError={(e) => {
+                          console.log('Erro ao carregar imagem:', user.fotoPerfil);
+                          e.target.style.display = 'none';
+                          e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
+                        }}
+                      />
+                    ) : (
+                      userName?.substring(0, 2).toUpperCase()
+                    )}
                   </div>
                 </button>
                 
@@ -206,7 +226,20 @@ const LandingHeader = ({ showNavLinks = false }) => {
                   <div className="user-dropdown">
                     <div className="user-info">
                       <div className="user-avatar-large">
-                        {userName?.substring(0, 2).toUpperCase()}
+                        {hasValidPhoto ? (
+                          <img 
+                            src={user.fotoPerfil} 
+                            alt="Foto do perfil" 
+                            style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              console.log('Erro ao carregar imagem grande:', user.fotoPerfil);
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
+                            }}
+                          />
+                        ) : (
+                          userName?.substring(0, 2).toUpperCase()
+                        )}
                       </div>
                       <div className="user-details">
                         <div className="user-name">

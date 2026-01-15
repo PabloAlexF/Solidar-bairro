@@ -350,8 +350,16 @@
   font-weight: 700;
   letter-spacing: 0.5px;
 
-
+  overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 
 /* Hover sutil */
@@ -380,6 +388,15 @@
   justify-content: center;
   font-size: 14px;
   font-weight: 600;
+  overflow: hidden;
+}
+
+.user-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 
 .verified-badge {

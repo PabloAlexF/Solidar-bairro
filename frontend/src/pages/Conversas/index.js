@@ -30,6 +30,11 @@ const Conversas = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [ajudasConcluidas, setAjudasConcluidas] = useState(0);
+  const [neighborhoodStats, setNeighborhoodStats] = useState({
+    pedidosHoje: 0,
+    doacoesConcluidas: 0,
+    areaSegura: false
+  });
 
   // Carregar conversas
   const loadConversations = async () => {
@@ -133,9 +138,17 @@ const Conversas = () => {
   const loadUserStats = async () => {
     try {
       if (user?.uid) {
-        const response = await ApiService.getAjudasConcluidas(user.uid);
-        if (response.success) {
-          setAjudasConcluidas(response.data.ajudasConcluidas || 0);
+        const [ajudasResponse, statsResponse] = await Promise.all([
+          ApiService.getAjudasConcluidas(user.uid),
+          ApiService.getNeighborhoodStats()
+        ]);
+        
+        if (ajudasResponse.success) {
+          setAjudasConcluidas(ajudasResponse.data.ajudasConcluidas || 0);
+        }
+        
+        if (statsResponse.success) {
+          setNeighborhoodStats(statsResponse.data);
         }
       }
     } catch (error) {
@@ -336,15 +349,15 @@ const Conversas = () => {
               <h4>No seu Bairro</h4>
               <div className="snapshot-item">
                 <Users size={16} />
-                <span><strong>12</strong> novos pedidos hoje</span>
+                <span><strong>{neighborhoodStats.pedidosHoje}</strong> novos pedidos hoje</span>
               </div>
               <div className="snapshot-item">
                 <Heart size={16} />
-                <span><strong>8</strong> doações concluídas</span>
+                <span><strong>{neighborhoodStats.doacoesConcluidas}</strong> doações concluídas</span>
               </div>
               <div className="snapshot-item">
                 <ShieldCheck size={16} />
-                <span>Área Segura e Ativa</span>
+                <span>{neighborhoodStats.areaSegura ? 'Área Segura e Ativa' : 'Área em Crescimento'}</span>
               </div>
             </div>
 

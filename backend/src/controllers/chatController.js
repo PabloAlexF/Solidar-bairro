@@ -124,6 +124,15 @@ class ChatController {
       res.status(500).json({ success: false, error: error.message });
     }
   }
+
+  async closeConversation(req, res) {
+    try {
+      const result = await chatService.closeConversation(req.params.id, req.user.uid);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new ChatController();

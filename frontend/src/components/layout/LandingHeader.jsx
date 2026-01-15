@@ -108,6 +108,20 @@ const LandingHeader = ({ scrolled = false }) => {
   const unreadCount = getUnreadCount();
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
 
+  console.log('=== DEBUG FOTO ===');
+  console.log('User completo:', user);
+  console.log('fotoPerfil:', user?.fotoPerfil);
+  console.log('Tipo fotoPerfil:', typeof user?.fotoPerfil);
+  
+  // Verificar se a foto existe e é válida
+  const hasValidPhoto = user?.fotoPerfil && 
+                       user.fotoPerfil.trim() !== '' && 
+                       user.fotoPerfil !== 'undefined' && 
+                       user.fotoPerfil !== 'null' &&
+                       (user.fotoPerfil.startsWith('http') || user.fotoPerfil.startsWith('data:'));
+  
+  console.log('hasValidPhoto:', hasValidPhoto);
+
   return (
     <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
       <div className="section-container nav-container">
@@ -243,7 +257,32 @@ const LandingHeader = ({ scrolled = false }) => {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
                   <div className="user-avatar">
-                    {userName?.substring(0, 2).toUpperCase()}
+                    {(() => {
+                      console.log('=== RENDERIZANDO AVATAR ===');
+                      console.log('user?.fotoPerfil:', user?.fotoPerfil);
+                      console.log('Existe fotoPerfil:', !!user?.fotoPerfil);
+                      
+                      if (user?.fotoPerfil) {
+                        console.log('Renderizando IMAGEM');
+                        return (
+                          <img 
+                            src={user.fotoPerfil} 
+                            alt="Foto do perfil" 
+                            className="avatar-image"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                            onLoad={() => console.log('Imagem carregou com sucesso!')}
+                            onError={(e) => {
+                              console.log('ERRO ao carregar imagem:', user.fotoPerfil);
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
+                            }}
+                          />
+                        );
+                      } else {
+                        console.log('Renderizando INICIAIS:', userName?.substring(0, 2).toUpperCase());
+                        return userName?.substring(0, 2).toUpperCase();
+                      }
+                    })()} 
                   </div>
                 </button>
                 
@@ -251,7 +290,20 @@ const LandingHeader = ({ scrolled = false }) => {
                   <div className="user-dropdown">
                     <div className="user-info">
                       <div className="user-avatar-large">
-                        {userName?.substring(0, 2).toUpperCase()}
+                        {hasValidPhoto ? (
+                          <img 
+                            src={user.fotoPerfil} 
+                            alt="Foto do perfil" 
+                            className="avatar-image-large"
+                            onError={(e) => {
+                              console.log('Erro ao carregar imagem grande:', user.fotoPerfil);
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
+                            }}
+                          />
+                        ) : (
+                          userName?.substring(0, 2).toUpperCase()
+                        )}
                       </div>
                       <div className="user-details">
                         <div className="user-name">

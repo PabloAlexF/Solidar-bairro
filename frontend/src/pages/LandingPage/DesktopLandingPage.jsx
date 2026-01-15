@@ -510,7 +510,20 @@ export default function DesktopLandingPage() {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                   >
                     <div className="user-avatar">
-                      {userName?.substring(0, 2).toUpperCase()}
+                      {user?.fotoPerfil ? (
+                        <img 
+                          src={user.fotoPerfil} 
+                          alt="Foto do perfil" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                          onError={(e) => {
+                            console.log('Erro ao carregar imagem:', user.fotoPerfil);
+                            e.target.style.display = 'none';
+                            e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
+                          }}
+                        />
+                      ) : (
+                        userName?.substring(0, 2).toUpperCase()
+                      )}
                     </div>
                   </button>
                   
@@ -518,7 +531,20 @@ export default function DesktopLandingPage() {
                     <div className="user-dropdown">
                       <div className="user-info">
                         <div className="user-avatar-large">
-                          {userName?.substring(0, 2).toUpperCase()}
+                          {user?.fotoPerfil ? (
+                            <img 
+                              src={user.fotoPerfil} 
+                              alt="Foto do perfil" 
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                              onError={(e) => {
+                                console.log('Erro ao carregar imagem grande:', user.fotoPerfil);
+                                e.target.style.display = 'none';
+                                e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
+                              }}
+                            />
+                          ) : (
+                            userName?.substring(0, 2).toUpperCase()
+                          )}
                         </div>
                         <div className="user-details">
                           <div className="user-name">

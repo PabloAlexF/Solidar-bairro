@@ -478,15 +478,15 @@ const ProfileComponent = () => {
             </div>
             
             <h1 className="name-title">{user?.nome || user?.nomeCompleto || user?.nomeEstabelecimento || user?.nomeEntidade || 'Usuário'} <span style={{ fontSize: '18px', verticalAlign: 'middle', opacity: 0.8 }}>{mood === 'Empolgado' ? '🚀' : mood === 'Zen' ? '🧘' : mood === 'Focado' ? '🎯' : mood === 'Criativo' ? '🎨' : '🙏'}</span></h1>
-            <div className="badge">{user?.tipo === 'comercio' ? 'Comércio Local' : user?.tipo === 'ong' ? 'ONG Parceira' : user?.tipo === 'familia' ? 'Família Cadastrada' : 'Nível 1 • Iniciante'}</div>
+            <div className="badge">{user?.tipo === 'comercio' ? 'Comércio Local' : user?.tipo === 'ong' ? 'ONG Parceira' : user?.tipo === 'familia' ? 'Família Cadastrada' : `Nível ${Math.floor(pontos / 100) + 1} • ${pontos < 100 ? 'Iniciante' : pontos < 300 ? 'Ajudante' : pontos < 500 ? 'Colaborador' : 'Expert'}`}</div>
 
             <div className="level-container">
               <div className="level-header">
                 <span>Progresso de Nível</span>
-                <span>0 / 100 XP</span>
+                <span>{pontos} / {Math.ceil((Math.floor(pontos / 100) + 1) * 100)} XP</span>
               </div>
               <div className="progress-bar-bg">
-                <div className="progress-bar-fill" style={{ width: '15%' }}></div>
+                <div className="progress-bar-fill" style={{ width: `${(pontos % 100)}%` }}></div>
               </div>
             </div>
 
@@ -601,12 +601,6 @@ const ProfileComponent = () => {
                 Começar agora
                 <ArrowRight size={18} />
               </button>
-              {!zenMode && (
-                <button className="btn glass-button" style={{ color: 'white' }} onClick={() => setIsViewingHistory(true)}>
-                  <History size={18} />
-                  Histórico
-                </button>
-              )}
             </div>
           </section>
 

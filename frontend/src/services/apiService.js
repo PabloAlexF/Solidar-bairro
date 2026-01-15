@@ -208,6 +208,12 @@ const ApiService = {
     });
   },
 
+  async closeConversation(conversationId) {
+    return this.request(`/chat/conversations/${conversationId}/close`, {
+      method: 'PUT'
+    });
+  },
+
   async getUserData(id) {
     return this.request(`/users/${id}`);
   },
@@ -308,6 +314,10 @@ const ApiService = {
 
   async getAjudasConcluidas(userId) {
     return this.request(`/cidadaos/${userId}/ajudas-concluidas`);
+  },
+
+  async getNeighborhoodStats() {
+    return this.request('/stats/neighborhood');
   }
 };
 

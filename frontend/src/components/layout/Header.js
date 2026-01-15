@@ -115,6 +115,16 @@ const Header = ({ showLoginButton = false }) => {
 
   const unreadCount = getUnreadCount();
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial;
+  const userPhoto = user?.fotoPerfil;
+  
+  // Verificar se a foto existe e é válida
+  const hasValidPhoto = userPhoto && 
+                       userPhoto.trim() !== '' && 
+                       userPhoto !== 'undefined' && 
+                       userPhoto !== 'null' &&
+                       (userPhoto.startsWith('http') || userPhoto.startsWith('data:'));
+
+  console.log('User data no header:', { userName, userPhoto, user, hasValidPhoto });
 
   return (
     <header className="header">
@@ -230,7 +240,20 @@ const Header = ({ showLoginButton = false }) => {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
                   <div className="user-avatar">
-                    {userName.substring(0, 2).toUpperCase()}
+                    {hasValidPhoto ? (
+                      <img 
+                        src={userPhoto} 
+                        alt="Perfil" 
+                        style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                        onError={(e) => {
+                          console.log('Erro ao carregar imagem:', userPhoto);
+                          e.target.style.display = 'none';
+                          e.target.parentElement.innerHTML = userName.substring(0, 2).toUpperCase();
+                        }}
+                      />
+                    ) : (
+                      userName.substring(0, 2).toUpperCase()
+                    )}
                   </div>
                   {user?.isVerified && <span className="verified-badge">✓</span>}
                 </button>
@@ -239,7 +262,20 @@ const Header = ({ showLoginButton = false }) => {
                   <div className="user-dropdown">
                     <div className="user-info">
                       <div className="user-avatar-large">
-                        {userName.substring(0, 2).toUpperCase()}
+                        {hasValidPhoto ? (
+                          <img 
+                            src={userPhoto} 
+                            alt="Perfil" 
+                            style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              console.log('Erro ao carregar imagem grande:', userPhoto);
+                              e.target.style.display = 'none';
+                              e.target.parentElement.innerHTML = userName.substring(0, 2).toUpperCase();
+                            }}
+                          />
+                        ) : (
+                          userName.substring(0, 2).toUpperCase()
+                        )}
                       </div>
                       <div className="user-details">
                         <div className="user-name">

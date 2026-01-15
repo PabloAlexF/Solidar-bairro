@@ -15,6 +15,7 @@ class ChatModel {
       itemType: data.itemType || null,
       type: data.type || 'direct',
       title: data.title || null,
+      status: 'active', // Status da conversa: 'active' ou 'closed'
       createdAt: new Date(),
       updatedAt: new Date(),
       lastMessage: null,
@@ -33,7 +34,7 @@ class ChatModel {
     
     return snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(conv => conv.isActive !== false)
+      .filter(conv => conv.isActive !== false && conv.status !== 'closed')
       .sort((a, b) => {
         const dateA = a.updatedAt?.seconds || 0;
         const dateB = b.updatedAt?.seconds || 0;

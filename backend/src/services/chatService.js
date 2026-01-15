@@ -199,6 +199,11 @@ class ChatService {
       metadata: messageData.metadata
     });
 
+    // Verificar se a conversa está encerrada
+    if (conversation.status === 'closed') {
+      throw new Error('Esta conversa foi encerrada e não aceita mais mensagens');
+    }
+
     // Criar notificações para outros participantes
     try {
       const otherParticipants = conversation.participants.filter(p => p !== senderId);
@@ -236,6 +241,37 @@ class ChatService {
 
   async markAsRead(conversationId, userId) {
     return await chatModel.markConversationAsRead(conversationId, userId);
+  }
+
+  async closeConversation(conversationId, userId) {
+    try {
+      // Verificar se o usuário faz parte da conversa
+      const conversation = await chatModel.getConversation(conversationId);
+      
+      if (!conversation.participants.includes(userId)) {
+        throw new Error('Usuário não autorizado nesta conversa');
+      }
+
+      // Marcar conversa como encerrada
+      await this.db.collection('conversations').doc(conversationId).update({
+        status: 'closed',
+        closedAt: new Date(),
+        closedBy: userId
+      });
+
+      // Enviar mensagem de sistema informando o encerramento
+      await chatModel.createMessage({
+        conversationId,
+        senderId: 'system',
+        type: 'system',
+        content: '✅ Conversa encerrada automaticamente após finalização da ajuda.'
+      });
+
+      return { success: true, message: 'Conversa encerrada com sucesso' };
+    } catch (error) {
+      console.error('Erro ao encerrar conversa:', error);
+      throw error;
+    }
   }
 }
 

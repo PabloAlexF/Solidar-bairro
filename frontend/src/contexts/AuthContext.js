@@ -55,6 +55,10 @@ export const AuthProvider = ({ children }) => {
       if (response.success && response.data) {
         const { user: userData, token: userToken } = response.data;
         
+        // Debug: verificar dados recebidos
+        console.log('Login - userData completo:', JSON.stringify(userData, null, 2));
+        console.log('Login - fotoPerfil:', userData.fotoPerfil);
+        
         // Ensure address data is properly formatted
         let processedUserData = userData;
         if (userData && typeof userData.endereco === 'object') {

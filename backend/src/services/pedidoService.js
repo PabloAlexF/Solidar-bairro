@@ -163,6 +163,45 @@ class PedidoService {
     
     return await pedidoModel.delete(pedidoId);
   }
+
+  async getPedidosByBairroAndDate(bairro, date) {
+    const { db } = require('../config/firebase');
+    const snapshot = await db.collection('pedidos').get();
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 1);
+    
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(pedido => {
+        const createdAt = pedido.createdAt?.toDate ? pedido.createdAt.toDate() : new Date(pedido.createdAt);
+        return pedido.neighborhood === bairro && 
+               createdAt >= today && 
+               createdAt < endDate;
+      });
+  }
+
+  async getDoacoesConcluidasHoje(bairro) {
+    const { db } = require('../config/firebase');
+    const snapshot = await db.collection('pedidos').get();
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 1);
+    
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(pedido => {
+        const updatedAt = pedido.updatedAt?.toDate ? pedido.updatedAt.toDate() : new Date(pedido.updatedAt);
+        return pedido.neighborhood === bairro && 
+               pedido.status === 'concluido' &&
+               updatedAt >= today && 
+               updatedAt < endDate;
+      });
+  }
 }
 
 module.exports = new PedidoService();

@@ -319,6 +319,12 @@ const Chat = () => {
   const handleSend = async () => {
     if (!inputValue.trim() || sendingMessage) return;
 
+    // Verificar se a conversa está encerrada
+    if (conversation?.status === 'closed') {
+      alert('Esta conversa foi encerrada e não aceita mais mensagens.');
+      return;
+    }
+
     const messageText = inputValue.trim();
     setInputValue("");
     setSendingMessage(true);
@@ -340,7 +346,11 @@ const Chat = () => {
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-      setInputValue(messageText); // Restaurar texto em caso de erro
+      if (error.message.includes('encerrada')) {
+        alert('Esta conversa foi encerrada e não aceita mais mensagens.');
+      } else {
+        setInputValue(messageText); // Restaurar texto em caso de erro
+      }
     } finally {
       setSendingMessage(false);
     }
@@ -368,19 +378,21 @@ const Chat = () => {
         const response = await ApiService.finalizarAjuda(conversation.pedidoId, user?.uid);
         if (response.success) {
           setDeliveryStatus("entregue");
-          // Redirecionar para página de conversas após finalizar
-          setTimeout(() => {
-            navigate('/conversas');
-          }, 3000);
         }
       } else {
         // Fallback para casos sem contexto específico
         setDeliveryStatus("entregue");
       }
       
+      // Encerrar a conversa automaticamente
+      await ApiService.closeConversation(conversaId);
+      
       setShowConfirmation(true);
+      
+      // Redirecionar para página de conversas após 3 segundos
       setTimeout(() => {
         setShowConfirmation(false);
+        navigate('/conversas');
       }, 3000);
     } catch (error) {
       console.error('Erro ao finalizar:', error);
@@ -776,46 +788,58 @@ const Chat = () => {
 
           {/* Input Footer */}
           <footer className="chat-input-footer">
-            <div className="input-container">
-              <div className="input-actions-left">
-                <button className="action-icon-btn" title="Anexar">
-                  <Paperclip size={20} />
-                </button>
-                <button 
-                  className={`action-icon-btn ${isGettingLocation ? 'loading' : ''}`} 
-                  title="Enviar Localização"
-                  onClick={handleSendLocation}
-                  disabled={isGettingLocation}
+            {conversation?.status === 'closed' ? (
+              <div className="conversation-closed-banner">
+                <div className="closed-icon">
+                  <ShieldCheck size={20} />
+                </div>
+                <div className="closed-text">
+                  <span className="closed-title">Conversa Encerrada</span>
+                  <span className="closed-subtitle">Esta conversa foi finalizada após a conclusão da ajuda</span>
+                </div>
+              </div>
+            ) : (
+              <div className="input-container">
+                <div className="input-actions-left">
+                  <button className="action-icon-btn" title="Anexar">
+                    <Paperclip size={20} />
+                  </button>
+                  <button 
+                    className={`action-icon-btn ${isGettingLocation ? 'loading' : ''}`} 
+                    title="Enviar Localização"
+                    onClick={handleSendLocation}
+                    disabled={isGettingLocation}
+                  >
+                    {isGettingLocation ? (
+                      <div className="mini-loader" />
+                    ) : (
+                      <MapPin size={20} />
+                    )}
+                  </button>
+                </div>
+                <div className="textarea-wrapper">
+                  <textarea
+                    className="chat-textarea"
+                    placeholder="Digite sua mensagem..."
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    rows={1}
+                  />
+                </div>
+                <button
+                  className={`send-msg-btn ${inputValue.trim() && !sendingMessage ? 'active' : ''}`}
+                  onClick={handleSend}
+                  disabled={!inputValue.trim() || sendingMessage}
                 >
-                  {isGettingLocation ? (
+                  {sendingMessage ? (
                     <div className="mini-loader" />
                   ) : (
-                    <MapPin size={20} />
+                    <Send size={20} />
                   )}
                 </button>
               </div>
-              <div className="textarea-wrapper">
-                <textarea
-                  className="chat-textarea"
-                  placeholder="Digite sua mensagem..."
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  rows={1}
-                />
-              </div>
-              <button
-                className={`send-msg-btn ${inputValue.trim() && !sendingMessage ? 'active' : ''}`}
-                onClick={handleSend}
-                disabled={!inputValue.trim() || sendingMessage}
-              >
-                {sendingMessage ? (
-                  <div className="mini-loader" />
-                ) : (
-                  <Send size={20} />
-                )}
-              </button>
-            </div>
+            )}
           </footer>
         </main>
       </div>
@@ -1017,7 +1041,7 @@ const Chat = () => {
 
             <div className="reward-badge">
               <Star className="star-icon" size={20} fill="currentColor" />
-              <span>+50 Pontos de Impacto Social</span>
+              <span>+10 Pontos de Impacto Social</span>
               <Sparkles size={16} className="text-yellow-300" />
             </div>
           </div>
