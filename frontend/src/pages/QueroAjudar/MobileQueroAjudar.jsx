@@ -5,6 +5,7 @@ import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import LandingHeader from '../../components/layout/LandingHeader';
 import MobileHeader from '../../components/layout/MobileHeader';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   MapPin, 
   Heart,
@@ -32,6 +33,7 @@ import {
 import ApiService from '../../services/apiService';
 
 export const MobileQueroAjudar = () => {
+  const { user } = useAuth();
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -142,6 +144,11 @@ export const MobileQueroAjudar = () => {
 
   const filteredOrders = useMemo(() => {
     return pedidos.filter((order) => {
+      // Filtrar pedidos do próprio usuário
+      if (user && order.userId === user.uid) {
+        return false;
+      }
+      
       const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
       const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
       
@@ -156,7 +163,7 @@ export const MobileQueroAjudar = () => {
       
       return catMatch && urgMatch && locationMatch && timeMatch;
     });
-  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, userLocation]);
+  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, userLocation, user]);
 
   const changeFontSize = (size) => {
     setFontSize(size);

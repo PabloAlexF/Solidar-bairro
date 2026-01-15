@@ -5,6 +5,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { Tooltip } from 'react-tooltip';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   MapPin, 
   Heart,
@@ -440,6 +441,7 @@ function AnimatedBackground() {
 }
 
 export default function DesktopQueroAjudar() {
+  const { user } = useAuth();
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -618,6 +620,11 @@ export default function DesktopQueroAjudar() {
 
   const filteredOrders = useMemo(() => {
     return pedidos.filter((order) => {
+      // Filtrar pedidos do próprio usuário
+      if (user && order.userId === user.uid) {
+        return false;
+      }
+      
       const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
       const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
       
@@ -635,7 +642,7 @@ export default function DesktopQueroAjudar() {
       
       return catMatch && urgMatch && locationMatch && newMatch && timeMatch;
     });
-  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation]);
+  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation, user]);
 
   const trail = useTrail(filteredOrders.length, {
     opacity: cardsInView ? 1 : 0,
