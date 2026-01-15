@@ -156,39 +156,16 @@ export default function MobileAchadosEPerdidos() {
 
   const fetchItems = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setItems([
-        {
-          id: 1,
-          title: 'Carteira Preta',
-          description: 'Carteira de couro preta com documentos pessoais.',
-          category: 'Carteiras',
-          type: 'lost',
-          location: 'Centro, São Paulo',
-          date_occurrence: '2024-01-15',
-          contact_info: '(11) 99999-9999',
-          image_url: '',
-          reward: 'R$ 100,00',
-          tags: ['couro', 'documentos'],
-          status: 'active'
-        },
-        {
-          id: 2,
-          title: 'Chaves com Chaveiro',
-          description: 'Molho de chaves com chaveiro vermelho.',
-          category: 'Chaves',
-          type: 'found',
-          location: 'Parque Ibirapuera',
-          date_occurrence: '2024-01-18',
-          contact_info: '(11) 88888-8888',
-          image_url: '',
-          reward: '',
-          tags: ['chaves', 'vermelho'],
-          status: 'active'
-        }
-      ]);
+    try {
+      const response = await apiService.getAchadosPerdidos();
+      if (response.success && response.data) {
+        setItems(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar itens:', error);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleCreateItem = async () => {
@@ -200,13 +177,19 @@ export default function MobileAchadosEPerdidos() {
     }
     
     setIsSubmitting(true);
-    setTimeout(() => {
-      const newItem = { ...formData, id: Date.now() };
-      setItems(prev => [newItem, ...prev]);
-      setIsModalOpen(false);
-      resetForm();
+    try {
+      const response = await apiService.createAchadoPerdido(formData);
+      if (response.success) {
+        await fetchItems();
+        setIsModalOpen(false);
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Erro ao criar item:', error);
+      alert('Erro ao criar item. Tente novamente.');
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   const resetForm = () => {

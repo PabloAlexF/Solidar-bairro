@@ -31,6 +31,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { useToast } from '../../contexts/ToastContext';
 import apiService from '../../services/apiService';
 import ProfileMobile from './ProfileMobile';
 import '../../styles/pages/profile.css';
@@ -39,20 +40,23 @@ const ProfileComponent = () => {
   const { user, isAuthenticated, updateUser } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const toast = useToast();
   
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bio, setBio] = useState(user?.bio || user?.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
   const [isPhoneVerified, setIsPhoneVerified] = useState(user?.phoneVerified || false);
   const [email, setEmail] = useState(user?.email || "Email não informado");
   
-  // Atualizar bio quando dados do usuário mudarem
   useEffect(() => {
-    setBio(user?.bio || user?.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
-    setEmail(user?.email || "Email não informado");
-    setAjudasConcluidas(user?.ajudasConcluidas || 0);
-  }, [user]);
+    if (!isEditingBio && user) {
+      setBio(user.bio || user.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
+      setEmail(user.email || "Email não informado");
+      setAjudasConcluidas(user.ajudasConcluidas || 0);
+      setAvatarUrl(user.fotoPerfil || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
+    }
+  }, [user, isEditingBio]);
   
-  const [avatarUrl, setAvatarUrl] = useState("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
+  const [avatarUrl, setAvatarUrl] = useState(user?.fotoPerfil || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
   const [bannerConfig, setBannerConfig] = useState({
     type: 'gradient',
     value: 'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)',
@@ -75,14 +79,17 @@ const ProfileComponent = () => {
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [ajudasConcluidas, setAjudasConcluidas] = useState(0);
+  const [pontos, setPontos] = useState(0);
+  const [pedidosCriados, setPedidosCriados] = useState(0);
   
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate('/login');
-    } else {
-      loadUserData();
+      return;
     }
-  }, [isAuthenticated, navigate]);
+    loadUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadUserData = async () => {
     try {
@@ -97,6 +104,8 @@ const ProfileComponent = () => {
       if (response.success && response.data) {
         updateUser(response.data);
         setAjudasConcluidas(response.data.ajudasConcluidas || 0);
+        setPontos(response.data.pontos || 0);
+        setPedidosCriados(response.data.pedidosCriados || 0);
       }
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
@@ -144,23 +153,53 @@ const ProfileComponent = () => {
       });
       
       if (response.success) {
-        // Atualizar dados locais
         updateUser({ ...user, bio });
         setIsEditingBio(false);
+        toast.success('Bio atualizada com sucesso!');
       }
     } catch (error) {
       console.error('Erro ao salvar bio:', error);
-      alert('Erro ao salvar. Tente novamente.');
+      toast.error('Erro ao salvar. Tente novamente.');
     }
   };
 
   const handleSecurityAction = (action) => {
-    if (!isPhoneVerified) return;
-    alert(`${action} solicitado com sucesso!`);
+    toast.success(`${action} solicitado com sucesso!`);
   };
 
   const handleAvatarChange = () => {
     document.getElementById('avatar-upload')?.click();
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64Image = event.target?.result;
+      setAvatarUrl(base64Image);
+
+      try {
+        const endpoint = user.tipo === 'comercio' ? '/comercios' : 
+                        user.tipo === 'ong' ? '/ongs' : 
+                        user.tipo === 'familia' ? '/familias' : '/cidadaos';
+        
+        const response = await apiService.request(`${endpoint}/${user.uid || user.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ fotoPerfil: base64Image })
+        });
+        
+        if (response.success) {
+          updateUser({ ...user, fotoPerfil: base64Image });
+          toast.success('Foto atualizada com sucesso!');
+        }
+      } catch (error) {
+        console.error('Erro ao salvar foto:', error);
+        toast.error('Erro ao salvar foto.');
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const updateBanner = (preset) => {
@@ -423,16 +462,7 @@ const ProfileComponent = () => {
                 id="avatar-upload"
                 accept="image/*"
                 style={{ display: 'none' }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      setAvatarUrl(event.target?.result);
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
+                onChange={handleAvatarUpload}
               />
               <div className="avatar-edit-hint">
                 <Camera size={28} />
@@ -556,11 +586,11 @@ const ProfileComponent = () => {
                   <span className="label">Ajudas Concluídas</span>
                 </div>
                 <div className="impact-stat-item">
-                  <span className="value">0</span>
+                  <span className="value">{pontos}</span>
                   <span className="label">Pontos</span>
                 </div>
                 <div className="impact-stat-item">
-                  <span className="value">0</span>
+                  <span className="value">{pedidosCriados}</span>
                   <span className="label">Pedidos</span>
                 </div>
               </div>
@@ -679,7 +709,7 @@ const ProfileComponent = () => {
                   <p>{email}</p>
                 </div>
                 <button 
-                  className={isPhoneVerified ? "btn btn-outline" : "btn btn-disabled"}
+                  className="btn btn-outline"
                   onClick={() => handleSecurityAction("Alterar E-mail")}
                 >
                   Alterar
@@ -692,7 +722,7 @@ const ProfileComponent = () => {
                   <p>Senha de acesso à conta</p>
                 </div>
                 <button 
-                  className={isPhoneVerified ? "btn btn-outline" : "btn btn-disabled"}
+                  className="btn btn-outline"
                   onClick={() => handleSecurityAction("Redefinir Senha")}
                 >
                   <Lock size={14} />
@@ -700,22 +730,6 @@ const ProfileComponent = () => {
                 </button>
               </div>
             </div>
-
-            {!isPhoneVerified ? (
-              <div className="verification-banner banner-warning" style={{ marginTop: '32px' }}>
-                <div className="banner-title"><ShieldCheck size={20} /> Verificação Necessária</div>
-                <p className="banner-desc">Confirme sua identidade via SMS para habilitar alterações críticas de segurança.</p>
-                <button className="btn btn-primary" onClick={() => setIsPhoneModalOpen(true)}>
-                  <Smartphone size={18} />
-                  Verificar Telefone
-                </button>
-              </div>
-            ) : (
-              <div className="verification-banner banner-success" style={{ marginTop: '32px' }}>
-                <div className="banner-title"><CheckCircle2 size={20} /> Identidade Confirmada</div>
-                <p className="banner-desc">Sua conta está totalmente protegida e verificada.</p>
-              </div>
-            )}
           </section>
         </div>
       </main>

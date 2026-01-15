@@ -151,7 +151,7 @@ const MobileNav = () => {
 
 export const MobileLandingPage = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <div className="mobile-landing-exclusive">
@@ -162,9 +162,33 @@ export const MobileLandingPage = () => {
             <span>Solidar<b>Bairro</b></span>
           </div>
           <div className="header-actions">
-            <button className="header-cta" onClick={() => navigate('/cadastro')}>
-              Cadastrar
-            </button>
+            {!isAuthenticated() ? (
+              <button className="header-cta" onClick={() => navigate('/cadastro')}>
+                Cadastrar
+              </button>
+            ) : (
+              <button 
+                className="user-avatar-btn" 
+                onClick={() => navigate('/perfil')}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+                  border: 'none',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(13, 148, 136, 0.3)'
+                }}
+              >
+                {(user?.nome || user?.nomeCompleto || 'U').substring(0, 2).toUpperCase()}
+              </button>
+            )}
             <NotificationDropdown />
           </div>
 

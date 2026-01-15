@@ -61,10 +61,14 @@ class ONGService {
   }
 
   async updateONG(uid, data) {
-    const updateData = {
-      ...data,
-      atualizadoEm: new Date()
-    };
+    const updateData = Object.keys(data).reduce((acc, key) => {
+      if (data[key] !== undefined && data[key] !== null) {
+        acc[key] = data[key];
+      }
+      return acc;
+    }, {});
+    
+    updateData.atualizadoEm = new Date();
     
     await this.db.collection(this.collection).doc(uid).update(updateData);
     return { uid, ...updateData };

@@ -57,7 +57,22 @@ class PedidoService {
       throw new Error(errors.join(', '));
     }
     
-    return await pedidoModel.create(sanitizedData);
+    const pedido = await pedidoModel.create(sanitizedData);
+    
+    // Incrementar contador de pedidos criados
+    const { db } = require('../config/firebase');
+    const cidadaoRef = db.collection('cidadaos').doc(sanitizedData.userId);
+    const cidadaoDoc = await cidadaoRef.get();
+    
+    if (cidadaoDoc.exists) {
+      const currentCount = cidadaoDoc.data().pedidosCriados || 0;
+      await cidadaoRef.update({
+        pedidosCriados: currentCount + 1,
+        atualizadoEm: new Date()
+      });
+    }
+    
+    return pedido;
   }
 
   async getAllPedidos(filters = {}) {
@@ -132,22 +147,20 @@ class PedidoService {
       throw new Error('Pedido não encontrado');
     }
     
-    // Incrementar contador de ajudas do cidadão
-    const cidadaoModel = require('../models/cidadaoModel');
     const { db } = require('../config/firebase');
-    
     const cidadaoRef = db.collection('cidadaos').doc(ajudanteId);
     const cidadaoDoc = await cidadaoRef.get();
     
     if (cidadaoDoc.exists) {
-      const currentCount = cidadaoDoc.data().ajudasConcluidas || 0;
+      const currentAjudas = cidadaoDoc.data().ajudasConcluidas || 0;
+      const currentPontos = cidadaoDoc.data().pontos || 0;
       await cidadaoRef.update({
-        ajudasConcluidas: currentCount + 1,
+        ajudasConcluidas: currentAjudas + 1,
+        pontos: currentPontos + 10,
         atualizadoEm: new Date()
       });
     }
     
-    // Remover o pedido da lista
     return await pedidoModel.delete(pedidoId);
   }
 }

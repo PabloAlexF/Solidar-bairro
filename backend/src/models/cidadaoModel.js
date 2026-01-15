@@ -11,8 +11,11 @@ class Cidadao {
     this.disponibilidade = data.disponibilidade || [];
     this.interesses = data.interesses || [];
     this.proposito = data.proposito || '';
-    this.senha = data.senha; // Campo para senha hasheada
+    this.senha = data.senha;
     this.ajudasConcluidas = data.ajudasConcluidas !== undefined ? data.ajudasConcluidas : 0;
+    this.pontos = data.pontos !== undefined ? data.pontos : 0;
+    this.pedidosCriados = data.pedidosCriados !== undefined ? data.pedidosCriados : 0;
+    this.fotoPerfil = data.fotoPerfil || null;
     this.tipo = 'cidadao';
     this.ativo = true;
     this.criadoEm = new Date();

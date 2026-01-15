@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import DashboardMobile from './DashboardMobile';
 import {
@@ -91,6 +92,7 @@ const apiService = {
 
 export default function AdminDashboard() {
   const isMobile = useIsMobile();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [ongs, setOngs] = useState([]);
   const [commerces, setCommerces] = useState([]);
@@ -221,11 +223,9 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('solidar-token');
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    navigate('/login');
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
   };
 
   const filteredOngs = ongs.filter(ong => 

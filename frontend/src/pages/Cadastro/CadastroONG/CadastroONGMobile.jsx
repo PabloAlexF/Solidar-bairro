@@ -6,12 +6,15 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
+import ApiService from '../../../services/apiService';
 import './CadastroONGMobile.css';
 
 export default function CadastroONGMobile() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [formData, setFormData] = useState({
     nomeFantasia: '',
     razaoSocial: '',
@@ -19,6 +22,7 @@ export default function CadastroONGMobile() {
     dataFundacao: '',
     telefone: '',
     email: '',
+    senha: '',
     website: '',
     causas: []
   });
@@ -53,10 +57,50 @@ export default function CadastroONGMobile() {
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
-  const handleSubmit = (e) => {
+  const showToast = (message, type = 'error') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'error' }), 4000);
+  };
+
+  const validateStep = (stepNumber) => {
+    switch (stepNumber) {
+      case 1:
+        return formData.nomeFantasia.trim() && formData.razaoSocial.trim();
+      case 2:
+        return formData.cnpj.replace(/\D/g, '').length === 14 && formData.dataFundacao;
+      case 3:
+        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim() && formData.senha.length >= 6;
+      default:
+        return true;
+    }
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(step)) {
+      nextStep();
+    } else {
+      showToast('Por favor, preencha todos os campos obrigatórios', 'error');
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => setShowAnalysisAlert(true), 2000);
+    if (step !== totalSteps) {
+      handleNextStep();
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await ApiService.createONG(formData);
+      setIsSubmitted(true);
+      setTimeout(() => setShowAnalysisAlert(true), 2000);
+    } catch (error) {
+      console.error('Erro ao cadastrar ONG:', error);
+      showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const steps = [
@@ -223,7 +267,7 @@ export default function CadastroONGMobile() {
             {step === 3 && "Informe os canais oficiais para comunicação."}
           </p>
 
-        <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }} className="ong-mob-form">
+        <form onSubmit={handleSubmit} className="ong-mob-form">
           {step === 1 && (
             <>
               <div className="ong-mob-input-group">
@@ -322,6 +366,8 @@ export default function CadastroONGMobile() {
                 label="Senha de Acesso"
                 placeholder="Crie uma senha segura"
                 required
+                value={formData.senha}
+                onChange={(e) => setFormData(prev => ({ ...prev, senha: e.target.value }))}
               />
             </>
           )}
@@ -342,8 +388,8 @@ export default function CadastroONGMobile() {
                 <ChevronRight size={20} />
               </button>
             ) : (
-              <button type="submit" className="ong-mob-btn ong-mob-btn-primary ong-mob-btn-full">
-                <span>Finalizar Registro</span>
+              <button type="submit" className="ong-mob-btn ong-mob-btn-primary ong-mob-btn-full" disabled={isLoading}>
+                <span>{isLoading ? 'Finalizando...' : 'Finalizar Registro'}</span>
                 <CheckCircle2 size={20} />
               </button>
             )}
@@ -351,6 +397,15 @@ export default function CadastroONGMobile() {
         </form>
         </div>
       </div>
+
+      {toast.show && (
+        <div className="ong-mob-toast" style={{ position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: toast.type === 'error' ? '#ef4444' : '#10b981', color: 'white', padding: '1rem 1.5rem', borderRadius: '0.5rem', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+          <div className="ong-mob-toast-content">
+            <span className="ong-mob-toast-message">{toast.message}</span>
+            <button className="ong-mob-toast-close" onClick={() => setToast({ show: false, message: '', type: 'error' })} style={{ marginLeft: '1rem', background: 'none', border: 'none', color: 'white', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../contexts/ToastContext';
 import apiService from '../../services/apiService';
 import MobileHeader from '../../components/layout/MobileHeader';
 import './ProfileMobile.css';
@@ -37,12 +38,12 @@ import './ProfileMobile.css';
 const ProfileMobile = () => {
   const { user, isAuthenticated, updateUser } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bio, setBio] = useState(user?.bio || user?.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
   const [isPhoneVerified, setIsPhoneVerified] = useState(user?.phoneVerified || false);
   const [email, setEmail] = useState(user?.email || "Email não informado");
-  const [avatarUrl, setAvatarUrl] = useState("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
   const [bannerConfig, setBannerConfig] = useState({
     type: 'gradient',
     value: 'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)',
@@ -65,19 +66,28 @@ const ProfileMobile = () => {
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [pontos, setPontos] = useState(0);
+  const [pedidosCriados, setPedidosCriados] = useState(0);
+  const [avatarUrl, setAvatarUrl] = useState(user?.fotoPerfil || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
   
   useEffect(() => {
-    setBio(user?.bio || user?.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
-    setEmail(user?.email || "Email não informado");
+    if (user) {
+      setBio(user.bio || user.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
+      setEmail(user.email || "Email não informado");
+      setPontos(user.pontos || 0);
+      setPedidosCriados(user.pedidosCriados || 0);
+      setAvatarUrl(user.fotoPerfil || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=300&h=300");
+    }
   }, [user]);
   
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate('/login');
-    } else {
-      loadUserData();
+      return;
     }
-  }, [isAuthenticated, navigate]);
+    loadUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadUserData = async () => {
     try {
@@ -140,20 +150,51 @@ const ProfileMobile = () => {
       if (response.success) {
         updateUser({ ...user, bio });
         setIsEditingBio(false);
+        toast.success('Bio atualizada com sucesso!');
       }
     } catch (error) {
       console.error('Erro ao salvar bio:', error);
-      alert('Erro ao salvar. Tente novamente.');
+      toast.error('Erro ao salvar. Tente novamente.');
     }
   };
 
   const handleSecurityAction = (action) => {
-    if (!isPhoneVerified) return;
-    alert(`${action} solicitado com sucesso!`);
+    toast.success(`${action} solicitado com sucesso!`);
   };
 
   const handleAvatarChange = () => {
     document.getElementById('avatar-upload')?.click();
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64Image = event.target?.result;
+      setAvatarUrl(base64Image);
+
+      try {
+        const endpoint = user.tipo === 'comercio' ? '/comercios' : 
+                        user.tipo === 'ong' ? '/ongs' : 
+                        user.tipo === 'familia' ? '/familias' : '/cidadaos';
+        
+        const response = await apiService.request(`${endpoint}/${user.uid || user.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ fotoPerfil: base64Image })
+        });
+        
+        if (response.success) {
+          updateUser({ ...user, fotoPerfil: base64Image });
+          toast.success('Foto atualizada com sucesso!');
+        }
+      } catch (error) {
+        console.error('Erro ao salvar foto:', error);
+        toast.error('Erro ao salvar foto.');
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const updateBanner = (preset) => {
@@ -197,16 +238,7 @@ const ProfileMobile = () => {
               id="avatar-upload"
               accept="image/*"
               style={{ display: 'none' }}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (event) => {
-                    setAvatarUrl(event.target?.result);
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
+              onChange={handleAvatarUpload}
             />
             <div className="prf-avatar-edit">
               <Camera size={20} />
@@ -303,7 +335,7 @@ const ProfileMobile = () => {
           {!zenMode && (
             <div className="prf-stats-grid">
               <div className="prf-stat-item">
-                <span className="prf-stat-value">0</span>
+                <span className="prf-stat-value">{pontos}</span>
                 <span className="prf-stat-label">Pontos</span>
               </div>
               <div className="prf-stat-item">
@@ -311,7 +343,7 @@ const ProfileMobile = () => {
                 <span className="prf-stat-label">Ajudas</span>
               </div>
               <div className="prf-stat-item">
-                <span className="prf-stat-value">0</span>
+                <span className="prf-stat-value">{pedidosCriados}</span>
                 <span className="prf-stat-label">Pedidos</span>
               </div>
             </div>
@@ -445,7 +477,7 @@ const ProfileMobile = () => {
                 <p>{email}</p>
               </div>
               <button 
-                className={`prf-btn ${isPhoneVerified ? 'prf-btn-outline' : 'prf-btn-disabled'}`}
+                className="prf-btn prf-btn-outline"
                 onClick={() => handleSecurityAction("Alterar E-mail")}
               >
                 Alterar
@@ -458,7 +490,7 @@ const ProfileMobile = () => {
                 <p>Senha de acesso à conta</p>
               </div>
               <button 
-                className={`prf-btn ${isPhoneVerified ? 'prf-btn-outline' : 'prf-btn-disabled'}`}
+                className="prf-btn prf-btn-outline"
                 onClick={() => handleSecurityAction("Redefinir Senha")}
               >
                 <Lock size={14} />
@@ -466,28 +498,6 @@ const ProfileMobile = () => {
               </button>
             </div>
           </div>
-
-          {!isPhoneVerified ? (
-            <div className="prf-verification-banner prf-warning">
-              <div className="prf-banner-header">
-                <ShieldCheck size={18} />
-                <span>Verificação Necessária</span>
-              </div>
-              <p>Confirme sua identidade via SMS para habilitar alterações críticas de segurança.</p>
-              <button className="prf-btn prf-btn-primary" onClick={() => setIsPhoneModalOpen(true)}>
-                <Smartphone size={16} />
-                Verificar Telefone
-              </button>
-            </div>
-          ) : (
-            <div className="prf-verification-banner prf-success">
-              <div className="prf-banner-header">
-                <CheckCircle2 size={18} />
-                <span>Identidade Confirmada</span>
-              </div>
-              <p>Sua conta está totalmente protegida e verificada.</p>
-            </div>
-          )}
         </div>
       </div>
 
