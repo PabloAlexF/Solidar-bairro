@@ -106,6 +106,10 @@ class FirebaseConnection {
   isDevelopmentMode() {
     return this.isDevMode;
   }
+
+  getTimestamp() {
+    return this.isDevMode ? new Date() : this.admin.firestore.FieldValue.serverTimestamp();
+  }
 }
 
 // Exporta uma única instância (Singleton)

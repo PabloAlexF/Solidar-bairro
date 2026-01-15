@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import { useAuth } from '../../contexts/AuthContext';
@@ -168,7 +168,7 @@ const Chat = () => {
   };
 
   // Carregar conversas
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       const response = await ApiService.getConversations();
       if (response.success && response.data) {
@@ -190,18 +190,16 @@ const Chat = () => {
     } catch (error) {
       console.error('Erro ao carregar conversas:', error);
     }
-  };
+  }, [user?.uid]);
 
   // Carregar mensagens da conversa
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!conversaId) return;
     
     try {
       setLoading(true);
-      const [conversationResponse, messagesResponse] = await Promise.all([
-        ApiService.getConversation(conversaId),
-        ApiService.getMessages(conversaId)
-      ]);
+      const conversationResponse = await ApiService.getConversation(conversaId);
+      const messagesResponse = await ApiService.getMessages(conversaId);
       
       console.log('Dados da conversa:', conversationResponse.data);
       
@@ -212,20 +210,7 @@ const Chat = () => {
         console.log('itemId:', convData.itemId);
         console.log('itemType:', convData.itemType);
         
-        // Se não há dados dos participantes, buscar via API
-        if (!convData.participantsData?.length && convData.participants?.length > 0) {
-          const otherUserId = convData.participants.find(p => p !== user?.id && p !== user?.uid);
-          if (otherUserId) {
-            try {
-              const userResponse = await ApiService.getUserData(otherUserId);
-              if (userResponse.success && userResponse.data) {
-                convData.participantsData = [userResponse.data];
-              }
-            } catch (error) {
-              console.error('Erro ao buscar dados do usuário:', error);
-            }
-          }
-        }
+        // Dados dos participantes já vêm na conversa, não buscar separadamente
         
         // Buscar dados do contexto (pedido ou achado/perdido)
         if (convData.pedidoId) {
@@ -295,7 +280,7 @@ const Chat = () => {
         achadoPerdidoData: !!achadoPerdidoData
       });
     }
-  };
+  }, [conversaId, user?.uid]);
 
   useEffect(() => {
     if (conversaId) {

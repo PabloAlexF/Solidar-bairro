@@ -33,14 +33,25 @@ const corsOptions = {
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // 100 requisições por IP
-  message: 'Muitas requisições, tente novamente mais tarde'
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  max: 200, // 200 requisições por minuto
+  message: JSON.stringify({ error: 'Muitas requisições, tente novamente mais tarde', code: 'RATE_LIMIT' }),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Muitas requisições, tente novamente mais tarde', code: 'RATE_LIMIT' });
+  }
+});
+
+const chatLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  max: 100, // 100 requisições por minuto para chat
+  message: 'Muitas requisições de chat, tente novamente mais tarde'
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // 5 tentativas de login
+  max: 10, // 10 tentativas de login
   message: 'Muitas tentativas de login, tente novamente mais tarde'
 });
 
@@ -58,7 +69,7 @@ app.use('/api/comercios', comercioRoutes);
 app.use('/api/ongs', ongRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/interesses', interesseRoutes);
-app.use('/api/chat', chatRoutes);
+app.use('/api/chat', chatLimiter, chatRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/achados-perdidos', achadosPerdidosRoutes);
 app.use('/api/notifications', notificationRoutes);
