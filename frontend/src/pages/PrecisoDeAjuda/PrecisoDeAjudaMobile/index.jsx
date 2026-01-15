@@ -76,84 +76,147 @@ const VISIBILITY_OPTIONS = [
 const CATEGORY_DETAILS = {
   Alimentos: {
     options: [
-      { id: 'cesta', label: 'Cesta Básica', desc: 'Arroz, feijão, óleo', color: '#f97316', contextInfo: 'Cesta básica alimenta família de 4 por ~15 dias.' },
-      { id: 'proteinas', label: 'Proteínas', desc: 'Carne, ovos, frango', color: '#ef4444' },
-      { id: 'frescos', label: 'Hortifruti', desc: 'Frutas e verduras', color: '#10b981' },
-      { id: 'padaria', label: 'Padaria', desc: 'Pão, leite, queijo', color: '#f59e0b' },
-      { id: 'infantil', label: 'Bebês', desc: 'Fórmulas, papinhas', color: '#6366f1' },
-      { id: 'prontas', label: 'Marmitas', desc: 'Refeições prontas', color: '#f43f5e' },
+      { id: 'cesta', label: 'Cesta Básica Completa', desc: 'Arroz, feijão, óleo, açúcar', color: '#f97316', contextInfo: 'Cesta básica alimenta família de 4 por ~15 dias.' },
+      { id: 'cereais_graos', label: 'Cereais & Grãos', desc: 'Arroz, feijão, lentilha', color: '#d97706' },
+      { id: 'proteinas_carnes', label: 'Carnes & Aves', desc: 'Carne, frango, peixe', color: '#ef4444' },
+      { id: 'ovos_laticinios', label: 'Ovos & Laticínios', desc: 'Ovos, leite, queijo', color: '#f59e0b' },
+      { id: 'frutas_frescas', label: 'Frutas Frescas', desc: 'Banana, maçã, laranja', color: '#10b981' },
+      { id: 'verduras_legumes', label: 'Verduras & Legumes', desc: 'Alface, tomate, batata', color: '#059669' },
+      { id: 'padaria_matinal', label: 'Padaria & Café', desc: 'Pão, biscoito, café', color: '#8b5cf6' },
+      { id: 'temperos_condimentos', label: 'Temperos', desc: 'Sal, açúcar, óleo', color: '#475569' },
+      { id: 'massas_farinhas', label: 'Massas & Farinhas', desc: 'Macarrão, farinha', color: '#6366f1' },
+      { id: 'enlatados_conservas', label: 'Enlatados', desc: 'Sardinha, atum, milho', color: '#dc2626' },
+      { id: 'bebidas_sucos', label: 'Bebidas & Sucos', desc: 'Suco, refrigerante', color: '#0ea5e9' },
+      { id: 'doces_sobremesas', label: 'Doces', desc: 'Chocolate, bolo', color: '#ec4899' },
+      { id: 'alimentacao_infantil', label: 'Alimentação Infantil', desc: 'Papinha, fórmula', color: '#f43f5e' },
+      { id: 'alimentacao_especial', label: 'Alimentação Especial', desc: 'Sem glúten, vegano', color: '#7c3aed' },
+      { id: 'refeicoes_prontas', label: 'Marmitas', desc: 'Refeições prontas', color: '#f97316' },
+      { id: 'merenda_escolar', label: 'Merenda', desc: 'Lanche escolar', color: '#14b8a6' },
     ]
   },
   Roupas: {
     options: [
-      { id: 'agasalhos', label: 'Agasalhos', desc: 'Casacos, blusas', color: '#1e40af' },
-      { id: 'escolar', label: 'Uniforme', desc: 'Escolar', color: '#6366f1' },
-      { id: 'calcados', label: 'Calçados', desc: 'Tênis, sapatos', color: '#2563eb' },
-      { id: 'enxoval', label: 'Enxoval Bebê', desc: 'Body, mantas', color: '#ec4899' },
-      { id: 'intimas', label: 'Íntimas', desc: 'Meias, cuecas', color: '#f43f5e' },
-      { id: 'profissional', label: 'Profissional', desc: 'Social, trabalho', color: '#475569' },
+      { id: 'roupas_inverno', label: 'Roupas Inverno', desc: 'Casacos, blusas', color: '#1e40af' },
+      { id: 'roupas_verao', label: 'Roupas Verão', desc: 'Camisetas, bermudas', color: '#f59e0b' },
+      { id: 'uniforme_escolar', label: 'Uniforme Escolar', desc: 'Kits escolares', color: '#6366f1' },
+      { id: 'uniforme_trabalho', label: 'Uniforme Trabalho', desc: 'Aventais, jalecos', color: '#475569' },
+      { id: 'roupa_social', label: 'Roupa Social', desc: 'Entrevistas, trabalho', color: '#374151' },
+      { id: 'roupas_intimas', label: 'Roupas Íntimas', desc: 'Cueca, calcinha (NOVAS)', color: '#f43f5e' },
+      { id: 'enxoval_bebe', label: 'Enxoval Bebê', desc: 'Body, mantas', color: '#f472b6' },
+      { id: 'roupas_crianca', label: 'Roupas Infantis', desc: '1 a 14 anos', color: '#8b5cf6' },
+      { id: 'pijamas_dormir', label: 'Pijamas', desc: 'Roupas para dormir', color: '#14b8a6' },
+      { id: 'cama_mesa_banho', label: 'Cama & Banho', desc: 'Lençol, toalha', color: '#0ea5e9' },
     ]
   },
   Medicamentos: {
     options: [
-      { id: 'pressao', label: 'Pressão Alta', desc: 'Losartana etc.', color: '#ef4444' },
-      { id: 'diabetes', label: 'Diabetes', desc: 'Metformina etc.', color: '#dc2626' },
-      { id: 'analgesicos', label: 'Analgésicos', desc: 'Dipirona etc.', color: '#10b981' },
-      { id: 'bombinhas', label: 'Asma', desc: 'Bombinhas', color: '#0ea5e9' },
+      { id: 'pressao_alta', label: 'Pressão Alta', desc: 'Losartana, Enalapril', color: '#ef4444' },
+      { id: 'diabetes', label: 'Diabetes', desc: 'Metformina, Insulina', color: '#dc2626' },
+      { id: 'analgesicos_antitermicos', label: 'Analgésicos', desc: 'Dipirona, Paracetamol', color: '#10b981' },
+      { id: 'asma_bronquite', label: 'Asma', desc: 'Bombinhas, Salbutamol', color: '#0ea5e9' },
+      { id: 'antibioticos', label: 'Antibióticos', desc: 'Com receita', color: '#8b5cf6' },
+      { id: 'saude_mental', label: 'Saúde Mental', desc: 'Controlados', color: '#ec4899' },
+      { id: 'antiinflamatorios', label: 'Anti-inflamatórios', desc: 'Diclofenaco', color: '#f59e0b' },
+      { id: 'gastrico_digestivo', label: 'Gástrico', desc: 'Omeprazol', color: '#14b8a6' },
+      { id: 'vitaminas_suplementos', label: 'Vitaminas', desc: 'Complexo B, Ferro', color: '#059669' },
+      { id: 'pediatrico', label: 'Pediátrico', desc: 'Xaropes infantis', color: '#f472b6' },
     ]
   },
   Higiene: {
     options: [
-      { id: 'kit_banho', label: 'Kit Banho', desc: 'Sabonete, shampoo', color: '#14b8a6' },
-      { id: 'saude_bucal', label: 'Bucal', desc: 'Pasta, escova', color: '#0d9488' },
-      { id: 'fraldas_infantis', label: 'Fraldas', desc: 'Infantis', color: '#6366f1' },
-      { id: 'limpeza_casa', label: 'Limpeza', desc: 'Detergente etc.', color: '#059669' },
+      { id: 'kit_banho_completo', label: 'Kit Banho', desc: 'Sabonete, shampoo', color: '#14b8a6' },
+      { id: 'saude_bucal', label: 'Saúde Bucal', desc: 'Pasta, escova', color: '#0d9488' },
+      { id: 'higiene_intima_feminina', label: 'Higiene Feminina', desc: 'Absorvente', color: '#ec4899' },
+      { id: 'fraldas_infantis', label: 'Fraldas Infantis', desc: 'P, M, G, XG', color: '#6366f1' },
+      { id: 'fraldas_geriatricas', label: 'Fraldas Adulto', desc: 'M, G, GG', color: '#8b5cf6' },
+      { id: 'produtos_cabelo', label: 'Cabelo', desc: 'Shampoo, creme', color: '#f59e0b' },
+      { id: 'desodorante_perfume', label: 'Desodorante', desc: 'Roll-on, aerosol', color: '#10b981' },
+      { id: 'limpeza_casa', label: 'Limpeza Casa', desc: 'Detergente, sabão', color: '#059669' },
+      { id: 'papel_higienico', label: 'Papel Higiênico', desc: 'Papel, toalha', color: '#64748b' },
+      { id: 'higiene_bebe', label: 'Higiene Bebê', desc: 'Produtos infantis', color: '#f472b6' },
     ]
   },
   Contas: {
     options: [
-      { id: 'conta_luz', label: 'Luz', desc: 'Conta de luz', color: '#ef4444' },
-      { id: 'conta_agua', label: 'Água', desc: 'Conta de água', color: '#3b82f6' },
-      { id: 'gas_cozinha', label: 'Gás', desc: 'Botijão', color: '#f97316' },
-      { id: 'apoio_aluguel', label: 'Aluguel', desc: 'Apoio', color: '#dc2626' },
+      { id: 'conta_luz', label: 'Conta Luz', desc: 'Evitar corte', color: '#ef4444' },
+      { id: 'conta_agua', label: 'Conta Água', desc: 'Manter abastecimento', color: '#3b82f6' },
+      { id: 'gas_cozinha', label: 'Gás', desc: 'Botijão 13kg', color: '#f97316' },
+      { id: 'apoio_aluguel', label: 'Aluguel', desc: 'Evitar despejo', color: '#dc2626' },
+      { id: 'internet_telefone', label: 'Internet', desc: 'Estudo, trabalho', color: '#6366f1' },
+      { id: 'plano_saude', label: 'Plano Saúde', desc: 'Convênio médico', color: '#10b981' },
+      { id: 'educacao_escola', label: 'Escola', desc: 'Material, uniforme', color: '#f59e0b' },
+      { id: 'transporte_publico', label: 'Transporte', desc: 'Cartão, passagens', color: '#0ea5e9' },
     ]
   },
   Emprego: {
     options: [
-      { id: 'curriculo', label: 'Currículo', desc: 'Elaboração', color: '#8b5cf6' },
-      { id: 'qualificacao', label: 'Cursos', desc: 'Qualificação', color: '#7c3aed' },
-      { id: 'epis_uniforme', label: 'EPIs', desc: 'Uniforme', color: '#059669' },
+      { id: 'curriculo_impressao', label: 'Currículo', desc: 'Elaboração, impressão', color: '#8b5cf6' },
+      { id: 'qualificacao_cursos', label: 'Cursos', desc: 'Qualificação técnica', color: '#7c3aed' },
+      { id: 'epis_uniforme_trabalho', label: 'EPIs', desc: 'Equipamentos segurança', color: '#059669' },
+      { id: 'ferramentas_profissionais', label: 'Ferramentas', desc: 'Pedreiro, eletricista', color: '#dc2626' },
+      { id: 'transporte_entrevistas', label: 'Transporte', desc: 'Passagens entrevistas', color: '#0ea5e9' },
+      { id: 'documentacao_trabalho', label: 'Documentação', desc: 'Carteira, CPF, RG', color: '#f59e0b' },
+      { id: 'capacitacao_digital', label: 'Informática', desc: 'Cursos digitais', color: '#6366f1' },
+      { id: 'material_vendas', label: 'Material Vendas', desc: 'Produtos revenda', color: '#10b981' },
     ]
   },
   Móveis: {
     options: [
-      { id: 'cama_solteiro', label: 'Cama Solteiro', desc: 'Ou colchão', color: '#f59e0b' },
-      { id: 'cama_casal', label: 'Cama Casal', desc: 'Ou colchão', color: '#d97706' },
-      { id: 'armario_cozinha', label: 'Armário', desc: 'Cozinha', color: '#059669' },
+      { id: 'cama_solteiro', label: 'Cama Solteiro', desc: 'Cama ou colchão', color: '#f59e0b' },
+      { id: 'cama_casal', label: 'Cama Casal', desc: 'Cama ou colchão', color: '#d97706' },
+      { id: 'berco_bebe', label: 'Berço Bebê', desc: 'Móveis infantis', color: '#ec4899' },
+      { id: 'sofa_poltrona', label: 'Sofá', desc: 'Sala de estar', color: '#6366f1' },
+      { id: 'mesa_jantar', label: 'Mesa Jantar', desc: 'Mesa com cadeiras', color: '#8b5cf6' },
+      { id: 'armario_cozinha', label: 'Armário Cozinha', desc: 'Paneleiro', color: '#059669' },
+      { id: 'guarda_roupa', label: 'Guarda-roupa', desc: 'Roupeiro', color: '#10b981' },
+      { id: 'mesa_estudo', label: 'Mesa Estudo', desc: 'Escrivaninha', color: '#f97316' },
     ]
   },
   Eletrodomésticos: {
     options: [
-      { id: 'geladeira', label: 'Geladeira', desc: 'Fundamental', color: '#475569' },
-      { id: 'fogao', label: 'Fogão', desc: 'Refeições', color: '#334155' },
-      { id: 'maquina_lavar', label: 'Lavadora', desc: 'Roupas', color: '#0ea5e9' },
+      { id: 'geladeira_freezer', label: 'Geladeira', desc: 'Conservar alimentos', color: '#475569' },
+      { id: 'fogao_cooktop', label: 'Fogão', desc: 'Preparo refeições', color: '#334155' },
+      { id: 'maquina_lavar_roupa', label: 'Lavadora', desc: 'Lavar roupas', color: '#0ea5e9' },
+      { id: 'microondas', label: 'Micro-ondas', desc: 'Aquecimento rápido', color: '#64748b' },
+      { id: 'ventilador_ar', label: 'Ventilador', desc: 'Dias de calor', color: '#06b6d4' },
+      { id: 'televisao', label: 'TV', desc: 'Televisão, conversor', color: '#374151' },
+      { id: 'ferro_passar', label: 'Ferro Passar', desc: 'Tábua e ferro', color: '#6b7280' },
+      { id: 'liquidificador_batedeira', label: 'Liquidificador', desc: 'Preparo alimentos', color: '#10b981' },
     ]
   },
   Transporte: {
     options: [
-      { id: 'passagens', label: 'Passagens', desc: 'Ônibus/trem', color: '#0ea5e9' },
+      { id: 'passagens_onibus', label: 'Passagens Ônibus', desc: 'Ônibus urbano/trem', color: '#0ea5e9' },
       { id: 'bicicleta', label: 'Bicicleta', desc: 'Trabalho/escola', color: '#10b981' },
+      { id: 'combustivel_veiculo', label: 'Combustível', desc: 'Gasolina, álcool', color: '#f97316' },
+      { id: 'manutencao_veiculo', label: 'Manutenção', desc: 'Conserto, peças', color: '#dc2626' },
+      { id: 'apoio_carona', label: 'Carona', desc: 'Consultas médicas', color: '#ec4899' },
+      { id: 'pecas_moto', label: 'Peças Moto', desc: 'Delivery, trabalho', color: '#f59e0b' },
+      { id: 'taxi_uber', label: 'Taxi/Uber', desc: 'Emergência', color: '#8b5cf6' },
     ]
   },
   Calçados: {
     options: [
-      { id: 'tenis', label: 'Tênis', desc: 'Esportivo', color: '#10b981' },
-      { id: 'sapato', label: 'Sapato', desc: 'Social', color: '#475569' },
-      { id: 'chinelos', label: 'Chinelos', desc: 'Casual', color: '#f59e0b' },
+      { id: 'tenis_esportivo', label: 'Tênis Esportivo', desc: 'Exercícios, caminhada', color: '#10b981' },
+      { id: 'tenis_casual', label: 'Tênis Casual', desc: 'Uso diário', color: '#059669' },
+      { id: 'sapato_social_masculino', label: 'Sapato Social M', desc: 'Trabalho, entrevista', color: '#475569' },
+      { id: 'sapato_social_feminino', label: 'Sapato Social F', desc: 'Trabalho feminino', color: '#374151' },
+      { id: 'sandalia_feminina', label: 'Sandália', desc: 'Rasteirinha', color: '#ec4899' },
+      { id: 'chinelos_havaianas', label: 'Chinelos', desc: 'Uso doméstico', color: '#f59e0b' },
+      { id: 'botas_trabalho', label: 'Botas Trabalho', desc: 'Segurança, bico aço', color: '#dc2626' },
+      { id: 'calcados_infantis', label: 'Calçados Infantis', desc: 'Crianças', color: '#8b5cf6' },
+      { id: 'calcados_bebe', label: 'Calçados Bebê', desc: 'Sapatinho bebê', color: '#f472b6' },
     ]
   },
   Outros: {
     options: [
+      { id: 'educacao_cursos', label: 'Educação', desc: 'Material escolar', color: '#6366f1' },
+      { id: 'saude_consultas', label: 'Saúde', desc: 'Consultas, exames', color: '#10b981' },
+      { id: 'juridico_documentos', label: 'Jurídico', desc: 'Advogado, cartório', color: '#8b5cf6' },
+      { id: 'tecnologia_equipamentos', label: 'Tecnologia', desc: 'Celular, computador', color: '#0ea5e9' },
+      { id: 'animais_estimacao', label: 'Animais', desc: 'Ração, veterinário', color: '#f59e0b' },
+      { id: 'reforma_casa', label: 'Reforma', desc: 'Material construção', color: '#dc2626' },
+      { id: 'lazer_cultura', label: 'Lazer', desc: 'Livros, brinquedos', color: '#ec4899' },
       { id: 'outros_ajuda', label: 'Outro', desc: 'Especifique', color: '#94a3b8' }
     ]
   }
