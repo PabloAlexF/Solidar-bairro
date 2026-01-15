@@ -674,7 +674,7 @@
 /* Modern Urgency Timeline & Priority Scale */
 .pda-urgency-container-v3 {
   display: flex;
-  gap: 80px;
+  gap: 150px;
   align-items: flex-start;
   padding: 20px 40px;
   margin-top: 20px;
@@ -900,8 +900,7 @@
 }
 
 .pda-vis-map-section-v4 {
-  height: 100%;
-  min-height: 500px;
+
   background: white;
   border-radius: 20px;
   border: 1px solid var(--pda-gray-200);
