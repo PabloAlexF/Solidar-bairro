@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/layout/Header';
-import { useAuth } from '../contexts/AuthContext';
-import ApiService from '../services/apiService';
-import chatNotificationService from '../services/chatNotificationService';
+import Header from '../../components/layout/Header';
+import { useAuth } from '../../contexts/AuthContext';
+import ApiService from '../../services/apiService';
+import chatNotificationService from '../../services/chatNotificationService';
 import { 
   Heart, 
   Search, 
@@ -19,7 +19,7 @@ import {
   Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import '../styles/pages/ConversationsList.css';
+import './styles.css';
 
 const Conversas = () => {
   const navigate = useNavigate();
