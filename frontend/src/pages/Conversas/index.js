@@ -180,7 +180,19 @@ const Conversas = () => {
               <div className="profile-bg-gradient" />
               <div className="profile-content">
                 <div className="profile-avatar-large">
-                  {user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'V'}
+                  {user?.fotoPerfil ? (
+                    <img 
+                      src={user.fotoPerfil} 
+                      alt="Foto do perfil" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'V';
+                      }}
+                    />
+                  ) : (
+                    user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'V'
+                  )}
                 </div>
                 <h3>Seu Perfil Solidário</h3>
                 <p className="profile-rank">⭐ Super Vizinho</p>
