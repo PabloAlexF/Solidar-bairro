@@ -96,9 +96,9 @@
 .pda-wizard-box-v2 {
   position: relative;
   z-index: 1;
-  max-width: 1600px;
+  max-width: 1700px;
   width: 100%;
-  height: 90vh;
+  height: 80vh;
   display: flex;
   background: var(--pda-glass);
   backdrop-filter: blur(40px) saturate(180%);
