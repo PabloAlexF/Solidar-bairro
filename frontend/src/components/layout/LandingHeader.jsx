@@ -2,13 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { Heart, Bell, User, LogOut, Settings } from 'lucide-react';
+import { Heart, Bell, User, LogOut, Settings, Globe } from 'lucide-react';
 import chatNotificationService from '../../services/chatNotificationService';
 import './LandingHeader.css';
 
-const LandingHeader = ({ scrolled = false }) => {
+const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  
+  console.log('=== LANDING HEADER DEBUG ===');
+  console.log('showPanelButtons:', showPanelButtons);
+  console.log('isAuthenticated:', isAuthenticated());
+  console.log('user:', user);
   const { 
     notifications, 
     addChatNotification, 
@@ -150,7 +155,26 @@ const LandingHeader = ({ scrolled = false }) => {
             <span className="link-underline" />
           </button>
           
-          {!isAuthenticated() ? (
+          {showPanelButtons && (
+            <div className="panel-buttons-container">
+              <button 
+                onClick={() => navigate('/painel-social')}
+                title="Painel Social"
+                className="panel-icon-button"
+              >
+                <Globe size={20} />
+              </button>
+              <button 
+                onClick={() => navigate('/admin')}
+                title="Painel Admin"
+                className="panel-icon-button admin"
+              >
+                <Settings size={20} />
+              </button>
+            </div>
+          )}
+          
+          {!isAuthenticated() && !showPanelButtons ? (
             <div className="auth-group">
               <button 
                 className="auth-btn-login"
@@ -165,19 +189,7 @@ const LandingHeader = ({ scrolled = false }) => {
                 Cadastrar
               </button>
             </div>
-          ) : (
-            <div className="user-section">
-              {showAdminButton && (
-                <button 
-                  className="admin-dashboard-btn"
-                  onClick={() => navigate('/admin')}
-                  title="Dashboard Admin"
-                >
-                  <Settings size={20} />
-                </button>
-              )}
-              
-              <div className="notification-wrapper">
+          ) : isAuthenticated() && (
                 <button 
                   className="notification-btn"
                   onClick={() => setShowNotifications(!showNotifications)}
@@ -375,7 +387,7 @@ const LandingHeader = ({ scrolled = false }) => {
                     </div>
                   </div>
                 )}
-              </div>
+              )}
             </div>
           )}
         </div>

@@ -24,23 +24,26 @@ import {
   HandHelping,
   Palette,
   Bell,
-  Volume2,
-  VolumeX,
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { useToast } from '../../contexts/ToastContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import apiService from '../../services/apiService';
 import ProfileMobile from './ProfileMobile';
-import '../../styles/pages/profile.css';
+import './profile.css';
 
 const ProfileComponent = () => {
   const { user, isAuthenticated, updateUser } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const toast = useToast();
+  const { notifications, markAsRead, markAllAsRead, clearNotifications, getUnreadCount } = useNotifications();
+  
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [bio, setBio] = useState(user?.bio || user?.proposito || "Sou um cidadão engajado em ajudar minha comunidade local. Acredito que pequenas ações podem gerar grandes mudanças e fortalecer os laços entre vizinhos.");
@@ -123,6 +126,27 @@ const ProfileComponent = () => {
       profileContainer.style.setProperty('--primary-light', `rgba(${r}, ${g}, ${b}, 0.15)`);
     }
   }, [accentColor]);
+
+  useEffect(() => {
+    if (isSettingsOpen || isEditingBanner || isViewingHistory || isPhoneModalOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      setTimeout(() => {
+        const modalContent = document.querySelector('.modal-content');
+        if (modalContent) {
+          modalContent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isSettingsOpen, isEditingBanner, isViewingHistory, isPhoneModalOpen]);
 
   if (!user) {
     return (
@@ -217,6 +241,102 @@ const ProfileComponent = () => {
 
   return (
     <div className={`profile-container animate-fade-in ${isDarkMode ? 'dark-mode' : ''}`}>
+      {/* Profile Header */}
+      <nav className="landing-nav scrolled">
+        <div className="section-container nav-container">
+          <div className="logo-wrapper" onClick={() => navigate('/')}>
+            <div className="logo-icon">
+              <Heart fill="white" size={24} />
+            </div>
+            <span className="logo-text">Solidar<span className="logo-accent">Bairro</span></span>
+          </div>
+          
+          <div className="nav-menu">
+            <button onClick={() => navigate('/painel-social')} title="Painel Social" className="panel-icon-button">
+              <Globe size={20} />
+            </button>
+            <button onClick={() => navigate('/admin')} title="Painel Admin" className="panel-icon-button admin">
+              <Settings size={20} />
+            </button>
+            
+            <button className="notification-btn" onClick={() => setShowNotifications(!showNotifications)}>
+              <Bell size={24} />
+              {getUnreadCount() > 0 && <span className="notification-badge">{getUnreadCount()}</span>}
+            </button>
+            
+            {showNotifications && (
+              <div className="notification-dropdown">
+                <div className="notification-header">
+                  <h3>Notificações</h3>
+                  {notifications.length > 0 && (
+                    <div className="notification-actions">
+                      {getUnreadCount() > 0 && <button className="action-btn" onClick={markAllAsRead}>✓</button>}
+                      <button className="action-btn" onClick={clearNotifications}>🗑️</button>
+                    </div>
+                  )}
+                </div>
+                <div className="notification-list">
+                  {notifications.length === 0 ? (
+                    <div className="no-notifications">Nenhuma notificação ainda</div>
+                  ) : (
+                    notifications.map((notification) => (
+                      <div key={notification.id} className={`notification-item ${notification.read ? 'read' : 'unread'}`} onClick={() => markAsRead(notification.id)}>
+                        <div className="notification-content">
+                          <div className="notification-icon">{notification.type === 'chat' ? '💬' : '🔔'}</div>
+                          <div className="notification-text">
+                            <p className="notification-title">{notification.title}</p>
+                            <p className="notification-message">{notification.message}</p>
+                          </div>
+                        </div>
+                        {!notification.read && <div className="unread-dot"></div>}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+            
+            <div className="user-menu-wrapper">
+              <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
+                <div className="user-avatar">
+                  {user?.fotoPerfil ? (
+                    <img src={user.fotoPerfil} alt="Perfil" className="avatar-image" />
+                  ) : (
+                    (user?.nome || user?.nomeCompleto || 'U')?.substring(0, 2).toUpperCase()
+                  )}
+                </div>
+              </button>
+              
+              {showUserMenu && (
+                <div className="user-dropdown">
+                  <div className="user-info">
+                    <div className="user-avatar-large">
+                      {user?.fotoPerfil ? (
+                        <img src={user.fotoPerfil} alt="Perfil" className="avatar-image-large" />
+                      ) : (
+                        (user?.nome || user?.nomeCompleto || 'U')?.substring(0, 2).toUpperCase()
+                      )}
+                    </div>
+                    <div className="user-details">
+                      <div className="user-name">{user?.nome || user?.nomeCompleto || 'Usuário'}</div>
+                      <div className="user-phone">{user?.telefone || user?.email}</div>
+                    </div>
+                  </div>
+                  <div className="user-actions">
+                    <button className="menu-item" onClick={() => { navigate('/perfil'); setShowUserMenu(false); }}>👤 Ver perfil</button>
+                    <button className="menu-item" onClick={() => { navigate('/conversas'); setShowUserMenu(false); }}>💬 Minhas conversas</button>
+                    <button className="menu-item admin-btn" onClick={() => { navigate('/admin'); setShowUserMenu(false); }}>⚙️ Dashboard Admin</button>
+                    <button className="menu-item logout-btn" onClick={() => { localStorage.removeItem('solidar-user'); window.location.reload(); }}>🚪 Sair</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+      
+      <div style={{ height: '80px' }}></div>
+      
       <header 
         className="profile-header-bg" 
         style={{ 
@@ -321,7 +441,7 @@ const ProfileComponent = () => {
 
               <div className="settings-section">
                 <h4><Bell size={18} /> Notificações</h4>
-                <div className="setting-control" style={{ marginBottom: '12px' }}>
+                <div className="setting-control">
                   <div className="setting-info">
                     <span>Alertas de Ajuda</span>
                     <p>Receba avisos de novas oportunidades</p>
@@ -330,18 +450,6 @@ const ProfileComponent = () => {
                     <input type="checkbox" checked={notificationsEnabled} onChange={() => setNotificationsEnabled(!notificationsEnabled)} />
                     <span className="slider round"></span>
                   </label>
-                </div>
-                <div className="setting-control">
-                  <div className="setting-info">
-                    <span>Efeitos Sonoros</span>
-                    <p>Sons ao interagir com a plataforma</p>
-                  </div>
-                  <button 
-                    onClick={() => setSoundEnabled(!soundEnabled)}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                  >
-                    {soundEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
-                  </button>
                 </div>
               </div>
 
