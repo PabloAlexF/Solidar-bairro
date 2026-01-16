@@ -252,12 +252,16 @@ const ProfileComponent = () => {
           </div>
           
           <div className="nav-menu">
-            <button onClick={() => navigate('/painel-social')} title="Painel Social" className="panel-icon-button">
-              <Globe size={20} />
-            </button>
-            <button onClick={() => navigate('/admin')} title="Painel Admin" className="panel-icon-button admin">
-              <Settings size={20} />
-            </button>
+            {(user?.email === 'admin@solidarbairro.com') && (
+              <>
+                <button onClick={() => navigate('/painel-social')} title="Painel Social" className="panel-icon-button">
+                  <Globe size={20} />
+                </button>
+                <button onClick={() => navigate('/admin')} title="Painel Admin" className="panel-icon-button admin">
+                  <Settings size={20} />
+                </button>
+              </>
+            )}
             
             <button className="notification-btn" onClick={() => setShowNotifications(!showNotifications)}>
               <Bell size={24} />
