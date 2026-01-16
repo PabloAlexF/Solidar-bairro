@@ -686,8 +686,12 @@ export default function DesktopLandingPage() {
               <button 
                 className="hero-btn-primary"
                 onClick={() => {
-                  toast.success('Redirecionando para o painel!');
-                  navigate('/painel-social');
+                  if (isAdmin) {
+                    toast.success('Redirecionando para o painel!');
+                    navigate('/painel-social');
+                  } else {
+                    toast.error('Acesso restrito a administradores');
+                  }
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.transform = 'scale(1.05) translateY(-5px)';
@@ -696,7 +700,7 @@ export default function DesktopLandingPage() {
                   e.target.style.transform = 'scale(1) translateY(0)';
                 }}
                 data-tooltip-id="hero-btn"
-                data-tooltip-content="Explore todas as funcionalidades da plataforma"
+                data-tooltip-content={isAdmin ? "Explore todas as funcionalidades da plataforma" : "Acesso restrito a administradores"}
               >
                 Explorar Plataforma
                 <div className="btn-icon-wrapper">
