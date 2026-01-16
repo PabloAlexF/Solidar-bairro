@@ -91,6 +91,17 @@ const ProfileComponent = () => {
       return;
     }
     loadUserData();
+    
+    const savedSettings = localStorage.getItem('profile-settings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      setIsDarkMode(settings.isDarkMode || false);
+      setAccentColor(settings.accentColor || '#10b981');
+      setMood(settings.mood || 'Empolgado');
+      setZenMode(settings.zenMode || false);
+      setNotificationsEnabled(settings.notificationsEnabled !== undefined ? settings.notificationsEnabled : true);
+      setIsPrivate(settings.isPrivate || false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -472,7 +483,11 @@ const ProfileComponent = () => {
               </div>
 
               <div className="settings-footer">
-                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setIsSettingsOpen(false)}>
+                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => {
+                  localStorage.setItem('profile-settings', JSON.stringify({ isDarkMode, accentColor, mood, zenMode, notificationsEnabled, isPrivate }));
+                  setIsSettingsOpen(false);
+                  toast.success('Preferências salvas!');
+                }}>
                   Salvar Preferências
                 </button>
               </div>

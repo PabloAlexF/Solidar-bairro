@@ -459,6 +459,8 @@ export default function DesktopQueroAjudar() {
   const [pedidos, setPedidos] = useState([]);
   const [loadingPedidos, setLoadingPedidos] = useState(true);
   const [error, setError] = useState(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locationMessage, setLocationMessage] = useState('');
 
   const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
   const [cardsRef, cardsInView] = useInView({ threshold: 0.1, triggerOnce: true });
@@ -585,19 +587,20 @@ export default function DesktopQueroAjudar() {
           }
           
           setUserLocation({ state: detectedState, city: detectedCity });
-          toast.success(`Localização detectada: ${detectedCity}, ${detectedState}`);
-          setTimeout(() => setIsLoading(false), 1000);
+          setLocationMessage(`Localização detectada: ${detectedCity}, ${detectedState}`);
+          setTimeout(() => {
+            setIsLoading(false);
+            setShowLocationModal(true);
+          }, 1000);
         },
         (error) => {
           console.log('Location access denied');
           setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-          toast.error('Localização negada. Usando Belo Horizonte como padrão.');
           setTimeout(() => setIsLoading(false), 1000);
         }
       );
     } else {
       setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-      toast.error('Geolocalização não suportada.');
       setTimeout(() => setIsLoading(false), 1000);
     }
   }, []);
@@ -672,40 +675,31 @@ export default function DesktopQueroAjudar() {
       
       {!selectedOrder && <LandingHeader scrolled={true} />}
       
-      <div className="qa-main-wrapper" id="main-content" style={{ paddingTop: '80px' }}>
+      <div className="qa-main-wrapper" id="main-content" style={{ paddingTop: '100px' }}>
         
-        <animated.header className="page-header" style={headerSpring} ref={headerRef}>
-          <div className="brand-box">
-            <div className="brand-info">
-              <h1>Solidariedade <span>Próxima</span></h1>
-              <p>Conectando quem precisa com quem pode ajudar</p>
+        <animated.header className="page-header-pro" style={headerSpring} ref={headerRef}>
+          <div className="header-content-pro">
+            <div className="header-left-pro">
+              <h1 className="title-pro">Quero Ajudar</h1>
+              <p className="subtitle-pro">Conecte-se com quem precisa da sua ajuda</p>
+            </div>
+            <div className="header-right-pro">
+              <button className="btn-accessibility-pro" onClick={() => setShowHelper(!showHelper)}>
+                Acessibilidade
+              </button>
+              <animated.button 
+                className="btn-filter-pro"
+                onClick={() => setShowFiltersModal(true)}
+                style={filterButtonSpring}
+              >
+                <Filter size={18} />
+                Filtros
+                {(selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil') && 
+                  <span className="filter-badge-pro" />
+                }
+              </animated.button>
             </div>
           </div>
-
-        <div className="header-controls">
-          <button
-            className="accessibility-toggle"
-            onClick={() => setShowHelper(!showHelper)}
-            data-tooltip-id="accessibility-tooltip"
-            data-tooltip-content="Opções de acessibilidade"
-          >
-            Acessibilidade
-          </button>
-          <animated.button 
-            className={`btn-toggle-filters ${showFiltersModal ? 'active' : ''}`}
-            onClick={() => {
-              setShowFiltersModal(true);
-              toast.success('Filtros abertos!');
-            }}
-            style={filterButtonSpring}
-            data-tooltip-id="filter-tooltip"
-            data-tooltip-content="Clique para abrir filtros avançados"
-          >
-            <Filter size={20} />
-            <span>Filtros Avançados</span>
-            {(selectedCat !== 'Todas' || selectedUrgency || (selectedLocation !== 'brasil' && selectedLocation !== 'todas') || selectedTimeframe !== 'todos' || onlyNew) && <div className="active-filter-indicator" />}
-          </animated.button>
-        </div>
         </animated.header>
 
         {showFiltersModal && (
@@ -853,13 +847,14 @@ export default function DesktopQueroAjudar() {
           </div>
         )}
 
-        <div className="results-count">
-          <p>Encontramos <strong>{loadingPedidos ? <Skeleton width={30} /> : filteredOrders.length}</strong> pedidos para você ajudar</p>
-          {error && (
-            <div className="error-message" style={{ color: '#ef4444', marginTop: '8px' }}>
-              {error}
-            </div>
-          )}
+        <div className="results-bar-pro">
+          <div className="results-info-pro">
+            <span className="results-number-pro">
+              {loadingPedidos ? <Skeleton width={30} /> : filteredOrders.length}
+            </span>
+            <span className="results-text-pro">pedidos disponíveis</span>
+          </div>
+          {error && <div className="error-badge-pro">{error}</div>}
         </div>
 
         <div className="orders-grid-layout" ref={cardsRef}>
@@ -948,88 +943,45 @@ export default function DesktopQueroAjudar() {
                 
                 return (
                   <animated.div key={order.id} style={style}>
-                    <div
-                      className="vibrant-order-card"
-                      style={{
-                        animation: 'cardSlideIn 0.5s ease-out'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-8px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      <div className="card-header">
-                        <span 
-                          className="cat-label" 
-                          style={{ backgroundColor: catMeta.color }}
-                          data-tooltip-id="category-tooltip"
-                          data-tooltip-content={`Categoria: ${order.category}`}
-                        >
-                          {order.category}
-                        </span>
-                        {order.isNew && (
-                          <span 
-                            className="new-badge"
-                            data-tooltip-id="new-tooltip"
-                            data-tooltip-content="Pedido recente!"
-                          >
-                            NOVO
+                    <div className="card-pro">
+                      <div className="card-header-pro">
+                        <div className="card-badges-pro">
+                          <span className="cat-badge-pro" style={{ backgroundColor: catMeta.color }}>
+                            {order.category}
                           </span>
-                        )}
-                      </div>
-
-                      <div className="card-content">
-                        <h2>{order.title}</h2>
-                        <p style={{ whiteSpace: 'pre-wrap' }}>{order.description.substring(0, 120)}...</p>
-                        <div className="loc-info">
-                          <MapPin size={14} />
-                          <span>{order.neighborhood}, {order.city}</span>
+                          {order.isNew && <span className="new-badge-pro">NOVO</span>}
                         </div>
-                      </div>
-
-                      <div className="card-footer-info">
-                        <div className="user-snippet">
-                          <div className="qa-user-avatar">
-                            {order.userName.charAt(0)}
-                          </div>
-                          <span className="user-name">{order.userName}</span>
-                        </div>
-                        <div 
-                          className="urg-status" 
-                          style={{ color: urg?.color }}
-                          data-tooltip-id="urgency-tooltip"
-                          data-tooltip-content={urg?.desc}
-                        >
+                        <div className="urg-badge-pro" style={{ color: urg?.color, borderColor: urg?.color }}>
                           {urg?.icon}
-                          <span>{urg?.label}</span>
                         </div>
                       </div>
 
-                      <div className="card-buttons">
-                        <button 
-                          className="btn-v-view" 
-                          onClick={() => setSelectedOrder(order)}
-                          data-tooltip-id="view-tooltip"
-                          data-tooltip-content="Ver detalhes completos"
-                          aria-label={`Ver detalhes de ${order.title}`}
-                        >
-                          <Eye size={18} />
-                          Ver Detalhes
+                      <div className="card-body-pro">
+                        <h3 className="card-title-pro">{order.title}</h3>
+                        <p className="card-desc-pro">{order.description.substring(0, 100)}...</p>
+                      </div>
+
+                      <div className="card-meta-pro">
+                        <div className="user-info-pro">
+                          <div className="avatar-pro">{order.userName.charAt(0)}</div>
+                          <div className="user-details-pro">
+                            <span className="user-name-pro">{order.userName}</span>
+                            <span className="user-loc-pro">
+                              <MapPin size={12} />
+                              {order.neighborhood}, {order.city}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="card-actions-pro">
+                        <button className="btn-details-pro" onClick={() => setSelectedOrder(order)}>
+                          <Eye size={16} />
+                          Detalhes
                         </button>
-                        <button 
-                          className="btn-v-help" 
-                          onClick={() => {
-                            setOrderToHelp(order);
-                            toast.success('Que gesto lindo! Vamos conectar vocês.');
-                          }}
-                          data-tooltip-id="help-tooltip"
-                          data-tooltip-content="Oferecer ajuda"
-                          aria-label={`Ajudar ${order.userName} com ${order.title}`}
-                        >
-                          <Heart size={18} />
-                          Ajudar
+                        <button className="btn-help-pro" onClick={() => setOrderToHelp(order)}>
+                          <Heart size={16} />
+                          Quero Ajudar
                         </button>
                       </div>
                     </div>
@@ -1161,6 +1113,42 @@ export default function DesktopQueroAjudar() {
           delayShow={300}
         />
       </div>
+
+      {showLocationModal && (
+        <div className="qa-modal-overlay" onClick={() => setShowLocationModal(false)}>
+          <div 
+            className="location-alert-modal"
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'white',
+              padding: '32px',
+              borderRadius: '16px',
+              maxWidth: '400px',
+              textAlign: 'center',
+              animation: 'modalSlideIn 0.3s ease-out'
+            }}
+          >
+            <MapPin size={48} color="#10b981" style={{ marginBottom: '16px' }} />
+            <h3 style={{ marginBottom: '12px', color: '#1e293b' }}>{locationMessage}</h3>
+            <button 
+              onClick={() => setShowLocationModal(false)}
+              style={{
+                marginTop: '20px',
+                padding: '12px 32px',
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: '600'
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

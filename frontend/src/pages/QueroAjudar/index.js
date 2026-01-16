@@ -1109,19 +1109,16 @@ export default function QueroAjudarPage() {
             }
             
             setUserLocation({ state: detectedState, city: detectedCity });
-            toast.success(`Localização detectada: ${detectedCity}, ${detectedState}`);
             setTimeout(() => setIsLoading(false), 1000);
           },
           (error) => {
             console.log('Location access denied');
             setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-            toast.success('Usando Belo Horizonte como localização padrão.');
             setTimeout(() => setIsLoading(false), 1000);
           }
         );
       } else {
         setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-        toast.success('Usando Belo Horizonte como localização padrão.');
         setTimeout(() => setIsLoading(false), 1000);
       }
     };
