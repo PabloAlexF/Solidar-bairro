@@ -318,6 +318,74 @@ const ApiService = {
 
   async getNeighborhoodStats() {
     return this.request('/stats/neighborhood');
+  },
+
+  // Painel Social - Famílias
+  async getFamilias() {
+    return this.request('/familias');
+  },
+
+  async getFamiliasByBairro(bairro) {
+    return this.request(`/familias/bairro/${encodeURIComponent(bairro)}`);
+  },
+
+  async getStatsByBairro(bairro) {
+    return this.request(`/familias/stats/${encodeURIComponent(bairro)}`);
+  },
+
+  async createFamiliaPanel(data) {
+    return this.request('/familias', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateFamiliaPanel(id, data) {
+    return this.request(`/familias/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async deleteFamiliaPanel(id) {
+    return this.request(`/familias/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // Painel Social - Comércios
+  async getComercios() {
+    return this.request('/comercios');
+  },
+
+  async getComerciosByBairro(bairro) {
+    return this.request(`/comercios?bairro=${encodeURIComponent(bairro)}`);
+  },
+
+  // Painel Social - ONGs
+  async getOngs() {
+    return this.request('/ongs');
+  },
+
+  async getOngsByBairro(bairro) {
+    return this.request(`/ongs?bairro=${encodeURIComponent(bairro)}`);
+  },
+
+  // Painel Social - Dashboard
+  async getPainelDashboard(bairro) {
+    return this.request(`/painel-social/dashboard/${encodeURIComponent(bairro)}`);
+  },
+
+  async getPainelPedidos(bairro) {
+    return this.request(`/painel-social/pedidos?bairro=${encodeURIComponent(bairro)}`);
+  },
+
+  async getPainelComercios(bairro) {
+    return this.request(`/painel-social/comercios?bairro=${encodeURIComponent(bairro)}`);
+  },
+
+  async getPainelOngs(bairro) {
+    return this.request(`/painel-social/ongs?bairro=${encodeURIComponent(bairro)}`);
   }
 };
 

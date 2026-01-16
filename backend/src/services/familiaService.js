@@ -89,6 +89,42 @@ class FamiliaService {
     await this.db.collection(this.collection).doc(id).update(updateData);
     return { id, ...updateData };
   }
+
+  async deleteFamilia(id) {
+    await this.db.collection(this.collection).doc(id).delete();
+  }
+
+  async getFamiliasByBairro(bairro) {
+    const snapshot = await this.db.collection(this.collection)
+      .where('endereco.bairro', '==', bairro)
+      .get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  async getStatsByBairro(bairro) {
+    const familias = await this.getFamiliasByBairro(bairro);
+    
+    const stats = {
+      total: familias.length,
+      pessoas: 0,
+      criancas: 0,
+      idosos: 0,
+      altaVuln: 0,
+      pendentes: 0,
+      atendidos: 0
+    };
+
+    familias.forEach(f => {
+      stats.pessoas += f.composicao?.totalMembros || 0;
+      stats.criancas += f.composicao?.criancas || 0;
+      stats.idosos += f.composicao?.idosos || 0;
+      if (f.vulnerability === 'Alta') stats.altaVuln++;
+      if (f.status === 'pendente') stats.pendentes++;
+      if (f.status === 'atendido') stats.atendidos++;
+    });
+
+    return stats;
+  }
 }
 
 module.exports = new FamiliaService();

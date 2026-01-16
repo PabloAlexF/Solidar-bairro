@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
+import ApiService from '../../services/apiService';
 import {
   ChevronDown,
   Search,
@@ -59,6 +61,9 @@ export default function PainelSocial() {
   const [bairroOpen, setBairroOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [families, setFamilies] = useState([]);
+  const [pedidosData, setPedidosData] = useState([]);
+  const [comerciosData, setComerciosData] = useState([]);
+  const [ongsData, setOngsData] = useState([]);
   const [selectedFamily, setSelectedFamily] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingFamily, setEditingFamily] = useState(null);
@@ -88,21 +93,60 @@ export default function PainelSocial() {
   const menuRef = useRef(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("solidar-familias");
-    if (stored) {
-      setFamilies(JSON.parse(stored));
-    } else {
-      const initial = [
-        { id: 1, name: "Família Silva", vulnerability: "Alta", urgency: "Crítica", members: 5, children: 2, elderly: 1, income: "Sem renda", bairro: "São Benedito", lat: -19.768, lng: -43.85, color: "#dc2626", phone: "(31) 99999-1111", address: "Rua das Flores, 123", status: "ativo", lastUpdate: "2024-01-15" },
-        { id: 2, name: "Família Santos", vulnerability: "Média", urgency: "Média", members: 3, children: 1, elderly: 0, income: "1 salário", bairro: "São Benedito", lat: -19.77, lng: -43.852, color: "#d97706", phone: "(31) 99999-2222", address: "Av. Principal, 456", status: "atendido", lastUpdate: "2024-01-14" },
-        { id: 3, name: "Família Oliveira", vulnerability: "Baixa", urgency: "Baixa", members: 4, children: 2, elderly: 0, income: "2 salários", bairro: "São Benedito", lat: -19.772, lng: -43.848, color: "#059669", phone: "(31) 99999-3333", address: "Rua do Comércio, 789", status: "ativo", lastUpdate: "2024-01-13" },
-        { id: 4, name: "Família Pereira", vulnerability: "Alta", urgency: "Alta", members: 6, children: 3, elderly: 1, income: "Auxílio", bairro: "São Benedito", lat: -19.766, lng: -43.854, color: "#dc2626", phone: "(31) 99999-4444", address: "Beco da Esperança, 10", status: "pendente", lastUpdate: "2024-01-12" },
-        { id: 5, name: "Família Costa", vulnerability: "Média", urgency: "Média", members: 4, children: 2, elderly: 1, income: "1/2 salário", bairro: "Palmital", lat: -19.775, lng: -43.845, color: "#d97706", phone: "(31) 99999-5555", address: "Rua Nova, 321", status: "ativo", lastUpdate: "2024-01-11" },
-      ];
-      setFamilies(initial);
-      localStorage.setItem("solidar-familias", JSON.stringify(initial));
+    loadFamilias();
+    loadPainelData();
+  }, [bairro]);
+
+  const loadPainelData = async () => {
+    try {
+      const [pedidosRes, comerciosRes, ongsRes] = await Promise.all([
+        ApiService.getPainelPedidos(bairro),
+        ApiService.getPainelComercios(bairro),
+        ApiService.getPainelOngs(bairro)
+      ]);
+
+      if (pedidosRes.success) setPedidosData(pedidosRes.data);
+      if (comerciosRes.success) setComerciosData(comerciosRes.data);
+      if (ongsRes.success) setOngsData(ongsRes.data);
+    } catch (error) {
+      console.error('Erro ao carregar dados do painel:', error);
     }
-  }, []);
+  };
+
+  const loadFamilias = async () => {
+    try {
+      const response = await ApiService.getFamiliasByBairro(bairro);
+      if (response.success) {
+        const formatted = response.data.map(f => ({
+          id: f.id,
+          name: f.nomeCompleto || f.name,
+          vulnerability: f.vulnerability || 'Média',
+          urgency: f.urgency || 'Média',
+          members: f.composicao?.totalMembros || f.members || 1,
+          children: f.composicao?.criancas || f.children || 0,
+          elderly: f.composicao?.idosos || f.elderly || 0,
+          income: f.rendaFamiliar || f.income || 'Sem renda',
+          bairro: f.endereco?.bairro || bairro,
+          lat: f.endereco?.latitude || f.lat || -19.768,
+          lng: f.endereco?.longitude || f.lng || -43.85,
+          color: f.vulnerability === 'Alta' ? '#dc2626' : f.vulnerability === 'Média' ? '#d97706' : '#059669',
+          phone: f.telefone || f.phone || '',
+          address: f.endereco?.logradouro ? `${f.endereco.logradouro}, ${f.endereco.numero}` : f.address || '',
+          status: f.status || 'ativo',
+          lastUpdate: f.atualizadoEm ? new Date(f.atualizadoEm.seconds * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        }));
+        setFamilies(formatted);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar famílias:', error);
+      toast.error('Erro ao carregar famílias');
+      // Fallback para dados locais
+      const stored = localStorage.getItem("solidar-familias");
+      if (stored) {
+        setFamilies(JSON.parse(stored));
+      }
+    }
+  };
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -142,31 +186,67 @@ export default function PainelSocial() {
     };
   }, [families, bairro]);
 
-  const saveFamily = () => {
-    if (!formData.name) return;
-    const newFamily = {
-      id: editingFamily?.id || Date.now(),
-      ...formData,
-      urgency: formData.vulnerability === "Alta" ? "Alta" : formData.vulnerability === "Média" ? "Média" : "Baixa",
-      bairro,
-      lat: editingFamily?.lat || -19.768 + (Math.random() - 0.5) * 0.015,
-      lng: editingFamily?.lng || -43.85 + (Math.random() - 0.5) * 0.015,
-      color: formData.vulnerability === "Alta" ? "#dc2626" : formData.vulnerability === "Média" ? "#d97706" : "#059669",
-      status: editingFamily?.status || "ativo",
-      lastUpdate: new Date().toISOString().split("T")[0],
-    };
-    const updated = editingFamily ? families.map((f) => (f.id === editingFamily.id ? newFamily : f)) : [...families, newFamily];
-    setFamilies(updated);
-    localStorage.setItem("solidar-familias", JSON.stringify(updated));
-    resetForm();
+  const saveFamily = async () => {
+    if (!formData.name) {
+      toast.error('Nome da família é obrigatório');
+      return;
+    }
+
+    try {
+      const familyData = {
+        nomeCompleto: formData.name,
+        vulnerability: formData.vulnerability,
+        composicao: {
+          totalMembros: formData.members,
+          criancas: formData.children,
+          idosos: formData.elderly
+        },
+        rendaFamiliar: formData.income,
+        telefone: formData.phone,
+        endereco: {
+          logradouro: formData.address,
+          bairro: bairro,
+          latitude: editingFamily?.lat || -19.768 + (Math.random() - 0.5) * 0.015,
+          longitude: editingFamily?.lng || -43.85 + (Math.random() - 0.5) * 0.015
+        },
+        status: editingFamily?.status || 'ativo'
+      };
+
+      if (editingFamily) {
+        const response = await ApiService.updateFamiliaPanel(editingFamily.id, familyData);
+        if (response.success) {
+          toast.success('Família atualizada com sucesso!');
+          await loadFamilias();
+        }
+      } else {
+        const response = await ApiService.createFamiliaPanel(familyData);
+        if (response.success) {
+          toast.success('Família cadastrada com sucesso!');
+          await loadFamilias();
+        }
+      }
+      resetForm();
+    } catch (error) {
+      console.error('Erro ao salvar família:', error);
+      toast.error(error.message || 'Erro ao salvar família');
+    }
   };
 
-  const deleteFamily = (id) => {
-    const updated = families.filter((f) => f.id !== id);
-    setFamilies(updated);
-    localStorage.setItem("solidar-familias", JSON.stringify(updated));
-    setSelectedFamily(null);
-    setOpenMenu(null);
+  const deleteFamily = async (id) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta família?')) return;
+    
+    try {
+      const response = await ApiService.deleteFamiliaPanel(id);
+      if (response.success) {
+        toast.success('Família excluída com sucesso!');
+        await loadFamilias();
+        setSelectedFamily(null);
+        setOpenMenu(null);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir família:', error);
+      toast.error('Erro ao excluir família');
+    }
   };
 
   const resetForm = () => {
@@ -194,10 +274,17 @@ export default function PainelSocial() {
     a.click();
   };
 
-  const updateStatus = (id, status) => {
-    const updated = families.map((f) => (f.id === id ? { ...f, status, lastUpdate: new Date().toISOString().split("T")[0] } : f));
-    setFamilies(updated);
-    localStorage.setItem("solidar-familias", JSON.stringify(updated));
+  const updateStatus = async (id, status) => {
+    try {
+      const response = await ApiService.updateFamiliaPanel(id, { status });
+      if (response.success) {
+        await loadFamilias();
+        toast.success('Status atualizado!');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Erro ao atualizar status');
+    }
   };
 
   const toggleLayer = (key) => setMapLayers((p) => ({ ...p, [key]: !p[key] }));
@@ -416,12 +503,21 @@ export default function PainelSocial() {
             <div className="map-layout">
               <div className="map-container">
                 <Suspense fallback={<div className="map-skeleton"><div className="map-loader" /><span>Carregando mapa...</span></div>}>
-                  <MapaInterativo familias={filteredFamilies} pedidos={MOCK_DATA.pedidos} comercios={MOCK_DATA.comercios} ongs={MOCK_DATA.ongs} pontosColeta={MOCK_DATA.pontosColeta} zonasRisco={MOCK_DATA.zonasRisco} layers={mapLayers} zoom={15} />
+                  <MapaInterativo 
+                    familias={filteredFamilies} 
+                    pedidos={pedidosData.length > 0 ? pedidosData : MOCK_DATA.pedidos} 
+                    comercios={comerciosData.length > 0 ? comerciosData : MOCK_DATA.comercios} 
+                    ongs={ongsData.length > 0 ? ongsData : MOCK_DATA.ongs} 
+                    pontosColeta={MOCK_DATA.pontosColeta} 
+                    zonasRisco={MOCK_DATA.zonasRisco} 
+                    layers={mapLayers} 
+                    zoom={15} 
+                  />
                 </Suspense>
                 <div className="map-stats-overlay">
                   <div className="map-stat"><strong>{filteredFamilies.length}</strong><span>Famílias</span></div>
-                  <div className="map-stat"><strong>{MOCK_DATA.pedidos.length}</strong><span>Pedidos</span></div>
-                  <div className="map-stat"><strong>{MOCK_DATA.comercios.length}</strong><span>Comércios</span></div>
+                  <div className="map-stat"><strong>{pedidosData.length || MOCK_DATA.pedidos.length}</strong><span>Pedidos</span></div>
+                  <div className="map-stat"><strong>{comerciosData.length || MOCK_DATA.comercios.length}</strong><span>Comércios</span></div>
                 </div>
               </div>
               <div className="map-controls">

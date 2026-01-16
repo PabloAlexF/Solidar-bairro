@@ -36,6 +36,33 @@ class FamiliaController {
       res.status(400).json({ success: false, error: error.message });
     }
   }
+
+  async deleteFamilia(req, res) {
+    try {
+      await familiaService.deleteFamilia(req.params.id);
+      res.json({ success: true, message: 'Família excluída com sucesso' });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  async getFamiliasByBairro(req, res) {
+    try {
+      const familias = await familiaService.getFamiliasByBairro(req.params.bairro);
+      res.json({ success: true, data: familias });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  async getStatsByBairro(req, res) {
+    try {
+      const stats = await familiaService.getStatsByBairro(req.params.bairro);
+      res.json({ success: true, data: stats });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new FamiliaController();
