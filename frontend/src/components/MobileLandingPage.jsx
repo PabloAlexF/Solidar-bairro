@@ -22,7 +22,8 @@ import {
   Instagram,
   Twitter,
   Facebook,
-  Settings
+  Settings,
+  Shield
 } from 'lucide-react';
 
 import './mobile.css';
@@ -175,25 +176,46 @@ export const MobileLandingPage = () => {
           </div>
           <div className="header-actions">
             {isAdmin && (
-              <button 
-                onClick={() => navigate('/admin')}
-                style={{
-                  background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                  border: 'none',
-                  color: 'white',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  marginRight: '8px',
-                  boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
-                }}
-              >
-                <Settings size={18} />
-              </button>
+              <>
+                <button 
+                  onClick={() => navigate('/admin')}
+                  style={{
+                    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                    border: 'none',
+                    color: 'white',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    marginRight: '8px',
+                    boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
+                  }}
+                >
+                  <Settings size={18} />
+                </button>
+                <button 
+                  onClick={() => navigate('/painel-social')}
+                  style={{
+                    background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+                    border: 'none',
+                    color: 'white',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    marginRight: '8px',
+                    boxShadow: '0 2px 8px rgba(13, 148, 136, 0.3)'
+                  }}
+                >
+                  <Shield size={18} />
+                </button>
+              </>
             )}
             {!isAuthenticated() ? (
               <button className="header-cta" onClick={() => navigate('/cadastro')}>

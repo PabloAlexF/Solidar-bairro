@@ -29,7 +29,8 @@ import {
   Sparkles,
   Copy,
   Share2,
-  Settings
+  Settings,
+  Shield
 } from 'lucide-react';
 
 import './styles.css';
@@ -403,36 +404,68 @@ export default function DesktopLandingPage() {
             ) : (
               <div className="user-section">
                 {isAdmin && (
-                  <button 
-                    className="admin-dashboard-btn"
-                    onClick={() => navigate('/admin')}
-                    title="Dashboard Admin"
-                    style={{
-                      background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                      border: 'none',
-                      color: 'white',
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
-                      marginRight: '1rem'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
-                    }}
-                  >
-                    <Settings size={20} />
-                  </button>
+                  <>
+                    <button 
+                      className="admin-dashboard-btn"
+                      onClick={() => navigate('/admin')}
+                      title="Dashboard Admin"
+                      style={{
+                        background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                        border: 'none',
+                        color: 'white',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+                        marginRight: '0.5rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.transform = 'translateY(-2px)';
+                        e.target.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
+                      }}
+                    >
+                      <Settings size={20} />
+                    </button>
+                    <button 
+                      className="admin-dashboard-btn"
+                      onClick={() => navigate('/painel-social')}
+                      title="Painel Social"
+                      style={{
+                        background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+                        border: 'none',
+                        color: 'white',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
+                        marginRight: '1rem'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.transform = 'translateY(-2px)';
+                        e.target.style.boxShadow = '0 6px 20px rgba(13, 148, 136, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = '0 4px 12px rgba(13, 148, 136, 0.3)';
+                      }}
+                    >
+                      <Shield size={20} />
+                    </button>
+                  </>
                 )}
                 
                 <div className="notification-wrapper">
