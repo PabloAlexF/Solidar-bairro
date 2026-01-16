@@ -306,15 +306,27 @@ export const MobileLandingPage = () => {
 
         <section className="mobile-cta-section">
           {isAuthenticated() ? (
-            <div className="cta-card" onClick={() => navigate('/quero-ajudar')}>
-              <div className="cta-text">
-                <h3>Comece ajudando o próximo</h3>
-                <p>Veja quem precisa de você</p>
+            isAdmin ? (
+              <div className="cta-card" onClick={() => navigate('/painel-social')}>
+                <div className="cta-text">
+                  <h3>Explorar Plataforma</h3>
+                  <p>Acesse o painel administrativo</p>
+                </div>
+                <div className="cta-icon">
+                  <ArrowRight size={24} />
+                </div>
               </div>
-              <div className="cta-icon">
-                <ArrowRight size={24} />
+            ) : (
+              <div className="cta-card" onClick={() => navigate('/quero-ajudar')}>
+                <div className="cta-text">
+                  <h3>Comece ajudando o próximo</h3>
+                  <p>Veja quem precisa de você</p>
+                </div>
+                <div className="cta-icon">
+                  <ArrowRight size={24} />
+                </div>
               </div>
-            </div>
+            )
           ) : (
             <div className="cta-card" onClick={() => navigate('/cadastro')}>
               <div className="cta-text">
