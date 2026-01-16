@@ -38,18 +38,21 @@ class PainelSocialService {
   }
 
   async getPedidosAjuda(bairro) {
-    const snapshot = await this.db.collection('pedidos')
-      .where('bairro', '==', bairro)
-      .where('status', 'in', ['ativo', 'pendente'])
-      .orderBy('criadoEm', 'desc')
-      .limit(50)
-      .get();
+    let query = this.db.collection('pedidos');
     
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      tipo: 'pedido'
-    }));
+    if (bairro) {
+      query = query.where('bairro', '==', bairro);
+    }
+    
+    const snapshot = await query.limit(50).get();
+    
+    return snapshot.docs
+      .map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        tipo: 'pedido'
+      }))
+      .filter(p => p.status === 'ativo' || p.status === 'pendente');
   }
 
   async getComerciosParceiros(bairro) {
