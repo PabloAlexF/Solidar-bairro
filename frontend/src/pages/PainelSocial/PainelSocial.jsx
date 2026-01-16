@@ -503,7 +503,8 @@ export default function PainelSocial() {
                     ongs={ongsData} 
                     pontosColeta={[]} 
                     zonasRisco={[]} 
-                    layers={mapLayers} 
+                    layers={mapLayers}
+                    onFamiliaClick={setSelectedFamily}
                     zoom={15} 
                   />
                 </Suspense>

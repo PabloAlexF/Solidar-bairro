@@ -25,6 +25,8 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   padding: 2rem 0;
 }
@@ -578,6 +580,25 @@
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1rem;
   margin-bottom: 2.5rem;
+}
+
+.fam-reg-family-grid-enhanced {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .fam-reg-family-grid-enhanced {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .fam-reg-family-grid-enhanced {
+    grid-template-columns: 1fr;
+  }
 }
 
 .fam-reg-family-card-input {
@@ -1272,11 +1293,13 @@
 }
 
 .fam-reg-form-card-new {
-  background: white;
-  border-radius: 2.5rem;
-  box-shadow: var(--fam-reg-shadow-lg);
-  overflow: hidden;
-  border: 1px solid var(--fam-reg-border);
+    width: 100%;
+    max-width: 1200px;
+    background: white;
+    border-radius: 2.5rem;
+    box-shadow: var(--fam-reg-shadow-lg);
+    overflow: hidden;
+    border: 1px solid var(--fam-reg-border);
 }
 
 .fam-reg-success-grid {
@@ -1454,6 +1477,63 @@
 }
 
 /* Utility Classes */
+.fam-reg-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 900;
+  animation: fam-reg-slideUp 0.4s ease-out;
+  max-width: 400px;
+  width: 90%;
+}
+
+.fam-reg-toast-content {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--fam-reg-shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-left: 4px solid;
+}
+
+.fam-reg-toast-error .fam-reg-toast-content {
+  border-left-color: #ef4444;
+}
+
+.fam-reg-toast-success .fam-reg-toast-content {
+  border-left-color: #22c55e;
+}
+
+.fam-reg-toast-message {
+  flex: 1;
+  color: var(--fam-reg-text-main);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.fam-reg-toast-close {
+  background: none;
+  border: none;
+  color: var(--fam-reg-text-muted);
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: all 0.2s;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fam-reg-toast-close:hover {
+  color: #111827;
+}
+
 .fam-reg-toast-overlay {
   position: fixed;
   bottom: 2rem;
@@ -1658,21 +1738,22 @@
 }
 
 /* Card Radio Grid with ID */
-.fam-reg-card-radio-grid-moradi {
+.fam-reg-card-radio-grid-moradia {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
 }
 
-.fam-reg-card-radio-grid-rend {
+.fam-reg-card-radio-grid-renda {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+  grid-column: span 2;
 }
 
 @media (max-width: 768px) {
-  .fam-reg-card-radio-grid-moradi,
-  .fam-reg-card-radio-grid-rend {
+  .fam-reg-card-radio-grid-moradia,
+  .fam-reg-card-radio-grid-renda {
     grid-template-columns: 1fr;
   }
 }
@@ -1685,6 +1766,86 @@
 .fam-reg-need-label {
   font-weight: 600;
   color: #374151;
+}
+
+/* Final Step Section - "Quase Pronto!" */
+.fam-reg-final-step-section {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--fam-reg-border);
+}
+
+.fam-reg-final-card {
+  background: linear-gradient(135deg, var(--fam-reg-primary-light) 0%, #fff7ed 100%);
+  border: 2px solid var(--fam-reg-primary);
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  text-align: center;
+  box-shadow: 0 10px 30px -5px rgba(249, 115, 22, 0.15);
+}
+
+.fam-reg-final-title {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--fam-reg-primary);
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+}
+
+.fam-reg-final-text {
+  font-size: 1.125rem;
+  color: var(--fam-reg-text-main);
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+  font-weight: 500;
+}
+
+.fam-reg-final-warning {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid #fed7aa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.fam-reg-warning-icon {
+  flex-shrink: 0;
+  color: var(--fam-reg-primary);
+}
+
+.fam-reg-warning-text {
+  font-size: 1rem;
+  color: var(--fam-reg-text-muted);
+  line-height: 1.5;
+  margin: 0;
+  text-align: left;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .fam-reg-final-card {
+    padding: 2rem;
+  }
+  
+  .fam-reg-final-title {
+    font-size: 1.75rem;
+  }
+  
+  .fam-reg-final-text {
+    font-size: 1rem;
+  }
+  
+  .fam-reg-final-warning {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .fam-reg-warning-text {
+    text-align: center;
+  }
 }
 
 /* Responsive Design */

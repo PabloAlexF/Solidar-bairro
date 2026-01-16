@@ -366,8 +366,8 @@ export default function CadastroFamiliaDesktop() {
                 </div>
               </div>
               <div className="fam-reg-success-actions">
-                <Link href="/" className="fam-reg-btn-base fam-reg-btn-primary">Início</Link>
-                <button className="fam-reg-btn-base fam-reg-btn-secondary">Acessar Painel</button>
+                <Link to="/" className="fam-reg-btn-base fam-reg-btn-primary">Início</Link>
+                <Link to="/quero-ajudar" className="fam-reg-btn-base fam-reg-btn-secondary">Ver meu pedido</Link>
               </div>
             </div>
           </div>
@@ -384,7 +384,7 @@ export default function CadastroFamiliaDesktop() {
       </div>
 
       <nav className="fam-reg-navbar">
-        <Link href="/" className="fam-reg-back-link">
+        <Link to="/" className="fam-reg-back-link">
           <div className="fam-reg-back-icon">
             <ArrowLeft size={20} />
           </div>
