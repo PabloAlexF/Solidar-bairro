@@ -34,27 +34,6 @@ const MapaInterativo = lazy(() => import("./MapaInterativo"));
 
 const BAIRROS = ["São Benedito", "Palmital", "Palmital A", "Palmital B", "Boa Esperança", "Bom Destino"];
 
-const MOCK_DATA = {
-  pedidos: [
-    { id: "p1", lat: -19.767, lng: -43.849, titulo: "Cesta básica urgente", tipo: "pedido", categoria: "Alimentação", status: "Urgente" },
-    { id: "p2", lat: -19.771, lng: -43.853, titulo: "Roupas infantis", tipo: "oferta", categoria: "Vestuário", status: "Disponível" },
-    { id: "p3", lat: -19.769, lng: -43.847, titulo: "Remédios", tipo: "pedido", categoria: "Saúde", status: "Pendente" },
-  ],
-  comercios: [
-    { id: "c1", lat: -19.7685, lng: -43.8515, nome: "Mercado Bom Preço", tipo: "Supermercado", parceiro: true, moedaSolidaria: true },
-    { id: "c2", lat: -19.7705, lng: -43.8495, nome: "Farmácia Popular", tipo: "Farmácia", parceiro: true, moedaSolidaria: false },
-  ],
-  ongs: [
-    { id: "o1", lat: -19.7695, lng: -43.8505, nome: "Casa da Criança", servicos: ["Reforço escolar", "Alimentação"], contato: "(31) 3333-1111" },
-  ],
-  pontosColeta: [
-    { id: "pc1", lat: -19.7675, lng: -43.8535, nome: "Central de Coleta", itens: ["Alimentos", "Roupas"], horario: "Seg-Sex 8h-17h" },
-  ],
-  zonasRisco: [
-    { id: "z1", coords: [[-19.765, -43.856], [-19.765, -43.852], [-19.768, -43.852], [-19.768, -43.856]], tipo: "enchente", nivel: "alto" },
-  ],
-};
-
 export default function PainelSocial() {
   const navigate = useNavigate();
   const [bairro, setBairro] = useState("São Benedito");
@@ -95,7 +74,8 @@ export default function PainelSocial() {
   useEffect(() => {
     loadFamilias();
     loadPainelData();
-  }, [bairro]);
+    // eslint-disable-next-line
+  }, []);
 
   const loadPainelData = async () => {
     try {
@@ -115,36 +95,50 @@ export default function PainelSocial() {
 
   const loadFamilias = async () => {
     try {
-      const response = await ApiService.getFamiliasByBairro(bairro);
+      console.log('🔄 Carregando famílias...');
+      const response = await ApiService.getFamilias();
+      console.log('📦 Resposta da API:', response);
+      
       if (response.success) {
-        const formatted = response.data.map(f => ({
-          id: f.id,
-          name: f.nomeCompleto || f.name,
-          vulnerability: f.vulnerability || 'Média',
-          urgency: f.urgency || 'Média',
-          members: f.composicao?.totalMembros || f.members || 1,
-          children: f.composicao?.criancas || f.children || 0,
-          elderly: f.composicao?.idosos || f.elderly || 0,
-          income: f.rendaFamiliar || f.income || 'Sem renda',
-          bairro: f.endereco?.bairro || bairro,
-          lat: f.endereco?.latitude || f.lat || -19.768,
-          lng: f.endereco?.longitude || f.lng || -43.85,
-          color: f.vulnerability === 'Alta' ? '#dc2626' : f.vulnerability === 'Média' ? '#d97706' : '#059669',
-          phone: f.telefone || f.phone || '',
-          address: f.endereco?.logradouro ? `${f.endereco.logradouro}, ${f.endereco.numero}` : f.address || '',
-          status: f.status || 'ativo',
-          lastUpdate: f.atualizadoEm ? new Date(f.atualizadoEm.seconds * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-        }));
+        const formatted = response.data.map(f => {
+          const endereco = f.endereco || {};
+          const address = endereco.endereco 
+            ? `${endereco.endereco}, ${endereco.bairro || ''}` 
+            : (endereco.logradouro 
+                ? `${endereco.logradouro}${endereco.numero ? ', ' + endereco.numero : ''}` 
+                : f.address || 'Endereço não informado');
+          
+          return {
+            id: f.id,
+            name: f.nomeCompleto || f.name || 'Sem nome',
+            vulnerability: f.vulnerability || 'Média',
+            urgency: f.urgency || f.vulnerability || 'Média',
+            members: f.composicao?.totalMembros || f.members || 1,
+            children: f.composicao?.criancas || f.children || 0,
+            elderly: f.composicao?.idosos || f.elderly || 0,
+            income: f.rendaFamiliar || f.income || 'Sem renda',
+            bairro: endereco.bairro || f.bairro || bairro,
+            lat: endereco.latitude || f.lat || -19.768 + (Math.random() - 0.5) * 0.01,
+            lng: endereco.longitude || f.lng || -43.85 + (Math.random() - 0.5) * 0.01,
+            color: (f.vulnerability === 'Alta' || f.urgency === 'Alta') ? '#dc2626' : 
+                   (f.vulnerability === 'Média' || f.urgency === 'Média') ? '#d97706' : '#059669',
+            phone: f.telefone || f.phone || '',
+            address,
+            status: f.status === 'pending' ? 'pendente' : f.status || 'ativo',
+            lastUpdate: f.atualizadoEm 
+              ? (f.atualizadoEm.seconds 
+                  ? new Date(f.atualizadoEm.seconds * 1000).toISOString().split('T')[0]
+                  : (typeof f.atualizadoEm === 'string' ? f.atualizadoEm.split('T')[0] : new Date().toISOString().split('T')[0]))
+              : new Date().toISOString().split('T')[0]
+          };
+        });
         setFamilies(formatted);
+        console.log(`✅ ${formatted.length} famílias carregadas do banco`);
+        console.log('📍 Famílias:', formatted.map(f => ({ id: f.id, name: f.name, bairro: f.bairro })));
       }
     } catch (error) {
-      console.error('Erro ao carregar famílias:', error);
-      toast.error('Erro ao carregar famílias');
-      // Fallback para dados locais
-      const stored = localStorage.getItem("solidar-familias");
-      if (stored) {
-        setFamilies(JSON.parse(stored));
-      }
+      console.error('❌ Erro ao carregar famílias:', error);
+      toast.error('Erro ao carregar famílias do banco');
     }
   };
 
@@ -162,7 +156,7 @@ export default function PainelSocial() {
   }, []);
 
   const filteredFamilies = useMemo(() => {
-    let result = families.filter((f) => f.bairro === bairro);
+    let result = families;
     if (searchQuery) {
       result = result.filter((f) => f.name.toLowerCase().includes(searchQuery.toLowerCase()) || f.address?.toLowerCase().includes(searchQuery.toLowerCase()));
     }
@@ -171,20 +165,19 @@ export default function PainelSocial() {
     if (activeFilter === "idosos") result = result.filter((f) => f.elderly > 0);
     if (activeFilter === "pendente") result = result.filter((f) => f.status === "pendente");
     return result;
-  }, [families, bairro, searchQuery, activeFilter]);
+  }, [families, searchQuery, activeFilter]);
 
   const stats = useMemo(() => {
-    const bairroFamilies = families.filter((f) => f.bairro === bairro);
     return {
-      total: bairroFamilies.length,
-      pessoas: bairroFamilies.reduce((a, f) => a + f.members, 0),
-      criancas: bairroFamilies.reduce((a, f) => a + f.children, 0),
-      idosos: bairroFamilies.reduce((a, f) => a + f.elderly, 0),
-      altaVuln: bairroFamilies.filter((f) => f.vulnerability === "Alta").length,
-      pendentes: bairroFamilies.filter((f) => f.status === "pendente").length,
-      atendidos: bairroFamilies.filter((f) => f.status === "atendido").length,
+      total: families.length,
+      pessoas: families.reduce((a, f) => a + f.members, 0),
+      criancas: families.reduce((a, f) => a + f.children, 0),
+      idosos: families.reduce((a, f) => a + f.elderly, 0),
+      altaVuln: families.filter((f) => f.vulnerability === "Alta").length,
+      pendentes: families.filter((f) => f.status === "pendente").length,
+      atendidos: families.filter((f) => f.status === "atendido").length,
     };
-  }, [families, bairro]);
+  }, [families]);
 
   const saveFamily = async () => {
     if (!formData.name) {
@@ -505,19 +498,19 @@ export default function PainelSocial() {
                 <Suspense fallback={<div className="map-skeleton"><div className="map-loader" /><span>Carregando mapa...</span></div>}>
                   <MapaInterativo 
                     familias={filteredFamilies} 
-                    pedidos={pedidosData.length > 0 ? pedidosData : MOCK_DATA.pedidos} 
-                    comercios={comerciosData.length > 0 ? comerciosData : MOCK_DATA.comercios} 
-                    ongs={ongsData.length > 0 ? ongsData : MOCK_DATA.ongs} 
-                    pontosColeta={MOCK_DATA.pontosColeta} 
-                    zonasRisco={MOCK_DATA.zonasRisco} 
+                    pedidos={pedidosData} 
+                    comercios={comerciosData} 
+                    ongs={ongsData} 
+                    pontosColeta={[]} 
+                    zonasRisco={[]} 
                     layers={mapLayers} 
                     zoom={15} 
                   />
                 </Suspense>
                 <div className="map-stats-overlay">
                   <div className="map-stat"><strong>{filteredFamilies.length}</strong><span>Famílias</span></div>
-                  <div className="map-stat"><strong>{pedidosData.length || MOCK_DATA.pedidos.length}</strong><span>Pedidos</span></div>
-                  <div className="map-stat"><strong>{comerciosData.length || MOCK_DATA.comercios.length}</strong><span>Comércios</span></div>
+                  <div className="map-stat"><strong>{pedidosData.length}</strong><span>Pedidos</span></div>
+                  <div className="map-stat"><strong>{comerciosData.length}</strong><span>Comércios</span></div>
                 </div>
               </div>
               <div className="map-controls">

@@ -95,10 +95,10 @@ class FamiliaService {
   }
 
   async getFamiliasByBairro(bairro) {
-    const snapshot = await this.db.collection(this.collection)
-      .where('endereco.bairro', '==', bairro)
-      .get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const snapshot = await this.db.collection(this.collection).get();
+    const allFamilias = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log(`✅ ${allFamilias.length} famílias carregadas do banco`);
+    return allFamilias;
   }
 
   async getStatsByBairro(bairro) {
