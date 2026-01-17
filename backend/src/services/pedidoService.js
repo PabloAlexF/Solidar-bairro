@@ -41,7 +41,8 @@ class PedidoService {
       specialists: Array.isArray(data.specialists) ? data.specialists : [],
       isPublic: data.isPublic !== undefined ? data.isPublic : true,
       radius: data.radius || 5,
-      location: data.location?.address || data.location?.trim() || 'Localização não informada',
+      // Estrutura de localização corrigida
+      location: data.location?.address || data.locationString || 'Localização não informada',
       coordinates: data.location?.coordinates || data.coordinates || null,
       city: data.location?.city || data.city?.trim() || null,
       state: data.location?.state || data.state?.trim() || null,

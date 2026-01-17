@@ -116,6 +116,20 @@ class PedidoModel {
           }
         }
         
+        if (filters.neighborhood) {
+          let pedidoNeighborhood = pedidoData.neighborhood;
+          
+          // Se não tem neighborhood direto, extrair da location
+          if (!pedidoNeighborhood && pedidoData.location) {
+            const parts = pedidoData.location.split(',');
+            pedidoNeighborhood = parts[0]?.trim();
+          }
+          
+          if (pedidoNeighborhood !== filters.neighborhood) {
+            incluir = false;
+          }
+        }
+        
         // Filtro de tempo
         if (filters.timeframe) {
           const now = new Date();
@@ -152,6 +166,38 @@ class PedidoModel {
         if (incluir) {
           pedidos.push(pedido);
         }
+      }
+      
+      // Ordenar por proximidade se cidade do usuário for fornecida
+      if (filters.userCity && filters.userState) {
+        pedidos.sort((a, b) => {
+          // Prioridade 1: Mesma cidade
+          const aCityMatch = (a.city === filters.userCity);
+          const bCityMatch = (b.city === filters.userCity);
+          
+          if (aCityMatch && !bCityMatch) return -1;
+          if (!aCityMatch && bCityMatch) return 1;
+          
+          // Prioridade 2: Mesmo estado
+          const aStateMatch = (a.state === filters.userState);
+          const bStateMatch = (b.state === filters.userState);
+          
+          if (aStateMatch && !bStateMatch) return -1;
+          if (!aStateMatch && bStateMatch) return 1;
+          
+          // Prioridade 3: Urgência (crítico > urgente > moderada > tranquilo > recorrente)
+          const urgencyOrder = { 'critico': 0, 'urgente': 1, 'moderada': 2, 'tranquilo': 3, 'recorrente': 4 };
+          const aUrgency = urgencyOrder[a.urgency] || 5;
+          const bUrgency = urgencyOrder[b.urgency] || 5;
+          
+          if (aUrgency !== bUrgency) return aUrgency - bUrgency;
+          
+          // Prioridade 4: Data de criação (mais recente primeiro)
+          const aDate = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+          const bDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+          
+          return bDate - aDate;
+        });
       }
       
       return pedidos;

@@ -32,6 +32,9 @@ class PedidoController {
         urgency: req.query.urgency,
         city: req.query.city,
         state: req.query.state,
+        neighborhood: req.query.neighborhood,
+        userCity: req.query.userCity, // Cidade do usuário para ordenação por proximidade
+        userState: req.query.userState, // Estado do usuário
         timeframe: req.query.timeframe,
         onlyNew: req.query.onlyNew === 'true'
       };
@@ -124,6 +127,25 @@ class PedidoController {
       });
     } catch (error) {
       console.error('Erro ao deletar pedido:', error);
+      const status = error.message.includes('não encontrado') ? 404 : 500;
+      res.status(status).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async adminDelete(req, res) {
+    try {
+      const { id } = req.params;
+      await pedidoService.deletePedido(id);
+      
+      res.json({
+        success: true,
+        message: 'Pedido deletado pelo administrador'
+      });
+    } catch (error) {
+      console.error('Erro ao deletar pedido (admin):', error);
       const status = error.message.includes('não encontrado') ? 404 : 500;
       res.status(status).json({
         success: false,

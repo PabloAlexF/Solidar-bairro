@@ -30,7 +30,11 @@ import {
   Sofa,
   Tv,
   Car,
-  Receipt
+  Receipt,
+  Clock,
+  User,
+  FileText,
+  Package
 } from 'lucide-react';
 import LandingHeader from '../../components/layout/LandingHeader';
 import './styles.css';
@@ -481,7 +485,13 @@ export default function DesktopQueroAjudar() {
       setLoadingPedidos(true);
       setError(null);
       
-      const response = await ApiService.getPedidos();
+      // Adicionar localização do usuário aos filtros para ordenação por proximidade
+      const queryParams = new URLSearchParams();
+      if (userLocation?.city) queryParams.append('userCity', userLocation.city);
+      if (userLocation?.state) queryParams.append('userState', userLocation.state);
+      
+      const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      const response = await ApiService.get(`/pedidos${query}`);
       
       if (response.success && response.data) {
         // Transformar dados do backend para o formato esperado pelo frontend
@@ -591,6 +601,8 @@ export default function DesktopQueroAjudar() {
           setTimeout(() => {
             setIsLoading(false);
             setShowLocationModal(true);
+            // Recarregar pedidos com a nova localização
+            loadPedidos();
           }, 1000);
         },
         (error) => {
@@ -623,11 +635,7 @@ export default function DesktopQueroAjudar() {
 
   const filteredOrders = useMemo(() => {
     return pedidos.filter((order) => {
-      // Filtrar pedidos do próprio usuário
-      if (user && order.userId === user.uid) {
-        return false;
-      }
-      
+      // Filtrar pedidos do próprio usuário - eles podem ver mas não ajudar
       const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
       const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
       
@@ -668,6 +676,22 @@ export default function DesktopQueroAjudar() {
     toast.success(newContrast ? 'Alto contraste ativado' : 'Alto contraste desativado');
   };
 
+  const handleAdminDelete = async (pedidoId) => {
+    if (!window.confirm('Tem certeza que deseja excluir este pedido?')) {
+      return;
+    }
+    
+    try {
+      const response = await ApiService.delete(`/pedidos/${pedidoId}/admin`);
+      if (response.success) {
+        toast.success('Pedido excluído com sucesso');
+        loadPedidos();
+      }
+    } catch (error) {
+      toast.error('Erro ao excluir pedido');
+    }
+  };
+
   return (
     <div className="qa-page">
       <a href="#main-content" className="skip-link">Pular para o conteúdo principal</a>
@@ -675,7 +699,8 @@ export default function DesktopQueroAjudar() {
       
       {!selectedOrder && <LandingHeader scrolled={true} />}
       
-      <div className="qa-main-wrapper" id="main-content" style={{ paddingTop: '100px' }}>
+      <main className="qa-content" id="main-content">
+        <div className="qa-main-wrapper">
         
         <animated.header className="page-header-pro" style={headerSpring} ref={headerRef}>
           <div className="header-content-pro">
@@ -943,33 +968,57 @@ export default function DesktopQueroAjudar() {
                 
                 return (
                   <animated.div key={order.id} style={style}>
-                    <div className="card-pro">
+                    <div className="card-pro" style={{ '--urgency-color': urg?.color }}>
                       <div className="card-header-pro">
                         <div className="card-badges-pro">
-                          <span className="cat-badge-pro" style={{ backgroundColor: catMeta.color }}>
-                            {order.category}
+                          {order.isNew && <span className="new-badge-pro"><Zap size={12} /> NOVO</span>}
+                          <span className="priority-badge-pro" style={{ backgroundColor: `${urg?.color}20`, color: urg?.color }}>
+                            {urg?.icon} {urg?.label.toUpperCase()}
                           </span>
-                          {order.isNew && <span className="new-badge-pro">NOVO</span>}
                         </div>
-                        <div className="urg-badge-pro" style={{ color: urg?.color, borderColor: urg?.color }}>
-                          {urg?.icon}
+                        <div className="card-time-info-pro">
+                          <div className="publish-time-pro">
+                            <Clock size={12} />
+                            {(() => {
+                              const createdAt = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+                              if (!createdAt || isNaN(createdAt.getTime())) {
+                                return 'Postado agora a pouco';
+                              }
+                              const now = new Date();
+                              const diffMs = now - createdAt;
+                              const diffMinutes = Math.floor(diffMs / (1000 * 60));
+                              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                              const diffDays = Math.floor(diffHours / 24);
+                              
+                              if (diffMinutes < 1) return 'Postado agora a pouco';
+                              if (diffMinutes < 60) return `${diffMinutes} min atrás`;
+                              if (diffHours < 24) return `${diffHours}h atrás`;
+                              if (diffDays === 1) return 'Ontem';
+                              if (diffDays < 7) return `${diffDays} dias atrás`;
+                              return createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                            })()} 
+                          </div>
                         </div>
                       </div>
 
                       <div className="card-body-pro">
-                        <h3 className="card-title-pro">{order.title}</h3>
-                        <p className="card-desc-pro">{order.description.substring(0, 100)}...</p>
-                      </div>
-
-                      <div className="card-meta-pro">
-                        <div className="user-info-pro">
-                          <div className="avatar-pro">{order.userName.charAt(0)}</div>
-                          <div className="user-details-pro">
-                            <span className="user-name-pro">{order.userName}</span>
-                            <span className="user-loc-pro">
-                              <MapPin size={12} />
-                              {order.neighborhood}, {order.city}
-                            </span>
+                        <div className="card-category-minimal">
+                          <span className="category-icon-minimal" style={{ backgroundColor: catMeta.color }}>
+                            {catMeta.icon || <Package size={16} />}
+                          </span>
+                          <span className="category-name-minimal">{order.category}</span>
+                        </div>
+                        
+                        <p className="card-description-minimal">{order.description.substring(0, 140)}...</p>
+                        
+                        <div className="card-footer-minimal">
+                          <div className="user-minimal">
+                            <User size={18} />
+                            <span>{order.userName}</span>
+                          </div>
+                          <div className="location-minimal">
+                            <MapPin size={18} />
+                            <span>{order.neighborhood}, {order.city}</span>
                           </div>
                         </div>
                       </div>
@@ -977,12 +1026,28 @@ export default function DesktopQueroAjudar() {
                       <div className="card-actions-pro">
                         <button className="btn-details-pro" onClick={() => setSelectedOrder(order)}>
                           <Eye size={16} />
-                          Detalhes
+                          Ver Detalhes
                         </button>
-                        <button className="btn-help-pro" onClick={() => setOrderToHelp(order)}>
-                          <Heart size={16} />
-                          Quero Ajudar
-                        </button>
+                        {user?.uid !== order.userId ? (
+                          <button className="btn-help-pro" onClick={() => setOrderToHelp(order)}>
+                            <Heart size={16} />
+                            Quero Ajudar
+                          </button>
+                        ) : (
+                          <button className="btn-own-post-pro" disabled>
+                            <Heart size={16} />
+                            Seu Pedido
+                          </button>
+                        )}
+                        {user?.role === 'admin' && (
+                          <button 
+                            className="btn-admin-delete-pro" 
+                            onClick={() => handleAdminDelete(order.id)}
+                            title="Excluir pedido (Admin)"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </animated.div>
@@ -1112,7 +1177,8 @@ export default function DesktopQueroAjudar() {
           place="top"
           delayShow={300}
         />
-      </div>
+        </div>
+      </main>
 
       {showLocationModal && (
         <div className="qa-modal-overlay" onClick={() => setShowLocationModal(false)}>

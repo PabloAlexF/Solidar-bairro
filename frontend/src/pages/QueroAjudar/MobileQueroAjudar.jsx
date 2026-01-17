@@ -144,11 +144,6 @@ export const MobileQueroAjudar = () => {
 
   const filteredOrders = useMemo(() => {
     return pedidos.filter((order) => {
-      // Filtrar pedidos do próprio usuário
-      if (user && order.userId === user.uid) {
-        return false;
-      }
-      
       const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
       const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
       
@@ -415,6 +410,40 @@ export const MobileQueroAjudar = () => {
                         {order.category}
                       </span>
                       {order.isNew && <span className="new-badge-mobile">NOVO</span>}
+                      <div className="time-info-mobile">
+                        <div className="time-relative-mobile">
+                          {(() => {
+                            const createdAt = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+                            if (!createdAt || isNaN(createdAt.getTime())) {
+                              return 'Agora';
+                            }
+                            const now = new Date();
+                            const diffMs = now - createdAt;
+                            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+                            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                            const diffDays = Math.floor(diffHours / 24);
+                            
+                            if (diffMinutes < 1) return 'Agora';
+                            if (diffMinutes < 60) return `${diffMinutes}min`;
+                            if (diffHours < 24) return `${diffHours}h`;
+                            if (diffDays === 1) return 'Ontem';
+                            if (diffDays < 7) return `${diffDays}d`;
+                            return createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                          })()} 
+                        </div>
+                        <div className="time-exact-mobile">
+                          {(() => {
+                            const createdAt = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+                            if (!createdAt || isNaN(createdAt.getTime())) {
+                              return '--:--';
+                            }
+                            return createdAt.toLocaleTimeString('pt-BR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            });
+                          })()} 
+                        </div>
+                      </div>
                     </div>
                     
                     <div className="card-content-mobile">
@@ -433,9 +462,15 @@ export const MobileQueroAjudar = () => {
                       <button className="btn-view-mobile" onClick={() => { setSelectedOrder(order); setActiveTab('relato'); }}>
                         <Eye size={16} /> Detalhes
                       </button>
-                      <button className="btn-help-mobile" onClick={() => setOrderToHelp(order)}>
-                        <Heart size={16} /> Ajudar
-                      </button>
+                      {user?.uid !== order.userId ? (
+                        <button className="btn-help-mobile" onClick={() => setOrderToHelp(order)}>
+                          <Heart size={16} /> Ajudar
+                        </button>
+                      ) : (
+                        <button className="btn-own-mobile" disabled>
+                          <Heart size={16} /> Seu Pedido
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

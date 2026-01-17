@@ -576,13 +576,12 @@ export function PrecisoDeAjudaDesktop() {
         urgency: formData.urgency,
         visibility: formData.visibility,
         radius: formData.radius,
-        location: {
-          coordinates: formData.userLocation,
-          address: formData.locationString,
-          city: formData.city,
-          state: formData.state,
-          neighborhood: formData.neighborhood
-        },
+        // Estrutura corrigida para o backend
+        locationString: formData.locationString,
+        city: formData.city,
+        state: formData.state,
+        neighborhood: formData.neighborhood,
+        coordinates: formData.userLocation,
         isPublic: formData.isPublic,
         subQuestionAnswers: formData.subQuestionAnswers
       };
