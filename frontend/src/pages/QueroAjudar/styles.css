@@ -4245,3 +4245,127 @@
 .card-pro:hover {
   box-shadow: 0 20px 40px var(--shadow-hover);
 }
+/* Enhanced Modal Styles */
+.item-priority-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: auto;
+}
+
+.item-category-tag {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.item-category-tag span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.urgency-detail-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 16px;
+  border: 2px solid;
+  margin-bottom: 20px;
+}
+
+.urgency-icon-large {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.urgency-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.urgency-info p {
+  margin: 0 0 12px 0;
+  color: #64748b;
+}
+
+.urgency-timeline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.urgency-timeline svg {
+  color: #94a3b8;
+}
+
+/* Enhanced Item Cards */
+.item-card-v3 {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border-left: 4px solid;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+}
+
+.item-card-v3:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.item-header-v3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.item-header-v3 h4 {
+  margin: 0;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Enhanced Sections */
+#section-urgencia {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.4));
+  padding: 24px;
+  border-radius: 16px;
+  margin: 20px 0;
+}
+
+#section-necessidades .items-grid-v3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* Responsive Modal Improvements */
+@media (max-width: 768px) {
+  .urgency-detail-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .urgency-icon-large {
+    width: 50px;
+    height: 50px;
+  }
+  
+  #section-necessidades .items-grid-v3 {
+    grid-template-columns: 1fr;
+  }
+}

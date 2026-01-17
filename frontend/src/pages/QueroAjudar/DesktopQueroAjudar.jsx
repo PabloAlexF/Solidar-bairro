@@ -46,7 +46,6 @@ import {
 } from './constants';
 import ApiService from '../../services/apiService';
 
-// Import the existing components from the original file
 function ModalDetalhes({ order, onClose, onHelp }) {
   const scrollContainerRef = useRef(null);
   const [activeTab, setActiveTab] = useState('historia');
@@ -54,7 +53,8 @@ function ModalDetalhes({ order, onClose, onHelp }) {
   const sections = [
     { id: 'historia', label: 'Relato', icon: <MessageSquare size={18} /> },
     { id: 'necessidades', label: 'Itens', icon: <ShoppingCart size={18} /> },
-    { id: 'tecnico', label: 'Técnico', icon: <Info size={18} /> },
+    { id: 'especificacoes', label: 'Detalhes', icon: <Info size={18} /> },
+    { id: 'urgencia', label: 'Urgência', icon: <AlertTriangle size={18} /> },
     { id: 'contato', label: 'Localização', icon: <MapPin size={18} /> },
   ];
 
@@ -73,6 +73,141 @@ function ModalDetalhes({ order, onClose, onHelp }) {
     config: { tension: 280, friction: 60 }
   });
 
+  // Dados das categorias completas
+  const CATEGORY_DETAILS = {
+    Alimentos: {
+      options: [
+        { id: 'cesta', label: 'Cesta Básica Completa', desc: 'Arroz, feijão, óleo, açúcar, sal, café, macarrão.', color: '#f97316' },
+        { id: 'cereais_graos', label: 'Cereais & Grãos', desc: 'Arroz, feijão, lentilha, grão-de-bico, quinoa.', color: '#d97706' },
+        { id: 'proteinas_carnes', label: 'Carnes & Aves', desc: 'Carne bovina, frango, peixe, linguiça.', color: '#ef4444' },
+        { id: 'ovos_laticinios', label: 'Ovos & Laticínios', desc: 'Ovos, leite, queijo, iogurte, manteiga.', color: '#f59e0b' },
+        { id: 'frutas_frescas', label: 'Frutas Frescas', desc: 'Banana, maçã, laranja, mamão, abacaxi.', color: '#10b981' },
+        { id: 'verduras_legumes', label: 'Verduras & Legumes', desc: 'Alface, tomate, cebola, batata, cenoura.', color: '#059669' },
+        { id: 'padaria_matinal', label: 'Padaria & Café da Manhã', desc: 'Pão, biscoito, café, achocolatado, aveia.', color: '#8b5cf6' },
+        { id: 'temperos_condimentos', label: 'Temperos & Condimentos', desc: 'Sal, açúcar, óleo, vinagre, alho, cebola.', color: '#475569' },
+        { id: 'massas_farinhas', label: 'Massas & Farinhas', desc: 'Macarrão, farinha de trigo, fubá, polvilho.', color: '#6366f1' },
+        { id: 'enlatados_conservas', label: 'Enlatados & Conservas', desc: 'Sardinha, atum, milho, ervilha, molho de tomate.', color: '#dc2626' },
+        { id: 'bebidas_sucos', label: 'Bebidas & Sucos', desc: 'Suco natural, refrigerante, água, chá.', color: '#0ea5e9' },
+        { id: 'doces_sobremesas', label: 'Doces & Sobremesas', desc: 'Chocolate, bolo, pudim, gelatina, sorvete.', color: '#ec4899' },
+        { id: 'alimentacao_infantil', label: 'Alimentação Infantil', desc: 'Papinha, fórmula, leite em pó, mingau, biscoito.', color: '#f43f5e' },
+        { id: 'alimentacao_especial', label: 'Alimentação Especial', desc: 'Sem glúten, sem lactose, diabético, vegano.', color: '#7c3aed' },
+        { id: 'refeicoes_prontas', label: 'Refeições Prontas', desc: 'Marmitas, comida congelada, lanches prontos.', color: '#f97316' },
+        { id: 'merenda_escolar', label: 'Merenda & Lanche', desc: 'Biscoito, suco de caixinha, fruta, sanduíche.', color: '#14b8a6' }
+      ]
+    },
+    Roupas: {
+      options: [
+        { id: 'roupas_inverno', label: 'Roupas de Inverno', desc: 'Casacos, blusas de lã, cachecol, luvas.', color: '#1e40af' },
+        { id: 'roupas_verao', label: 'Roupas de Verão', desc: 'Camisetas, bermudas, vestidos leves, shorts.', color: '#f59e0b' },
+        { id: 'uniforme_escolar', label: 'Uniforme Escolar', desc: 'Kits da rede municipal/estadual completos.', color: '#6366f1' },
+        { id: 'uniforme_trabalho', label: 'Uniforme de Trabalho', desc: 'Aventais, jalecos, uniformes profissionais.', color: '#475569' },
+        { id: 'roupa_social', label: 'Roupa Social', desc: 'Camisa, calça social, blazer para entrevistas.', color: '#374151' },
+        { id: 'roupas_intimas', label: 'Roupas Íntimas', desc: 'Cueca, calcinha, sutiã, meias (NOVAS).', color: '#f43f5e' },
+        { id: 'enxoval_bebe', label: 'Enxoval de Bebê', desc: 'Body, macacão, manta, touca, luva.', color: '#f472b6' },
+        { id: 'roupas_crianca', label: 'Roupas Infantis', desc: 'Tamanhos 1 a 14 anos, masculino e feminino.', color: '#8b5cf6' }
+      ]
+    },
+    Calçados: {
+      options: [
+        { id: 'tenis_esportivo', label: 'Tênis Esportivo', desc: 'Para exercícios, caminhadas e corridas.', color: '#10b981' },
+        { id: 'tenis_casual', label: 'Tênis Casual', desc: 'Para uso diário, escola e passeios.', color: '#059669' },
+        { id: 'sapato_social_masculino', label: 'Sapato Social Masculino', desc: 'Para trabalho, entrevistas e eventos.', color: '#475569' },
+        { id: 'sapato_social_feminino', label: 'Sapato Social Feminino', desc: 'Scarpin, sapato baixo para trabalho.', color: '#374151' },
+        { id: 'sandalia_feminina', label: 'Sandália Feminina', desc: 'Rasteirinha, sandália de salto baixo.', color: '#ec4899' },
+        { id: 'chinelos_havaianas', label: 'Chinelos & Havaianas', desc: 'Para uso doméstico e praia.', color: '#f59e0b' },
+        { id: 'botas_trabalho', label: 'Botas de Trabalho', desc: 'Bota de segurança, botina com bico de aço.', color: '#dc2626' },
+        { id: 'calcados_infantis', label: 'Calçados Infantis', desc: 'Tênis, sapato, sandália para crianças.', color: '#8b5cf6' }
+      ]
+    },
+    Medicamentos: {
+      options: [
+        { id: 'pressao_alta', label: 'Pressão Alta', desc: 'Losartana, Enalapril, Captopril, Amlodipina.', color: '#ef4444' },
+        { id: 'diabetes', label: 'Diabetes', desc: 'Metformina, Glibenclamida, Insulina.', color: '#dc2626' },
+        { id: 'analgesicos_antitermicos', label: 'Analgésicos & Antitérmicos', desc: 'Dipirona, Paracetamol, Ibuprofeno, Aspirina.', color: '#10b981' },
+        { id: 'asma_bronquite', label: 'Asma & Bronquite', desc: 'Salbutamol, Beclometasona, bombinhas.', color: '#0ea5e9' },
+        { id: 'antibioticos', label: 'Antibióticos', desc: 'Amoxicilina, Azitromicina (com receita).', color: '#8b5cf6' },
+        { id: 'saude_mental', label: 'Saúde Mental', desc: 'Antidepressivos, ansioliticos (controlados).', color: '#ec4899' },
+        { id: 'vitaminas_suplementos', label: 'Vitaminas & Suplementos', desc: 'Complexo B, Vitamina D, Ferro, Cálcio.', color: '#059669' }
+      ]
+    },
+    Higiene: {
+      options: [
+        { id: 'kit_banho_completo', label: 'Kit Banho Completo', desc: 'Sabonete, shampoo, condicionador, esponja.', color: '#14b8a6' },
+        { id: 'saude_bucal', label: 'Saúde Bucal', desc: 'Pasta de dente, escova, fio dental, enxaguante.', color: '#0d9488' },
+        { id: 'higiene_intima_feminina', label: 'Higiene Íntima Feminina', desc: 'Absorvente, protetor diário, sabonete íntimo.', color: '#ec4899' },
+        { id: 'fraldas_infantis', label: 'Fraldas Infantis', desc: 'Tamanhos RN, P, M, G, XG, XXG.', color: '#6366f1' },
+        { id: 'fraldas_geriatricas', label: 'Fraldas Geriátricas', desc: 'Uso adulto tamanhos M, G, GG, EXG.', color: '#8b5cf6' },
+        { id: 'produtos_cabelo', label: 'Produtos para Cabelo', desc: 'Shampoo, condicionador, creme para pentear.', color: '#f59e0b' },
+        { id: 'limpeza_casa', label: 'Limpeza da Casa', desc: 'Detergente, sabão em pó, amaciante, álcool.', color: '#059669' }
+      ]
+    },
+    Contas: {
+      options: [
+        { id: 'conta_luz', label: 'Conta de Luz', desc: 'Evitar corte de energia elétrica.', color: '#ef4444' },
+        { id: 'conta_agua', label: 'Conta de Água', desc: 'Manter abastecimento de água.', color: '#3b82f6' },
+        { id: 'gas_cozinha', label: 'Gás de Cozinha', desc: 'Recarga de botijão 13kg ou gás encanado.', color: '#f97316' },
+        { id: 'apoio_aluguel', label: 'Apoio com Aluguel', desc: 'Ajuda para evitar despejo.', color: '#dc2626' },
+        { id: 'internet_telefone', label: 'Internet & Telefone', desc: 'Para estudo, trabalho remoto ou comunicação.', color: '#6366f1' },
+        { id: 'plano_saude', label: 'Plano de Saúde', desc: 'Mensalidade do convênio médico.', color: '#10b981' }
+      ]
+    },
+    Emprego: {
+      options: [
+        { id: 'curriculo_impressao', label: 'Currículo & Impressão', desc: 'Elaboração, revisão e impressão.', color: '#8b5cf6' },
+        { id: 'qualificacao_cursos', label: 'Qualificação & Cursos', desc: 'Cursos técnicos, profissionalizantes.', color: '#7c3aed' },
+        { id: 'epis_uniforme_trabalho', label: 'EPIs & Uniforme', desc: 'Botinas, luvas, capacete, roupas de trabalho.', color: '#059669' },
+        { id: 'ferramentas_profissionais', label: 'Ferramentas Profissionais', desc: 'Para pedreiro, eletricista, encanador.', color: '#dc2626' },
+        { id: 'transporte_entrevistas', label: 'Transporte para Entrevistas', desc: 'Passagens, combustível para entrevistas.', color: '#0ea5e9' }
+      ]
+    },
+    Móveis: {
+      options: [
+        { id: 'cama_solteiro', label: 'Cama de Solteiro', desc: 'Cama ou colchão de solteiro.', color: '#f59e0b' },
+        { id: 'cama_casal', label: 'Cama de Casal', desc: 'Cama ou colchão de casal.', color: '#d97706' },
+        { id: 'berco_bebe', label: 'Berço & Móveis de Bebê', desc: 'Berço, cômoda, trocador.', color: '#ec4899' },
+        { id: 'sofa_poltrona', label: 'Sofá & Poltrona', desc: 'Para sala de estar, descanso.', color: '#6366f1' },
+        { id: 'mesa_jantar', label: 'Mesa de Jantar', desc: 'Mesa com cadeiras para refeições.', color: '#8b5cf6' },
+        { id: 'guarda_roupa', label: 'Guarda-roupa', desc: 'Roupeiro para o quarto.', color: '#10b981' }
+      ]
+    },
+    Eletrodomésticos: {
+      options: [
+        { id: 'geladeira_freezer', label: 'Geladeira & Freezer', desc: 'Fundamental para conservar alimentos.', color: '#475569' },
+        { id: 'fogao_cooktop', label: 'Fogão & Cooktop', desc: 'Para preparo de refeições.', color: '#334155' },
+        { id: 'maquina_lavar_roupa', label: 'Máquina de Lavar', desc: 'Lavar roupas, tanquinho.', color: '#0ea5e9' },
+        { id: 'microondas', label: 'Micro-ondas', desc: 'Aquecimento rápido de alimentos.', color: '#64748b' },
+        { id: 'ventilador_ar', label: 'Ventilador & Ar Condicionado', desc: 'Para dias de calor intenso.', color: '#06b6d4' },
+        { id: 'televisao', label: 'Televisão', desc: 'TV, conversor digital, antena.', color: '#374151' }
+      ]
+    },
+    Transporte: {
+      options: [
+        { id: 'passagens_onibus', label: 'Passagens de Ônibus', desc: 'Ônibus urbano, intermunicipal, TRI/TEU.', color: '#0ea5e9' },
+        { id: 'passagens_metro_trem', label: 'Metrô & Trem', desc: 'Transporte sobre trilhos, integração.', color: '#3b82f6' },
+        { id: 'bicicleta', label: 'Bicicleta', desc: 'Para trabalho, escola, exercícios.', color: '#10b981' },
+        { id: 'combustivel_veiculo', label: 'Combustível', desc: 'Gasolina, álcool, diesel para veículo.', color: '#f97316' },
+        { id: 'manutencao_veiculo', label: 'Manutenção de Veículo', desc: 'Conserto, peças, pneu, bateria.', color: '#dc2626' }
+      ]
+    },
+    Outros: {
+      options: [
+        { id: 'educacao_cursos', label: 'Educação & Cursos', desc: 'Material escolar, livros, cursos online.', color: '#6366f1' },
+        { id: 'saude_consultas', label: 'Saúde & Consultas', desc: 'Consultas médicas, exames, tratamentos.', color: '#10b981' },
+        { id: 'juridico_documentos', label: 'Jurídico & Documentos', desc: 'Advogado, cartório, certidões.', color: '#8b5cf6' },
+        { id: 'tecnologia_equipamentos', label: 'Tecnologia', desc: 'Celular, computador, tablet, internet.', color: '#0ea5e9' },
+        { id: 'animais_estimacao', label: 'Animais de Estimação', desc: 'Ração, veterinário, medicamentos.', color: '#f59e0b' }
+      ]
+    }
+  };
+
+  const URGENCY_OPTIONS = [
+    { id: 'critico', label: 'CRÍTICO', desc: 'Risco imediato à saúde ou vida', icon: <AlertTriangle size={20} />, color: '#ef4444' },
+    { id: 'urgente', label: 'URGENTE', desc: 'Necessário para as próximas 24h', icon: <Zap size={20} />, color: '#f97316' },
+    { id: 'moderada', label: 'MODERADA', desc: 'Pode aguardar alguns dias', icon: <Calendar size={20} />, color: '#f59e0b' },
+    { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem prazo rígido', icon: <Coffee size={20} />, color: '#10b981' },
+    { id: 'recorrente', label: 'RECORRENTE', desc: 'Necessidade mensal constante', icon: <RefreshCcw size={20} />, color: '#6366f1' }
+  ];
+
   const allSpecs = { ...(order?.details || {}), ...(order?.subQuestionAnswers || {}) };
   const specsArray = Object.entries(allSpecs);
   const specsTrail = useTrail(specsArray.length, {
@@ -81,6 +216,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
     config: { tension: 280, friction: 60 }
   });
 
+  const categoryDetails = CATEGORY_DETAILS[order?.category] || { options: [] };
   const itemsTrail = useTrail(order?.subCategories?.length || 0, {
     opacity: contentInView ? 1 : 0,
     transform: contentInView ? 'scale(1)' : 'scale(0.9)',
@@ -239,24 +375,34 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                     const sc = order.subCategories?.[index];
                     if (!sc) return null;
                     
+                    const itemDetail = categoryDetails.options.find(opt => opt.id === sc);
+                    
                     return (
                       <animated.div 
                         key={sc} 
                         className="item-card-v3" 
-                        style={{ ...style, borderLeftColor: catMeta.color }}
+                        style={{ ...style, borderLeftColor: itemDetail?.color || catMeta.color }}
                       >
                         <div className="item-header-v3">
-                          <h4>{catMeta.details[sc]?.label || sc}</h4>
-                          {/* Context info would go here */}
+                          <h4>{itemDetail?.label || sc}</h4>
+                          <div 
+                            className="item-priority-indicator"
+                            style={{ backgroundColor: itemDetail?.color || catMeta.color }}
+                          />
                         </div>
-                        <p>{catMeta.details[sc]?.desc}</p>
+                        <p>{itemDetail?.desc || 'Item necessário para as necessidades relatadas.'}</p>
+                        {itemDetail && (
+                          <div className="item-category-tag">
+                            <span style={{ color: itemDetail.color }}>#{order.category}</span>
+                          </div>
+                        )}
                       </animated.div>
                     );
                   })}
                 </div>
               </section>
 
-              <section id="section-tecnico" className="content-section-v3">
+              <section id="section-especificacoes" className="content-section-v3">
                 <div 
                   className="section-title-v3"
                   style={{
@@ -309,6 +455,38 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                     <p>Este pedido não possui detalhes técnicos específicos informados.</p>
                   </div>
                 )}
+              </section>
+
+              <section id="section-urgencia" className="content-section-v3">
+                <div 
+                  className="section-title-v3"
+                  style={{
+                    animation: 'fadeInUp 0.5s ease-out 0.6s both'
+                  }}
+                >
+                  <AlertTriangle size={20} />
+                  <h3>Nível de Urgência</h3>
+                </div>
+                <div 
+                  className="urgency-detail-card"
+                  style={{
+                    animation: 'scaleIn 0.5s ease-out 0.7s both',
+                    borderColor: urg?.color,
+                    backgroundColor: urg?.color + '10'
+                  }}
+                >
+                  <div className="urgency-icon-large" style={{ color: urg?.color }}>
+                    {urg?.icon}
+                  </div>
+                  <div className="urgency-info">
+                    <h4 style={{ color: urg?.color }}>{urg?.label}</h4>
+                    <p>{urg?.desc}</p>
+                    <div className="urgency-timeline">
+                      <Clock size={16} />
+                      <span>Tempo de resposta esperado: {urg?.id === 'critico' ? '< 2 horas' : urg?.id === 'urgente' ? '< 24 horas' : urg?.id === 'moderada' ? '2-5 dias' : urg?.id === 'tranquilo' ? '1-2 semanas' : 'Agendado'}</span>
+                    </div>
+                  </div>
+                </div>
               </section>
 
               <section id="section-contato" className="content-section-v3">
