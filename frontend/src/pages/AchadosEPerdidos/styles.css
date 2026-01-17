@@ -198,8 +198,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-  border-bottom: 4px solid var(--sb-teal);
+  box-shadow: 0 15px 35px rgba(139, 92, 246, 0.1);
+  border-bottom: 4px solid var(--sb-purple);
 }
 
 .lf-location-info {
@@ -211,8 +211,8 @@
 .lf-location-icon-pulse {
   width: 50px;
   height: 50px;
-  background: var(--sb-teal-soft);
-  color: var(--sb-teal);
+  background: var(--sb-purple-soft);
+  color: var(--sb-purple);
   border-radius: 1rem;
   display: flex;
   align-items: center;
@@ -225,7 +225,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 1.2rem;
-  border: 2px solid var(--sb-teal);
+  border: 2px solid var(--sb-purple);
   animation: location-pulse 2s infinite;
 }
 
@@ -286,8 +286,8 @@
 
 .lf-scope-btn.active {
   background: white;
-  color: var(--sb-teal);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  color: var(--sb-purple);
+  box-shadow: 0 4px 10px rgba(139, 92, 246, 0.15);
 }
 
 .text-orange {
@@ -305,7 +305,10 @@
   --sb-orange-hover: #ea580c;
   --sb-orange-soft: #fff7ed;
   --sb-purple: #8b5cf6;
+  --sb-purple-hover: #7c3aed;
   --sb-purple-soft: #f5f3ff;
+  --sb-purple-light: #a78bfa;
+  --sb-purple-dark: #6d28d9;
   --sb-bg: #fdfdfd;
   --sb-bg-soft: #f8fafc;
   --sb-text: #0f172a;
@@ -348,12 +351,12 @@
   position: fixed;
   inset: 0;
   z-index: -10;
-  opacity: 0.25;
+  opacity: 0.3;
   background-image: 
-    radial-gradient(at 0% 0%, var(--sb-teal) 0, transparent 50%), 
-    radial-gradient(at 100% 0%, var(--sb-orange) 0, transparent 50%), 
-    radial-gradient(at 100% 100%, var(--sb-purple) 0, transparent 50%), 
-    radial-gradient(at 0% 100%, var(--sb-teal) 0, transparent 50%);
+    radial-gradient(at 0% 0%, var(--sb-purple) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, var(--sb-purple-light) 0, transparent 50%), 
+    radial-gradient(at 100% 100%, var(--sb-teal) 0, transparent 50%), 
+    radial-gradient(at 0% 100%, var(--sb-purple-dark) 0, transparent 50%);
   filter: blur(120px);
   pointer-events: none;
 }
@@ -452,7 +455,7 @@
   justify-content: center;
   gap: 1rem;
   padding: 1.25rem 2.5rem;
-  background: var(--sb-text);
+  background: linear-gradient(135deg, var(--sb-purple), var(--sb-purple-hover));
   color: white;
   border: none;
   border-radius: 1.5rem;
@@ -460,15 +463,15 @@
   font-size: 1.15rem;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.3);
   text-decoration: none;
   font-family: inherit;
 }
 
 .lf-main-btn:hover {
-  background: var(--sb-teal);
+  background: linear-gradient(135deg, var(--sb-purple-hover), var(--sb-purple-dark));
   transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 25px 50px -12px rgba(13, 148, 136, 0.35);
+  box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.4);
 }
 
 .lf-hero-stats {
@@ -571,8 +574,8 @@
 }
 
 .lf-filter-input:focus {
-  border-color: var(--sb-teal);
-  box-shadow: 0 0 0 4px var(--sb-teal-soft);
+  border-color: var(--sb-purple);
+  box-shadow: 0 0 0 4px var(--sb-purple-soft);
 }
 
 .lf-filter-group {
