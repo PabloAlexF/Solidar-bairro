@@ -81,14 +81,79 @@ export default function PainelSocial() {
   const loadPainelData = async () => {
     try {
       const [pedidosRes, comerciosRes, ongsRes] = await Promise.all([
-        ApiService.getPainelPedidos(bairro),
-        ApiService.getPainelComercios(bairro),
-        ApiService.getPainelOngs(bairro)
+        ApiService.getPedidos(),
+        ApiService.getComercios(),
+        ApiService.getOngs()
       ]);
 
-      if (pedidosRes.success) setPedidosData(pedidosRes.data);
-      if (comerciosRes.success) setComerciosData(comerciosRes.data);
-      if (ongsRes.success) setOngsData(ongsRes.data);
+      if (pedidosRes.success) {
+        const pedidosFormatted = await Promise.all(pedidosRes.data.map(async p => {
+          let lat = p.endereco?.latitude || p.lat;
+          let lng = p.endereco?.longitude || p.lng;
+          
+          if (!lat || !lng) {
+            try {
+              const location = p.location || p.endereco || p.neighborhood || '';
+              if (location) {
+                const geoResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}&limit=1`);
+                const geoData = await geoResponse.json();
+                
+                if (geoData && geoData.length > 0) {
+                  lat = parseFloat(geoData[0].lat);
+                  lng = parseFloat(geoData[0].lon);
+                  console.log(`📍 Pedido geocodificado: ${location} -> ${lat}, ${lng}`);
+                } else {
+                  lat = -19.768 + (Math.random() - 0.5) * 0.01;
+                  lng = -43.85 + (Math.random() - 0.5) * 0.01;
+                }
+              } else {
+                lat = -19.768 + (Math.random() - 0.5) * 0.01;
+                lng = -43.85 + (Math.random() - 0.5) * 0.01;
+              }
+            } catch (error) {
+              console.error('Erro na geocodificação do pedido:', error);
+              lat = -19.768 + (Math.random() - 0.5) * 0.01;
+              lng = -43.85 + (Math.random() - 0.5) * 0.01;
+            }
+          }
+          
+          return {
+            ...p,
+            lat,
+            lng,
+            tipo: 'pedido',
+            titulo: p.titulo || p.title || p.nome || 'Pedido de Ajuda',
+            categoria: p.categoria || p.category || p.tipo || 'Geral',
+            descricao: p.descricao || p.description || p.detalhes || '',
+            status: p.status || 'ativo'
+          };
+        }));
+        setPedidosData(pedidosFormatted);
+        console.log('📋 Pedidos carregados:', pedidosFormatted.length);
+      }
+      
+      if (comerciosRes.success) {
+        const comerciosFormatted = comerciosRes.data.map(c => ({
+          ...c,
+          lat: c.endereco?.latitude || c.lat || -19.768 + (Math.random() - 0.5) * 0.01,
+          lng: c.endereco?.longitude || c.lng || -43.85 + (Math.random() - 0.5) * 0.01,
+          nome: c.nomeEstabelecimento || c.nome_fantasia || c.nome
+        }));
+        setComerciosData(comerciosFormatted);
+        console.log('🏪 Comércios carregados:', comerciosFormatted.length);
+      }
+      
+      if (ongsRes.success) {
+        const ongsFormatted = ongsRes.data.map(o => ({
+          ...o,
+          lat: o.endereco?.latitude || o.lat || -19.768 + (Math.random() - 0.5) * 0.01,
+          lng: o.endereco?.longitude || o.lng || -43.85 + (Math.random() - 0.5) * 0.01,
+          nome: o.razaoSocial || o.nome_fantasia || o.nome,
+          servicos: o.causas || []
+        }));
+        setOngsData(ongsFormatted);
+        console.log('🏛️ ONGs carregadas:', ongsFormatted.length);
+      }
     } catch (error) {
       console.error('Erro ao carregar dados do painel:', error);
     }

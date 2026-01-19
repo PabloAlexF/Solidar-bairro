@@ -285,16 +285,25 @@ export function MapaInterativo({
   useEffect(() => {
     if (!mapRef.current) return;
 
+    // Limpar mapa anterior
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
+      try {
+        mapInstanceRef.current.remove();
+      } catch (e) {
+        console.warn('Erro ao remover mapa:', e);
+      }
       mapInstanceRef.current = null;
     }
 
-    const map = L.map(mapRef.current, {
-      zoomControl: false,
-    }).setView(centro, zoom);
-    
-    mapInstanceRef.current = map;
+    // Aguardar um frame antes de criar novo mapa
+    const timeoutId = setTimeout(() => {
+      if (!mapRef.current) return;
+      
+      const map = L.map(mapRef.current, {
+        zoomControl: false,
+      }).setView(centro, zoom);
+      
+      mapInstanceRef.current = map;
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -743,12 +752,22 @@ export function MapaInterativo({
     document.head.appendChild(style);
 
     return () => {
+      if (timeoutId) clearTimeout(timeoutId);
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.remove();
+        } catch (e) {
+          console.warn('Erro ao limpar mapa:', e);
+        }
         mapInstanceRef.current = null;
       }
       const styleEl = document.getElementById('map-custom-styles');
       if (styleEl) styleEl.remove();
+    };
+    }, 100);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [familias, pedidos, comercios, ongs, pontosColeta, zonasRisco, layers, centro, zoom, createFamiliaMarker, createPedidoMarker, createComercioMarker, createONGMarker, createPontoColetaMarker, createZonaRisco]);
 
