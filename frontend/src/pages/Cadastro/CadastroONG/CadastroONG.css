@@ -44,6 +44,11 @@
   position: relative;
   overflow-x: hidden;
   min-height: 100vh;
+  width: 100vw;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   padding: 0;
 }
 
@@ -160,20 +165,20 @@
 /* Main Layout */
 .ong-reg-main-grid {
   display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 2rem;
-  padding: 2rem;
+  grid-template-columns: 400px 1fr;
   position: relative;
   z-index: 10;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  flex: 1;
 }
 
 /* Sidebar */
 .ong-reg-sidebar {
-  position: sticky;
-  top: 100px;
-  height: fit-content;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  border-right: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .ong-reg-steps-card {
@@ -277,16 +282,24 @@
 
 /* Content Area */
 .ong-reg-content-area {
-  position: relative;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.3);
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .ong-reg-form-card {
   background: white;
-  border-radius: 1.25rem;
-  padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--ong-border);
-  animation: slideUp 0.4s ease-out;
+  border-radius: 2rem;
+  padding: 0;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .ong-reg-animate-up {
@@ -294,37 +307,32 @@
 }
 
 .ong-reg-form-header {
-  margin-bottom: 2rem;
-}
-
-.ong-reg-progress-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  padding: 1rem 1.5rem 0.75rem;
+  background: linear-gradient(135deg, var(--ong-primary-light), #fef3f2);
+  border-bottom: 1px solid var(--ong-border);
+  text-align: center;
 }
 
 .ong-reg-step-badge {
-  background: var(--ong-primary-light);
-  color: var(--ong-primary);
+  background: var(--ong-primary);
+  color: white;
   padding: 0.5rem 1rem;
-  border-radius: 0.75rem;
+  border-radius: 2rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
+  display: inline-block;
+  margin-bottom: 1rem;
 }
 
 .ong-reg-progress-bar-bg {
-  flex: 1;
-  height: 6px;
-  background: var(--ong-border);
-  border-radius: 3px;
-  overflow: hidden;
+  display: none;
 }
 
 .ong-reg-progress-bar-fill {
   height: 100%;
-  background: var(--ong-gradient);
-  transition: width 0.3s ease;
+  background: var(--ong-primary);
+  border-radius: 1rem;
+  transition: width 0.5s ease;
 }
 
 .ong-reg-form-title {
@@ -361,6 +369,63 @@
 
 .ong-reg-form-grid-3 {
   grid-template-columns: repeat(3, 1fr);
+}
+
+/* Form Body */
+.ong-reg-form-body {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  background: white;
+  overflow-y: auto;
+  max-height: calc(85vh - 200px);
+}
+
+/* Enhanced Form Inputs */
+.ong-reg-form-body input,
+.ong-reg-form-body select,
+.ong-reg-form-body textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #111827;
+  background: white;
+  transition: all 0.2s;
+}
+
+.ong-reg-form-body input:focus,
+.ong-reg-form-body select:focus,
+.ong-reg-form-body textarea:focus {
+  outline: none;
+  border-color: var(--ong-primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.ong-reg-form-body input::placeholder,
+.ong-reg-form-body textarea::placeholder {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.ong-reg-form-body label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.ong-reg-form-body .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.ong-reg-form-body .required {
+  color: #dc2626;
 }
 
 /* Input Groups */
@@ -617,10 +682,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 2rem;
-  padding-top: 2rem;
+  padding: 1.5rem 2rem;
   border-top: 1px solid var(--ong-border);
-  gap: 1rem;
+  background: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .ong-reg-nav-actions {

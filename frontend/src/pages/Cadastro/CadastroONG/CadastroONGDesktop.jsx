@@ -208,12 +208,7 @@ export default function CadastroONGDesktop() {
         <main className="ong-reg-content-area">
           <div className="ong-reg-form-card ong-reg-animate-up">
             <div className="ong-reg-form-header">
-              <div className="ong-reg-progress-container">
-                <span className="ong-reg-step-badge">{steps.find(s => s.id === step)?.title}</span>
-                <div className="ong-reg-progress-bar-bg">
-                  <div className="ong-reg-progress-bar-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
-                </div>
-              </div>
+              <span className="ong-reg-step-badge">{steps.find(s => s.id === step)?.title}</span>
               <h1 className="ong-reg-form-title">
                 {step === 1 && <>Sua <span className="ong-reg-text-highlight">instituição</span></>}
                 {step === 2 && <>Dados <span className="ong-reg-text-highlight">legais</span></>}
@@ -233,283 +228,285 @@ export default function CadastroONGDesktop() {
             </div>
 
             <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); nextStep(); }}>
-              {step === 1 && (
-                <div className="ong-reg-form-grid ong-reg-form-grid-2">
-                  <div className="ong-reg-input-group ong-reg-input-group-full">
-                    <label className="ong-reg-input-label">Nome Fantasia da ONG <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="ong-reg-input-wrapper">
-                      <Building2 className="ong-reg-input-icon" size={20} />
+              <div className="ong-reg-form-body">
+                {step === 1 && (
+                  <div className="ong-reg-form-grid ong-reg-form-grid-2">
+                    <div className="ong-reg-input-group ong-reg-input-group-full">
+                      <label className="ong-reg-input-label">Nome Fantasia da ONG <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="ong-reg-input-wrapper">
+                        <Building2 className="ong-reg-input-icon" size={20} />
+                        <input 
+                          required 
+                          type="text" 
+                          className="ong-reg-form-input" 
+                          placeholder="Nome da organização"
+                          value={formData.nomeFantasia}
+                          onChange={(e) => setFormData(prev => ({ ...prev, nomeFantasia: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="ong-reg-input-group ong-reg-input-group-full">
+                      <label className="ong-reg-input-label">Razão Social <span style={{ color: '#ef4444' }}>*</span></label>
                       <input 
                         required 
                         type="text" 
                         className="ong-reg-form-input" 
-                        placeholder="Nome da organização"
-                        value={formData.nomeFantasia}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nomeFantasia: e.target.value }))}
+                        style={{ paddingLeft: '1rem' }}
+                        placeholder="Razão social completa"
+                        value={formData.razaoSocial}
+                        onChange={(e) => setFormData(prev => ({ ...prev, razaoSocial: e.target.value }))}
                       />
                     </div>
                   </div>
-                  <div className="ong-reg-input-group ong-reg-input-group-full">
-                    <label className="ong-reg-input-label">Razão Social <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input 
-                      required 
-                      type="text" 
-                      className="ong-reg-form-input" 
-                      style={{ paddingLeft: '1rem' }}
-                      placeholder="Razão social completa"
-                      value={formData.razaoSocial}
-                      onChange={(e) => setFormData(prev => ({ ...prev, razaoSocial: e.target.value }))}
+                )}
+
+                {step === 2 && (
+                  <div className="ong-reg-form-grid ong-reg-form-grid-2">
+                    <div className="ong-reg-input-group">
+                      <label className="ong-reg-input-label">CNPJ <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="ong-reg-input-wrapper">
+                        <FileText className="ong-reg-input-icon" size={20} />
+                        <input 
+                          required 
+                          type="text" 
+                          className="ong-reg-form-input" 
+                          placeholder="00.000.000/0000-00"
+                          value={formData.cnpj}
+                          onChange={handleCNPJChange}
+                          maxLength={18}
+                        />
+                      </div>
+                    </div>
+                    <div className="ong-reg-input-group">
+                      <label className="ong-reg-input-label">Data de Fundação <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="ong-reg-input-wrapper">
+                        <Calendar className="ong-reg-input-icon" size={20} />
+                        <input 
+                          required 
+                          type="date" 
+                          className="ong-reg-form-input"
+                          value={formData.dataFundacao}
+                          onChange={(e) => setFormData(prev => ({ ...prev, dataFundacao: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="ong-reg-info-box">
+                      <div className="ong-reg-info-icon-box">
+                        <ShieldCheck size={28} />
+                      </div>
+                      <div className="ong-reg-info-content">
+                        <h4>Validação Necessária</h4>
+                        <p>ONGs cadastradas passam por uma auditoria documental para garantir a segurança da plataforma.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="ong-reg-form-grid ong-reg-form-grid-2">
+                    <div className="ong-reg-input-group">
+                      <label className="ong-reg-input-label">Telefone Comercial <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="ong-reg-input-wrapper">
+                        <Phone className="ong-reg-input-icon" size={20} />
+                        <input 
+                          required 
+                          type="tel" 
+                          className="ong-reg-form-input" 
+                          placeholder="(00) 00000-0000"
+                          value={formData.telefone}
+                          onChange={handlePhoneChange}
+                          maxLength={15}
+                        />
+                      </div>
+                    </div>
+                    <div className="ong-reg-input-group">
+                      <label className="ong-reg-input-label">E-mail Institucional <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="ong-reg-input-wrapper">
+                        <Mail className="ong-reg-input-icon" size={20} />
+                        <input 
+                          required 
+                          type="email" 
+                          className="ong-reg-form-input" 
+                          placeholder="contato@ong.org"
+                          value={formData.email}
+                          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="ong-reg-input-group ong-reg-input-group-full">
+                      <label className="ong-reg-input-label">Website ou Rede Social</label>
+                      <div className="ong-reg-input-wrapper">
+                        <Globe className="ong-reg-input-icon" size={20} />
+                        <input 
+                          type="url" 
+                          className="ong-reg-form-input" 
+                          placeholder="https://www.suaong.org"
+                          value={formData.website}
+                          onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <PasswordField 
+                      label="Senha de Acesso"
+                      placeholder="Crie uma senha segura"
+                      required
+                    />
+                    <PasswordField 
+                      label="Confirmar Senha"
+                      placeholder="Digite a senha novamente"
+                      required
                     />
                   </div>
-                </div>
-              )}
+                )}
 
-              {step === 2 && (
-                <div className="ong-reg-form-grid ong-reg-form-grid-2">
-                  <div className="ong-reg-input-group">
-                    <label className="ong-reg-input-label">CNPJ <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="ong-reg-input-wrapper">
-                      <FileText className="ong-reg-input-icon" size={20} />
-                      <input 
-                        required 
-                        type="text" 
-                        className="ong-reg-form-input" 
-                        placeholder="00.000.000/0000-00"
-                        value={formData.cnpj}
-                        onChange={handleCNPJChange}
-                        maxLength={18}
-                      />
+                {step === 4 && (
+                  <div className="ong-reg-form-grid">
+                    <div className="ong-reg-input-group ong-reg-input-group-full">
+                      <label className="ong-reg-input-label">Sede da ONG <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="ong-reg-input-wrapper">
+                        <Home className="ong-reg-input-icon" size={20} />
+                        <input 
+                          required 
+                          type="text" 
+                          className="ong-reg-form-input" 
+                          placeholder="Endereço completo da sede"
+                          value={formData.sede}
+                          onChange={(e) => setFormData(prev => ({ ...prev, sede: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="ong-reg-input-group ong-reg-input-group-full">
+                      <label className="ong-reg-input-label">Áreas de Cobertura (Selecione os bairros onde atuam)</label>
+                      <div className="ong-reg-coverage-grid">
+                        {[
+                          { name: "Centro", icon: <Building2 size={20} />, desc: "Região central" },
+                          { name: "Zona Norte", icon: <Compass size={20} />, desc: "Bairros norte" },
+                          { name: "Zona Sul", icon: <Sun size={20} />, desc: "Bairros sul" },
+                          { name: "Zona Leste", icon: <Sunrise size={20} />, desc: "Bairros leste" },
+                          { name: "Periferia", icon: <Warehouse size={20} />, desc: "Áreas periféricas" },
+                          { name: "Região Metropolitana", icon: <Map size={20} />, desc: "Cidades vizinhas" }
+                        ].map((zona) => {
+                          const isSelected = selectedAreas.includes(zona.name);
+                          return (
+                            <label key={zona.name} className="ong-reg-coverage-card">
+                              <input 
+                                type="checkbox" 
+                                checked={isSelected} 
+                                onChange={() => {
+                                  setSelectedAreas(prev => 
+                                    prev.includes(zona.name) 
+                                      ? prev.filter(area => area !== zona.name)
+                                      : [...prev, zona.name]
+                                  );
+                                }} 
+                              />
+                              <div className="ong-reg-coverage-card-inner">
+                                <div className="ong-reg-coverage-icon">
+                                  {zona.icon}
+                                </div>
+                                <h4 className="ong-reg-coverage-name">{zona.name}</h4>
+                                <p className="ong-reg-coverage-desc">{zona.desc}</p>
+                                {isSelected && (
+                                  <div style={{
+                                    position: 'absolute',
+                                    top: '0.5rem',
+                                    right: '0.5rem',
+                                    width: '20px',
+                                    height: '20px',
+                                    borderRadius: '50%',
+                                    background: '#8b5cf6',
+                                    color: 'white',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}>
+                                    <CheckCircle2 size={12} />
+                                  </div>
+                                )}
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                  <div className="ong-reg-input-group">
-                    <label className="ong-reg-input-label">Data de Fundação <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="ong-reg-input-wrapper">
-                      <Calendar className="ong-reg-input-icon" size={20} />
-                      <input 
-                        required 
-                        type="date" 
-                        className="ong-reg-form-input"
-                        value={formData.dataFundacao}
-                        onChange={(e) => setFormData(prev => ({ ...prev, dataFundacao: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div className="ong-reg-info-box">
-                    <div className="ong-reg-info-icon-box">
-                      <ShieldCheck size={28} />
-                    </div>
-                    <div className="ong-reg-info-content">
-                      <h4>Validação Necessária</h4>
-                      <p>ONGs cadastradas passam por uma auditoria documental para garantir a segurança da plataforma.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+                )}
 
-              {step === 3 && (
-                <div className="ong-reg-form-grid ong-reg-form-grid-2">
-                  <div className="ong-reg-input-group">
-                    <label className="ong-reg-input-label">Telefone Comercial <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="ong-reg-input-wrapper">
-                      <Phone className="ong-reg-input-icon" size={20} />
+                {step === 5 && (
+                  <div className="ong-reg-form-grid ong-reg-form-grid-2">
+                    <div className="ong-reg-input-group">
+                      <label className="ong-reg-input-label">Número de Voluntários</label>
                       <input 
-                        required 
-                        type="tel" 
+                        type="number" 
                         className="ong-reg-form-input" 
-                        placeholder="(00) 00000-0000"
-                        value={formData.telefone}
-                        onChange={handlePhoneChange}
-                        maxLength={15}
+                        style={{ paddingLeft: '1rem' }}
+                        placeholder="Ex: 50"
+                        value={formData.numVoluntarios}
+                        onChange={(e) => setFormData(prev => ({ ...prev, numVoluntarios: e.target.value }))}
                       />
                     </div>
-                  </div>
-                  <div className="ong-reg-input-group">
-                    <label className="ong-reg-input-label">E-mail Institucional <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="ong-reg-input-wrapper">
-                      <Mail className="ong-reg-input-icon" size={20} />
+                    <div className="ong-reg-input-group">
+                      <label className="ong-reg-input-label">Colaboradores Fixos</label>
                       <input 
-                        required 
-                        type="email" 
+                        type="number" 
                         className="ong-reg-form-input" 
-                        placeholder="contato@ong.org"
-                        value={formData.email}
-                        onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        style={{ paddingLeft: '1rem' }}
+                        placeholder="Ex: 10"
+                        value={formData.colaboradoresFixos}
+                        onChange={(e) => setFormData(prev => ({ ...prev, colaboradoresFixos: e.target.value }))}
                       />
                     </div>
-                  </div>
-                  <div className="ong-reg-input-group ong-reg-input-group-full">
-                    <label className="ong-reg-input-label">Website ou Rede Social</label>
-                    <div className="ong-reg-input-wrapper">
-                      <Globe className="ong-reg-input-icon" size={20} />
-                      <input 
-                        type="url" 
-                        className="ong-reg-form-input" 
-                        placeholder="https://www.suaong.org"
-                        value={formData.website}
-                        onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-                      />
+                    <div className="ong-reg-info-box" style={{ background: '#4c1d95' }}>
+                      <div className="ong-reg-info-icon-box" style={{ color: '#ddd6fe' }}>
+                        <Users size={28} />
+                      </div>
+                      <div className="ong-reg-info-content">
+                        <h4>Gestão de Equipe</h4>
+                        <p>Após o cadastro, você poderá convidar sua equipe para gerenciar as demandas no painel.</p>
+                      </div>
                     </div>
                   </div>
-                  <PasswordField 
-                    label="Senha de Acesso"
-                    placeholder="Crie uma senha segura"
-                    required
-                  />
-                  <PasswordField 
-                    label="Confirmar Senha"
-                    placeholder="Digite a senha novamente"
-                    required
-                  />
-                </div>
-              )}
+                )}
 
-              {step === 4 && (
-                <div className="ong-reg-form-grid">
-                  <div className="ong-reg-input-group ong-reg-input-group-full">
-                    <label className="ong-reg-input-label">Sede da ONG <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="ong-reg-input-wrapper">
-                      <Home className="ong-reg-input-icon" size={20} />
-                      <input 
-                        required 
-                        type="text" 
-                        className="ong-reg-form-input" 
-                        placeholder="Endereço completo da sede"
-                        value={formData.sede}
-                        onChange={(e) => setFormData(prev => ({ ...prev, sede: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div className="ong-reg-input-group ong-reg-input-group-full">
-                    <label className="ong-reg-input-label">Áreas de Cobertura (Selecione os bairros onde atuam)</label>
-                    <div className="ong-reg-coverage-grid">
-                      {[
-                        { name: "Centro", icon: <Building2 size={20} />, desc: "Região central" },
-                        { name: "Zona Norte", icon: <Compass size={20} />, desc: "Bairros norte" },
-                        { name: "Zona Sul", icon: <Sun size={20} />, desc: "Bairros sul" },
-                        { name: "Zona Leste", icon: <Sunrise size={20} />, desc: "Bairros leste" },
-                        { name: "Periferia", icon: <Warehouse size={20} />, desc: "Áreas periféricas" },
-                        { name: "Região Metropolitana", icon: <Map size={20} />, desc: "Cidades vizinhas" }
-                      ].map((zona) => {
-                        const isSelected = selectedAreas.includes(zona.name);
-                        return (
-                          <label key={zona.name} className="ong-reg-coverage-card">
+                {step === 6 && (
+                  <div className="ong-reg-form-grid">
+                    <div className="ong-reg-input-group ong-reg-input-group-full">
+                      <label className="ong-reg-input-label">Causas Principais</label>
+                      <div className="ong-reg-checkbox-grid">
+                        {[
+                          "Segurança Alimentar",
+                          "Educação e Cultura",
+                          "Saúde e Bem-estar",
+                          "Meio Ambiente",
+                          "Direitos Humanos",
+                          "Proteção Animal"
+                        ].map((causa) => (
+                          <label key={causa} className="ong-reg-checkbox-card">
                             <input 
                               type="checkbox" 
-                              checked={isSelected} 
-                              onChange={() => {
-                                setSelectedAreas(prev => 
-                                  prev.includes(zona.name) 
-                                    ? prev.filter(area => area !== zona.name)
-                                    : [...prev, zona.name]
-                                );
-                              }} 
+                              checked={formData.causas.includes(causa)}
+                              onChange={(e) => {
+                                const checked = e.target.checked;
+                                setFormData(prev => ({
+                                  ...prev,
+                                  causas: checked 
+                                    ? [...prev.causas, causa]
+                                    : prev.causas.filter(c => c !== causa)
+                                }));
+                              }}
                             />
-                            <div className="ong-reg-coverage-card-inner">
-                              <div className="ong-reg-coverage-icon">
-                                {zona.icon}
-                              </div>
-                              <h4 className="ong-reg-coverage-name">{zona.name}</h4>
-                              <p className="ong-reg-coverage-desc">{zona.desc}</p>
-                              {isSelected && (
-                                <div style={{
-                                  position: 'absolute',
-                                  top: '0.5rem',
-                                  right: '0.5rem',
-                                  width: '20px',
-                                  height: '20px',
-                                  borderRadius: '50%',
-                                  background: '#8b5cf6',
-                                  color: 'white',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}>
-                                  <CheckCircle2 size={12} />
-                                </div>
-                              )}
-                            </div>
+                            <span>{causa}</span>
                           </label>
-                        );
-                      })}
+                        ))}
+                      </div>
+                    </div>
+                    <div className="ong-reg-final-box">
+                      <Award size={48} />
+                      <p>Ao se registrar, sua ONG ganha visibilidade para doadores e torna-se um ponto oficial de apoio no bairro.</p>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {step === 5 && (
-                <div className="ong-reg-form-grid ong-reg-form-grid-2">
-                  <div className="ong-reg-input-group">
-                    <label className="ong-reg-input-label">Número de Voluntários</label>
-                    <input 
-                      type="number" 
-                      className="ong-reg-form-input" 
-                      style={{ paddingLeft: '1rem' }}
-                      placeholder="Ex: 50"
-                      value={formData.numVoluntarios}
-                      onChange={(e) => setFormData(prev => ({ ...prev, numVoluntarios: e.target.value }))}
-                    />
-                  </div>
-                  <div className="ong-reg-input-group">
-                    <label className="ong-reg-input-label">Colaboradores Fixos</label>
-                    <input 
-                      type="number" 
-                      className="ong-reg-form-input" 
-                      style={{ paddingLeft: '1rem' }}
-                      placeholder="Ex: 10"
-                      value={formData.colaboradoresFixos}
-                      onChange={(e) => setFormData(prev => ({ ...prev, colaboradoresFixos: e.target.value }))}
-                    />
-                  </div>
-                  <div className="ong-reg-info-box" style={{ background: '#4c1d95' }}>
-                    <div className="ong-reg-info-icon-box" style={{ color: '#ddd6fe' }}>
-                      <Users size={28} />
-                    </div>
-                    <div className="ong-reg-info-content">
-                      <h4>Gestão de Equipe</h4>
-                      <p>Após o cadastro, você poderá convidar sua equipe para gerenciar as demandas no painel.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {step === 6 && (
-                <div className="ong-reg-form-grid">
-                  <div className="ong-reg-input-group ong-reg-input-group-full">
-                    <label className="ong-reg-input-label">Causas Principais</label>
-                    <div className="ong-reg-checkbox-grid">
-                      {[
-                        "Segurança Alimentar",
-                        "Educação e Cultura",
-                        "Saúde e Bem-estar",
-                        "Meio Ambiente",
-                        "Direitos Humanos",
-                        "Proteção Animal"
-                      ].map((causa) => (
-                        <label key={causa} className="ong-reg-checkbox-card">
-                          <input 
-                            type="checkbox" 
-                            checked={formData.causas.includes(causa)}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              setFormData(prev => ({
-                                ...prev,
-                                causas: checked 
-                                  ? [...prev.causas, causa]
-                                  : prev.causas.filter(c => c !== causa)
-                              }));
-                            }}
-                          />
-                          <span>{causa}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="ong-reg-final-box">
-                    <Award size={48} />
-                    <p>Ao se registrar, sua ONG ganha visibilidade para doadores e torna-se um ponto oficial de apoio no bairro.</p>
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="ong-reg-form-footer">
                 {step > 1 ? (

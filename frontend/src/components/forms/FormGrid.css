@@ -1,0 +1,74 @@
+/* Mobile-first responsive grid system */
+.form-grid {
+  display: grid;
+  width: 100%;
+  align-items: start;
+}
+
+/* Gap variations */
+.form-grid-gap-tight {
+  gap: 1rem;
+}
+
+.form-grid-gap-normal {
+  gap: 1.5rem;
+}
+
+.form-grid-gap-loose {
+  gap: 2rem;
+}
+
+/* Mobile: Always single column */
+.form-grid-1,
+.form-grid-2,
+.form-grid-3,
+.form-grid-4 {
+  grid-template-columns: 1fr;
+}
+
+/* Tablet and up: Responsive columns */
+@media (min-width: 768px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .form-grid-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  
+  .form-grid-4 {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+}
+
+/* Desktop: Full grid support */
+@media (min-width: 1024px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .form-grid-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  
+  .form-grid-4 {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+}
+
+/* Special layouts */
+.form-grid-radio-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .form-grid-radio-2x2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.form-grid-full-width {
+  grid-column: 1 / -1;
+}

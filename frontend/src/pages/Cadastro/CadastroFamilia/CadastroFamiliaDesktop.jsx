@@ -7,7 +7,13 @@ import {
   Zap, Info
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import PasswordField from '../../../components/ui/PasswordField';
+import FormStep from '../../../components/forms/FormStep';
+import Step1ResponsavelData from '../../../components/forms/Step1ResponsavelData';
+import Step2DocumentosData from '../../../components/forms/Step2DocumentosData';
+import Step3ContatoData from '../../../components/forms/Step3ContatoData';
+import Step4EnderecoData from '../../../components/forms/Step4EnderecoData';
+import Step5FamiliaData from '../../../components/forms/Step5FamiliaData';
+import Step6NecessidadesData from '../../../components/forms/Step6NecessidadesData';
 import Toast from '../../../components/ui/Toast';
 import ApiService from '../../../services/apiService';
 import './CadastroFamiliaDesktop.css';
@@ -64,6 +70,7 @@ export default function CadastroFamiliaDesktop() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(true);
+  const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressData, setAddressData] = useState({ endereco: '', bairro: '', referencia: '' });
   const [isLocating, setIsLocating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -281,7 +288,7 @@ export default function CadastroFamiliaDesktop() {
                 
                 setAddressData({
                   endereco: `${street} ${number}`.trim() || data.display_name?.split(',')[0] || '',
-                  bairro: neighborhood + ' (verificar se está correto)',
+                  bairro: neighborhood,
                   referencia: `${addr.amenity || addr.shop || addr.building || 'Localização GPS'}`
                 });
                 addressFound = true;
@@ -298,6 +305,9 @@ export default function CadastroFamiliaDesktop() {
               referencia: `Precisão GPS: ${Math.round(accuracy)}m`
             });
           }
+          
+          // Mostrar modal de confirmação
+          setShowAddressModal(true);
           
         } catch (error) {
           console.error('Erro:', error);
@@ -464,401 +474,57 @@ export default function CadastroFamiliaDesktop() {
             <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNextStep(); }}>
               <div className="fam-reg-form-body">
                 {step === 1 && (
-                  <div className="fam-reg-form-grid fam-reg-form-grid-2">
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Nome Completo <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-input-wrapper">
-                        <User className="fam-reg-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-reg-form-input" 
-                          placeholder="Digite seu nome completo"
-                          value={formData.nomeCompleto}
-                          onChange={(e) => updateFormData('nomeCompleto', e.target.value)}
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Data de Nascimento <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-input-wrapper">
-                        <Calendar className="fam-reg-input-icon" />
-                        <input 
-                          type="date" 
-                          className="fam-reg-form-input"
-                          value={formData.dataNascimento}
-                          onChange={(e) => updateFormData('dataNascimento', e.target.value)}
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Estado Civil <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-radio-grid fam-reg-radio-grid-4">
-                        {['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)'].map((estado) => (
-                          <label key={estado} className="fam-reg-radio-label">
-                            <input 
-                              type="radio" 
-                              name="estado_civil" 
-                              value={estado} 
-                              className="fam-reg-radio-input"
-                              checked={formData.estadoCivil === estado}
-                              onChange={(e) => updateFormData('estadoCivil', e.target.value)}
-                            />
-                            <div className="fam-reg-radio-box">{estado}</div>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Profissão <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-input-wrapper">
-                        <User className="fam-reg-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-reg-form-input" 
-                          placeholder="Qual sua profissão?"
-                          value={formData.profissao}
-                          onChange={(e) => updateFormData('profissao', e.target.value)}
-                          required 
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <Step1ResponsavelData 
+                    formData={formData}
+                    updateFormData={updateFormData}
+                  />
                 )}
 
                 {step === 2 && (
-                  <div className="fam-reg-form-grid fam-reg-form-grid-2">
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">CPF <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-input-wrapper">
-                        <IdCard className="fam-reg-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-reg-form-input" 
-                          placeholder="000.000.000-00"
-                          value={formData.cpf}
-                          onChange={handleCPFChange}
-                          maxLength={14}
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">RG <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-input-wrapper">
-                        <Fingerprint className="fam-reg-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-reg-form-input" 
-                          placeholder="00.000.000-0 ou 000.000.000-00"
-                          value={formData.rg}
-                          onChange={handleRGChange}
-                          maxLength={14}
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">NIS (Cadastro Único)</label>
-                      <div className="fam-reg-input-wrapper">
-                        <IdCard className="fam-reg-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-reg-form-input" 
-                          placeholder="000.00000.00-0 (se possuir)"
-                          value={formData.nis}
-                          onChange={(e) => updateFormData('nis', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Renda Familiar Mensal <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-card-radio-grid-renda">
-                        {[
-                          { label: 'Até R$ 500', value: 'ate_500', icon: <DollarSign size={20} />, desc: 'Renda baixa' },
-                          { label: 'R$ 501 - R$ 1.000', value: '501_1000', icon: <DollarSign size={20} />, desc: 'Renda moderada' },
-                          { label: 'R$ 1.001 - R$ 2.000', value: '1001_2000', icon: <DollarSign size={20} />, desc: 'Renda média' },
-                          { label: 'Acima de R$ 2.000', value: 'acima_2000', icon: <DollarSign size={20} />, desc: 'Renda alta' }
-                        ].map((renda) => (
-                          <label key={renda.value} className="fam-reg-radio-label">
-                            <input 
-                              type="radio" 
-                              name="renda" 
-                              value={renda.value} 
-                              className="fam-reg-radio-input"
-                              checked={formData.rendaFamiliar === renda.value}
-                              onChange={(e) => updateFormData('rendaFamiliar', e.target.value)}
-                            />
-                            <div className="fam-reg-card-radio-box-enhanced">
-                              <div className="fam-reg-card-icon-box-enhanced">
-                                {renda.icon}
-                              </div>
-                              <div className="fam-reg-card-content">
-                                <h4 className="fam-reg-card-title-enhanced">{renda.label}</h4>
-                                <p className="fam-reg-card-desc-enhanced">{renda.desc}</p>
-                              </div>
-                              <div className="fam-reg-card-check-indicator">
-                                <CheckCircle2 size={16} />
-                              </div>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <Step2DocumentosData 
+                    formData={formData}
+                    updateFormData={updateFormData}
+                    formatters={{
+                      handleCPFChange,
+                      handleRGChange
+                    }}
+                  />
                 )}
 
                 {step === 3 && (
-                  <div className="fam-reg-form-grid fam-reg-form-grid-2">
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Telefone Principal <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-input-wrapper">
-                        <Phone className="fam-reg-input-icon" />
-                        <input 
-                          type="tel" 
-                          className="fam-reg-form-input" 
-                          placeholder="(00) 00000-0000"
-                          value={formData.telefone}
-                          onChange={handlePhoneChange}
-                          maxLength={15}
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">WhatsApp (opcional)</label>
-                      <div className="fam-reg-input-wrapper">
-                        <Phone className="fam-reg-input-icon" />
-                        <input 
-                          type="tel" 
-                          className="fam-reg-form-input" 
-                          placeholder="(00) 00000-0000"
-                          value={formData.whatsapp}
-                          onChange={handleWhatsAppChange}
-                          maxLength={15}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">E-mail (opcional)</label>
-                      <div className="fam-reg-input-wrapper">
-                        <Mail className="fam-reg-input-icon" />
-                        <input 
-                          type="email" 
-                          className="fam-reg-form-input" 
-                          placeholder="seu@email.com"
-                          value={formData.email}
-                          onChange={(e) => updateFormData('email', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Melhor horário para contato <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-radio-grid fam-reg-radio-grid-4">
-                        {['Manhã', 'Tarde', 'Noite', 'Qualquer'].map((horario) => (
-                          <label key={horario} className="fam-reg-radio-label">
-                            <input 
-                              type="radio" 
-                              name="horario" 
-                              value={horario} 
-                              className="fam-reg-radio-input"
-                              checked={formData.horarioContato === horario}
-                              onChange={(e) => updateFormData('horarioContato', e.target.value)}
-                            />
-                            <div className="fam-reg-radio-box">{horario}</div>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <PasswordField 
-                      label="Senha de Acesso"
-                      placeholder="Crie uma senha segura"
-                      required
-                      value={formData.senha}
-                      onChange={(e) => updateFormData('senha', e.target.value)}
-                    />
-                    
-                    <PasswordField 
-                      label="Confirmar Senha"
-                      placeholder="Digite a senha novamente"
-                      required
-                      value={formData.confirmarSenha}
-                      onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
-                    />
-                  </div>
+                  <Step3ContatoData 
+                    formData={formData}
+                    updateFormData={updateFormData}
+                    formatters={{
+                      handlePhoneChange,
+                      handleWhatsAppChange
+                    }}
+                  />
                 )}
 
                 {step === 4 && (
-                  <div className="fam-reg-form-grid fam-reg-form-grid-2">
-                    <MapLocationButton 
-                      isLocating={isLocating} 
-                      onClick={handleMapLocation} 
-                    />
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Endereço <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-input-wrapper">
-                        <Home className="fam-reg-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-reg-form-input" 
-                          placeholder="Rua, Avenida, etc."
-                          value={addressData.endereco}
-                          onChange={(e) => setAddressData(prev => ({ ...prev, endereco: e.target.value }))}
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Bairro <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-input-wrapper">
-                        <MapPin className="fam-reg-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-reg-form-input" 
-                          placeholder="Nome do bairro"
-                          value={addressData.bairro}
-                          onChange={(e) => setAddressData(prev => ({ ...prev, bairro: e.target.value }))}
-                          required 
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Ponto de Referência</label>
-                      <div className="fam-reg-input-wrapper">
-                        <MapPin className="fam-reg-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-reg-form-input" 
-                          placeholder="Próximo a..."
-                          value={addressData.referencia}
-                          onChange={(e) => setAddressData(prev => ({ ...prev, referencia: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="fam-reg-input-group">
-                      <label className="fam-reg-input-label">Tipo de Moradia <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-reg-card-radio-grid-moradia">
-                        {[
-                          { label: 'Casa Própria', icon: <Home size={20} /> },
-                          { label: 'Casa Alugada', icon: <Home size={20} /> },
-                          { label: 'Apartamento', icon: <Home size={20} /> },
-                          { label: 'Outros', icon: <Home size={20} /> }
-                        ].map((tipo) => (
-                          <label key={tipo.label} className="fam-reg-radio-label">
-                            <input 
-                              type="radio" 
-                              name="tipo_moradia" 
-                              value={tipo.label} 
-                              className="fam-reg-radio-input"
-                              checked={formData.tipoMoradia === tipo.label}
-                              onChange={(e) => updateFormData('tipoMoradia', e.target.value)}
-                            />
-                            <div className="fam-reg-card-radio-box">
-                              <div className="fam-reg-card-icon-box">
-                                {tipo.icon}
-                              </div>
-                              <div>
-                                <h4 className="fam-reg-card-title">{tipo.label}</h4>
-                              </div>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <Step4EnderecoData 
+                    formData={formData}
+                    updateFormData={updateFormData}
+                    addressData={addressData}
+                    setAddressData={setAddressData}
+                    isLocating={isLocating}
+                    handleMapLocation={handleMapLocation}
+                  />
                 )}
 
                 {step === 5 && (
-                  <div className="fam-reg-family-input-section">
-                    <h3 className="fam-reg-section-subtitle">
-                      <Users2 size={24} color="#f97316" />
-                      Composição Familiar
-                    </h3>
-                    
-                    <div className="fam-reg-family-grid-enhanced">
-                      {familyTypes.map((item) => (
-                        <FamilyCounter
-                          key={item.key}
-                          item={item}
-                          count={familyCount[item.key]}
-                          onUpdate={updateFamilyCount}
-                        />
-                      ))}
-                    </div>
-                    
-                    <div className="fam-reg-info-banner">
-                      <div className="fam-reg-info-icon-box">
-                        <Info size={24} color="#f97316" />
-                      </div>
-                      <div className="fam-reg-info-content">
-                        <h3>Informação Importante</h3>
-                        <p>Estes dados nos ajudam a dimensionar melhor o tipo de apoio que sua família precisa e conectar com ONGs especializadas.</p>
-                      </div>
-                    </div>
-                  </div>
+                  <Step5FamiliaData 
+                    familyCount={familyCount}
+                    updateFamilyCount={updateFamilyCount}
+                  />
                 )}
 
                 {step === 6 && (
-                  <div className="fam-reg-needs-section">
-                    <h3 className="fam-reg-section-subtitle">
-                      <ListChecks size={24} color="#f97316" />
-                      Principais Necessidades
-                    </h3>
-                    
-                    <div className="fam-reg-needs-grid">
-                      {[
-                        'Alimentação', 'Roupas', 'Medicamentos', 'Material Escolar',
-                        'Móveis', 'Eletrodomésticos', 'Consultas Médicas', 'Cursos Profissionalizantes'
-                      ].map((need) => (
-                        <label key={need} className="fam-reg-need-item">
-                          <input 
-                            type="checkbox" 
-                            name="necessidades" 
-                            value={need} 
-                            className="fam-reg-need-input"
-                            checked={formData.necessidades.includes(need)}
-                            onChange={(e) => handleCheckboxChange('necessidades', need, e.target.checked)}
-                          />
-                          <div className="fam-reg-need-box">
-                            <span className="fam-reg-need-label">{need}</span>
-                            <div className="fam-reg-check-circle-box">
-                              <CheckCircle2 size={16} />
-                            </div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                    
-                    <div className="fam-reg-final-step-section">
-                      <div className="fam-reg-final-card">
-                        <h3 className="fam-reg-final-title">Quase Pronto!</h3>
-                        <p className="fam-reg-final-text">
-                          Revise suas informações e clique em "Finalizar Cadastro" para enviar sua solicitação.
-                        </p>
-                        <div className="fam-reg-final-warning">
-                          <ShieldCheck className="fam-reg-warning-icon" size={24} />
-                          <p className="fam-reg-warning-text">
-                            Seus dados serão analisados em até 24 horas. Você receberá uma confirmação por telefone.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <Step6NecessidadesData 
+                    formData={formData}
+                    handleCheckboxChange={handleCheckboxChange}
+                  />
                 )}
               </div>
 
@@ -888,6 +554,31 @@ export default function CadastroFamiliaDesktop() {
           </div>
         </main>
       </div>
+
+      {showAddressModal && (
+        <div className="fam-reg-modal-overlay">
+          <div className="fam-reg-address-modal">
+            <div className="fam-reg-address-header">
+              <MapPin size={24} color="#f97316" />
+              <h3>Confirme seu Endereço</h3>
+            </div>
+            <div className="fam-reg-address-content">
+              <p><strong>Endereço:</strong> {addressData.endereco}</p>
+              <p><strong>Bairro:</strong> {addressData.bairro}</p>
+              <p><strong>Referência:</strong> {addressData.referencia}</p>
+            </div>
+            <p className="fam-reg-address-warning">
+              Por favor, verifique se as informações estão corretas e faça as correções necessárias nos campos.
+            </p>
+            <button 
+              className="fam-reg-address-btn" 
+              onClick={() => setShowAddressModal(false)}
+            >
+              Entendi, vou conferir
+            </button>
+          </div>
+        </div>
+      )}
 
       {showPrivacyModal && (
         <div className="fam-reg-modal-overlay">

@@ -1,0 +1,123 @@
+/* Input field component styles */
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.input-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.required-indicator {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.input-control {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  font-weight: 500;
+  background: white;
+  transition: all 0.2s ease;
+  color: #111827;
+}
+
+.input-control.has-icon {
+  padding-left: 3.5rem;
+}
+
+.input-control:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.input-control:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.input-control.error {
+  border-color: #ef4444;
+}
+
+.input-control.error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.input-control::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.input-error {
+  font-size: 0.875rem;
+  color: #ef4444;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.input-helper {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .input-control {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 1.125rem 1.25rem;
+  }
+  
+  .input-control.has-icon {
+    padding-left: 3.75rem;
+  }
+}
+
+/* Focus styles for better accessibility */
+.input-control:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .input-control {
+    border-width: 3px;
+  }
+  
+  .input-control:focus {
+    border-color: #000;
+  }
+}
