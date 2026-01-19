@@ -4,9 +4,10 @@ import {
   MapPin, CheckCircle2, ChevronRight, 
   ChevronLeft, Phone, Mail, 
   Trophy, Zap, Heart, Award, Info, Users,
-  ShoppingBag, CreditCard, Tag, Eye, EyeOff, AlertCircle, X
+  ShoppingBag, CreditCard, Tag, Eye, EyeOff
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Toast from '../../../components/ui/Toast';
 import './CadastroComercio.css';
 
 export default function CadastroComercioDesktop() {
@@ -14,12 +15,16 @@ export default function CadastroComercioDesktop() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const totalSteps = 6;
+
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+  };
 
   useEffect(() => {
     if (isSubmitted) {
-      setShowAlert(true);
+      showToast('Sua parceria foi enviada com sucesso! O processo de análise pode demorar até 24 horas. O administrador precisa liberar seu acesso.', 'success');
     }
   }, [isSubmitted]);
 
@@ -52,22 +57,6 @@ export default function CadastroComercioDesktop() {
   if (isSubmitted) {
     return (
       <div className="comercio-success-page-immersive comercio-theme comercio-unique-success-view">
-        {showAlert && (
-          <div className="comercio-alert-overlay">
-            <div className="comercio-alert-modal comercio-animate-bounce-in">
-              <div className="comercio-alert-header">
-                <AlertCircle size={28} color="#3b82f6" />
-                <h3>Aviso Importante</h3>
-                <button onClick={() => setShowAlert(false)} className="comercio-close-alert-btn">
-                  <X size={20} />
-                </button>
-              </div>
-              <p>Sua parceria foi enviada com sucesso! O processo de análise pode demorar até <strong>24 horas</strong>.</p>
-              <button onClick={() => setShowAlert(false)} className="comercio-alert-confirm-btn">Entendi</button>
-            </div>
-          </div>
-        )}
-
         <div className="comercio-floating-elements">
           <div className="comercio-float-shape comercio-s1-blue" />
           <div className="comercio-float-shape comercio-s2-blue" />
@@ -423,6 +412,14 @@ export default function CadastroComercioDesktop() {
           </div>
         </main>
       </div>
+
+      {/* Toast */}
+      <Toast 
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ show: false, message: '', type: 'info' })}
+      />
     </div>
   );
 }

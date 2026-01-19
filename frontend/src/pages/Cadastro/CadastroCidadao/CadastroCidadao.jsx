@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
+import Toast from '../../../components/ui/Toast';
 import ApiService from '../../../services/apiService';
 import './CadastroCidadao.css';
 import '../../../styles/components/PasswordField.css';
@@ -19,7 +20,6 @@ import '../../../styles/components/Toast.css';
 export default function CadastroCidadao() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [formData, setFormData] = useState({
@@ -167,7 +167,7 @@ export default function CadastroCidadao() {
       const { confirmPassword, ...dataToSend } = formData;
       await ApiService.createCidadao(dataToSend);
       setIsSubmitted(true);
-      setTimeout(() => setShowAnalysisAlert(true), 2000);
+      showToast('Cadastro realizado com sucesso! O administrador precisa liberar seu acesso.', 'success');
     } catch (error) {
       console.error('Erro ao cadastrar cidadão:', error);
       showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
@@ -257,24 +257,6 @@ export default function CadastroCidadao() {
             </div>
           </div>
         </div>
-
-        {showAnalysisAlert && (
-          <div className="alert-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
-            <div className="analysis-alert">
-              <div className="alert-icon">
-                <ShieldCheck size={48} />
-              </div>
-              <h3>Cadastro em Análise</h3>
-              <p>Seu cadastro está sendo analisado por nossa equipe. Você receberá uma notificação em até 24 horas com o resultado.</p>
-              <button 
-                className="alert-btn" 
-                onClick={() => setShowAnalysisAlert(false)}
-              >
-                Entendi
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -595,19 +577,12 @@ export default function CadastroCidadao() {
       </div>
 
       {/* Toast */}
-      {toast.show && (
-        <div className={`toast toast-${toast.type}`}>
-          <div className="toast-content">
-            <span className="toast-message">{toast.message}</span>
-            <button 
-              className="toast-close" 
-              onClick={() => setToast({ show: false, message: '', type: 'error' })}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+      <Toast 
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ show: false, message: '', type: 'error' })}
+      />
     </div>
   );
 }

@@ -8,13 +8,14 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
+import Toast from '../../../components/ui/Toast';
 import './CadastroONG.css';
 
 export default function CadastroONGDesktop() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState([]);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const [formData, setFormData] = useState({
     cnpj: '',
     telefone: '',
@@ -29,6 +30,10 @@ export default function CadastroONGDesktop() {
     causas: []
   });
   const totalSteps = 6;
+
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+  };
 
   const handleCNPJChange = (e) => {
     let value = e.target.value.replace(/\D/g, '');
@@ -61,7 +66,7 @@ export default function CadastroONGDesktop() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitted(true);
-    setTimeout(() => setShowAnalysisAlert(true), 2000);
+    showToast('ONG registrada com sucesso! Seu cadastro está sendo analisado por nossa equipe. Você receberá uma notificação em até 24 horas com o resultado. O administrador precisa liberar seu acesso.', 'success');
   };
 
   const steps = [
@@ -148,23 +153,13 @@ export default function CadastroONGDesktop() {
           </div>
         </div>
 
-        {showAnalysisAlert && (
-          <div className="ong-reg-modal-overlay">
-            <div className="ong-reg-alert-modal">
-              <div className="ong-reg-alert-icon-box">
-                <ShieldCheck size={48} />
-              </div>
-              <h3>Cadastro em Análise</h3>
-              <p>Seu cadastro está sendo analisado por nossa equipe. Você receberá uma notificação em até 24 horas com o resultado.</p>
-              <button 
-                className="ong-reg-alert-btn" 
-                onClick={() => setShowAnalysisAlert(false)}
-              >
-                Entendi
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Toast */}
+        <Toast 
+          show={toast.show}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ show: false, message: '', type: 'info' })}
+        />
       </div>
     );
   }
@@ -546,6 +541,14 @@ export default function CadastroONGDesktop() {
           </div>
         </main>
       </div>
+
+      {/* Toast */}
+      <Toast 
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ show: false, message: '', type: 'info' })}
+      />
     </div>
   );
 }

@@ -48,6 +48,7 @@ export default function PainelSocial() {
   const [editingFamily, setEditingFamily] = useState(null);
   const [activeFilter, setActiveFilter] = useState("todos");
   const [view, setView] = useState("lista");
+  const [isLoading, setIsLoading] = useState(true);
   const [mapLayers, setMapLayers] = useState({
     familias: true,
     pedidos: true,
@@ -95,6 +96,7 @@ export default function PainelSocial() {
 
   const loadFamilias = async () => {
     try {
+      setIsLoading(true);
       console.log('🔄 Carregando famílias...');
       const response = await ApiService.getFamilias();
       console.log('📦 Resposta da API:', response);
@@ -139,6 +141,8 @@ export default function PainelSocial() {
     } catch (error) {
       console.error('❌ Erro ao carregar famílias:', error);
       toast.error('Erro ao carregar famílias do banco');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -290,6 +294,30 @@ export default function PainelSocial() {
       default: return null;
     }
   };
+
+  // Loading Component
+  const LoadingScreen = () => (
+    <div className="loading-screen">
+      <div className="loading-content">
+        <div className="loading-spinner">
+          <div className="spinner-ring"></div>
+          <div className="spinner-ring"></div>
+          <div className="spinner-ring"></div>
+        </div>
+        <h3>Carregando Painel Social</h3>
+        <p>Buscando famílias cadastradas...</p>
+        <div className="loading-progress">
+          <div className="progress-bar">
+            <div className="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="panel">

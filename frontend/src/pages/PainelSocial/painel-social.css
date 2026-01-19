@@ -1050,3 +1050,139 @@
   .th-vuln, .td-vuln { display: none; }
   .field-row.triple, .field-row.double { grid-template-columns: 1fr; }
 }
+
+/* Loading Screen Styles */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.loading-content {
+  text-align: center;
+  max-width: 400px;
+  padding: 40px;
+}
+
+.loading-spinner {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 30px;
+}
+
+.spinner-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+}
+
+.spinner-ring:nth-child(1) {
+  border-top-color: #22c55e;
+  animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+  border-top-color: #3b82f6;
+  animation-delay: -0.4s;
+  width: 70%;
+  height: 70%;
+  top: 15%;
+  left: 15%;
+}
+
+.spinner-ring:nth-child(3) {
+  border-top-color: #f59e0b;
+  animation-delay: -0.8s;
+  width: 40%;
+  height: 40%;
+  top: 30%;
+  left: 30%;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-content h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--slate-900);
+  margin-bottom: 12px;
+  letter-spacing: -0.025em;
+}
+
+.loading-content p {
+  font-size: 16px;
+  color: var(--slate-600);
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.loading-progress {
+  width: 100%;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--slate-200);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #3b82f6, #f59e0b);
+  background-size: 200% 100%;
+  border-radius: 3px;
+  animation: progress 2s ease-in-out infinite;
+}
+
+@keyframes progress {
+  0% {
+    width: 0%;
+    background-position: 0% 50%;
+  }
+  50% {
+    width: 70%;
+    background-position: 100% 50%;
+  }
+  100% {
+    width: 100%;
+    background-position: 0% 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .loading-content {
+    padding: 20px;
+  }
+  
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
+  }
+  
+  .loading-content h3 {
+    font-size: 20px;
+  }
+  
+  .loading-content p {
+    font-size: 14px;
+  }
+}

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
+import Toast from '../../../components/ui/Toast';
 import ApiService from '../../../services/apiService';
 import './CadastroFamiliaDesktop.css';
 
@@ -63,7 +64,6 @@ export default function CadastroFamiliaDesktop() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(true);
-  const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
   const [addressData, setAddressData] = useState({ endereco: '', bairro: '', referencia: '' });
   const [isLocating, setIsLocating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -228,7 +228,7 @@ export default function CadastroFamiliaDesktop() {
       
       await ApiService.createFamilia(submitData);
       setIsSubmitted(true);
-      setTimeout(() => setShowAnalysisAlert(true), 2000);
+      showToast('Família cadastrada com sucesso! Seu cadastro está sendo analisado. Você receberá uma notificação em até 24 horas. O administrador precisa liberar seu acesso.', 'success');
     } catch (error) {
       console.error('Erro ao cadastrar família:', error);
       showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
@@ -909,37 +909,13 @@ export default function CadastroFamiliaDesktop() {
         </div>
       )}
 
-      {showAnalysisAlert && (
-        <div className="fam-reg-alert-overlay">
-          <div className="fam-reg-analysis-alert">
-            <div className="fam-reg-alert-icon">
-              <ShieldCheck size={32} />
-            </div>
-            <h3>Análise Iniciada!</h3>
-            <p>Seu cadastro está sendo analisado. Você receberá uma notificação em até 24 horas.</p>
-            <button 
-              className="fam-reg-alert-btn" 
-              onClick={() => setShowAnalysisAlert(false)}
-            >
-              Entendi
-            </button>
-          </div>
-        </div>
-      )}
-
-      {toast.show && (
-        <div className={`fam-reg-toast fam-reg-toast-${toast.type}`}>
-          <div className="fam-reg-toast-content">
-            <span className="fam-reg-toast-message">{toast.message}</span>
-            <button 
-              className="fam-reg-toast-close" 
-              onClick={() => setToast({ ...toast, show: false })}
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Toast */}
+      <Toast 
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ show: false, message: '', type: 'error' })}
+      />
     </div>
   );
 }
