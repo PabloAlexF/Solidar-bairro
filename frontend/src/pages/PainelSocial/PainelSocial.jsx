@@ -396,22 +396,6 @@ export default function PainelSocial() {
         </div>
 
         <div className="header-right">
-          <div className="bairro-selector" ref={dropdownRef}>
-            <button className="bairro-trigger" onClick={() => setBairroOpen(!bairroOpen)}>
-              <MapPin size={14} />
-              {bairro}
-              <ChevronDown size={14} className={bairroOpen ? "flip" : ""} />
-            </button>
-            {bairroOpen && (
-              <div className="bairro-menu">
-                {BAIRROS.map((b) => (
-                  <button key={b} className={b === bairro ? "selected" : ""} onClick={() => { setBairro(b); setBairroOpen(false); }}>
-                    {b}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </header>
 
