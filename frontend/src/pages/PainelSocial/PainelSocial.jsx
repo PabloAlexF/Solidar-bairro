@@ -102,13 +102,39 @@ export default function PainelSocial() {
       console.log('📦 Resposta da API:', response);
       
       if (response.success) {
-        const formatted = response.data.map(f => {
+        const formatted = await Promise.all(response.data.map(async f => {
           const endereco = f.endereco || {};
           const address = endereco.endereco 
             ? `${endereco.endereco}, ${endereco.bairro || ''}` 
             : (endereco.logradouro 
                 ? `${endereco.logradouro}${endereco.numero ? ', ' + endereco.numero : ''}` 
                 : f.address || 'Endereço não informado');
+          
+          // Geocodificar endereço se não tiver coordenadas
+          let lat = endereco.latitude || f.lat;
+          let lng = endereco.longitude || f.lng;
+          
+          if (!lat || !lng) {
+            try {
+              const fullAddress = `${address}, ${endereco.bairro || f.bairro || bairro}, Minas Gerais, Brasil`;
+              const geoResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`);
+              const geoData = await geoResponse.json();
+              
+              if (geoData && geoData.length > 0) {
+                lat = parseFloat(geoData[0].lat);
+                lng = parseFloat(geoData[0].lon);
+                console.log(`📍 Geocodificado: ${address} -> ${lat}, ${lng}`);
+              } else {
+                // Fallback para coordenadas da região
+                lat = -19.768 + (Math.random() - 0.5) * 0.01;
+                lng = -43.85 + (Math.random() - 0.5) * 0.01;
+              }
+            } catch (error) {
+              console.error('Erro na geocodificação:', error);
+              lat = -19.768 + (Math.random() - 0.5) * 0.01;
+              lng = -43.85 + (Math.random() - 0.5) * 0.01;
+            }
+          }
           
           return {
             id: f.id,
@@ -120,23 +146,48 @@ export default function PainelSocial() {
             elderly: f.composicao?.idosos || f.elderly || 0,
             income: f.rendaFamiliar || f.income || 'Sem renda',
             bairro: endereco.bairro || f.bairro || bairro,
-            lat: endereco.latitude || f.lat || -19.768 + (Math.random() - 0.5) * 0.01,
-            lng: endereco.longitude || f.lng || -43.85 + (Math.random() - 0.5) * 0.01,
+            lat,
+            lng,
             color: (f.vulnerability === 'Alta' || f.urgency === 'Alta') ? '#dc2626' : 
                    (f.vulnerability === 'Média' || f.urgency === 'Média') ? '#d97706' : '#059669',
             phone: f.telefone || f.phone || '',
             address,
             status: f.status === 'pending' ? 'pendente' : f.status || 'ativo',
-            lastUpdate: f.atualizadoEm 
-              ? (f.atualizadoEm.seconds 
-                  ? new Date(f.atualizadoEm.seconds * 1000).toISOString().split('T')[0]
-                  : (typeof f.atualizadoEm === 'string' ? f.atualizadoEm.split('T')[0] : new Date().toISOString().split('T')[0]))
-              : new Date().toISOString().split('T')[0]
+            registeredAt: (() => {
+              if (!f.criadoEm) return 'Não informado';
+              try {
+                if (f.criadoEm.seconds) {
+                  return new Date(f.criadoEm.seconds * 1000).toLocaleDateString('pt-BR');
+                }
+                if (f.criadoEm._seconds) {
+                  return new Date(f.criadoEm._seconds * 1000).toLocaleDateString('pt-BR');
+                }
+                const date = new Date(f.criadoEm);
+                return isNaN(date.getTime()) ? 'Data inválida' : date.toLocaleDateString('pt-BR');
+              } catch {
+                return 'Data inválida';
+              }
+            })(),
+            lastUpdate: (() => {
+              if (!f.atualizadoEm) return new Date().toISOString().split('T')[0];
+              try {
+                if (f.atualizadoEm.seconds) {
+                  return new Date(f.atualizadoEm.seconds * 1000).toISOString().split('T')[0];
+                }
+                if (f.atualizadoEm._seconds) {
+                  return new Date(f.atualizadoEm._seconds * 1000).toISOString().split('T')[0];
+                }
+                const date = new Date(f.atualizadoEm);
+                return isNaN(date.getTime()) ? new Date().toISOString().split('T')[0] : date.toISOString().split('T')[0];
+              } catch {
+                return new Date().toISOString().split('T')[0];
+              }
+            })()
           };
-        });
+        }));
         setFamilies(formatted);
         console.log(`✅ ${formatted.length} famílias carregadas do banco`);
-        console.log('📍 Famílias:', formatted.map(f => ({ id: f.id, name: f.name, bairro: f.bairro })));
+        console.log('📍 Famílias:', formatted.map(f => ({ id: f.id, name: f.name, bairro: f.bairro, lat: f.lat, lng: f.lng })));
       }
     } catch (error) {
       console.error('❌ Erro ao carregar famílias:', error);
@@ -452,6 +503,7 @@ export default function PainelSocial() {
                 <div className="th-cell th-family">Família</div>
                 <div className="th-cell th-vuln">Vulnerabilidade</div>
                 <div className="th-cell th-comp">Composição</div>
+                <div className="th-cell th-date">Cadastro</div>
                 <div className="th-cell th-status">Status</div>
                 <div className="th-cell th-actions"></div>
               </div>
@@ -481,6 +533,11 @@ export default function PainelSocial() {
                           {f.children > 0 && <span className="comp-tag child">{f.children} criança{f.children > 1 ? "s" : ""}</span>}
                           {f.elderly > 0 && <span className="comp-tag elderly">{f.elderly} idoso{f.elderly > 1 ? "s" : ""}</span>}
                         </div>
+                      </div>
+                    </div>
+                    <div className="td-cell td-date">
+                      <div className="date-info">
+                        <span className="date-text">{f.registeredAt}</span>
                       </div>
                     </div>
                     <div className="td-cell td-status">
@@ -596,6 +653,7 @@ export default function PainelSocial() {
               <div className="detail-list">
                 {selectedFamily.phone && <div className="detail-row"><Phone size={14} /><span>{selectedFamily.phone}</span></div>}
                 {selectedFamily.address && <div className="detail-row"><HomeIcon size={14} /><span>{selectedFamily.address}</span></div>}
+                <div className="detail-row"><Clock size={14} /><span>Cadastrado em {selectedFamily.registeredAt}</span></div>
                 <div className="detail-row"><Clock size={14} /><span>Atualizado em {selectedFamily.lastUpdate}</span></div>
               </div>
             </div>

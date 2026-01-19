@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import DashboardMobile from './DashboardMobile';
+import Toast from '../../components/ui/Toast';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -121,7 +122,12 @@ export default function AdminDashboard() {
     check3: false,
     check4: false
   });
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const navigate = useNavigate();
+
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+  };
 
   useEffect(() => {
     fetchData();
@@ -216,10 +222,12 @@ export default function AdminDashboard() {
       setRejectionReason('');
       setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false });
       
-      alert(`${type === 'ongs' ? 'ONG' : type === 'comercios' ? 'Comércio' : type === 'cidadaos' ? 'Cidadão' : 'Família'} ${status === 'verified' ? 'aprovado' : 'rejeitado'} com sucesso!`);
+      const entityName = type === 'ongs' ? 'ONG' : type === 'comercios' ? 'Comércio' : type === 'cidadaos' ? 'Cidadão' : 'Família';
+      const statusText = status === 'verified' ? 'aprovado' : 'rejeitado';
+      showToast(`${entityName} ${statusText} com sucesso!`, status === 'verified' ? 'success' : 'info');
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('Erro ao atualizar status. Tente novamente.');
+      showToast('Erro ao atualizar status. Tente novamente.', 'error');
     }
   };
 
@@ -1130,6 +1138,14 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Toast */}
+      <Toast 
+        show={toast.show}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ show: false, message: '', type: 'info' })}
+      />
     </div>
   );
 }

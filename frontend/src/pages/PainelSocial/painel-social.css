@@ -422,7 +422,7 @@
 
 .table-head {
   display: grid;
-  grid-template-columns: 2fr 140px 180px 120px 50px;
+  grid-template-columns: 2fr 140px 180px 120px 120px 50px;
   padding: 12px 16px;
   background: var(--slate-50);
   border-bottom: 1px solid var(--slate-200);
@@ -443,7 +443,7 @@
 
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 140px 180px 120px 50px;
+  grid-template-columns: 2fr 140px 180px 120px 120px 50px;
   padding: 14px 16px;
   align-items: center;
   border-bottom: 1px solid var(--slate-100);
@@ -556,6 +556,20 @@
 .comp-tag.elderly {
   background: var(--amber-50);
   color: var(--amber-600);
+}
+
+.td-date {}
+
+.date-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.date-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--slate-600);
 }
 
 .td-status {}
@@ -1048,6 +1062,7 @@
   .table-head, .table-row { grid-template-columns: 1fr 100px 50px; }
   .th-comp, .td-comp { display: none; }
   .th-vuln, .td-vuln { display: none; }
+  .th-date, .td-date { display: none; }
   .field-row.triple, .field-row.double { grid-template-columns: 1fr; }
 }
 
