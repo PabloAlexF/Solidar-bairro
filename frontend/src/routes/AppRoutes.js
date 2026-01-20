@@ -19,6 +19,7 @@ import AchadosEPerdidos from '../pages/AchadosEPerdidos';
 import Perfil from '../pages/Perfil';
 import Chat from '../pages/Chat';
 import PainelSocial from '../pages/PainelSocial';
+import DesignSystemDemo from '../pages/DesignSystemDemo';
 
 // Remaining pages (not yet refactored)
 import NovoAnuncio from '../pages/NovoAnuncio';
@@ -37,6 +38,9 @@ const AppRoutes = () => {
       <Route path="/cadastro/comercio" element={<CadastroComercio />} />
       <Route path="/cadastro/familia" element={<CadastroFamilia />} />
       <Route path="/cadastro/ong" element={<CadastroONG />} />
+      
+      {/* Design System Demo */}
+      <Route path="/design-system" element={<DesignSystemDemo />} />
       
       {/* Rotas protegidas */}
       <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />

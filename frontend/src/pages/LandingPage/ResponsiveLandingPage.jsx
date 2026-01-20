@@ -1,10 +1,39 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { useOnboarding } from '../../hooks/useOnboarding';
 import { MobileLandingPage } from '../../components/MobileLandingPage';
 import DesktopLandingPage from './DesktopLandingPage';
+import Onboarding from '../../components/Onboarding';
 
 export default function ResponsiveLandingPage() {
   const isMobile = useIsMobile();
+  const { 
+    showOnboarding, 
+    isLoading, 
+    completeOnboarding, 
+    skipOnboarding,
+    resetOnboarding
+  } = useOnboarding();
 
-  return isMobile ? <MobileLandingPage /> : <DesktopLandingPage />;
+
+
+  if (isLoading) {
+    return (
+      <div className="sb-flex sb-items-center sb-justify-center sb-min-h-screen">
+        <div className="sb-loading sb-loading-lg" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {isMobile ? <MobileLandingPage /> : <DesktopLandingPage />}
+      {showOnboarding && (
+        <Onboarding 
+          onComplete={completeOnboarding}
+          onSkip={skipOnboarding}
+        />
+      )}
+    </>
+  );
 }

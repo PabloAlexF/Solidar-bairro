@@ -1,20 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import CadastroCidadao from './CadastroCidadao';
 import CadastroCidadaoMobile from './CadastroCidadaoMobile';
 
 const CadastroCidadaoWrapper = () => {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const isMobile = useIsMobile();
 
   return isMobile ? <CadastroCidadaoMobile /> : <CadastroCidadao />;
 };

@@ -101,7 +101,7 @@ export default function CadastroFamiliaDesktop() {
     idosos: 0,
     necessidades: []
   });
-  
+
   const totalSteps = 6;
   
   const steps = [

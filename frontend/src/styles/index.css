@@ -1,4 +1,5 @@
 /* ===== IMPORTS PRINCIPAIS ===== */
+@import './design-system.css';
 @import './globals.css';
 @import './modal-fixes.css';
 @import './components/passo6-melhorado.css';

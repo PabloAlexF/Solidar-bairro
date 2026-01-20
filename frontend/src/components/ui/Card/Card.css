@@ -1,0 +1,10 @@
+/* === CARD COMPONENT EXTRAS === */
+.sb-card-hover {
+  cursor: pointer;
+}
+
+.sb-card-no-padding .sb-card-header,
+.sb-card-no-padding .sb-card-body,
+.sb-card-no-padding .sb-card-footer {
+  padding: 0;
+}
