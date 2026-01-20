@@ -3,7 +3,7 @@ import { useIsMobile } from '../../hooks/useIsMobile';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import { MobileLandingPage } from '../../components/MobileLandingPage';
 import DesktopLandingPage from './DesktopLandingPage';
-import Onboarding from '../../components/Onboarding';
+import Onboarding from '../../components/Onboarding/Onboarding';
 
 export default function ResponsiveLandingPage() {
   const isMobile = useIsMobile();

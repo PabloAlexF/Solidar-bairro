@@ -1,102 +1,115 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
   HandHelping,
-  Building2,
-  Bell,
   Sparkles,
   PartyPopper,
   CheckCircle2,
   Circle,
-  MousePointerClick,
   ChevronRight,
   X,
   MapPin,
   Clock,
-  Award,
   BookOpen,
-  ToggleLeft,
-  ToggleRight,
-  Users,
   ArrowRight,
   User,
   Car,
   Coffee,
-  Briefcase,
   Package,
   Search,
   Camera,
-  Tag,
-  Phone,
   MessageCircle,
-  ArrowUp,
-  ArrowLeft
+  Zap,
+  Shield,
+  Users,
+  Gift,
+  Globe,
+  Eye,
+  Lock,
+  BadgeCheck,
+  Building2,
+  UserCheck,
+  FileCheck,
+  Navigation,
+  Star,
+  ThumbsUp,
+  AlertCircle
 } from 'lucide-react';
 import './Onboarding.css';
 
-// ==================================
-//      MOCK UI COMPONENTS (v5)
-// ==================================
+const FeatureHighlight = ({ icon: Icon, title, description, color }) => (
+  <motion.div 
+    className="onb-feature-highlight"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ scale: 1.02, y: -2 }}
+  >
+    <div className="onb-feature-icon" style={{ background: color }}>
+      <Icon size={20} />
+    </div>
+    <div className="onb-feature-content">
+      <h4>{title}</h4>
+      <p>{description}</p>
+    </div>
+  </motion.div>
+);
+
+const SecurityBadge = ({ icon: Icon, text }) => (
+  <div className="onb-security-badge">
+    <Icon size={14} />
+    <span>{text}</span>
+  </div>
+);
 
 const MockHelpCard = ({ item, onClick, isSelected }) => (
   <motion.button
     layout
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
-    whileHover={{ scale: 1.02, y: -2, boxShadow: "0 8px 20px rgba(0,0,0,0.08)" }}
+    whileHover={{ scale: 1.02, y: -4 }}
     whileTap={{ scale: 0.98 }}
-    className={`sb-mock-card help ${isSelected ? 'selected' : ''}`}
+    className={`onb-card onb-card-help ${isSelected ? 'selected' : ''}`}
     onClick={onClick}
   >
-    <div className="sb-mock-card-header">
-      <div className="sb-mock-card-category">
-        <span className="sb-mock-card-category-icon" style={{ backgroundColor: item.categoryColor }}>
-          <item.categoryIcon size={16} />
-        </span>
-        <span className="sb-mock-card-category-name">{item.category}</span>
+    <div className="onb-card-content">
+      <div className="onb-card-header">
+        <div className="onb-card-category">
+          <span className="onb-card-category-icon" style={{ backgroundColor: item.categoryColor }}>
+            <item.categoryIcon size={16} />
+          </span>
+          <span className="onb-card-category-name">{item.category}</span>
+        </div>
+        <div className="onb-card-time">
+          <Clock size={12} />
+          {item.time}
+        </div>
       </div>
-      <div className="sb-mock-card-time-info">
-        <Clock size={12} />
-        {item.time}
+      <p className="onb-card-desc">{item.request}</p>
+      <div className="onb-card-footer">
+        <div className="onb-card-user">
+          <div className="onb-card-avatar">
+            <User size={14} />
+          </div>
+          <span className="onb-card-user-name">{item.user}</span>
+        </div>
+        <div className="onb-card-location">
+          <Navigation size={13} />
+          <span>{item.distance}</span>
+        </div>
       </div>
     </div>
-    <p className="sb-mock-card-desc">{item.request}</p>
-    <div className="sb-mock-card-footer">
-      <div className="sb-mock-card-user">
-        <User size={18} />
-        <span>{item.user}</span>
-      </div>
-      <div className="sb-mock-card-location">
-        <MapPin size={18} />
-        <span>{item.location}</span>
-      </div>
-    </div>
+    {isSelected && (
+      <motion.div 
+        className="onb-card-selected-badge"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 500, damping: 25 }}
+      >
+        <CheckCircle2 size={18} />
+      </motion.div>
+    )}
   </motion.button>
-);
-
-const MockCommerceCard = ({ item, onClick, isSelected }) => (
-  <button className={`sb-mock-card commerce ${isSelected ? 'selected' : ''}`} onClick={onClick}>
-    <div className="sb-mock-card-header">
-      <span className="sb-mock-card-title">{item.name}</span>
-      {item.isPartner && <span className="sb-mock-card-partner"><Award size={12} /> Parceiro</span>}
-    </div>
-    <p className="sb-mock-card-desc">{item.category}</p>
-    <div className="sb-mock-card-footer">
-      <div className="sb-mock-card-tag commerce-tag">{item.rating} ★</div>
-      <div className="sb-mock-card-location"><MapPin size={12} /> {item.location}</div>
-    </div>
-  </button>
-);
-
-const MockInterestItem = ({ item, onClick, isSelected }) => (
-  <button className={`sb-mock-interest-item ${isSelected ? 'selected' : ''}`} onClick={onClick}>
-    <div className="sb-mock-interest-icon"><item.icon size={20} /></div>
-    <span className="sb-mock-interest-label">{item.label}</span>
-    <div className="sb-mock-interest-toggle">
-      {isSelected ? <ToggleRight size={24} className="toggled" /> : <ToggleLeft size={24} />}
-    </div>
-  </button>
 );
 
 const MockLostFoundCard = ({ item, onClick, isSelected, onChatClick }) => (
@@ -104,102 +117,172 @@ const MockLostFoundCard = ({ item, onClick, isSelected, onChatClick }) => (
     layout
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
-    whileHover={{ scale: 1.02, y: -2, boxShadow: "0 8px 20px rgba(0,0,0,0.08)" }}
+    whileHover={{ scale: 1.02, y: -4 }}
     whileTap={{ scale: 0.98 }}
-    className={`sb-mock-card lost-found ${isSelected ? 'selected' : ''}`}
+    className={`onb-card onb-card-lostfound ${isSelected ? 'selected' : ''}`}
     onClick={onClick}
   >
-    <div className="sb-mock-card-image">
+    <div className="onb-card-image">
       {item.image_url ? (
-        <img src={item.image_url} alt={item.title} className="sb-mock-card-img" />
+        <img src={item.image_url} alt={item.title} className="onb-card-img" />
       ) : (
-        <div className="sb-mock-card-placeholder">
-          <Camera size={32} strokeWidth={1} />
+        <div className="onb-card-placeholder">
+          <Camera size={28} strokeWidth={1.5} />
         </div>
       )}
-      <div className={`sb-mock-type-badge ${item.type}`}>
+      <div className={`onb-type-badge ${item.type}`}>
         {item.type === 'lost' ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Search size={12} /> PERDIDO</span>
+          <span><Search size={10} /> PERDIDO</span>
         ) : (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle2 size={12} /> ACHADO</span>
+          <span><CheckCircle2 size={10} /> ACHADO</span>
         )}
       </div>
+      {item.verified && (
+        <div className="onb-verified-badge">
+          <Shield size={10} />
+        </div>
+      )}
     </div>
 
-    <div className="sb-mock-card-body">
-      <div className="sb-mock-card-header">
-        <span className="sb-mock-card-category-tag">{item.category}</span>
-        <span className="sb-mock-card-date">
-          <Clock size={12} />
-          {item.date_occurrence ? new Date(item.date_occurrence).toLocaleDateString('pt-BR') : 'Recentemente'}
+    <div className="onb-card-body">
+      <div className="onb-card-header">
+        <span className="onb-card-category-tag">{item.category}</span>
+        <span className="onb-card-date">
+          <Clock size={11} />
+          {item.date_occurrence ? new Date(item.date_occurrence).toLocaleDateString('pt-BR') : 'Recente'}
         </span>
       </div>
 
-      <h3 className="sb-mock-card-title">
-        {item.title || 'Novo Item'}
-      </h3>
-      <p className="sb-mock-card-desc" style={{ whiteSpace: 'pre-wrap' }}>{item.description || 'Descreva os detalhes importantes aqui...'}</p>
+      <h3 className="onb-card-title">{item.title || 'Novo Item'}</h3>
+      <p className="onb-card-desc">{item.description || 'Descrição do item...'}</p>
 
-      <div className="sb-mock-card-meta">
-        <div className="sb-mock-card-meta-item">
-          <MapPin size={14} />
-          <span>{item.location || 'Local a definir'}</span>
+      <div className="onb-card-meta">
+        <div className="onb-card-meta-item">
+          <Navigation size={13} />
+          <span>{item.distance || '500m de você'}</span>
         </div>
         {item.reward && item.type === 'lost' && (
-          <div className="sb-mock-card-meta-item reward">
-            <Package size={14} />
-            <span>Recompensa: {item.reward}</span>
+          <div className="onb-card-meta-item reward">
+            <Gift size={13} />
+            <span>{item.reward}</span>
           </div>
         )}
       </div>
-
-      {item.tags && item.tags.length > 0 && (
-        <div className="sb-mock-card-tags">
-          {item.tags.map((tag, i) => (
-            <span key={i} className="sb-mock-tag">#{tag}</span>
-          ))}
-        </div>
-      )}
     </div>
 
-    <div className="sb-mock-card-footer">
-      <button className="sb-mock-chat-btn sb-mock-chat-btn-centered" onClick={() => onChatClick(item)}>
-        ABRIR CHAT
+    <div className="onb-card-action">
+      <button 
+        className="onb-chat-btn" 
+        onClick={(e) => {
+          e.stopPropagation();
+          onChatClick(item);
+        }}
+      >
+        <MessageCircle size={14} />
+        Entrar em Contato
       </button>
     </div>
+
+    {isSelected && (
+      <motion.div 
+        className="onb-card-selected-badge"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 500, damping: 25 }}
+      >
+        <CheckCircle2 size={18} />
+      </motion.div>
+    )}
   </motion.button>
 );
 
 const Confetti = () => (
-  <div className="sb-confetti-wrapper">
+  <div className="onb-confetti">
     {[...Array(50)].map((_, i) => (
       <motion.div
         key={i}
-        className="sb-confetti-particle"
-        initial={{ y: -50, x: Math.random() * 100 + "%", opacity: 0, rotate: 0 }}
+        className="onb-confetti-piece"
+        initial={{ y: -20, x: 0, opacity: 0, rotate: 0 }}
         animate={{
-          y: "120vh",
+          y: "110vh",
           opacity: [0, 1, 1, 0],
           rotate: 720,
         }}
         transition={{
-          duration: Math.random() * 2 + 2,
+          duration: Math.random() * 2.5 + 2,
           repeat: Infinity,
           ease: "linear",
           delay: Math.random() * 3
         }}
         style={{
           left: `${Math.random() * 100}%`,
-          backgroundColor: ['#FF595E', '#FFCA3A', '#8AC926', '#1982C4', '#6A4C93'][Math.floor(Math.random() * 5)],
-          width: Math.random() * 8 + 6 + 'px',
-          height: Math.random() * 8 + 6 + 'px',
+          backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181', '#AA96DA', '#6C5CE7', '#00B894'][Math.floor(Math.random() * 8)],
+          width: Math.random() * 10 + 6 + 'px',
+          height: Math.random() * 10 + 6 + 'px',
+          borderRadius: Math.random() > 0.5 ? '50%' : '2px',
         }}
       />
     ))}
   </div>
 );
 
-// Corrected Step Content Component
+const ProgressRing = ({ progress, size = 60, strokeWidth = 4 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (progress / 100) * circumference;
+
+  return (
+    <svg width={size} height={size} className="onb-progress-ring">
+      <circle
+        className="onb-progress-ring-bg"
+        strokeWidth={strokeWidth}
+        fill="transparent"
+        r={radius}
+        cx={size / 2}
+        cy={size / 2}
+      />
+      <motion.circle
+        className="onb-progress-ring-fill"
+        strokeWidth={strokeWidth}
+        fill="transparent"
+        r={radius}
+        cx={size / 2}
+        cy={size / 2}
+        initial={{ strokeDashoffset: circumference }}
+        animate={{ strokeDashoffset: offset }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        style={{
+          strokeDasharray: circumference,
+          transformOrigin: "center",
+          transform: "rotate(-90deg)",
+        }}
+      />
+    </svg>
+  );
+};
+
+const InteractionHint = ({ show }) => (
+  <AnimatePresence>
+    {show && (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className="onb-interaction-hint"
+      >
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          className="onb-hint-icon"
+        >
+          <ThumbsUp size={16} />
+        </motion.div>
+        <span>Clique em um card acima para continuar</span>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
 const OnboardingStepContent = ({
   step,
   isStepInteractionComplete,
@@ -219,22 +302,115 @@ const OnboardingStepContent = ({
   steps,
   currentStep
 }) => {
-  const Icon = step.icon; // Assign to a capitalized variable
+  const Icon = step.icon;
+
+  const renderWelcomeContent = () => (
+    <div className="onb-welcome-content">
+      <div className="onb-welcome-features">
+        <FeatureHighlight
+          icon={Globe}
+          title="Geolocalização Inteligente"
+          description="Encontre pedidos e oportunidades de ajuda próximos a você em tempo real"
+          color="linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
+        />
+        <FeatureHighlight
+          icon={Shield}
+          title="Ambiente Seguro e Moderado"
+          description="Todos os pedidos são analisados antes de serem publicados por nossa equipe"
+          color="linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
+        />
+        <FeatureHighlight
+          icon={Users}
+          title="Comunidade Verificada"
+          description="Usuários passam por verificação para garantir a segurança de todos"
+          color="linear-gradient(135deg, #a855f7 0%, #9333ea 100%)"
+        />
+        <FeatureHighlight
+          icon={Building2}
+          title="Administradores Locais"
+          description="Cada bairro tem administradores dedicados para ajudar a comunidade"
+          color="linear-gradient(135deg, #f97316 0%, #ea580c 100%)"
+        />
+      </div>
+      <div className="onb-welcome-stats">
+        <div className="onb-stat">
+          <span className="onb-stat-value">10k+</span>
+          <span className="onb-stat-label">Vizinhos Conectados</span>
+        </div>
+        <div className="onb-stat">
+          <span className="onb-stat-value">5k+</span>
+          <span className="onb-stat-label">Pedidos Atendidos</span>
+        </div>
+        <div className="onb-stat">
+          <span className="onb-stat-value">98%</span>
+          <span className="onb-stat-label">Satisfação</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderFinalContent = () => (
+    <div className="onb-final-content">
+      <div className="onb-final-checklist">
+        <h4>O que você pode fazer agora:</h4>
+        <div className="onb-checklist-item">
+          <CheckCircle2 size={20} />
+          <span>Explorar pedidos de ajuda na sua região</span>
+        </div>
+        <div className="onb-checklist-item">
+          <CheckCircle2 size={20} />
+          <span>Publicar seus próprios pedidos com segurança</span>
+        </div>
+        <div className="onb-checklist-item">
+          <CheckCircle2 size={20} />
+          <span>Encontrar ou reportar itens perdidos</span>
+        </div>
+        <div className="onb-checklist-item">
+          <CheckCircle2 size={20} />
+          <span>Conectar-se com vizinhos verificados</span>
+        </div>
+        <div className="onb-checklist-item">
+          <CheckCircle2 size={20} />
+          <span>Contribuir para uma comunidade mais unida</span>
+        </div>
+      </div>
+      <div className="onb-final-trust">
+        <div className="onb-trust-badges">
+          <SecurityBadge icon={Lock} text="Dados Protegidos" />
+          <SecurityBadge icon={Eye} text="Moderação 24h" />
+          <SecurityBadge icon={Shield} text="100% Seguro" />
+        </div>
+      </div>
+    </div>
+  );
 
   const renderInteraction = () => {
-    if (!step.interaction) return null;
+    if (!step.interaction) {
+      if (step.id === 'welcome') return renderWelcomeContent();
+      if (step.id === 'start') return renderFinalContent();
+      return null;
+    }
     const { interaction } = step;
 
     if (interaction.type === 'help_creation_flow') {
       return (
-        <div className="sb-interaction-panel">
+        <div className="onb-interaction-panel">
+          <div className="onb-security-notice">
+            <Shield size={18} />
+            <div>
+              <strong>Ambiente Seguro</strong>
+              <p>Todos os pedidos passam por análise da nossa equipe de moderação antes de serem publicados.</p>
+            </div>
+          </div>
+          
           <motion.h5
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="sb-interaction-title"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }}
+            className="onb-interaction-title"
           >
             {interaction.prompt}
           </motion.h5>
-          <div className="sb-mock-ui-container help-categories">
+          <div className="onb-categories-grid">
             {interaction.categories.map((category, idx) => {
               const IconComponent = category.icon;
               return (
@@ -243,301 +419,352 @@ const OnboardingStepContent = ({
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: idx * 0.05 }}
-                  whileHover={{ scale: 1.05, backgroundColor: 'var(--bg-hover)' }}
-                  whileTap={{ scale: 0.95 }}
-                  className="sb-help-category-card"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="onb-category-card"
                   onClick={() => {
                     setSelectedCategory(category);
                     setHelpCreationStep('details');
                   }}
                 >
-                  <div className="sb-help-category-icon" style={{ backgroundColor: category.color }}>
-                    <IconComponent size={24} />
+                  <div className="onb-category-icon" style={{ backgroundColor: category.color }}>
+                    <IconComponent size={22} />
                   </div>
-                  <div className="sb-help-category-content">
+                  <div className="onb-category-content">
                     <h4>{category.name}</h4>
                     <p>{category.description}</p>
                   </div>
+                  <ChevronRight size={18} className="onb-category-arrow" />
                 </motion.div>
               );
             })}
           </div>
 
-          {/* Mini Modal for Details */}
           <AnimatePresence>
-          {helpCreationStep === 'details' && selectedCategory && (
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="sb-mini-modal-overlay" onClick={() => setHelpCreationStep(null)}
-            >
-              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="sb-mini-modal" onClick={(e) => e.stopPropagation()}>
-                <div className="sb-mini-modal-header">
-                  <h3>Detalhes do Pedido - {selectedCategory.name}</h3>
-                  <button className="sb-mini-modal-close" onClick={() => setHelpCreationStep(null)}>
-                    <X size={20} />
-                  </button>
-                </div>
-                <div className="sb-mini-modal-body">
-                  <label className="sb-mini-modal-label">
-                    Descreva seu problema ou necessidade:
-                  </label>
-                  <textarea
-                    className="sb-mini-modal-textarea"
-                    placeholder="Ex: Família com 3 crianças precisa de cesta básica urgente..."
-                    value={helpDescription}
-                    onChange={(e) => setHelpDescription(e.target.value)}
-                  />
-                  <button
-                    className="sb-mini-modal-btn"
-                    disabled={!helpDescription.trim()}
-                    onClick={() => {
-                      setHelpCreationStep('published');
-                      handleInteraction('need-help', 'completed');
-                    }}
-                  >
-                    Publicar Pedido
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-          </AnimatePresence>
-
-          {/* Success Modal */}
-          <AnimatePresence>
-          {helpCreationStep === 'published' && selectedCategory && (
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="sb-mini-modal-overlay" onClick={() => {
-              setHelpCreationStep(null);
-              setSelectedCategory(null);
-              setHelpDescription('');
-              handleInteraction('help', 'completed');
-            }}>
-              <motion.div
-                initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", bounce: 0.5 }}
-                className="sb-mini-modal success" onClick={(e) => e.stopPropagation()}
+            {helpCreationStep === 'details' && selectedCategory && (
+              <div 
+                className="onb-modal-overlay" 
+                onClick={() => setHelpCreationStep(null)}
               >
-                <div className="sb-mini-modal-body">
-                  <CheckCircle2 size={48} className="sb-success-icon" />
-                  <h3>Pedido Publicado!</h3>
-                  <p>Seu pedido de ajuda foi publicado com sucesso e agora está visível para toda a comunidade.</p>
-                  <button
-                    className="sb-mini-modal-btn success"
-                    onClick={() => {
-                      setHelpCreationStep(null);
-                      setSelectedCategory(null);
-                      setHelpDescription('');
-                      handleInteraction('help', 'completed');
-                    }}
-                  >
-                    Continuar
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
+                <motion.div 
+                  initial={{ scale: 0.9, y: 20, opacity: 0 }} 
+                  animate={{ scale: 1, y: 0, opacity: 1 }}
+                  exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                  className="onb-modal" 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="onb-modal-header">
+                    <div className="onb-modal-header-icon" style={{ backgroundColor: selectedCategory.color }}>
+                      <selectedCategory.icon size={20} />
+                    </div>
+                    <h3>Novo Pedido - {selectedCategory.name}</h3>
+                    <button className="onb-modal-close" onClick={() => setHelpCreationStep(null)}>
+                      <X size={18} />
+                    </button>
+                  </div>
+                  <div className="onb-modal-body">
+                    <label className="onb-modal-label">
+                      Descreva seu problema ou necessidade:
+                    </label>
+                    <textarea
+                      className="onb-modal-textarea"
+                      placeholder="Ex: Família com 3 crianças precisa de cesta básica urgente..."
+                      value={helpDescription}
+                      onChange={(e) => setHelpDescription(e.target.value)}
+                      rows={4}
+                    />
+                    <div className="onb-modal-info-box">
+                      <div className="onb-info-item">
+                        <FileCheck size={16} />
+                        <span>Seu pedido será analisado em até 2h</span>
+                      </div>
+                      <div className="onb-info-item">
+                        <UserCheck size={16} />
+                        <span>Administradores locais podem ajudar diretamente</span>
+                      </div>
+                      <div className="onb-info-item">
+                        <Navigation size={16} />
+                        <span>Vizinhos próximos serão notificados</span>
+                      </div>
+                    </div>
+                    <button
+                      className="onb-modal-btn primary"
+                      disabled={!helpDescription.trim()}
+                      onClick={() => {
+                        setHelpCreationStep('published');
+                        handleInteraction('need-help', 'completed');
+                      }}
+                    >
+                      <Sparkles size={16} />
+                      Enviar para Análise
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
           </AnimatePresence>
 
+          <AnimatePresence>
+            {helpCreationStep === 'published' && selectedCategory && (
+              <div
+                className="onb-modal-overlay" 
+                onClick={() => {
+                  setHelpCreationStep(null);
+                  setSelectedCategory(null);
+                  setHelpDescription('');
+                  handleInteraction('help', 'completed');
+                }}
+              >
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }} 
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", bounce: 0.4 }}
+                  className="onb-modal success" 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="onb-modal-body success">
+                    <motion.div 
+                      className="onb-success-icon"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
+                    >
+                      <CheckCircle2 size={48} />
+                    </motion.div>
+                    <h3>Pedido Enviado!</h3>
+                    <p>Seu pedido foi enviado para análise. Nossa equipe de moderação irá verificar e aprovar em até 2 horas.</p>
+                    <div className="onb-success-info">
+                      <Shield size={16} />
+                      <span>Você receberá uma notificação quando for aprovado</span>
+                    </div>
+                    <button
+                      className="onb-modal-btn success"
+                      onClick={() => {
+                        setHelpCreationStep(null);
+                        setSelectedCategory(null);
+                        setHelpDescription('');
+                        handleInteraction('help', 'completed');
+                      }}
+                    >
+                      Continuar
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
       );
     }
 
     return (
-      <div className="sb-interaction-panel">
-        <motion.h5 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="sb-interaction-title">{interaction.prompt}</motion.h5>
-        <div className={`sb-mock-ui-container ${interaction.renderer?.name === 'MockLostFoundCard' ? 'lost-found-grid' : ''}`}>
-          {interaction.items?.map(item => {
+      <div className="onb-interaction-panel">
+        {step.id === 'help' && (
+          <div className="onb-geo-notice">
+            <Navigation size={16} />
+            <span>Mostrando pedidos a até 2km de você</span>
+          </div>
+        )}
+        
+        <motion.h5 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          className="onb-interaction-title"
+        >
+          {interaction.prompt}
+        </motion.h5>
+        <div className={`onb-cards-container ${interaction.renderer?.name === 'MockLostFoundCard' ? 'grid' : ''}`}>
+          {interaction.items?.map((item, idx) => {
             const Renderer = interaction.renderer;
             const isSelected = interactionsComplete[steps[currentStep].id] === item.id;
             return (
-              <Renderer
+              <motion.div
                 key={item.id}
-                item={item}
-                onClick={() => onInteraction(item.id)}
-                onChatClick={(selectedItem) => {
-                  setSelectedLostFoundItem(selectedItem);
-                  setLostFoundModal(true);
-                }}
-                isSelected={isSelected}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                <Renderer
+                  item={item}
+                  onClick={() => onInteraction(item.id)}
+                  onChatClick={(selectedItem) => {
+                    setSelectedLostFoundItem(selectedItem);
+                    setLostFoundModal(true);
+                  }}
+                  isSelected={isSelected}
+                />
+              </motion.div>
             );
           })}
         </div>
 
+        <InteractionHint show={!isStepInteractionComplete} />
 
-
-        {/* Lost & Found Help Modal */}
         <AnimatePresence>
-        {lostFoundModal && selectedLostFoundItem && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="sb-mini-modal-overlay" onClick={() => setLostFoundModal(false)}
-          >
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="sb-help-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="sb-help-modal-header">
-                <button className="sb-help-modal-close" onClick={() => setLostFoundModal(false)}>
-                  <X size={20} />
-                </button>
-              </div>
+          {lostFoundModal && selectedLostFoundItem && (
+            <div 
+              className="onb-modal-overlay" 
+              onClick={() => setLostFoundModal(false)}
+            >
+              <motion.div 
+                initial={{ y: 50, opacity: 0 }} 
+                animate={{ y: 0, opacity: 1 }} 
+                exit={{ y: 50, opacity: 0 }}
+                className="onb-modal help-modal" 
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="onb-modal-header">
+                  <h3>Confirmar Contato</h3>
+                  <button className="onb-modal-close" onClick={() => setLostFoundModal(false)}>
+                    <X size={18} />
+                  </button>
+                </div>
 
-              <div className="sb-help-modal-body">
-                <h2 className="sb-help-modal-title">
-                  Você deseja ajudar {selectedLostFoundItem.type === 'lost' ? 'a encontrar' : 'a devolver'} este item?
-                </h2>
+                <div className="onb-modal-body">
+                  <h2 className="onb-help-modal-title">
+                    Você deseja ajudar {selectedLostFoundItem.type === 'lost' ? 'a encontrar' : 'a devolver'} este item?
+                  </h2>
 
-                <div className="sb-help-modal-item-preview">
-                  <div className="sb-help-modal-item-image">
-                    {selectedLostFoundItem.image_url ? (
-                      <img src={selectedLostFoundItem.image_url} alt={selectedLostFoundItem.title} />
-                    ) : (
-                      <div className="sb-help-modal-placeholder">
-                        <Camera size={24} strokeWidth={1} />
-                      </div>
-                    )}
-                    <div className={`sb-help-modal-badge ${selectedLostFoundItem.type}`}>
-                      {selectedLostFoundItem.type === 'lost' ? 'PERDIDO' : 'ACHADO'}
-                    </div>
-                  </div>
-                  <div className="sb-help-modal-item-info">
-                    <h3>{selectedLostFoundItem.title}</h3>
-                    <p>{selectedLostFoundItem.description}</p>
-                    <div className="sb-help-modal-item-meta">
-                      <span><MapPin size={14} /> {selectedLostFoundItem.location}</span>
-                      {selectedLostFoundItem.reward && selectedLostFoundItem.type === 'lost' && (
-                        <span className="reward">Recompensa: {selectedLostFoundItem.reward}</span>
+                  <div className="onb-help-modal-preview">
+                    <div className="onb-help-modal-image">
+                      {selectedLostFoundItem.image_url ? (
+                        <img src={selectedLostFoundItem.image_url} alt={selectedLostFoundItem.title} />
+                      ) : (
+                        <div className="onb-help-modal-placeholder">
+                          <Camera size={24} strokeWidth={1.5} />
+                        </div>
                       )}
+                      <div className={`onb-help-modal-badge ${selectedLostFoundItem.type}`}>
+                        {selectedLostFoundItem.type === 'lost' ? 'PERDIDO' : 'ACHADO'}
+                      </div>
+                    </div>
+                    <div className="onb-help-modal-info">
+                      <h3>{selectedLostFoundItem.title}</h3>
+                      <p>{selectedLostFoundItem.description}</p>
+                      <div className="onb-help-modal-meta">
+                        <span><Navigation size={14} /> {selectedLostFoundItem.distance || '500m de você'}</span>
+                        {selectedLostFoundItem.reward && selectedLostFoundItem.type === 'lost' && (
+                          <span className="reward"><Gift size={14} /> {selectedLostFoundItem.reward}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="sb-help-modal-message">
-                  <MessageCircle size={20} />
-                  <p>Você está prestes a iniciar um chat com a pessoa que {selectedLostFoundItem.type === 'lost' ? 'perdeu' : 'encontrou'} este item.</p>
-                </div>
+                  <div className="onb-help-modal-message">
+                    <Shield size={18} />
+                    <p>Chat seguro e moderado. Suas informações pessoais ficam protegidas até você decidir compartilhar.</p>
+                  </div>
 
-                <div className="sb-help-modal-actions">
-                  <button
-                    className="sb-help-modal-btn sb-help-modal-btn-secondary"
-                    onClick={() => setLostFoundModal(false)}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    className="sb-help-modal-btn sb-help-modal-btn-primary"
-                    onClick={() => {
-                      setLostFoundModal(false);
-                      setSelectedLostFoundItem(null);
-                      handleInteraction('lost-found', 'completed');
-                    }}
-                  >
-                    <MessageCircle size={16} />
-                    Iniciar Chat
-                  </button>
+                  <div className="onb-help-modal-actions">
+                    <button
+                      className="onb-modal-btn secondary"
+                      onClick={() => setLostFoundModal(false)}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      className="onb-modal-btn primary"
+                      onClick={() => {
+                        setLostFoundModal(false);
+                        setSelectedLostFoundItem(null);
+                        handleInteraction('lost-found', 'completed');
+                      }}
+                    >
+                      <MessageCircle size={16} />
+                      Iniciar Chat Seguro
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
+              </motion.div>
+            </div>
+          )}
         </AnimatePresence>
       </div>
     );
   };
 
   return (
-    <div className="sb-onboarding-step-content">
-      <div className="sb-step-content-header">
-        <div className={`sb-step-content-icon ${step.color || 'blue'}`}>
+    <div className="onb-step-content">
+      <div className="onb-step-header">
+        <motion.div 
+          className={`onb-step-icon ${step.color || 'blue'}`}
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
           <Icon size={32} />
-        </div>
-        <div className="sb-step-content-text">
-          <h2 className="sb-step-content-title">{step.title}</h2>
-          <p className="sb-step-content-desc">{step.description}</p>
+        </motion.div>
+        <div className="onb-step-text">
+          <motion.h2 
+            className="onb-step-title"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            {step.title}
+          </motion.h2>
+          <motion.p 
+            className="onb-step-desc"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            {step.description}
+          </motion.p>
+          {step.badges && (
+            <motion.div 
+              className="onb-step-badges"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              {step.badges.map((badge, idx) => (
+                <SecurityBadge key={idx} icon={badge.icon} text={badge.text} />
+              ))}
+            </motion.div>
+          )}
         </div>
       </div>
-      <div className="sb-step-content-body">
+      <div className="onb-step-body">
         {renderInteraction()}
-        {/* Choice Indicator */}
-        {(step.id === 'help' || step.id === 'lost-found') && !isStepInteractionComplete && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1, duration: 0.5 }}
-            className="sb-choice-indicator"
-          >
-            <motion.div
-              animate={{ x: [0, -5, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-              className="sb-choice-arrow"
-            >
-              <ArrowLeft size={24} />
-            </motion.div>
-            <p className="sb-choice-text">Escolha uma opção à esquerda para continuar</p>
-          </motion.div>
-        )}
       </div>
     </div>
   );
 };
 
-
-// ==================================
-//      MAIN ONBOARDING (v5)
-// ==================================
-
 const Onboarding = ({ onComplete, onSkip }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [interactionsComplete, setInteractionsComplete] = useState({});
-  const [helpCreationStep, setHelpCreationStep] = useState(null); // null, 'category', 'details', 'published'
+  const [helpCreationStep, setHelpCreationStep] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [helpDescription, setHelpDescription] = useState('');
   const [lostFoundModal, setLostFoundModal] = useState(false);
   const [selectedLostFoundItem, setSelectedLostFoundItem] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  // Prevent background scrolling when modal is open
   useEffect(() => {
-    document.body.classList.add('modal-open');
-
-    const preventScroll = (e) => {
-      e.preventDefault();
-    };
-
-    // Prevent scroll events on window
-    window.addEventListener('wheel', preventScroll, { passive: false });
-    window.addEventListener('touchmove', preventScroll, { passive: false });
-    window.addEventListener('keydown', (e) => {
-      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
-        e.preventDefault();
-      }
-    });
-
+    document.body.classList.add('onb-modal-open');
     return () => {
-      document.body.classList.remove('modal-open');
-      window.removeEventListener('wheel', preventScroll);
-      window.removeEventListener('touchmove', preventScroll);
-      window.removeEventListener('keydown', (e) => {
-        if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
-          e.preventDefault();
-        }
-      });
+      document.body.classList.remove('onb-modal-open');
     };
   }, []);
 
-  const handleInteraction = (stepId, value) => {
+  const handleInteraction = useCallback((stepId, value) => {
     if (interactionsComplete[stepId] === value) return;
     setInteractionsComplete(prev => ({ ...prev, [stepId]: value }));
-  };
+  }, [interactionsComplete]);
 
   const steps = useMemo(() => [
-     {
+    {
       id: 'welcome',
       navLabel: 'Bem-vindo',
-      navDesc: 'Início da jornada',
+      navDesc: 'Conheça a plataforma',
       icon: PartyPopper,
-      title: 'Oi! Bem-vindo ao SolidarBairro',
-      description: 'Aqui, vizinhos se ajudam. Vamos te mostrar como é fácil conectar e fazer a diferença. Pronto para começar?',
+      color: 'orange',
+      title: 'Bem-vindo ao SolidarBairro!',
+      description: 'Uma plataforma segura onde vizinhos se conectam para ajudar uns aos outros. Descubra como transformar sua comunidade.',
     },
     {
       id: 'help',
@@ -545,33 +772,43 @@ const Onboarding = ({ onComplete, onSkip }) => {
       navDesc: 'Faça a diferença',
       icon: HandHelping,
       color: 'teal',
-      title: 'Ajude quem precisa',
-      description: 'Veja pedidos reais de vizinhos próximos. Um pequeno gesto pode mudar vidas. Toque em um para simular.',
+      title: 'Ajude quem está perto de você',
+      description: 'Encontre pedidos verificados de vizinhos próximos usando geolocalização. Todos os pedidos passam por análise antes de serem publicados.',
+      badges: [
+        { icon: Shield, text: 'Pedidos Verificados' },
+        { icon: Navigation, text: 'Geolocalização' }
+      ],
       interaction: {
         type: 'ui_simulation',
-        prompt: 'Toque em um card abaixo para ver como é fácil oferecer ajuda.',
+        prompt: 'Veja como são os pedidos reais na plataforma:',
         items: [
           {
             type: 'help',
             id: 1,
-            user: 'Ana Silva',
-            request: 'Preciso de ajuda com transporte para consulta médica amanhã. Sou idosa e não tenho como ir sozinha.',
+            user: 'Maria Santos',
+            request: 'Preciso de ajuda com transporte para consulta médica amanhã às 14h. Sou idosa e moro sozinha, não tenho como ir por conta própria.',
             category: 'Transporte',
             categoryColor: '#0ea5e9',
             categoryIcon: Car,
-            location: 'Centro, Belo Horizonte',
-            time: '2h atrás'
+            location: 'Centro',
+            distance: '800m',
+            time: '2h atrás',
+            urgency: 'high',
+            verified: true
           },
           {
             type: 'help',
             id: 2,
-            user: 'Carlos Mendes',
-            request: 'Família precisa de cesta básica urgente. Temos 3 crianças pequenas e a situação está crítica.',
+            user: 'João Silva',
+            request: 'Família com 3 crianças pequenas precisa de cesta básica. Estamos passando por um momento difícil após perda de emprego.',
             category: 'Alimentos',
             categoryColor: '#f97316',
             categoryIcon: Coffee,
-            location: 'Vila Nova, Belo Horizonte',
-            time: '5h atrás'
+            location: 'Vila Nova',
+            distance: '1.2km',
+            time: '5h atrás',
+            urgency: 'normal',
+            verified: true
           }
         ],
         renderer: MockHelpCard
@@ -580,42 +817,46 @@ const Onboarding = ({ onComplete, onSkip }) => {
     {
       id: 'need-help',
       navLabel: 'Preciso de Ajuda',
-      navDesc: 'Conte com apoio',
-      icon: HandHelping,
+      navDesc: 'Peça apoio seguro',
+      icon: Heart,
       color: 'purple',
-      title: 'Precisa de uma mão?',
-      description: 'Conte com a comunidade. Publique seu pedido com dignidade – é corajoso pedir ajuda. Escolha uma categoria abaixo.',
+      title: 'Precisa de ajuda? Estamos aqui!',
+      description: 'Publique seu pedido com total segurança. Nossa equipe de moderação analisa cada solicitação, e administradores locais podem ajudar diretamente.',
+      badges: [
+        { icon: FileCheck, text: 'Análise em 2h' },
+        { icon: UserCheck, text: 'Moderação Ativa' }
+      ],
       interaction: {
         type: 'help_creation_flow',
-        prompt: 'Escolha uma categoria abaixo para simular um pedido:',
+        prompt: 'Escolha uma categoria para simular um pedido:',
         categories: [
           {
             id: 'alimentos',
             name: 'Alimentos',
             icon: Coffee,
             color: '#f97316',
-            description: 'Cesta básica, refeições, doações de alimentos'
+            description: 'Cesta básica, refeições, suprimentos'
           },
           {
             id: 'transporte',
             name: 'Transporte',
             icon: Car,
             color: '#0ea5e9',
-            description: 'Ajuda com deslocamento, consultas médicas, transporte'
+            description: 'Deslocamento, consultas médicas'
           },
           {
             id: 'saude',
             name: 'Saúde',
             icon: Heart,
             color: '#ef4444',
-            description: 'Medicamentos, consultas médicas, cuidados de saúde'
+            description: 'Medicamentos, cuidados, apoio'
           },
           {
             id: 'educacao',
             name: 'Educação',
             icon: BookOpen,
             color: '#8b5cf6',
-            description: 'Materiais escolares, cursos, apoio educacional'
+            description: 'Material escolar, cursos, aulas'
           }
         ]
       }
@@ -623,39 +864,43 @@ const Onboarding = ({ onComplete, onSkip }) => {
     {
       id: 'lost-found',
       navLabel: 'Achados e Perdidos',
-      navDesc: 'Recupere itens',
+      navDesc: 'Recupere seus itens',
       icon: Package,
       color: 'pink',
-      title: 'Achados e Perdidos',
-      description: 'Perdeu algo ou encontrou? A comunidade ajuda a reunir. Clique para ver detalhes e conectar.',
+      title: 'Achados e Perdidos da Comunidade',
+      description: 'Perdeu algo ou encontrou um item? Nossa comunidade usa geolocalização para reunir objetos perdidos com seus donos de forma segura.',
+      badges: [
+        { icon: Globe, text: 'Mapa Interativo' },
+        { icon: Lock, text: 'Chat Protegido' }
+      ],
       interaction: {
         type: 'ui_simulation',
-        prompt: 'Clique em um item para ver detalhes e iniciar o contato.',
+        prompt: 'Veja itens reportados próximos a você:',
         items: [
           {
             type: 'lost',
             id: 1,
             title: 'Carteira de couro marrom',
-            description: 'Carteira masculina em couro marrom, contém documentos, cartões e dinheiro.',
+            description: 'Contém documentos importantes, cartões e fotos de família. Perdi ontem à noite.',
             category: 'Carteiras',
-            location: 'Savassi, BH',
+            location: 'Savassi',
+            distance: '300m',
             date_occurrence: '2024-01-15',
-            contact_info: '(31) 99999-8888',
-            reward: 'R$ 100,00',
-            tags: ['carteira', 'documentos'],
+            reward: 'R$ 150,00',
+            verified: true,
             image_url: null
           },
           {
             type: 'found',
             id: 2,
             title: 'Chaves com chaveiro vermelho',
-            description: 'Conjunto de chaves encontrado na Praça Sete. Chaveiro vermelho.',
+            description: 'Encontrei esse conjunto de chaves na praça. Chaveiro vermelho com formato de coração.',
             category: 'Chaves',
-            location: 'Praça Sete, BH',
+            location: 'Praça Sete',
+            distance: '1.5km',
             date_occurrence: '2024-01-14',
-            contact_info: '(31) 98888-7777',
             reward: null,
-            tags: ['chaves', 'vermelho'],
+            verified: true,
             image_url: null
           }
         ],
@@ -665,11 +910,11 @@ const Onboarding = ({ onComplete, onSkip }) => {
     {
       id: 'start',
       navLabel: 'Tudo Pronto!',
-      navDesc: 'Comece a usar o app',
+      navDesc: 'Comece sua jornada',
       icon: Sparkles,
       color: 'green',
-      title: 'Pronto para explorar!',
-      description: 'Você conhece o básico. Agora, ajude, peça apoio e fortaleça o bairro. Vamos lá!',
+      title: 'Você está pronto para fazer a diferença!',
+      description: 'Agora você conhece o SolidarBairro. Uma comunidade mais unida e solidária começa com você.',
     },
   ], []);
 
@@ -679,63 +924,122 @@ const Onboarding = ({ onComplete, onSkip }) => {
     return !!interactionsComplete[steps[currentStep].id];
   }, [currentStep, steps, interactionsComplete]);
 
-  const [glow, setGlow] = useState(false);
-  useEffect(() => {
-    if (isStepInteractionComplete) {
-      setGlow(true);
-      const timer = setTimeout(() => setGlow(false), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [isStepInteractionComplete, currentStep]);
+  const progress = ((currentStep + 1) / steps.length) * 100;
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
-    else onComplete(dontShowAgain);
-  };
+  const handleNext = useCallback(() => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      onComplete(dontShowAgain);
+    }
+    
+    setTimeout(() => setIsAnimating(false), 300);
+  }, [currentStep, steps.length, onComplete, dontShowAgain, isAnimating]);
+
+  const handleSkip = useCallback(() => {
+    onSkip(dontShowAgain);
+  }, [onSkip, dontShowAgain]);
 
   return (
-    <div className="sb-onboarding-overlay v5">
+    <div className="onb-overlay">
       {steps[currentStep].id === 'start' && <Confetti />}
-      <div className="sb-onboarding-container">
-        <button className="sb-onboarding-close-modal" onClick={() => onSkip(dontShowAgain)}>
+      
+      <motion.div 
+        className="onb-container"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <button className="onb-close" onClick={handleSkip} title="Fechar">
           <X size={20} />
         </button>
-        <div className="sb-onboarding-nav">
-          <div className="sb-nav-header"><Heart size={24} className="sb-logo-icon" /><span className="sb-nav-title">Simulação</span></div>
-          <div className="sb-nav-steps">
+
+        <aside className="onb-sidebar">
+          <div className="onb-sidebar-header">
+            <div className="onb-logo">
+              <Heart size={24} />
+            </div>
+            <span className="onb-logo-text">SolidarBairro</span>
+          </div>
+          
+          <nav className="onb-nav">
             {steps.map((step, index) => {
-              const isCompleted = currentStep > index, isActive = currentStep === index;
-              let statusIcon = <Circle size={20} className="sb-nav-icon-pending" />;
-              if (isActive) statusIcon = <MousePointerClick size={20} className="sb-nav-icon-active" />;
-              if (isCompleted) statusIcon = <CheckCircle2 size={20} className="sb-nav-icon-completed" />;
+              const isCompleted = currentStep > index;
+              const isActive = currentStep === index;
+              const StepIcon = step.icon;
+              
               return (
-                <button key={step.id} className={`sb-nav-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`} disabled>
-                  <div className="sb-nav-item-icon">{statusIcon}</div>
-                  <div className="sb-nav-item-content">
-                    <h4 className="sb-nav-item-title">{step.navLabel}</h4>
-                    {step.navDesc && <p className="sb-nav-item-desc">{step.navDesc}</p>}
+                <div 
+                  key={step.id} 
+                  className={`onb-nav-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
+                >
+                  <div className="onb-nav-icon">
+                    {isCompleted ? (
+                      <CheckCircle2 size={20} />
+                    ) : isActive ? (
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      >
+                        <StepIcon size={20} />
+                      </motion.div>
+                    ) : (
+                      <Circle size={20} />
+                    )}
                   </div>
-                  {isActive && <ChevronRight size={20} className="sb-nav-active-indicator" />}
-                </button>
+                  <div className="onb-nav-content">
+                    <h4>{step.navLabel}</h4>
+                    <p>{step.navDesc}</p>
+                  </div>
+                  {isActive && (
+                    <motion.div 
+                      className="onb-nav-indicator"
+                      layoutId="activeIndicator"
+                    />
+                  )}
+                </div>
               );
             })}
-          </div>
-        </div>
+          </nav>
 
-        <div className="sb-onboarding-main">
-          <div className="sb-progress-bar" role="progressbar" aria-valuenow={currentStep + 1} aria-valuemin="1" aria-valuemax={steps.length} aria-label="Progresso do onboarding">
-            <div className="sb-progress-fill" style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}></div>
-            <span className="sb-progress-text">Passo {currentStep + 1} de {steps.length}</span>
+          <div className="onb-sidebar-footer">
+            <div className="onb-progress-info">
+              <ProgressRing progress={progress} size={48} strokeWidth={4} />
+              <div className="onb-progress-text">
+                <span className="onb-progress-label">Progresso</span>
+                <span className="onb-progress-value">{Math.round(progress)}%</span>
+              </div>
+            </div>
           </div>
-          <div className="sb-main-content">
+        </aside>
+
+        <main className="onb-main">
+          <div className="onb-main-progress">
+            <div className="onb-progress-bar">
+              <motion.div 
+                className="onb-progress-fill"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+            <span className="onb-progress-steps">
+              Passo {currentStep + 1} de {steps.length}
+            </span>
+          </div>
+
+          <div className="onb-main-content">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                style={{ width: '100%', height: '100%' }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="onb-content-wrapper"
               >
                 <OnboardingStepContent
                   step={steps[currentStep]}
@@ -759,14 +1063,40 @@ const Onboarding = ({ onComplete, onSkip }) => {
               </motion.div>
             </AnimatePresence>
           </div>
-          <div className="sb-main-footer">
-            <div className="sb-dont-show-again"><input type="checkbox" id="dontShowAgainV5" checked={dontShowAgain} onChange={(e) => setDontShowAgain(e.target.checked)} /><label htmlFor="dontShowAgainV5">Não mostrar novamente</label></div>
-            <button className={`sb-btn sb-btn-primary ${glow ? 'glow' : ''}`} onClick={handleNext} disabled={!isStepInteractionComplete}>
-              Continuar <ArrowRight size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
+
+          <footer className="onb-footer">
+            <label className="onb-checkbox">
+              <input 
+                type="checkbox" 
+                checked={dontShowAgain} 
+                onChange={(e) => setDontShowAgain(e.target.checked)} 
+              />
+              <span className="onb-checkbox-mark"></span>
+              <span>Não mostrar novamente</span>
+            </label>
+            
+            <motion.button 
+              className={`onb-btn-primary ${!isStepInteractionComplete ? 'disabled' : ''}`}
+              onClick={handleNext}
+              disabled={!isStepInteractionComplete || isAnimating}
+              whileHover={isStepInteractionComplete ? { scale: 1.02 } : {}}
+              whileTap={isStepInteractionComplete ? { scale: 0.98 } : {}}
+            >
+              {currentStep === steps.length - 1 ? (
+                <>
+                  Começar a Explorar
+                  <Sparkles size={18} />
+                </>
+              ) : (
+                <>
+                  Continuar
+                  <ArrowRight size={18} />
+                </>
+              )}
+            </motion.button>
+          </footer>
+        </main>
+      </motion.div>
     </div>
   );
 };
