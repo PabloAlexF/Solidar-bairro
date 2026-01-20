@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { useSpring, animated, useTrail, useSprings } from 'react-spring';
+import { useSpring, animated, useTrail } from 'react-spring';
 import { useInView } from 'react-intersection-observer';
 import toast, { Toaster } from 'react-hot-toast';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { Tooltip } from 'react-tooltip';
-import { useAuth } from '../../contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import createGlobe from 'cobe';
 import { 
   MapPin, 
   Heart,
@@ -21,41 +21,446 @@ import {
   Info,
   ShoppingCart,
   MessageSquare,
-  Lightbulb,
   Shirt,
   Pill,
-  Plus,
   Briefcase,
-  Bath,
   Sofa,
-  Tv,
-  Car,
-  Receipt,
+  Lightbulb,
   Clock,
   User,
-  FileText,
-  Package
+  Package,
+  Search,
+  Sparkles,
+  Navigation,
+  Grid3X3,
+  List,
+  HandHeart,
+  HelpCircle,
+  FileSearch,
+  Accessibility,
+  Users,
+  TrendingUp,
+  ArrowRight
 } from 'lucide-react';
-import LandingHeader from '../../components/layout/LandingHeader';
-import './styles.css';
-import { 
-  CATEGORY_METADATA, 
-  CATEGORIES, 
-  URGENCY_OPTIONS, 
-  SUB_QUESTION_LABELS
-} from './constants';
-import ApiService from '../../services/apiService';
+import './styles-v4.css';
+
+const CATEGORY_METADATA = {
+  'Alimentos': { color: '#f97316', icon: <ShoppingCart size={18} aria-hidden="true" />, label: 'Alimentos' },
+  'Roupas': { color: '#6366f1', icon: <Shirt size={18} aria-hidden="true" />, label: 'Roupas' },
+  'Medicamentos': { color: '#ef4444', icon: <Pill size={18} aria-hidden="true" />, label: 'Medicamentos' },
+  'Móveis': { color: '#8b5cf6', icon: <Sofa size={18} aria-hidden="true" />, label: 'Móveis' },
+  'Serviços': { color: '#10b981', icon: <Briefcase size={18} aria-hidden="true" />, label: 'Serviços' },
+  'Outros': { color: '#64748b', icon: <Lightbulb size={18} aria-hidden="true" />, label: 'Outros' },
+};
+
+const CATEGORIES = [
+  { id: 'Todas', label: 'Todas', color: '#64748b' },
+  { id: 'Alimentos', label: 'Alimentos', color: '#f97316' },
+  { id: 'Roupas', label: 'Roupas', color: '#6366f1' },
+  { id: 'Medicamentos', label: 'Medicamentos', color: '#ef4444' },
+  { id: 'Móveis', label: 'Móveis', color: '#8b5cf6' },
+  { id: 'Serviços', label: 'Serviços', color: '#10b981' },
+  { id: 'Outros', label: 'Outros', color: '#64748b' },
+];
+
+const URGENCY_OPTIONS = [
+  { id: 'critico', label: 'CRÍTICO', desc: 'Risco imediato', icon: <AlertTriangle size={14} aria-hidden="true" />, color: '#ef4444' },
+  { id: 'urgente', label: 'URGENTE', desc: 'Próximas 24h', icon: <Zap size={14} aria-hidden="true" />, color: '#f97316' },
+  { id: 'moderada', label: 'MODERADA', desc: 'Alguns dias', icon: <Calendar size={14} aria-hidden="true" />, color: '#f59e0b' },
+  { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem pressa', icon: <Coffee size={14} aria-hidden="true" />, color: '#10b981' },
+  { id: 'recorrente', label: 'RECORRENTE', desc: 'Mensal', icon: <RefreshCcw size={14} aria-hidden="true" />, color: '#6366f1' },
+];
+
+const MOCK_PEDIDOS = [
+  {
+    id: '1',
+    userId: 'user1',
+    userName: 'Maria Silva',
+    city: 'São Paulo',
+    state: 'SP',
+    neighborhood: 'Vila Madalena',
+    urgency: 'urgente',
+    category: 'Alimentos',
+    title: 'Cesta Básica',
+    description: 'Família com 4 filhos pequenos precisando de alimentos básicos. Meu marido perdeu o emprego há 2 meses e estamos passando por dificuldades. Agradeço qualquer ajuda.',
+    isNew: true,
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+  },
+  {
+    id: '2',
+    userId: 'user2',
+    userName: 'João Santos',
+    city: 'São Paulo',
+    state: 'SP',
+    neighborhood: 'Pinheiros',
+    urgency: 'critico',
+    category: 'Medicamentos',
+    title: 'Remédios para diabetes',
+    description: 'Idoso de 78 anos precisando de insulina e medicamentos para controle de diabetes. A aposentadoria não está dando para cobrir todos os gastos com saúde.',
+    isNew: true,
+    createdAt: new Date(Date.now() - 30 * 60 * 1000),
+  },
+  {
+    id: '3',
+    userId: 'user3',
+    userName: 'Ana Oliveira',
+    city: 'Rio de Janeiro',
+    state: 'RJ',
+    neighborhood: 'Copacabana',
+    urgency: 'moderada',
+    category: 'Roupas',
+    title: 'Roupas infantis',
+    description: 'Mãe solo com 3 crianças (2, 5 e 8 anos) precisando de roupas de inverno. As crianças cresceram e não tenho condições de comprar roupas novas.',
+    isNew: false,
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: '4',
+    userId: 'user4',
+    userName: 'Carlos Mendes',
+    city: 'Belo Horizonte',
+    state: 'MG',
+    neighborhood: 'Savassi',
+    urgency: 'tranquilo',
+    category: 'Móveis',
+    title: 'Cama e colchão',
+    description: 'Recém chegado na cidade, consegui um emprego mas ainda não tenho móveis. Estou dormindo no chão e preciso de uma cama para conseguir descansar bem.',
+    isNew: false,
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: '5',
+    userId: 'user5',
+    userName: 'Fernanda Costa',
+    city: 'São Paulo',
+    state: 'SP',
+    neighborhood: 'Mooca',
+    urgency: 'recorrente',
+    category: 'Alimentos',
+    title: 'Leite e fraldas',
+    description: 'Mãe de gêmeos recém-nascidos precisando de leite em pó e fraldas mensalmente. Estou desempregada e meu companheiro faz bicos.',
+    isNew: true,
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
+  },
+  {
+    id: '6',
+    userId: 'user6',
+    userName: 'Roberto Lima',
+    city: 'Curitiba',
+    state: 'PR',
+    neighborhood: 'Centro',
+    urgency: 'urgente',
+    category: 'Serviços',
+    title: 'Conserto de encanamento',
+    description: 'Cano estourado em casa e não tenho dinheiro para pagar um encanador. A água está jorrando e está causando prejuízos.',
+    isNew: false,
+    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
+  },
+];
+
+function CobeGlobe() {
+  const canvasRef = useRef();
+  const [globe, setGlobe] = useState();
+
+  useEffect(() => {
+    let phi = 0;
+    
+    if (canvasRef.current) {
+      const globe = createGlobe(canvasRef.current, {
+        devicePixelRatio: 2,
+        width: 450,
+        height: 450,
+        phi: -0.1,
+        theta: 0.2,
+        dark: 0,
+        diffuse: 1.2,
+        mapSamples: 20000,
+        mapBrightness: 8,
+        baseColor: [0.2, 0.2, 0.2],
+        markerColor: [0.1, 0.8, 1],
+        glowColor: [0.1, 0.8, 0.5],
+        markers: [
+          { location: [-23.5505, -46.6333], size: 0.04 }, // São Paulo
+          { location: [-22.9068, -43.1729], size: 0.04 }, // Rio de Janeiro
+          { location: [-19.9167, -43.9345], size: 0.03 }, // Belo Horizonte
+          { location: [-25.4284, -49.2733], size: 0.03 }, // Curitiba
+          { location: [-30.0346, -51.2177], size: 0.03 }, // Porto Alegre
+          { location: [-8.0476, -34.8770], size: 0.03 }, // Recife
+          { location: [-15.7942, -47.8822], size: 0.03 }, // Brasília
+          { location: [-3.7319, -38.5267], size: 0.03 }, // Fortaleza
+          { location: [-12.9714, -38.5014], size: 0.03 }, // Salvador
+          { location: [-5.7945, -35.2110], size: 0.02 }, // Natal
+        ],
+        onRender: (state) => {
+          phi += 0.005;
+          state.phi = phi;
+        }
+      });
+      
+      setGlobe(globe);
+    }
+    
+    return () => {
+      if (globe) {
+        globe.destroy();
+      }
+    };
+  }, []);
+
+  return (
+    <div className="globe-container">
+      <canvas
+        ref={canvasRef}
+        style={{
+          width: 450,
+          height: 450,
+          maxWidth: '100%',
+          aspectRatio: 1,
+          filter: 'drop-shadow(0 20px 40px rgba(16, 185, 129, 0.2))',
+        }}
+      />
+      <div className="globe-text">
+        <h3>Conectando o mundo</h3>
+        <p>Uma rede global de solidariedade que une corações</p>
+      </div>
+    </div>
+  );
+}
+
+function SkipLinks() {
+  return (
+    <div className="skip-links">
+      <a href="#main-content" className="skip-link">
+        Pular para o conteúdo principal
+      </a>
+      <a href="#filters" className="skip-link">
+        Pular para filtros
+      </a>
+      <a href="#orders-list" className="skip-link">
+        Pular para lista de pedidos
+      </a>
+    </div>
+  );
+}
+
+function HeroSection({ 
+  filteredCount, 
+  userLocation
+}) {
+  const [heroRef, heroInView] = useInView({ threshold: 0.1, triggerOnce: true });
+  
+  const leftSpring = useSpring({
+    opacity: heroInView ? 1 : 0,
+    transform: heroInView ? 'translateX(0px)' : 'translateX(-40px)',
+    config: { tension: 200, friction: 40 }
+  });
+
+  const rightSpring = useSpring({
+    opacity: heroInView ? 1 : 0,
+    transform: heroInView ? 'translateX(0px)' : 'translateX(40px)',
+    delay: 150,
+    config: { tension: 200, friction: 40 }
+  });
+
+  const navLinks = [
+    { href: '/quero-ajudar', label: 'Quero Ajudar', icon: <HandHeart size={18} aria-hidden="true" />, active: true },
+    { href: '/preciso-de-ajuda', label: 'Preciso de Ajuda', icon: <HelpCircle size={18} aria-hidden="true" />, active: false },
+    { href: '/achados-e-perdidos', label: 'Achados e Perdidos', icon: <FileSearch size={18} aria-hidden="true" />, active: false },
+  ];
+
+  return (
+    <section className="hero-section-v5" ref={heroRef} aria-labelledby="hero-title">
+      <div className="hero-bg-pattern" aria-hidden="true" />
+
+      <div className="hero-main-content">
+        <animated.div className="hero-left" style={leftSpring}>
+          <div className="hero-badge">
+            <Sparkles size={14} aria-hidden="true" />
+            <span>Rede de solidariedade comunitária</span>
+          </div>
+          
+          <h1 id="hero-title">
+            <span className="hero-title-highlight">Transforme vidas através da solidariedade</span>
+          </h1>
+          
+          <p className="hero-subtitle">
+            Una-se a milhares de pessoas que fazem a diferença todos os dias. 
+            Descubra pedidos de ajuda próximos e seja parte da mudança que sua comunidade precisa.
+          </p>
+
+          {userLocation && (
+            <div className="hero-location">
+              <MapPin size={18} aria-hidden="true" />
+              <span>Sua localização: <strong>{userLocation.city}, {userLocation.state}</strong></span>
+            </div>
+          )}
+
+          <div className="hero-cta-group">
+            <a href="#orders-list" className="btn-hero-primary">
+              <Heart size={18} aria-hidden="true" />
+              Ver pedidos de ajuda
+              <ArrowRight size={18} aria-hidden="true" />
+            </a>
+            <Link to="/preciso-de-ajuda" className="btn-hero-secondary">
+              <HelpCircle size={18} aria-hidden="true" />
+              Preciso de ajuda
+            </Link>
+          </div>
+
+          <nav className="hero-inline-nav" role="navigation" aria-label="Navegação de páginas">
+            {navLinks.map((link) => (
+              <Link 
+                key={link.href}
+                to={link.href} 
+                className={`hero-inline-link ${link.active ? 'active' : ''}`}
+                aria-current={link.active ? 'page' : undefined}
+              >
+                {link.icon}
+                <span>{link.label}</span>
+              </Link>
+            ))}
+          </nav>
+        </animated.div>
+
+        <animated.div className="hero-right" style={rightSpring}>
+          <CobeGlobe />
+        </animated.div>
+      </div>
+
+      <a href="#orders-list" className="scroll-indicator" aria-label="Rolar para ver os pedidos">
+        <span>Ver pedidos abaixo</span>
+        <ArrowRight size={18} aria-hidden="true" className="scroll-arrow" />
+      </a>
+    </section>
+  );
+}
+
+function OrderCard({ order, onViewDetails, onHelp }) {
+  const urg = URGENCY_OPTIONS.find((u) => u.id === order.urgency);
+  const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b', icon: <Package size={18} aria-hidden="true" />, label: order.category };
+  
+  const getTimeAgo = (createdAt) => {
+    const now = new Date();
+    const diffMs = now.getTime() - createdAt.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMinutes < 1) return 'Agora mesmo';
+    if (diffMinutes < 60) return `há ${diffMinutes} minutos`;
+    if (diffHours < 24) return `há ${diffHours} horas`;
+    if (diffDays === 1) return 'Ontem';
+    if (diffDays < 7) return `há ${diffDays} dias`;
+    return createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onViewDetails(order);
+    }
+  };
+
+  return (
+    <article 
+      className="order-card-v4"
+      aria-labelledby={`order-title-${order.id}`}
+      aria-describedby={`order-desc-${order.id}`}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      role="article"
+    >
+      <div 
+        className="card-accent-v4" 
+        style={{ background: `linear-gradient(180deg, ${urg?.color || '#64748b'}, transparent)` }} 
+        aria-hidden="true"
+      />
+      
+      <div className="card-header-v4">
+        <div className="card-badges-v4" role="list" aria-label="Status do pedido">
+          {order.isNew && (
+            <span className="badge-new-v4" role="listitem" aria-label="Pedido novo">
+              <Sparkles size={12} aria-hidden="true" />
+              Novo
+            </span>
+          )}
+          <span 
+            className="badge-urgency-v4" 
+            style={{ color: urg?.color, background: `${urg?.color}15`, borderColor: `${urg?.color}30` }}
+            role="listitem"
+            aria-label={`Urgência: ${urg?.label}, ${urg?.desc}`}
+          >
+            {urg?.icon}
+            {urg?.label}
+          </span>
+        </div>
+        <time className="card-time-v4" dateTime={order.createdAt.toISOString()} aria-label={`Publicado ${getTimeAgo(order.createdAt)}`}>
+          <Clock size={14} aria-hidden="true" />
+          {getTimeAgo(order.createdAt)}
+        </time>
+      </div>
+
+      <div className="card-category-v4">
+        <div 
+          className="category-icon-v4" 
+          style={{ background: catMeta.color }}
+          aria-hidden="true"
+        >
+          {catMeta.icon || <Package size={18} />}
+        </div>
+        <h3 id={`order-title-${order.id}`} className="category-name-v4">
+          {order.title || order.category}
+        </h3>
+      </div>
+
+      <p id={`order-desc-${order.id}`} className="card-description-v4">
+        {order.description?.substring(0, 150)}...
+      </p>
+
+      <dl className="card-meta-v4">
+        <div className="meta-row-v4">
+          <dt className="sr-only">Solicitante</dt>
+          <User size={16} aria-hidden="true" />
+          <dd>{order.userName}</dd>
+        </div>
+        <div className="meta-row-v4">
+          <dt className="sr-only">Localização</dt>
+          <MapPin size={16} aria-hidden="true" />
+          <dd>{order.neighborhood}, {order.city} - {order.state}</dd>
+        </div>
+      </dl>
+
+      <div className="card-actions-v4" role="group" aria-label="Ações do pedido">
+        <button 
+          className="btn-view-v4" 
+          onClick={() => onViewDetails(order)}
+          aria-label={`Ver detalhes do pedido de ${order.userName}`}
+        >
+          <Eye size={16} aria-hidden="true" />
+          Detalhes
+        </button>
+        <button 
+          className="btn-help-v4" 
+          onClick={() => onHelp(order)}
+          aria-label={`Oferecer ajuda para ${order.userName}`}
+        >
+          <Heart size={16} aria-hidden="true" />
+          Ajudar
+        </button>
+      </div>
+    </article>
+  );
+}
 
 function ModalDetalhes({ order, onClose, onHelp }) {
-  const scrollContainerRef = useRef(null);
   const [activeTab, setActiveTab] = useState('historia');
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
   
   const sections = [
-    { id: 'historia', label: 'Relato', icon: <MessageSquare size={18} /> },
-    { id: 'necessidades', label: 'Itens', icon: <ShoppingCart size={18} /> },
-    { id: 'especificacoes', label: 'Detalhes', icon: <Info size={18} /> },
-    { id: 'urgencia', label: 'Urgência', icon: <AlertTriangle size={18} /> },
-    { id: 'contato', label: 'Localização', icon: <MapPin size={18} /> },
+    { id: 'historia', label: 'Relato', icon: <MessageSquare size={18} aria-hidden="true" /> },
+    { id: 'urgencia', label: 'Urgência', icon: <AlertTriangle size={18} aria-hidden="true" /> },
+    { id: 'contato', label: 'Localização', icon: <MapPin size={18} aria-hidden="true" /> },
   ];
 
   const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
@@ -73,747 +478,488 @@ function ModalDetalhes({ order, onClose, onHelp }) {
     config: { tension: 280, friction: 60 }
   });
 
-  // Dados das categorias completas
-  const CATEGORY_DETAILS = {
-    Alimentos: {
-      options: [
-        { id: 'cesta', label: 'Cesta Básica Completa', desc: 'Arroz, feijão, óleo, açúcar, sal, café, macarrão.', color: '#f97316' },
-        { id: 'cereais_graos', label: 'Cereais & Grãos', desc: 'Arroz, feijão, lentilha, grão-de-bico, quinoa.', color: '#d97706' },
-        { id: 'proteinas_carnes', label: 'Carnes & Aves', desc: 'Carne bovina, frango, peixe, linguiça.', color: '#ef4444' },
-        { id: 'ovos_laticinios', label: 'Ovos & Laticínios', desc: 'Ovos, leite, queijo, iogurte, manteiga.', color: '#f59e0b' },
-        { id: 'frutas_frescas', label: 'Frutas Frescas', desc: 'Banana, maçã, laranja, mamão, abacaxi.', color: '#10b981' },
-        { id: 'verduras_legumes', label: 'Verduras & Legumes', desc: 'Alface, tomate, cebola, batata, cenoura.', color: '#059669' },
-        { id: 'padaria_matinal', label: 'Padaria & Café da Manhã', desc: 'Pão, biscoito, café, achocolatado, aveia.', color: '#8b5cf6' },
-        { id: 'temperos_condimentos', label: 'Temperos & Condimentos', desc: 'Sal, açúcar, óleo, vinagre, alho, cebola.', color: '#475569' },
-        { id: 'massas_farinhas', label: 'Massas & Farinhas', desc: 'Macarrão, farinha de trigo, fubá, polvilho.', color: '#6366f1' },
-        { id: 'enlatados_conservas', label: 'Enlatados & Conservas', desc: 'Sardinha, atum, milho, ervilha, molho de tomate.', color: '#dc2626' },
-        { id: 'bebidas_sucos', label: 'Bebidas & Sucos', desc: 'Suco natural, refrigerante, água, chá.', color: '#0ea5e9' },
-        { id: 'doces_sobremesas', label: 'Doces & Sobremesas', desc: 'Chocolate, bolo, pudim, gelatina, sorvete.', color: '#ec4899' },
-        { id: 'alimentacao_infantil', label: 'Alimentação Infantil', desc: 'Papinha, fórmula, leite em pó, mingau, biscoito.', color: '#f43f5e' },
-        { id: 'alimentacao_especial', label: 'Alimentação Especial', desc: 'Sem glúten, sem lactose, diabético, vegano.', color: '#7c3aed' },
-        { id: 'refeicoes_prontas', label: 'Refeições Prontas', desc: 'Marmitas, comida congelada, lanches prontos.', color: '#f97316' },
-        { id: 'merenda_escolar', label: 'Merenda & Lanche', desc: 'Biscoito, suco de caixinha, fruta, sanduíche.', color: '#14b8a6' }
-      ]
-    },
-    Roupas: {
-      options: [
-        { id: 'roupas_inverno', label: 'Roupas de Inverno', desc: 'Casacos, blusas de lã, cachecol, luvas.', color: '#1e40af' },
-        { id: 'roupas_verao', label: 'Roupas de Verão', desc: 'Camisetas, bermudas, vestidos leves, shorts.', color: '#f59e0b' },
-        { id: 'uniforme_escolar', label: 'Uniforme Escolar', desc: 'Kits da rede municipal/estadual completos.', color: '#6366f1' },
-        { id: 'uniforme_trabalho', label: 'Uniforme de Trabalho', desc: 'Aventais, jalecos, uniformes profissionais.', color: '#475569' },
-        { id: 'roupa_social', label: 'Roupa Social', desc: 'Camisa, calça social, blazer para entrevistas.', color: '#374151' },
-        { id: 'roupas_intimas', label: 'Roupas Íntimas', desc: 'Cueca, calcinha, sutiã, meias (NOVAS).', color: '#f43f5e' },
-        { id: 'enxoval_bebe', label: 'Enxoval de Bebê', desc: 'Body, macacão, manta, touca, luva.', color: '#f472b6' },
-        { id: 'roupas_crianca', label: 'Roupas Infantis', desc: 'Tamanhos 1 a 14 anos, masculino e feminino.', color: '#8b5cf6' }
-      ]
-    },
-    Calçados: {
-      options: [
-        { id: 'tenis_esportivo', label: 'Tênis Esportivo', desc: 'Para exercícios, caminhadas e corridas.', color: '#10b981' },
-        { id: 'tenis_casual', label: 'Tênis Casual', desc: 'Para uso diário, escola e passeios.', color: '#059669' },
-        { id: 'sapato_social_masculino', label: 'Sapato Social Masculino', desc: 'Para trabalho, entrevistas e eventos.', color: '#475569' },
-        { id: 'sapato_social_feminino', label: 'Sapato Social Feminino', desc: 'Scarpin, sapato baixo para trabalho.', color: '#374151' },
-        { id: 'sandalia_feminina', label: 'Sandália Feminina', desc: 'Rasteirinha, sandália de salto baixo.', color: '#ec4899' },
-        { id: 'chinelos_havaianas', label: 'Chinelos & Havaianas', desc: 'Para uso doméstico e praia.', color: '#f59e0b' },
-        { id: 'botas_trabalho', label: 'Botas de Trabalho', desc: 'Bota de segurança, botina com bico de aço.', color: '#dc2626' },
-        { id: 'calcados_infantis', label: 'Calçados Infantis', desc: 'Tênis, sapato, sandália para crianças.', color: '#8b5cf6' }
-      ]
-    },
-    Medicamentos: {
-      options: [
-        { id: 'pressao_alta', label: 'Pressão Alta', desc: 'Losartana, Enalapril, Captopril, Amlodipina.', color: '#ef4444' },
-        { id: 'diabetes', label: 'Diabetes', desc: 'Metformina, Glibenclamida, Insulina.', color: '#dc2626' },
-        { id: 'analgesicos_antitermicos', label: 'Analgésicos & Antitérmicos', desc: 'Dipirona, Paracetamol, Ibuprofeno, Aspirina.', color: '#10b981' },
-        { id: 'asma_bronquite', label: 'Asma & Bronquite', desc: 'Salbutamol, Beclometasona, bombinhas.', color: '#0ea5e9' },
-        { id: 'antibioticos', label: 'Antibióticos', desc: 'Amoxicilina, Azitromicina (com receita).', color: '#8b5cf6' },
-        { id: 'saude_mental', label: 'Saúde Mental', desc: 'Antidepressivos, ansioliticos (controlados).', color: '#ec4899' },
-        { id: 'vitaminas_suplementos', label: 'Vitaminas & Suplementos', desc: 'Complexo B, Vitamina D, Ferro, Cálcio.', color: '#059669' }
-      ]
-    },
-    Higiene: {
-      options: [
-        { id: 'kit_banho_completo', label: 'Kit Banho Completo', desc: 'Sabonete, shampoo, condicionador, esponja.', color: '#14b8a6' },
-        { id: 'saude_bucal', label: 'Saúde Bucal', desc: 'Pasta de dente, escova, fio dental, enxaguante.', color: '#0d9488' },
-        { id: 'higiene_intima_feminina', label: 'Higiene Íntima Feminina', desc: 'Absorvente, protetor diário, sabonete íntimo.', color: '#ec4899' },
-        { id: 'fraldas_infantis', label: 'Fraldas Infantis', desc: 'Tamanhos RN, P, M, G, XG, XXG.', color: '#6366f1' },
-        { id: 'fraldas_geriatricas', label: 'Fraldas Geriátricas', desc: 'Uso adulto tamanhos M, G, GG, EXG.', color: '#8b5cf6' },
-        { id: 'produtos_cabelo', label: 'Produtos para Cabelo', desc: 'Shampoo, condicionador, creme para pentear.', color: '#f59e0b' },
-        { id: 'limpeza_casa', label: 'Limpeza da Casa', desc: 'Detergente, sabão em pó, amaciante, álcool.', color: '#059669' }
-      ]
-    },
-    Contas: {
-      options: [
-        { id: 'conta_luz', label: 'Conta de Luz', desc: 'Evitar corte de energia elétrica.', color: '#ef4444' },
-        { id: 'conta_agua', label: 'Conta de Água', desc: 'Manter abastecimento de água.', color: '#3b82f6' },
-        { id: 'gas_cozinha', label: 'Gás de Cozinha', desc: 'Recarga de botijão 13kg ou gás encanado.', color: '#f97316' },
-        { id: 'apoio_aluguel', label: 'Apoio com Aluguel', desc: 'Ajuda para evitar despejo.', color: '#dc2626' },
-        { id: 'internet_telefone', label: 'Internet & Telefone', desc: 'Para estudo, trabalho remoto ou comunicação.', color: '#6366f1' },
-        { id: 'plano_saude', label: 'Plano de Saúde', desc: 'Mensalidade do convênio médico.', color: '#10b981' }
-      ]
-    },
-    Emprego: {
-      options: [
-        { id: 'curriculo_impressao', label: 'Currículo & Impressão', desc: 'Elaboração, revisão e impressão.', color: '#8b5cf6' },
-        { id: 'qualificacao_cursos', label: 'Qualificação & Cursos', desc: 'Cursos técnicos, profissionalizantes.', color: '#7c3aed' },
-        { id: 'epis_uniforme_trabalho', label: 'EPIs & Uniforme', desc: 'Botinas, luvas, capacete, roupas de trabalho.', color: '#059669' },
-        { id: 'ferramentas_profissionais', label: 'Ferramentas Profissionais', desc: 'Para pedreiro, eletricista, encanador.', color: '#dc2626' },
-        { id: 'transporte_entrevistas', label: 'Transporte para Entrevistas', desc: 'Passagens, combustível para entrevistas.', color: '#0ea5e9' }
-      ]
-    },
-    Móveis: {
-      options: [
-        { id: 'cama_solteiro', label: 'Cama de Solteiro', desc: 'Cama ou colchão de solteiro.', color: '#f59e0b' },
-        { id: 'cama_casal', label: 'Cama de Casal', desc: 'Cama ou colchão de casal.', color: '#d97706' },
-        { id: 'berco_bebe', label: 'Berço & Móveis de Bebê', desc: 'Berço, cômoda, trocador.', color: '#ec4899' },
-        { id: 'sofa_poltrona', label: 'Sofá & Poltrona', desc: 'Para sala de estar, descanso.', color: '#6366f1' },
-        { id: 'mesa_jantar', label: 'Mesa de Jantar', desc: 'Mesa com cadeiras para refeições.', color: '#8b5cf6' },
-        { id: 'guarda_roupa', label: 'Guarda-roupa', desc: 'Roupeiro para o quarto.', color: '#10b981' }
-      ]
-    },
-    Eletrodomésticos: {
-      options: [
-        { id: 'geladeira_freezer', label: 'Geladeira & Freezer', desc: 'Fundamental para conservar alimentos.', color: '#475569' },
-        { id: 'fogao_cooktop', label: 'Fogão & Cooktop', desc: 'Para preparo de refeições.', color: '#334155' },
-        { id: 'maquina_lavar_roupa', label: 'Máquina de Lavar', desc: 'Lavar roupas, tanquinho.', color: '#0ea5e9' },
-        { id: 'microondas', label: 'Micro-ondas', desc: 'Aquecimento rápido de alimentos.', color: '#64748b' },
-        { id: 'ventilador_ar', label: 'Ventilador & Ar Condicionado', desc: 'Para dias de calor intenso.', color: '#06b6d4' },
-        { id: 'televisao', label: 'Televisão', desc: 'TV, conversor digital, antena.', color: '#374151' }
-      ]
-    },
-    Transporte: {
-      options: [
-        { id: 'passagens_onibus', label: 'Passagens de Ônibus', desc: 'Ônibus urbano, intermunicipal, TRI/TEU.', color: '#0ea5e9' },
-        { id: 'passagens_metro_trem', label: 'Metrô & Trem', desc: 'Transporte sobre trilhos, integração.', color: '#3b82f6' },
-        { id: 'bicicleta', label: 'Bicicleta', desc: 'Para trabalho, escola, exercícios.', color: '#10b981' },
-        { id: 'combustivel_veiculo', label: 'Combustível', desc: 'Gasolina, álcool, diesel para veículo.', color: '#f97316' },
-        { id: 'manutencao_veiculo', label: 'Manutenção de Veículo', desc: 'Conserto, peças, pneu, bateria.', color: '#dc2626' }
-      ]
-    },
-    Outros: {
-      options: [
-        { id: 'educacao_cursos', label: 'Educação & Cursos', desc: 'Material escolar, livros, cursos online.', color: '#6366f1' },
-        { id: 'saude_consultas', label: 'Saúde & Consultas', desc: 'Consultas médicas, exames, tratamentos.', color: '#10b981' },
-        { id: 'juridico_documentos', label: 'Jurídico & Documentos', desc: 'Advogado, cartório, certidões.', color: '#8b5cf6' },
-        { id: 'tecnologia_equipamentos', label: 'Tecnologia', desc: 'Celular, computador, tablet, internet.', color: '#0ea5e9' },
-        { id: 'animais_estimacao', label: 'Animais de Estimação', desc: 'Ração, veterinário, medicamentos.', color: '#f59e0b' }
-      ]
-    }
-  };
-
-  const URGENCY_OPTIONS = [
-    { id: 'critico', label: 'CRÍTICO', desc: 'Risco imediato à saúde ou vida', icon: <AlertTriangle size={20} />, color: '#ef4444' },
-    { id: 'urgente', label: 'URGENTE', desc: 'Necessário para as próximas 24h', icon: <Zap size={20} />, color: '#f97316' },
-    { id: 'moderada', label: 'MODERADA', desc: 'Pode aguardar alguns dias', icon: <Calendar size={20} />, color: '#f59e0b' },
-    { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem prazo rígido', icon: <Coffee size={20} />, color: '#10b981' },
-    { id: 'recorrente', label: 'RECORRENTE', desc: 'Necessidade mensal constante', icon: <RefreshCcw size={20} />, color: '#6366f1' }
+  const URGENCY_OPTIONS_MODAL = [
+    { id: 'critico', label: 'CRÍTICO', desc: 'Risco imediato à saúde ou vida', icon: <AlertTriangle size={20} aria-hidden="true" />, color: '#ef4444' },
+    { id: 'urgente', label: 'URGENTE', desc: 'Necessário para as próximas 24h', icon: <Zap size={20} aria-hidden="true" />, color: '#f97316' },
+    { id: 'moderada', label: 'MODERADA', desc: 'Pode aguardar alguns dias', icon: <Calendar size={20} aria-hidden="true" />, color: '#f59e0b' },
+    { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem prazo rígido', icon: <Coffee size={20} aria-hidden="true" />, color: '#10b981' },
+    { id: 'recorrente', label: 'RECORRENTE', desc: 'Necessidade mensal constante', icon: <RefreshCcw size={20} aria-hidden="true" />, color: '#6366f1' }
   ];
 
-  const allSpecs = { ...(order?.details || {}), ...(order?.subQuestionAnswers || {}) };
-  const specsArray = Object.entries(allSpecs);
-  const specsTrail = useTrail(specsArray.length, {
-    opacity: contentInView ? 1 : 0,
-    transform: contentInView ? 'translateY(0px)' : 'translateY(20px)',
-    config: { tension: 280, friction: 60 }
-  });
-
-  const categoryDetails = CATEGORY_DETAILS[order?.category] || { options: [] };
-  const itemsTrail = useTrail(order?.subCategories?.length || 0, {
-    opacity: contentInView ? 1 : 0,
-    transform: contentInView ? 'scale(1)' : 'scale(0.9)',
-    config: { tension: 280, friction: 60 }
-  });
+  useEffect(() => {
+    if (order && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, [order]);
 
   useEffect(() => {
-    if (!order) return;
-    
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      let currentSection = sections[0].id;
-      for (const section of sections) {
-        const element = document.getElementById(`section-${section.id}`);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          const containerRect = container.getBoundingClientRect();
-          if (rect.top <= containerRect.top + 100) {
-            currentSection = section.id;
-          }
-        }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
       }
-      setActiveTab(currentSection);
     };
-
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [order, sections]);
-  
+    
+    if (order) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [order, onClose]);
+    
   if (!order) return null;
   
-  const urg = URGENCY_OPTIONS.find((u) => u.id === order.urgency);
-  const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b', details: {}, icon: <Info size={24} /> };
-
-  const hasSpecs = Object.keys(allSpecs).length > 0;
+  const urg = URGENCY_OPTIONS_MODAL.find((u) => u.id === order.urgency);
+  const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b', icon: <Info size={24} aria-hidden="true" />, label: order.category };
 
   const scrollToSection = (id) => {
     const element = document.getElementById(`section-${id}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
       setActiveTab(id);
-      toast.success(`Navegando para ${sections.find(s => s.id === id)?.label}`);
     }
   };
 
   return (
-    <div className="qa-modal-overlay" onClick={onClose}>
+    <div 
+      className="qa-modal-overlay" 
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
       <div 
-        className="qa-modal-content-v3"
+        className="qa-modal-content-v4" 
         onClick={e => e.stopPropagation()}
-        style={{
-          animation: 'modalSlideIn 0.3s ease-out'
-        }}
+        ref={modalRef}
       >
         <button 
-          className="modal-close-btn-v3" 
-          onClick={onClose} 
-          data-tooltip-id="close-tooltip"
-          data-tooltip-content="Fechar detalhes"
+          ref={closeButtonRef}
+          className="modal-close-btn-v4" 
+          onClick={onClose}
+          aria-label="Fechar detalhes"
         >
-          <X size={24} />
+          <X size={20} aria-hidden="true" />
         </button>
         
-        <div className="modal-sidebar-v3">
-          <nav className="sidebar-nav-v3">
-            {sections.map((s, index) => (
+        <aside className="modal-sidebar-v4" aria-label="Navegação do modal">
+          <div className="sidebar-header-v4">
+            <div className="sidebar-category-badge" style={{ background: catMeta.color }} aria-hidden="true">
+              {catMeta.icon || <Package size={20} />}
+            </div>
+            <span>{order.category}</span>
+          </div>
+          <nav className="sidebar-nav-v4" aria-label="Seções do pedido">
+            {sections.map((s) => (
               <button 
                 key={s.id}
-                className={`nav-item-v3 ${activeTab === s.id ? 'active' : ''}`}
+                className={`nav-item-v4 ${activeTab === s.id ? 'active' : ''}`}
                 onClick={() => scrollToSection(s.id)}
-                data-tooltip-id="nav-tooltip"
-                data-tooltip-content={`Ver ${s.label.toLowerCase()}`}
-                style={{
-                  animation: `slideInLeft 0.3s ease-out ${index * 0.1}s both`
-                }}
+                aria-current={activeTab === s.id ? 'true' : undefined}
+                aria-label={`Ir para seção ${s.label}`}
               >
-                {s.icon}
-                <span>{s.label}</span>
-                {activeTab === s.id && (
-                  <div 
-                    className="nav-indicator"
-                    style={{ backgroundColor: catMeta.color }}
-                  />
-                )}
+                <span className="nav-icon-v4">{s.icon}</span>
+                <span className="nav-label-v4">{s.label}</span>
+                {activeTab === s.id && <div className="nav-indicator-v4" style={{ backgroundColor: catMeta.color }} aria-hidden="true" />}
               </button>
             ))}
           </nav>
-        </div>
-
-        <div className="modal-main-v3">
-          <animated.header className="main-header-v3" style={headerSpring} ref={headerRef}>
-            <div className="header-titles-v3">
-              <span 
-                className="cat-badge-v3" 
-                style={{ color: catMeta.color, backgroundColor: catMeta.color + '15' }}
-                data-tooltip-id="category-tooltip"
-                data-tooltip-content={`Categoria: ${order.category}`}
-              >
-                {catMeta.icon}
-                {order.category}
-              </span>
-              <h2>{order.title || order.category}</h2>
-              <p className="user-info-v3">
-                Solicitado por <strong>{order.userName}</strong> • {order.userType || 'Cidadão'}
-              </p>
+          <div 
+            className="sidebar-urgency-v4" 
+            style={{ borderColor: urg?.color, background: `${urg?.color}10` }}
+            role="status"
+            aria-label={`Nível de urgência: ${urg?.label}`}
+          >
+            <span className="urgency-icon-v4" style={{ color: urg?.color }} aria-hidden="true">{urg?.icon}</span>
+            <div className="urgency-text-v4">
+              <span className="urgency-label-v4" style={{ color: urg?.color }}>{urg?.label}</span>
+              <span className="urgency-desc-v4">{urg?.desc}</span>
             </div>
-            <div 
-              className="header-urgency-v3" 
-              style={{ color: urg?.color, borderColor: urg?.color }}
-              data-tooltip-id="urgency-tooltip"
-              data-tooltip-content={urg?.desc}
-            >
-              {urg?.icon}
-              <span>{urg?.label}</span>
+          </div>
+        </aside>
+
+        <main className="modal-main-v4">
+          <animated.header className="main-header-v4" style={headerSpring} ref={headerRef}>
+            <div className="header-content-v4">
+              <h2 id="modal-title">{order.title || order.category}</h2>
+              <div className="header-meta-v4">
+                <div className="meta-item-v4">
+                  <User size={16} aria-hidden="true" />
+                  <span>{order.userName}</span>
+                </div>
+                <div className="meta-divider-v4" aria-hidden="true" />
+                <div className="meta-item-v4">
+                  <MapPin size={16} aria-hidden="true" />
+                  <span>{order.neighborhood}, {order.city}</span>
+                </div>
+              </div>
             </div>
           </animated.header>
 
-          <animated.div className="modal-scroll-v3" ref={scrollContainerRef} style={contentSpring}>
+          <animated.div className="modal-scroll-v4" style={contentSpring}>
             <div ref={contentRef}>
-              <section id="section-historia" className="content-section-v3">
-                <div 
-                  className="section-title-v3"
-                  style={{
-                    animation: 'fadeInUp 0.5s ease-out 0.2s both'
-                  }}
-                >
-                  <MessageSquare size={20} />
-                  <h3>O Relato de {order.userName.split(' ')[0]}</h3>
+              <section id="section-historia" className="content-section-v4" aria-labelledby="section-historia-title">
+                <div className="section-header-v4">
+                  <MessageSquare size={20} aria-hidden="true" />
+                  <h3 id="section-historia-title">O Relato de {order.userName.split(' ')[0]}</h3>
                 </div>
-                <div 
-                  className="story-card-v3"
-                  style={{
-                    animation: 'scaleIn 0.5s ease-out 0.3s both'
-                  }}
-                >
-                  <div className="quote-mark">"</div>
-                  <p style={{ whiteSpace: 'pre-wrap' }}>{order.description}</p>
-                  <div className="quote-mark-end">"</div>
+                <div className="story-card-v4">
+                  <p>{order.description}</p>
                 </div>
               </section>
 
-              <section id="section-necessidades" className="content-section-v3">
-                <div 
-                  className="section-title-v3"
-                  style={{
-                    animation: 'fadeInUp 0.5s ease-out 0.4s both'
-                  }}
-                >
-                  <ShoppingCart size={20} />
-                  <h3>Itens Necessários</h3>
+              <section id="section-urgencia" className="content-section-v4" aria-labelledby="section-urgencia-title">
+                <div className="section-header-v4">
+                  <AlertTriangle size={20} aria-hidden="true" />
+                  <h3 id="section-urgencia-title">Nível de Urgência</h3>
                 </div>
-                <div className="items-grid-v3">
-                  {itemsTrail.map((style, index) => {
-                    const sc = order.subCategories?.[index];
-                    if (!sc) return null;
-                    
-                    const itemDetail = categoryDetails.options.find(opt => opt.id === sc);
-                    
-                    return (
-                      <animated.div 
-                        key={sc} 
-                        className="item-card-v3" 
-                        style={{ ...style, borderLeftColor: itemDetail?.color || catMeta.color }}
-                      >
-                        <div className="item-header-v3">
-                          <h4>{itemDetail?.label || sc}</h4>
-                          <div 
-                            className="item-priority-indicator"
-                            style={{ backgroundColor: itemDetail?.color || catMeta.color }}
-                          />
-                        </div>
-                        <p>{itemDetail?.desc || 'Item necessário para as necessidades relatadas.'}</p>
-                        {itemDetail && (
-                          <div className="item-category-tag">
-                            <span style={{ color: itemDetail.color }}>#{order.category}</span>
-                          </div>
-                        )}
-                      </animated.div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              <section id="section-especificacoes" className="content-section-v3">
-                <div 
-                  className="section-title-v3"
-                  style={{
-                    animation: 'fadeInUp 0.5s ease-out 0.5s both'
-                  }}
-                >
-                  <Info size={20} />
-                  <h3>Detalhes e Especificações</h3>
-                </div>
-                {hasSpecs ? (
-                  <div className="enhanced-specs-grid">
-                    {specsTrail.map((style, index) => {
-                      const [key, val] = specsArray[index];
-                      return (
-                        <animated.div key={key} className="enhanced-spec-card" style={style}>
-                          <div className="spec-header">
-                            <Info size={16} className="spec-icon" />
-                            <label className="spec-label">{SUB_QUESTION_LABELS[key] || key}</label>
-                          </div>
-                          <div className="spec-content">
-                            {Array.isArray(val) ? (
-                              <div className="spec-chips">
-                                {val.map(v => (
-                                  <span 
-                                    key={v} 
-                                    className="spec-chip"
-                                    style={{ backgroundColor: catMeta.color + '20', color: catMeta.color }}
-                                  >
-                                    {v}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="spec-value">{val}</div>
-                            )}
-                          </div>
-                        </animated.div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div 
-                    className="enhanced-empty-state"
-                    style={{
-                      animation: 'scaleIn 0.5s ease-out 0.6s both'
-                    }}
-                  >
-                    <Info size={48} className="empty-icon" />
-                    <h4>Sem especificações adicionais</h4>
-                    <p>Este pedido não possui detalhes técnicos específicos informados.</p>
-                  </div>
-                )}
-              </section>
-
-              <section id="section-urgencia" className="content-section-v3">
-                <div 
-                  className="section-title-v3"
-                  style={{
-                    animation: 'fadeInUp 0.5s ease-out 0.6s both'
-                  }}
-                >
-                  <AlertTriangle size={20} />
-                  <h3>Nível de Urgência</h3>
-                </div>
-                <div 
-                  className="urgency-detail-card"
-                  style={{
-                    animation: 'scaleIn 0.5s ease-out 0.7s both',
-                    borderColor: urg?.color,
-                    backgroundColor: urg?.color + '10'
-                  }}
-                >
-                  <div className="urgency-icon-large" style={{ color: urg?.color }}>
+                <div className="urgency-card-v4" style={{ borderColor: urg?.color, background: `${urg?.color}08` }}>
+                  <div className="urgency-badge-large" style={{ background: urg?.color }} aria-hidden="true">
                     {urg?.icon}
                   </div>
-                  <div className="urgency-info">
+                  <div className="urgency-details-v4">
                     <h4 style={{ color: urg?.color }}>{urg?.label}</h4>
                     <p>{urg?.desc}</p>
-                    <div className="urgency-timeline">
-                      <Clock size={16} />
-                      <span>Tempo de resposta esperado: {urg?.id === 'critico' ? '< 2 horas' : urg?.id === 'urgente' ? '< 24 horas' : urg?.id === 'moderada' ? '2-5 dias' : urg?.id === 'tranquilo' ? '1-2 semanas' : 'Agendado'}</span>
+                    <div className="urgency-timeline-v4">
+                      <Clock size={14} aria-hidden="true" />
+                      <span>Resposta esperada: {urg?.id === 'critico' ? '< 2h' : urg?.id === 'urgente' ? '< 24h' : '2-5 dias'}</span>
                     </div>
                   </div>
                 </div>
               </section>
 
-              <section id="section-contato" className="content-section-v3">
-                <div 
-                  className="section-title-v3"
-                  style={{
-                    animation: 'fadeInUp 0.5s ease-out 0.7s both'
-                  }}
-                >
-                  <MapPin size={20} />
-                  <h3>Localização e Contato</h3>
+              <section id="section-contato" className="content-section-v4" aria-labelledby="section-contato-title">
+                <div className="section-header-v4">
+                  <MapPin size={20} aria-hidden="true" />
+                  <h3 id="section-contato-title">Localização</h3>
                 </div>
-                <div 
-                  className="contact-card-v3"
-                  style={{
-                    animation: 'scaleIn 0.5s ease-out 0.8s both'
-                  }}
-                >
-                  <div className="loc-row-v3">
-                    <div className="loc-item-v3">
-                      <label>Bairro</label>
-                      <span>{order.neighborhood}</span>
+                <div className="contact-card-v4">
+                  <dl className="contact-grid-v4">
+                    <div className="contact-item-v4">
+                      <dt>Bairro</dt>
+                      <dd>{order.neighborhood}</dd>
                     </div>
-                    <div className="loc-item-v3">
-                      <label>Cidade</label>
-                      <span>{order.city} - {order.state}</span>
+                    <div className="contact-item-v4">
+                      <dt>Cidade</dt>
+                      <dd>{order.city} - {order.state}</dd>
                     </div>
-                  </div>
-                  {order.subQuestionAnswers?.ponto_referencia && (
-                    <div className="loc-full-v3">
-                      <label>Ponto de Referência</label>
-                      <p>{order.subQuestionAnswers.ponto_referencia}</p>
-                    </div>
-                  )}
-                  <div className="contact-footer-v3">
-                    <div className="pref-v3">
-                      <MessageCircle size={14} />
-                      <span>
-                        Contato preferencial via chat ou {order.subQuestionAnswers?.contato_pref || 'telefone'}
-                      </span>
-                    </div>
-                  </div>
+                  </dl>
                 </div>
               </section>
             </div>
           </animated.div>
 
-          <footer 
-            className="modal-footer-v3"
-            style={{
-              animation: 'fadeInUp 0.5s ease-out 0.9s both'
-            }}
-          >
-            <button className="btn-cancel-v3" onClick={onClose}>
+          <footer className="modal-footer-v4">
+            <button className="btn-secondary-v4" onClick={onClose}>
               Voltar
             </button>
             <button 
-              className="btn-action-v3"
-              onClick={() => {
-                onHelp(order);
-                onClose();
-                toast.success('Conectando vocês! 💚');
-              }}
-              style={{ backgroundColor: catMeta.color }}
-              data-tooltip-id="help-action-tooltip"
-              data-tooltip-content="Iniciar conversa para ajudar"
+              className="btn-primary-v4"
+              onClick={() => { onHelp(order); onClose(); }}
+              style={{ background: `linear-gradient(135deg, ${catMeta.color}, ${catMeta.color}dd)` }}
+              aria-label={`Oferecer ajuda para ${order.userName}`}
             >
-              <Heart size={20} fill="white" />
-              Quero Ajudar Agora
+              <Heart size={18} fill="white" aria-hidden="true" />
+              Quero Ajudar
             </button>
           </footer>
-        </div>
-        
-        <Tooltip 
-          id="close-tooltip" 
-          place="left"
-          delayShow={200}
-        />
-        <Tooltip 
-          id="nav-tooltip" 
-          place="right"
-          delayShow={200}
-        />
-        <Tooltip 
-          id="category-tooltip" 
-          place="top"
-          delayShow={200}
-        />
-        <Tooltip 
-          id="urgency-tooltip" 
-          place="top"
-          delayShow={200}
-        />
-        <Tooltip 
-          id="help-action-tooltip" 
-          place="top"
-          delayShow={300}
-        />
+        </main>
       </div>
     </div>
   );
 }
 
-function AnimatedBackground() {
+function FiltersModal({ 
+  show, 
+  onClose, 
+  selectedCat, 
+  setSelectedCat, 
+  selectedUrgency, 
+  setSelectedUrgency,
+  selectedLocation,
+  setSelectedLocation,
+  onlyNew,
+  setOnlyNew,
+  userLocation,
+  onClear
+}) {
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (show && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, [show]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    if (show) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [show, onClose]);
+
+  if (!show) return null;
+
   return (
-    <div className="animated-background">
-      <div className="geometric-shapes">
-        {[...Array(12)].map((_, i) => (
-          <div 
-            key={i} 
-            className={`shape shape-${(i % 8) + 1}`}
-            style={{
-              '--delay': `${i * 1.5}s`,
-              '--duration': `${20 + i * 2}s`
-            }}
-          />
-        ))}
-      </div>
-      
-      <div className="gradient-orbs">
-        {[...Array(6)].map((_, i) => (
-          <div 
-            key={i} 
-            className={`orb orb-${(i % 5) + 1}`}
-            style={{
-              '--delay': `${i * 2}s`,
-              '--size': `${120 + i * 40}px`
-            }}
-          />
-        ))}
+    <div 
+      className="filters-modal-overlay-v4" 
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="filters-title"
+    >
+      <div 
+        className="filters-modal-v4" 
+        onClick={e => e.stopPropagation()}
+        ref={modalRef}
+      >
+        <div className="filters-header-v4">
+          <div className="filters-title-v4">
+            <Filter size={20} aria-hidden="true" />
+            <h2 id="filters-title">Filtros</h2>
+          </div>
+          <button 
+            ref={closeButtonRef}
+            className="filters-close-v4" 
+            onClick={onClose}
+            aria-label="Fechar filtros"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="filters-content-v4">
+          <fieldset className="filter-group-v4">
+            <legend>
+              <MapPin size={16} aria-hidden="true" />
+              Localização
+            </legend>
+            <div className="filter-chips-v4" role="radiogroup" aria-label="Filtrar por localização">
+              <button 
+                className={`filter-chip-v4 ${selectedLocation === 'brasil' ? 'active' : ''}`}
+                onClick={() => setSelectedLocation('brasil')}
+                role="radio"
+                aria-checked={selectedLocation === 'brasil'}
+              >
+                Todo o Brasil
+              </button>
+              {userLocation && (
+                <>
+                  <button 
+                    className={`filter-chip-v4 ${selectedLocation === 'meu_estado' ? 'active' : ''}`}
+                    onClick={() => setSelectedLocation('meu_estado')}
+                    role="radio"
+                    aria-checked={selectedLocation === 'meu_estado'}
+                  >
+                    {userLocation.state}
+                  </button>
+                  <button 
+                    className={`filter-chip-v4 ${selectedLocation === 'minha_cidade' ? 'active' : ''}`}
+                    onClick={() => setSelectedLocation('minha_cidade')}
+                    role="radio"
+                    aria-checked={selectedLocation === 'minha_cidade'}
+                  >
+                    {userLocation.city}
+                  </button>
+                </>
+              )}
+            </div>
+          </fieldset>
+
+          <fieldset className="filter-group-v4">
+            <legend>
+              <Package size={16} aria-hidden="true" />
+              Categoria
+            </legend>
+            <div className="filter-chips-v4 scrollable" role="radiogroup" aria-label="Filtrar por categoria">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  className={`filter-chip-v4 ${selectedCat === cat.id ? 'active' : ''}`}
+                  onClick={() => setSelectedCat(cat.id)}
+                  style={{ '--chip-color': cat.color }}
+                  role="radio"
+                  aria-checked={selectedCat === cat.id}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="filter-group-v4">
+            <legend>
+              <AlertTriangle size={16} aria-hidden="true" />
+              Urgência
+            </legend>
+            <div className="filter-chips-v4" role="group" aria-label="Filtrar por urgência">
+              {URGENCY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  className={`filter-chip-v4 urgency ${selectedUrgency === opt.id ? 'active' : ''}`}
+                  onClick={() => setSelectedUrgency(selectedUrgency === opt.id ? null : opt.id)}
+                  style={{ '--chip-color': opt.color }}
+                  role="checkbox"
+                  aria-checked={selectedUrgency === opt.id}
+                  aria-label={`${opt.label}: ${opt.desc}`}
+                >
+                  {opt.icon}
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="filter-group-v4">
+            <legend>
+              <Clock size={16} aria-hidden="true" />
+              Período
+            </legend>
+            <div className="filter-chips-v4">
+              <button 
+                className={`filter-chip-v4 ${onlyNew ? 'active' : ''}`}
+                onClick={() => setOnlyNew(!onlyNew)}
+                role="checkbox"
+                aria-checked={onlyNew}
+              >
+                <Sparkles size={14} aria-hidden="true" />
+                Apenas Novos
+              </button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div className="filters-footer-v4">
+          <button className="btn-clear-v4" onClick={onClear}>
+            Limpar Filtros
+          </button>
+          <button className="btn-apply-v4" onClick={onClose}>
+            Aplicar
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-export default function DesktopQueroAjudar() {
-  const { user } = useAuth();
+function ConfirmHelpModal({ order, onConfirm, onClose }) {
+  const confirmButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (order && confirmButtonRef.current) {
+      confirmButtonRef.current.focus();
+    }
+  }, [order]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    if (order) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [order, onClose]);
+
+  if (!order) return null;
+
+  return (
+    <div 
+      className="confirm-modal-overlay-v4" 
+      onClick={onClose}
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      aria-describedby="confirm-desc"
+    >
+      <div className="confirm-modal-v4" onClick={e => e.stopPropagation()}>
+        <div className="confirm-icon-v4" aria-hidden="true">
+          <Heart size={40} fill="#10b981" color="#10b981" />
+        </div>
+        <h2 id="confirm-title">Deseja ajudar {order.userName}?</h2>
+        <p id="confirm-desc">Iremos abrir um chat seguro para vocês combinarem a ajuda.</p>
+        <div className="confirm-actions-v4">
+          <button 
+            ref={confirmButtonRef}
+            className="btn-confirm-v4" 
+            onClick={onConfirm}
+          >
+            <MessageCircle size={18} aria-hidden="true" />
+            Sim, conversar agora
+          </button>
+          <button className="btn-cancel-v4" onClick={onClose}>
+            Voltar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LiveRegion({ message }) {
+  return (
+    <div 
+      role="status" 
+      aria-live="polite" 
+      aria-atomic="true" 
+      className="sr-only"
+    >
+      {message}
+    </div>
+  );
+}
+
+export default function QueroAjudarPage() {
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderToHelp, setOrderToHelp] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState('brasil');
-  const [selectedTimeframe, setSelectedTimeframe] = useState('todos');
   const [onlyNew, setOnlyNew] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [fontSize, setFontSize] = useState('normal');
-  const [highContrast, setHighContrast] = useState(false);
-  const [showHelper, setShowHelper] = useState(false);
   const [pedidos, setPedidos] = useState([]);
   const [loadingPedidos, setLoadingPedidos] = useState(true);
-  const [error, setError] = useState(null);
-  const [showLocationModal, setShowLocationModal] = useState(false);
-  const [locationMessage, setLocationMessage] = useState('');
+  const [highContrast, setHighContrast] = useState(false);
+  const [liveMessage, setLiveMessage] = useState('');
 
-  const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
   const [cardsRef, cardsInView] = useInView({ threshold: 0.1, triggerOnce: true });
 
-  const headerSpring = useSpring({
-    opacity: headerInView ? 1 : 0,
-    transform: headerInView ? 'translateY(0px)' : 'translateY(-50px)',
-    config: { tension: 280, friction: 60 }
-  });
-
-  const filterButtonSpring = useSpring({
-    scale: showFiltersModal ? 1.05 : 1,
-    config: { tension: 300, friction: 10 }
-  });
-
-  const loadPedidos = async (filters = {}) => {
-    try {
-      setLoadingPedidos(true);
-      setError(null);
-      
-      // Adicionar localização do usuário aos filtros para ordenação por proximidade
-      const queryParams = new URLSearchParams();
-      if (userLocation?.city) queryParams.append('userCity', userLocation.city);
-      if (userLocation?.state) queryParams.append('userState', userLocation.state);
-      
-      const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-      const response = await ApiService.get(`/pedidos${query}`);
-      
-      if (response.success && response.data) {
-        // Transformar dados do backend para o formato esperado pelo frontend
-        const transformedPedidos = response.data.map(pedido => ({
-          id: pedido.id,
-          userId: pedido.userId, // ID do usuário que criou o pedido
-          userName: pedido.usuario?.nome || 'Usuário',
-          userType: pedido.usuario?.tipo || 'Cidadão',
-          city: pedido.city || extractCityFromLocation(pedido.location),
-          state: pedido.state || extractStateFromLocation(pedido.location),
-          neighborhood: pedido.neighborhood || extractNeighborhoodFromLocation(pedido.location),
-          urgency: pedido.urgency,
-          category: pedido.category,
-          title: pedido.title || pedido.category,
-          description: pedido.description,
-          subCategories: pedido.subCategory || [],
-          subQuestionAnswers: pedido.subQuestionAnswers || {},
-          isNew: isNewPedido(pedido.createdAt),
-          createdAt: pedido.createdAt
-        }));
-        
-        setPedidos(transformedPedidos);
-      } else {
-        throw new Error('Erro ao carregar pedidos');
-      }
-    } catch (error) {
-      console.error('Erro ao carregar pedidos:', error);
-      setError(error.message);
-      toast.error('Erro ao carregar pedidos: ' + error.message);
-    } finally {
-      setLoadingPedidos(false);
-    }
-  };
-
-  const extractCityFromLocation = (location) => {
-    if (!location) return 'Não informado';
-    const parts = location.split(',');
-    if (parts.length >= 2) {
-      const secondPart = parts[1].trim();
-      if (secondPart.includes('-')) {
-        return secondPart.split('-')[0].trim();
-      }
-      return secondPart;
-    }
-    return 'Não informado';
-  };
-
-  const extractStateFromLocation = (location) => {
-    if (!location) return 'BR';
-    const parts = location.split(',');
-    if (parts.length >= 2) {
-      const secondPart = parts[1].trim();
-      if (secondPart.includes('-')) {
-        return secondPart.split('-')[1].trim();
-      }
-    }
-    return 'BR';
-  };
-
-  const extractNeighborhoodFromLocation = (location) => {
-    if (!location) return 'Não informado';
-    const parts = location.split(',');
-    return parts[0]?.trim() || 'Não informado';
-  };
-
-  const isNewPedido = (createdAt) => {
-    if (!createdAt) return false;
-    const created = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    return created > yesterday;
-  };
-
   useEffect(() => {
-    const savedFontSize = localStorage.getItem('fontSize') || 'normal';
-    const savedContrast = localStorage.getItem('highContrast') === 'true';
-    setFontSize(savedFontSize);
-    setHighContrast(savedContrast);
+    setTimeout(() => {
+      setPedidos(MOCK_PEDIDOS);
+      setLoadingPedidos(false);
+      setLiveMessage(`${MOCK_PEDIDOS.length} pedidos de ajuda carregados`);
+    }, 1000);
     
-    document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
-    
-    setIsLoading(true);
-    
-    // Carregar pedidos
-    loadPedidos();
-    
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          let detectedState = 'MG';
-          let detectedCity = 'Belo Horizonte';
-          
-          if (latitude >= -23 && latitude <= -19 && longitude >= -51 && longitude <= -39) {
-            detectedState = 'MG';
-            detectedCity = 'Belo Horizonte';
-          } else if (latitude >= -25 && latitude <= -22 && longitude >= -54 && longitude <= -44) {
-            detectedState = 'SP';
-            detectedCity = 'São Paulo';
-          } else if (latitude >= -33 && latitude <= -27 && longitude >= -58 && longitude <= -49) {
-            detectedState = 'RS';
-            detectedCity = 'Porto Alegre';
-          }
-          
-          setUserLocation({ state: detectedState, city: detectedCity });
-          setLocationMessage(`Localização detectada: ${detectedCity}, ${detectedState}`);
-          setTimeout(() => {
-            setIsLoading(false);
-            setShowLocationModal(true);
-            // Recarregar pedidos com a nova localização
-            loadPedidos();
-          }, 1000);
-        },
-        (error) => {
-          console.log('Location access denied');
-          setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-          setTimeout(() => setIsLoading(false), 1000);
-        }
-      );
-    } else {
-      setUserLocation({ state: 'MG', city: 'Belo Horizonte' });
-      setTimeout(() => setIsLoading(false), 1000);
-    }
+    setUserLocation({ state: 'SP', city: 'São Paulo' });
   }, []);
 
-  const citiesByState = useMemo(() => {
-    const grouped = {};
-    pedidos.forEach(order => {
-      if (!grouped[order.state]) {
-        grouped[order.state] = new Set();
-      }
-      grouped[order.state].add(order.city);
-    });
-    
-    Object.keys(grouped).forEach(state => {
-      grouped[state] = Array.from(grouped[state]).sort();
-    });
-    
-    return grouped;
-  }, [pedidos]);
-
   const filteredOrders = useMemo(() => {
-    return pedidos.filter((order) => {
-      // Filtrar pedidos do próprio usuário - eles podem ver mas não ajudar
+    const filtered = pedidos.filter((order) => {
       const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
       const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
       
@@ -822,577 +968,220 @@ export default function DesktopQueroAjudar() {
         locationMatch = order.state === userLocation.state;
       } else if (selectedLocation === 'minha_cidade' && userLocation) {
         locationMatch = order.city === userLocation.city && order.state === userLocation.state;
-      } else if (selectedLocation !== 'brasil' && selectedLocation !== 'meu_estado' && selectedLocation !== 'minha_cidade') {
-        locationMatch = `${order.city}, ${order.state}` === selectedLocation;
       }
       
       const newMatch = !onlyNew || order.isNew;
-      const timeMatch = selectedTimeframe === 'todos' || (selectedTimeframe === 'hoje' && order.isNew);
       
-      return catMatch && urgMatch && locationMatch && newMatch && timeMatch;
+      return catMatch && urgMatch && locationMatch && newMatch;
     });
-  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, onlyNew, userLocation, user]);
+    
+    return filtered;
+  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, onlyNew, userLocation]);
+
+  useEffect(() => {
+    if (!loadingPedidos) {
+      setLiveMessage(`${filteredOrders.length} pedidos encontrados`);
+    }
+  }, [filteredOrders.length, loadingPedidos]);
 
   const trail = useTrail(filteredOrders.length, {
     opacity: cardsInView ? 1 : 0,
-    transform: cardsInView ? 'translateY(0px)' : 'translateY(50px)',
+    transform: cardsInView ? 'translateY(0px)' : 'translateY(30px)',
     config: { tension: 280, friction: 60 }
   });
 
-  const changeFontSize = (size) => {
-    setFontSize(size);
-    localStorage.setItem('fontSize', size);
-    document.documentElement.className = document.documentElement.className.replace(/font-\w+/g, `font-${size}`);
-    toast.success(`Tamanho da fonte: ${size === 'large' ? 'Grande' : size === 'small' ? 'Pequena' : 'Normal'}`);
+  const hasActiveFilters = selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil' || onlyNew;
+
+  const handleConfirmHelp = () => {
+    toast.success('Conversa iniciada! (Demo)', {
+      icon: '💬',
+      duration: 4000,
+    });
+    setOrderToHelp(null);
+    setLiveMessage('Conversa iniciada com sucesso');
   };
 
-  const toggleContrast = () => {
-    const newContrast = !highContrast;
-    setHighContrast(newContrast);
-    localStorage.setItem('highContrast', newContrast.toString());
-    document.documentElement.classList.toggle('high-contrast', newContrast);
-    toast.success(newContrast ? 'Alto contraste ativado' : 'Alto contraste desativado');
-  };
-
-  const handleAdminDelete = async (pedidoId) => {
-    if (!window.confirm('Tem certeza que deseja excluir este pedido?')) {
-      return;
-    }
-    
-    try {
-      const response = await ApiService.delete(`/pedidos/${pedidoId}/admin`);
-      if (response.success) {
-        toast.success('Pedido excluído com sucesso');
-        loadPedidos();
-      }
-    } catch (error) {
-      toast.error('Erro ao excluir pedido');
-    }
+  const clearFilters = () => {
+    setSelectedCat('Todas');
+    setSelectedUrgency(null);
+    setSelectedLocation('brasil');
+    setOnlyNew(false);
+    setLiveMessage('Filtros limpos');
   };
 
   return (
-    <div className="qa-page">
-      <a href="#main-content" className="skip-link">Pular para o conteúdo principal</a>
-      <AnimatedBackground />
+    <div className={`qa-page-v4 ${highContrast ? 'high-contrast' : ''}`}>
+      <div className="skip-links">
+        <a href="#main-content" className="skip-link">
+          Pular para o conteúdo principal
+        </a>
+        <a href="#filters" className="skip-link">
+          Pular para filtros
+        </a>
+        <a href="#orders-list" className="skip-link">
+          Pular para lista de pedidos
+        </a>
+      </div>
+      <LiveRegion message={liveMessage} />
       
-      {!selectedOrder && <LandingHeader scrolled={true} />}
+        <HeroSection 
+          filteredCount={filteredOrders.length}
+          userLocation={userLocation}
+        />
       
-      <main className="qa-content" id="main-content">
-        <div className="qa-main-wrapper">
-        
-        <animated.header className="page-header-pro" style={headerSpring} ref={headerRef}>
-          <div className="header-content-pro">
-            <div className="header-left-pro">
-              <h1 className="title-pro">Quero Ajudar</h1>
-              <p className="subtitle-pro">Conecte-se com quem precisa da sua ajuda</p>
+      <main id="main-content" className="qa-content-v4" role="main">
+        <div className="qa-container-v4">
+          <div className="section-header-bar" id="filters">
+            <div className="section-header-left">
+              <h2>Pedidos de ajuda</h2>
+              <span className="pedidos-count">{filteredOrders.length} encontrados</span>
             </div>
-            <div className="header-right-pro">
-              <button className="btn-accessibility-pro" onClick={() => setShowHelper(!showHelper)}>
-                Acessibilidade
-              </button>
-              <animated.button 
-                className="btn-filter-pro"
+            <div className="section-header-actions">
+              <button 
+                className={`btn-filters-section ${hasActiveFilters ? 'has-filters' : ''}`}
                 onClick={() => setShowFiltersModal(true)}
-                style={filterButtonSpring}
+                aria-label={`Abrir filtros${hasActiveFilters ? ' - filtros ativos' : ''}`}
+                aria-haspopup="dialog"
               >
-                <Filter size={18} />
-                Filtros
-                {(selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil') && 
-                  <span className="filter-badge-pro" />
-                }
-              </animated.button>
+                <Filter size={18} aria-hidden="true" />
+                <span>Filtros</span>
+                {hasActiveFilters && <span className="filter-badge-count" aria-hidden="true" />}
+              </button>
+              
+              <button
+                className={`btn-accessibility-section ${highContrast ? 'active' : ''}`}
+                onClick={() => setHighContrast(!highContrast)}
+                aria-label={highContrast ? 'Desativar alto contraste' : 'Ativar alto contraste'}
+                title={highContrast ? 'Desativar alto contraste' : 'Ativar alto contraste'}
+              >
+                <Accessibility size={18} aria-hidden="true" />
+              </button>
             </div>
           </div>
-        </animated.header>
 
-        {showFiltersModal && (
-          <div className="filters-modal-overlay" onClick={() => setShowFiltersModal(false)}>
-            <div 
-              className="filters-modal"
-              onClick={e => e.stopPropagation()}
-              style={{
-                animation: 'modalSlideIn 0.3s ease-out'
-              }}
-            >
-              <div className="filters-modal-header">
-                <h2>Filtros Avançados</h2>
-                <button className="modal-close-btn" onClick={() => setShowFiltersModal(false)}>
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="filters-modal-content">
-                <div className="filter-section">
-                  <h3>Localização</h3>
-                  <div className="filter-options">
-                    <button
-                      className={`filter-option ${selectedLocation === 'brasil' ? 'active' : ''}`}
-                      onClick={() => setSelectedLocation('brasil')}
-                    >
-                      Todo o Brasil
-                    </button>
-                    {userLocation && (
-                      <>
-                        <button
-                          className={`filter-option ${selectedLocation === 'meu_estado' ? 'active' : ''}`}
-                          onClick={() => setSelectedLocation('meu_estado')}
-                        >
-                          Meu Estado ({userLocation.state})
-                        </button>
-                        <button
-                          className={`filter-option ${selectedLocation === 'minha_cidade' ? 'active' : ''}`}
-                          onClick={() => setSelectedLocation('minha_cidade')}
-                        >
-                          Minha Cidade ({userLocation.city})
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  
-                  {userLocation && selectedLocation === 'meu_estado' && (
-                    <div className="state-section">
-                      <h4>Escolher cidade em {userLocation.state}:</h4>
-                      <select 
-                        className="city-dropdown"
-                        value={selectedLocation.startsWith(userLocation.state) ? selectedLocation : ''}
-                        onChange={(e) => setSelectedLocation(e.target.value)}
-                      >
-                        <option value="meu_estado">Todas as cidades do estado</option>
-                        {citiesByState[userLocation.state]?.map(city => (
-                          <option key={city} value={`${city}, ${userLocation.state}`}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-
-                <div className="filter-section">
-                  <h3>Categorias</h3>
-                  <div className="filter-options">
-                    {CATEGORIES.map((cat) => (
-                      <button
-                        key={cat.id}
-                        className={`filter-option ${selectedCat === cat.id ? 'active' : ''}`}
-                        onClick={() => setSelectedCat(cat.id)}
-                        style={{ '--filter-color': cat.color }}
-                      >
-                        {cat.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="filter-section">
-                  <h3>Urgência</h3>
-                  <div className="filter-options">
-                    {URGENCY_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        className={`filter-option ${selectedUrgency === opt.id ? 'active' : ''}`}
-                        onClick={() => setSelectedUrgency(selectedUrgency === opt.id ? null : opt.id)}
-                        style={{ '--filter-color': opt.color }}
-                      >
-                        {opt.icon}
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="filter-section">
-                  <h3>Período</h3>
-                  <div className="filter-options">
-                    <button
-                      className={`filter-option ${selectedTimeframe === 'todos' ? 'active' : ''}`}
-                      onClick={() => setSelectedTimeframe('todos')}
-                    >
-                      Todos os Períodos
-                    </button>
-                    <button
-                      className={`filter-option ${selectedTimeframe === 'hoje' ? 'active' : ''}`}
-                      onClick={() => setSelectedTimeframe('hoje')}
-                    >
-                      Hoje
-                    </button>
-                    <button
-                      className={`filter-option ${onlyNew ? 'active' : ''}`}
-                      onClick={() => setOnlyNew(!onlyNew)}
-                    >
-                      Apenas Novos
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="filters-modal-footer">
-                <button 
-                  className="btn-clear-filters"
-                  onClick={() => {
-                    setSelectedCat('Todas');
-                    setSelectedUrgency(null);
-                    setSelectedLocation('brasil');
-                    setSelectedTimeframe('todos');
-                    setOnlyNew(false);
-                  }}
-                >
-                  Limpar Filtros
-                </button>
-                <button 
-                  className="btn-apply-filters"
-                  onClick={() => setShowFiltersModal(false)}
-                >
-                  Aplicar Filtros
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="results-bar-pro">
-          <div className="results-info-pro">
-            <span className="results-number-pro">
-              {loadingPedidos ? <Skeleton width={30} /> : filteredOrders.length}
-            </span>
-            <span className="results-text-pro">pedidos disponíveis</span>
-          </div>
-          {error && <div className="error-badge-pro">{error}</div>}
-        </div>
-
-        <div className="orders-grid-layout" ref={cardsRef}>
-          {showHelper && (
-            <div className="accessibility-overlay">
-              <div
-                className="accessibility-modal"
-                onClick={e => e.stopPropagation()}
-                style={{
-                  animation: 'modalSlideIn 0.3s ease-out'
-                }}
-              >
-                <h3>Acessibilidade</h3>
-                
-                <div className="accessibility-group">
-                  <label>Tamanho da Fonte:</label>
-                  <div className="font-controls">
-                    <button 
-                      className={fontSize === 'small' ? 'active' : ''}
-                      onClick={() => changeFontSize('small')}
-                    >
-                      A-
-                    </button>
-                    <button 
-                      className={fontSize === 'normal' ? 'active' : ''}
-                      onClick={() => changeFontSize('normal')}
-                    >
-                      A
-                    </button>
-                    <button 
-                      className={fontSize === 'large' ? 'active' : ''}
-                      onClick={() => changeFontSize('large')}
-                    >
-                      A+
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="accessibility-group">
+          {hasActiveFilters && (
+            <div className="active-filters-v4" role="region" aria-label="Filtros ativos">
+              <span className="filters-label-v4">Filtros ativos:</span>
+              {selectedCat !== 'Todas' && (
+                <span className="filter-tag-v4">
+                  {selectedCat}
                   <button 
-                    className={`contrast-btn ${highContrast ? 'active' : ''}`}
-                    onClick={toggleContrast}
+                    onClick={() => setSelectedCat('Todas')}
+                    aria-label={`Remover filtro de categoria ${selectedCat}`}
                   >
-                    {highContrast ? 'Desativar' : 'Ativar'} Alto Contraste
+                    <X size={12} aria-hidden="true" />
                   </button>
-                </div>
-                
-                <button 
-                  className="close-accessibility"
-                  onClick={() => setShowHelper(false)}
-                >
-                  X
-                </button>
-              </div>
+                </span>
+              )}
+              {selectedUrgency && (
+                <span className="filter-tag-v4">
+                  {URGENCY_OPTIONS.find(u => u.id === selectedUrgency)?.label}
+                  <button 
+                    onClick={() => setSelectedUrgency(null)}
+                    aria-label="Remover filtro de urgência"
+                  >
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                </span>
+              )}
+              {selectedLocation !== 'brasil' && (
+                <span className="filter-tag-v4">
+                  {selectedLocation === 'meu_estado' ? userLocation?.state : userLocation?.city}
+                  <button 
+                    onClick={() => setSelectedLocation('brasil')}
+                    aria-label="Remover filtro de localização"
+                  >
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                </span>
+              )}
+              <button className="clear-all-v4" onClick={clearFilters}>
+                Limpar todos
+              </button>
             </div>
           )}
-          {loadingPedidos ? (
-            [...Array(6)].map((_, i) => (
-              <div key={i} className="vibrant-order-card">
-                <div className="card-header">
-                  <Skeleton height={24} width={80} />
-                  <Skeleton height={24} width={50} />
+
+          <section 
+            id="orders-list" 
+            className="orders-grid-v4" 
+            ref={cardsRef}
+            aria-label="Lista de pedidos de ajuda"
+            aria-busy={loadingPedidos}
+          >
+            {loadingPedidos ? (
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="order-card-v4 skeleton" aria-hidden="true">
+                  <Skeleton height={180} />
+                  <div style={{ padding: '20px' }}>
+                    <Skeleton height={24} width="60%" />
+                    <Skeleton count={2} style={{ marginTop: 12 }} />
+                    <Skeleton height={40} style={{ marginTop: 16 }} />
+                  </div>
                 </div>
-                <div className="card-content">
-                  <Skeleton height={32} width="80%" />
-                  <Skeleton count={3} />
-                  <Skeleton height={20} width={120} />
-                </div>
-                <div className="card-footer-info">
-                  <Skeleton height={32} width={32} circle />
-                  <Skeleton height={24} width={60} />
-                </div>
-                <div className="card-buttons">
-                  <Skeleton height={48} />
-                </div>
+              ))
+            ) : filteredOrders.length === 0 ? (
+              <div className="empty-state-v4" role="status">
+                <Search size={48} aria-hidden="true" />
+                <h3>Nenhum pedido encontrado</h3>
+                <p>Tente ajustar os filtros ou volte mais tarde</p>
+                <button onClick={clearFilters}>Limpar Filtros</button>
               </div>
-            ))
-          ) : (
-            <>
-              {trail.map((style, index) => {
+            ) : (
+              trail.map((style, index) => {
                 const order = filteredOrders[index];
                 if (!order) return null;
-                
-                const urg = URGENCY_OPTIONS.find((u) => u.id === order.urgency);
-                const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b' };
-                
                 return (
                   <animated.div key={order.id} style={style}>
-                    <div className="card-pro" style={{ '--urgency-color': urg?.color }}>
-                      <div className="card-header-pro">
-                        <div className="card-badges-pro">
-                          {order.isNew && <span className="new-badge-pro"><Zap size={12} /> NOVO</span>}
-                          <span className="priority-badge-pro" style={{ backgroundColor: `${urg?.color}20`, color: urg?.color }}>
-                            {urg?.icon} {urg?.label.toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="card-time-info-pro">
-                          <div className="publish-time-pro">
-                            <Clock size={12} />
-                            {(() => {
-                              const createdAt = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
-                              if (!createdAt || isNaN(createdAt.getTime())) {
-                                return 'Postado agora a pouco';
-                              }
-                              const now = new Date();
-                              const diffMs = now - createdAt;
-                              const diffMinutes = Math.floor(diffMs / (1000 * 60));
-                              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-                              const diffDays = Math.floor(diffHours / 24);
-                              
-                              if (diffMinutes < 1) return 'Postado agora a pouco';
-                              if (diffMinutes < 60) return `${diffMinutes} min atrás`;
-                              if (diffHours < 24) return `${diffHours}h atrás`;
-                              if (diffDays === 1) return 'Ontem';
-                              if (diffDays < 7) return `${diffDays} dias atrás`;
-                              return createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                            })()} 
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="card-body-pro">
-                        <div className="card-category-minimal">
-                          <span className="category-icon-minimal" style={{ backgroundColor: catMeta.color }}>
-                            {catMeta.icon || <Package size={16} />}
-                          </span>
-                          <span className="category-name-minimal">{order.category}</span>
-                        </div>
-                        
-                        <p className="card-description-minimal">{order.description.substring(0, 140)}...</p>
-                        
-                        <div className="card-footer-minimal">
-                          <div className="user-minimal">
-                            <User size={18} />
-                            <span>{order.userName}</span>
-                          </div>
-                          <div className="location-minimal">
-                            <MapPin size={18} />
-                            <span>{order.neighborhood}, {order.city}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="card-actions-pro">
-                        <button className="btn-details-pro" onClick={() => setSelectedOrder(order)}>
-                          <Eye size={16} />
-                          Ver Detalhes
-                        </button>
-                        {user?.uid !== order.userId ? (
-                          <button className="btn-help-pro" onClick={() => setOrderToHelp(order)}>
-                            <Heart size={16} />
-                            Quero Ajudar
-                          </button>
-                        ) : (
-                          <button className="btn-own-post-pro" disabled>
-                            <Heart size={16} />
-                            Seu Pedido
-                          </button>
-                        )}
-                        {user?.role === 'admin' && (
-                          <button 
-                            className="btn-admin-delete-pro" 
-                            onClick={() => handleAdminDelete(order.id)}
-                            title="Excluir pedido (Admin)"
-                          >
-                            <X size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    <OrderCard
+                      order={order}
+                      onViewDetails={setSelectedOrder}
+                      onHelp={setOrderToHelp}
+                    />
                   </animated.div>
                 );
-              })}
-            </>
-          )}
-        </div>
-
-        {selectedOrder && (
-          <ModalDetalhes 
-            order={selectedOrder} 
-            onClose={() => setSelectedOrder(null)} 
-            onHelp={(order) => setOrderToHelp(order)}
-          />
-        )}
-
-        {orderToHelp && (
-          <div className="qa-modal-overlay high-z" onClick={() => setOrderToHelp(null)}>
-            <div 
-              className="confirm-help-modal"
-              onClick={e => e.stopPropagation()}
-              style={{
-                animation: 'modalSlideIn 0.3s ease-out'
-              }}
-            >
-              <div className="heart-icon-box">
-                <Heart size={48} fill="#ef4444" color="#ef4444" />
-              </div>
-              <h2>Deseja ajudar {orderToHelp.userName}?</h2>
-              <p>
-                Iremos abrir um chat para que vocês possam combinar a entrega ou doação diretamente.
-              </p>
-              <div className="modal-confirm-actions">
-                <button 
-                  className="btn-confirm-chat"
-                  onClick={async () => {
-                    try {
-                      // Criar conversa diretamente
-                      const conversationData = {
-                        participants: [orderToHelp.userId],
-                        pedidoId: orderToHelp.id,
-                        type: 'ajuda',
-                        title: `Ajuda: ${orderToHelp.title}`
-                      };
-                      
-                      const response = await ApiService.createConversation(conversationData);
-                      
-                      if (response.success) {
-                        toast.success('Conversa iniciada! Redirecionando...');
-                        window.location.href = `/chat/${response.data.id}`;
-                      } else {
-                        throw new Error(response.error || 'Erro ao criar conversa');
-                      }
-                    } catch (error) {
-                      console.error('Erro ao iniciar conversa:', error);
-                      toast.error('Erro ao iniciar conversa: ' + error.message);
-                    }
-                    setOrderToHelp(null);
-                  }}
-                >
-                  <MessageCircle size={20} />
-                  Sim, conversar agora
-                </button>
-                <button className="btn-cancel-modal" onClick={() => setOrderToHelp(null)}>
-                  Voltar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#1e293b',
-              color: '#fff',
-              borderRadius: '12px',
-              padding: '16px',
-              fontSize: '14px',
-              fontWeight: '600'
-            },
-            success: {
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#fff'
-              }
-            },
-            error: {
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff'
-              }
-            }
-          }}
-        />
-        
-        <Tooltip 
-          id="filter-tooltip" 
-          place="bottom"
-          delayShow={300}
-        />
-        <Tooltip 
-          id="category-tooltip" 
-          place="top"
-          delayShow={200}
-        />
-        <Tooltip 
-          id="new-tooltip" 
-          place="top"
-          delayShow={200}
-        />
-        <Tooltip 
-          id="urgency-tooltip" 
-          place="top"
-          delayShow={200}
-        />
-        <Tooltip 
-          id="view-tooltip" 
-          place="top"
-          delayShow={300}
-        />
-        <Tooltip 
-          id="help-tooltip" 
-          place="top"
-          delayShow={300}
-        />
+              })
+            )}
+          </section>
         </div>
       </main>
 
-      {showLocationModal && (
-        <div className="qa-modal-overlay" onClick={() => setShowLocationModal(false)}>
-          <div 
-            className="location-alert-modal"
-            onClick={e => e.stopPropagation()}
-            style={{
-              background: 'white',
-              padding: '32px',
-              borderRadius: '16px',
-              maxWidth: '400px',
-              textAlign: 'center',
-              animation: 'modalSlideIn 0.3s ease-out'
-            }}
-          >
-            <MapPin size={48} color="#10b981" style={{ marginBottom: '16px' }} />
-            <h3 style={{ marginBottom: '12px', color: '#1e293b' }}>{locationMessage}</h3>
-            <button 
-              onClick={() => setShowLocationModal(false)}
-              style={{
-                marginTop: '20px',
-                padding: '12px 32px',
-                background: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '600'
-              }}
-            >
-              OK
-            </button>
-          </div>
-        </div>
+      <FiltersModal
+        show={showFiltersModal}
+        onClose={() => setShowFiltersModal(false)}
+        selectedCat={selectedCat}
+        setSelectedCat={setSelectedCat}
+        selectedUrgency={selectedUrgency}
+        setSelectedUrgency={setSelectedUrgency}
+        selectedLocation={selectedLocation}
+        setSelectedLocation={setSelectedLocation}
+        onlyNew={onlyNew}
+        setOnlyNew={setOnlyNew}
+        userLocation={userLocation}
+        onClear={clearFilters}
+      />
+
+      {selectedOrder && (
+        <ModalDetalhes 
+          order={selectedOrder} 
+          onClose={() => setSelectedOrder(null)} 
+          onHelp={setOrderToHelp}
+        />
       )}
+
+      <ConfirmHelpModal
+        order={orderToHelp}
+        onConfirm={handleConfirmHelp}
+        onClose={() => setOrderToHelp(null)}
+      />
+
+      <Toaster position="top-right" toastOptions={{
+        duration: 3000,
+        style: { background: '#1e293b', color: '#fff', borderRadius: '12px' },
+        ariaProps: {
+          role: 'status',
+          'aria-live': 'polite',
+        },
+      }} />
     </div>
   );
 }
