@@ -1,43 +1,23 @@
-# Onboarding UI/UX Improvements TODO
+# TODO: Melhorias no Modal de Onboarding
 
-## 1. Content Textual Improvements (Onboarding.jsx)
-- [x] Rewrite welcome step title and description to be more engaging
-- [x] Improve "Help Mutual" step texts for clarity
-- [x] Enhance "Need Help" step messaging
-- [x] Update "Lost & Found" step content
-- [x] Make final step more motivating
-- [x] Improve CTA button text
+## ✅ 1. Adicionar mais categorias na seção "Preciso de Ajuda"
+- ✅ Adicionar 2 novas categorias: "Saúde" e "Educação"
+- ✅ Atualizar o array de categorias no componente Onboarding.jsx
 
-## 2. Visual Hierarchy & Layout (Onboarding.css)
-- [x] Increase title font sizes for better hierarchy
-- [x] Add step icons to main content area
-- [x] Improve spacing and padding throughout
-- [x] Better center alignment of content
-- [x] Enhance grid layouts for interaction panels
+## ✅ 2. Desbloquear botão "Próximo" após publicar pedido
+- ✅ Modificar a lógica para habilitar o botão após completar a interação de publicação
+- ✅ Garantir que o estado `isStepInteractionComplete` seja atualizado corretamente
+- ✅ Corrigir stepId de 'help' para 'need-help' na chamada handleInteraction
 
-## 3. Colors & Contrast (Onboarding.css)
-- [ ] Implement warmer, more welcoming color palette
-- [ ] Improve text contrast ratios
-- [ ] Make color scheme more cohesive
-- [ ] Add subtle gradients and shadows
+## ✅ 3. Adicionar animações de seleção
+- ✅ Implementar animações visuais quando o usuário seleciona itens (cards de ajuda, achados/perdidos)
+- ✅ Adicionar feedback visual imediato (ex: escala, sombra, cor)
+- ✅ Corrigir lógica de seleção para usar interactionsComplete diretamente
+- ✅ Adicionar hover effect aprimorado para cards selecionados
+- ✅ Melhorar efeito de seleção para todas as etapas: lift effect consistente ao invés de scale
+- ✅ Aplicar efeito de seleção uniforme em cards de ajuda, categorias e itens de interesse
 
-## 4. Icons & States (Onboarding.css)
-- [ ] Add consistent icons to all steps
-- [ ] Enhance progress indicators
-- [ ] Improve hover and selected states
-- [ ] Add better visual feedback for interactions
-
-## 5. Menu Lateral Improvements (Onboarding.jsx)
-- [ ] Add short descriptions to each step in nav
-- [ ] Improve step naming for clarity
-- [ ] Better progress indication
-
-## 6. CTA Enhancements (Onboarding.css)
-- [ ] Improve button visual prominence
-- [ ] Better button text and styling
-- [ ] Add hover effects and animations
-
-## 7. Testing & Validation
-- [ ] Test on mobile and desktop
-- [ ] Ensure accessibility compliance
-- [ ] Validate Portuguese text clarity
+## ✅ 4. Melhorar CSS dos steps
+- ✅ Ajustar espaçamentos e layouts dos steps no sidebar
+- ✅ Melhorar responsividade e visual dos indicadores de progresso
+- ✅ Otimizar cores e tipografia para melhor legibilidade

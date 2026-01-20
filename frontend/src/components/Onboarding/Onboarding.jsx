@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart,
   HandHelping,
@@ -29,7 +29,9 @@ import {
   Camera,
   Tag,
   Phone,
-  MessageCircle
+  MessageCircle,
+  ArrowUp,
+  ArrowLeft
 } from 'lucide-react';
 import './Onboarding.css';
 
@@ -38,7 +40,15 @@ import './Onboarding.css';
 // ==================================
 
 const MockHelpCard = ({ item, onClick, isSelected }) => (
-  <button className={`sb-mock-card help ${isSelected ? 'selected' : ''}`} onClick={onClick}>
+  <motion.button
+    layout
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ scale: 1.02, y: -2, boxShadow: "0 8px 20px rgba(0,0,0,0.08)" }}
+    whileTap={{ scale: 0.98 }}
+    className={`sb-mock-card help ${isSelected ? 'selected' : ''}`}
+    onClick={onClick}
+  >
     <div className="sb-mock-card-header">
       <div className="sb-mock-card-category">
         <span className="sb-mock-card-category-icon" style={{ backgroundColor: item.categoryColor }}>
@@ -62,7 +72,7 @@ const MockHelpCard = ({ item, onClick, isSelected }) => (
         <span>{item.location}</span>
       </div>
     </div>
-  </button>
+  </motion.button>
 );
 
 const MockCommerceCard = ({ item, onClick, isSelected }) => (
@@ -90,7 +100,15 @@ const MockInterestItem = ({ item, onClick, isSelected }) => (
 );
 
 const MockLostFoundCard = ({ item, onClick, isSelected, onChatClick }) => (
-  <button className={`sb-mock-card lost-found ${isSelected ? 'selected' : ''}`} onClick={onClick}>
+  <motion.button
+    layout
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ scale: 1.02, y: -2, boxShadow: "0 8px 20px rgba(0,0,0,0.08)" }}
+    whileTap={{ scale: 0.98 }}
+    className={`sb-mock-card lost-found ${isSelected ? 'selected' : ''}`}
+    onClick={onClick}
+  >
     <div className="sb-mock-card-image">
       {item.image_url ? (
         <img src={item.image_url} alt={item.title} className="sb-mock-card-img" />
@@ -149,7 +167,36 @@ const MockLostFoundCard = ({ item, onClick, isSelected, onChatClick }) => (
         ABRIR CHAT
       </button>
     </div>
-  </button>
+  </motion.button>
+);
+
+const Confetti = () => (
+  <div className="sb-confetti-wrapper">
+    {[...Array(50)].map((_, i) => (
+      <motion.div
+        key={i}
+        className="sb-confetti-particle"
+        initial={{ y: -50, x: Math.random() * 100 + "%", opacity: 0, rotate: 0 }}
+        animate={{
+          y: "120vh",
+          opacity: [0, 1, 1, 0],
+          rotate: 720,
+        }}
+        transition={{
+          duration: Math.random() * 2 + 2,
+          repeat: Infinity,
+          ease: "linear",
+          delay: Math.random() * 3
+        }}
+        style={{
+          left: `${Math.random() * 100}%`,
+          backgroundColor: ['#FF595E', '#FFCA3A', '#8AC926', '#1982C4', '#6A4C93'][Math.floor(Math.random() * 5)],
+          width: Math.random() * 8 + 6 + 'px',
+          height: Math.random() * 8 + 6 + 'px',
+        }}
+      />
+    ))}
+  </div>
 );
 
 // Corrected Step Content Component
@@ -167,7 +214,10 @@ const OnboardingStepContent = ({
   lostFoundModal,
   setLostFoundModal,
   selectedLostFoundItem,
-  setSelectedLostFoundItem
+  setSelectedLostFoundItem,
+  interactionsComplete,
+  steps,
+  currentStep
 }) => {
   const Icon = step.icon; // Assign to a capitalized variable
 
@@ -178,13 +228,23 @@ const OnboardingStepContent = ({
     if (interaction.type === 'help_creation_flow') {
       return (
         <div className="sb-interaction-panel">
-          <h5 className="sb-interaction-title">{interaction.prompt}</h5>
+          <motion.h5
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="sb-interaction-title"
+          >
+            {interaction.prompt}
+          </motion.h5>
           <div className="sb-mock-ui-container help-categories">
-            {interaction.categories.map(category => {
+            {interaction.categories.map((category, idx) => {
               const IconComponent = category.icon;
               return (
-                <div
+                <motion.div
                   key={category.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                  whileHover={{ scale: 1.05, backgroundColor: 'var(--bg-hover)' }}
+                  whileTap={{ scale: 0.95 }}
                   className="sb-help-category-card"
                   onClick={() => {
                     setSelectedCategory(category);
@@ -198,15 +258,19 @@ const OnboardingStepContent = ({
                     <h4>{category.name}</h4>
                     <p>{category.description}</p>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
 
           {/* Mini Modal for Details */}
+          <AnimatePresence>
           {helpCreationStep === 'details' && selectedCategory && (
-            <div className="sb-mini-modal-overlay" onClick={() => setHelpCreationStep(null)}>
-              <div className="sb-mini-modal" onClick={(e) => e.stopPropagation()}>
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="sb-mini-modal-overlay" onClick={() => setHelpCreationStep(null)}
+            >
+              <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="sb-mini-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="sb-mini-modal-header">
                   <h3>Detalhes do Pedido - {selectedCategory.name}</h3>
                   <button className="sb-mini-modal-close" onClick={() => setHelpCreationStep(null)}>
@@ -228,24 +292,33 @@ const OnboardingStepContent = ({
                     disabled={!helpDescription.trim()}
                     onClick={() => {
                       setHelpCreationStep('published');
+                      handleInteraction('need-help', 'completed');
                     }}
                   >
                     Publicar Pedido
                   </button>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
+          </AnimatePresence>
 
           {/* Success Modal */}
+          <AnimatePresence>
           {helpCreationStep === 'published' && selectedCategory && (
-            <div className="sb-mini-modal-overlay" onClick={() => {
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="sb-mini-modal-overlay" onClick={() => {
               setHelpCreationStep(null);
               setSelectedCategory(null);
               setHelpDescription('');
               handleInteraction('help', 'completed');
             }}>
-              <div className="sb-mini-modal success" onClick={(e) => e.stopPropagation()}>
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", bounce: 0.5 }}
+                className="sb-mini-modal success" onClick={(e) => e.stopPropagation()}
+              >
                 <div className="sb-mini-modal-body">
                   <CheckCircle2 size={48} className="sb-success-icon" />
                   <h3>Pedido Publicado!</h3>
@@ -262,20 +335,22 @@ const OnboardingStepContent = ({
                     Continuar
                   </button>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
+          </AnimatePresence>
+
         </div>
       );
     }
 
     return (
       <div className="sb-interaction-panel">
-        <h5 className="sb-interaction-title">{interaction.prompt}</h5>
+        <motion.h5 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="sb-interaction-title">{interaction.prompt}</motion.h5>
         <div className={`sb-mock-ui-container ${interaction.renderer?.name === 'MockLostFoundCard' ? 'lost-found-grid' : ''}`}>
           {interaction.items?.map(item => {
             const Renderer = interaction.renderer;
-            const isSelected = isStepInteractionComplete === item.id;
+            const isSelected = interactionsComplete[steps[currentStep].id] === item.id;
             return (
               <Renderer
                 key={item.id}
@@ -291,10 +366,16 @@ const OnboardingStepContent = ({
           })}
         </div>
 
+
+
         {/* Lost & Found Help Modal */}
+        <AnimatePresence>
         {lostFoundModal && selectedLostFoundItem && (
-          <div className="sb-mini-modal-overlay" onClick={() => setLostFoundModal(false)}>
-            <div className="sb-help-modal" onClick={(e) => e.stopPropagation()}>
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="sb-mini-modal-overlay" onClick={() => setLostFoundModal(false)}
+          >
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="sb-help-modal" onClick={(e) => e.stopPropagation()}>
               <div className="sb-help-modal-header">
                 <button className="sb-help-modal-close" onClick={() => setLostFoundModal(false)}>
                   <X size={20} />
@@ -356,9 +437,10 @@ const OnboardingStepContent = ({
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
     );
   };
@@ -374,7 +456,27 @@ const OnboardingStepContent = ({
           <p className="sb-step-content-desc">{step.description}</p>
         </div>
       </div>
-      {renderInteraction()}
+      <div className="sb-step-content-body">
+        {renderInteraction()}
+        {/* Choice Indicator */}
+        {(step.id === 'help' || step.id === 'lost-found') && !isStepInteractionComplete && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 1, duration: 0.5 }}
+            className="sb-choice-indicator"
+          >
+            <motion.div
+              animate={{ x: [0, -5, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="sb-choice-arrow"
+            >
+              <ArrowLeft size={24} />
+            </motion.div>
+            <p className="sb-choice-text">Escolha uma opção à esquerda para continuar</p>
+          </motion.div>
+        )}
+      </div>
     </div>
   );
 };
@@ -394,6 +496,35 @@ const Onboarding = ({ onComplete, onSkip }) => {
   const [lostFoundModal, setLostFoundModal] = useState(false);
   const [selectedLostFoundItem, setSelectedLostFoundItem] = useState(null);
 
+  // Prevent background scrolling when modal is open
+  useEffect(() => {
+    document.body.classList.add('modal-open');
+
+    const preventScroll = (e) => {
+      e.preventDefault();
+    };
+
+    // Prevent scroll events on window
+    window.addEventListener('wheel', preventScroll, { passive: false });
+    window.addEventListener('touchmove', preventScroll, { passive: false });
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+        e.preventDefault();
+      }
+    });
+
+    return () => {
+      document.body.classList.remove('modal-open');
+      window.removeEventListener('wheel', preventScroll);
+      window.removeEventListener('touchmove', preventScroll);
+      window.removeEventListener('keydown', (e) => {
+        if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+          e.preventDefault();
+        }
+      });
+    };
+  }, []);
+
   const handleInteraction = (stepId, value) => {
     if (interactionsComplete[stepId] === value) return;
     setInteractionsComplete(prev => ({ ...prev, [stepId]: value }));
@@ -403,22 +534,22 @@ const Onboarding = ({ onComplete, onSkip }) => {
      {
       id: 'welcome',
       navLabel: 'Bem-vindo',
-      navDesc: 'Introdução ao SolidarBairro',
+      navDesc: 'Início da jornada',
       icon: PartyPopper,
-      title: 'Bem-vindo ao SolidarBairro! 🌟',
-      description: 'Uma comunidade onde vizinhos se ajudam. Vamos mostrar como é fácil conectar e fazer a diferença no seu bairro. Clique nos próximos passos para descobrir!',
+      title: 'Oi! Bem-vindo ao SolidarBairro',
+      description: 'Aqui, vizinhos se ajudam. Vamos te mostrar como é fácil conectar e fazer a diferença. Pronto para começar?',
     },
     {
       id: 'help',
       navLabel: 'Quero Ajudar',
-      navDesc: 'Encontre pedidos de ajuda',
+      navDesc: 'Faça a diferença',
       icon: HandHelping,
       color: 'teal',
-      title: 'Descubra quem precisa de ajuda no seu bairro',
-      description: 'Veja pedidos reais de vizinhos próximos. Cada ajuda faz a diferença! Clique em um pedido para ver como funciona.',
+      title: 'Ajude quem precisa',
+      description: 'Veja pedidos reais de vizinhos próximos. Um pequeno gesto pode mudar vidas. Toque em um para simular.',
       interaction: {
         type: 'ui_simulation',
-        prompt: 'Simule sua escolha clicando em um dos pedidos para continuar.',
+        prompt: 'Toque em um card abaixo para ver como é fácil oferecer ajuda.',
         items: [
           {
             type: 'help',
@@ -441,17 +572,6 @@ const Onboarding = ({ onComplete, onSkip }) => {
             categoryIcon: Coffee,
             location: 'Vila Nova, Belo Horizonte',
             time: '5h atrás'
-          },
-          {
-            type: 'help',
-            id: 3,
-            user: 'Mariana Costa',
-            request: 'Procurando emprego como auxiliar de limpeza. Tenho experiência e disponibilidade imediata.',
-            category: 'Emprego',
-            categoryColor: '#8b5cf6',
-            categoryIcon: Briefcase,
-            location: 'Savassi, Belo Horizonte',
-            time: '1 dia atrás'
           }
         ],
         renderer: MockHelpCard
@@ -460,14 +580,14 @@ const Onboarding = ({ onComplete, onSkip }) => {
     {
       id: 'need-help',
       navLabel: 'Preciso de Ajuda',
-      navDesc: 'Publique seu pedido',
+      navDesc: 'Conte com apoio',
       icon: HandHelping,
       color: 'purple',
-      title: 'Peça ajuda quando precisar',
-      description: 'Precisa de uma mão? Publique seu pedido e receba ajuda da comunidade. Vamos simular como criar um pedido de ajuda.',
+      title: 'Precisa de uma mão?',
+      description: 'Conte com a comunidade. Publique seu pedido com dignidade – é corajoso pedir ajuda. Escolha uma categoria abaixo.',
       interaction: {
         type: 'help_creation_flow',
-        prompt: 'Clique em uma categoria para simular a criação de um pedido de ajuda.',
+        prompt: 'Escolha uma categoria abaixo para simular um pedido:',
         categories: [
           {
             id: 'alimentos',
@@ -482,6 +602,20 @@ const Onboarding = ({ onComplete, onSkip }) => {
             icon: Car,
             color: '#0ea5e9',
             description: 'Ajuda com deslocamento, consultas médicas, transporte'
+          },
+          {
+            id: 'saude',
+            name: 'Saúde',
+            icon: Heart,
+            color: '#ef4444',
+            description: 'Medicamentos, consultas médicas, cuidados de saúde'
+          },
+          {
+            id: 'educacao',
+            name: 'Educação',
+            icon: BookOpen,
+            color: '#8b5cf6',
+            description: 'Materiais escolares, cursos, apoio educacional'
           }
         ]
       }
@@ -489,14 +623,14 @@ const Onboarding = ({ onComplete, onSkip }) => {
     {
       id: 'lost-found',
       navLabel: 'Achados e Perdidos',
-      navDesc: 'Ajude a reencontrar objetos',
+      navDesc: 'Recupere itens',
       icon: Package,
       color: 'pink',
-      title: 'Reúna objetos perdidos com seus donos',
-      description: 'Publique itens perdidos ou encontrados na seção "Achados e Perdidos". Adicione fotos, localização precisa e detalhes únicos para facilitar o reencontro com a ajuda da comunidade.',
+      title: 'Achados e Perdidos',
+      description: 'Perdeu algo ou encontrou? A comunidade ajuda a reunir. Clique para ver detalhes e conectar.',
       interaction: {
         type: 'ui_simulation',
-        prompt: 'Simule clicando em um item para ver os detalhes e opções de contato.',
+        prompt: 'Clique em um item para ver detalhes e iniciar o contato.',
         items: [
           {
             type: 'lost',
@@ -534,8 +668,8 @@ const Onboarding = ({ onComplete, onSkip }) => {
       navDesc: 'Comece a usar o app',
       icon: Sparkles,
       color: 'green',
-      title: 'Agora você está pronto para ajudar! 🎉',
-      description: 'Parabéns! Você aprendeu como usar o SolidarBairro. Comece a explorar, ajudar vizinhos e fazer seu bairro ainda melhor.',
+      title: 'Pronto para explorar!',
+      description: 'Você conhece o básico. Agora, ajude, peça apoio e fortaleça o bairro. Vamos lá!',
     },
   ], []);
 
@@ -561,10 +695,11 @@ const Onboarding = ({ onComplete, onSkip }) => {
 
   return (
     <div className="sb-onboarding-overlay v5">
-      <button className="sb-onboarding-skip-overlay" onClick={() => onSkip(dontShowAgain)}>
-        <X size={20} />
-      </button>
+      {steps[currentStep].id === 'start' && <Confetti />}
       <div className="sb-onboarding-container">
+        <button className="sb-onboarding-close-modal" onClick={() => onSkip(dontShowAgain)}>
+          <X size={20} />
+        </button>
         <div className="sb-onboarding-nav">
           <div className="sb-nav-header"><Heart size={24} className="sb-logo-icon" /><span className="sb-nav-title">Simulação</span></div>
           <div className="sb-nav-steps">
@@ -588,28 +723,46 @@ const Onboarding = ({ onComplete, onSkip }) => {
         </div>
 
         <div className="sb-onboarding-main">
+          <div className="sb-progress-bar" role="progressbar" aria-valuenow={currentStep + 1} aria-valuemin="1" aria-valuemax={steps.length} aria-label="Progresso do onboarding">
+            <div className="sb-progress-fill" style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}></div>
+            <span className="sb-progress-text">Passo {currentStep + 1} de {steps.length}</span>
+          </div>
           <div className="sb-main-content">
-            <OnboardingStepContent
-              step={steps[currentStep]}
-              isStepInteractionComplete={isStepInteractionComplete}
-              onInteraction={(value) => handleInteraction(steps[currentStep].id, value)}
-              helpCreationStep={helpCreationStep}
-              setHelpCreationStep={setHelpCreationStep}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              helpDescription={helpDescription}
-              setHelpDescription={setHelpDescription}
-              handleInteraction={handleInteraction}
-              lostFoundModal={lostFoundModal}
-              setLostFoundModal={setLostFoundModal}
-              selectedLostFoundItem={selectedLostFoundItem}
-              setSelectedLostFoundItem={setSelectedLostFoundItem}
-            />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                style={{ width: '100%', height: '100%' }}
+              >
+                <OnboardingStepContent
+                  step={steps[currentStep]}
+                  isStepInteractionComplete={isStepInteractionComplete}
+                  onInteraction={(value) => handleInteraction(steps[currentStep].id, value)}
+                  helpCreationStep={helpCreationStep}
+                  setHelpCreationStep={setHelpCreationStep}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  helpDescription={helpDescription}
+                  setHelpDescription={setHelpDescription}
+                  handleInteraction={handleInteraction}
+                  lostFoundModal={lostFoundModal}
+                  setLostFoundModal={setLostFoundModal}
+                  selectedLostFoundItem={selectedLostFoundItem}
+                  setSelectedLostFoundItem={setSelectedLostFoundItem}
+                  interactionsComplete={interactionsComplete}
+                  steps={steps}
+                  currentStep={currentStep}
+                />
+              </motion.div>
+            </AnimatePresence>
           </div>
           <div className="sb-main-footer">
             <div className="sb-dont-show-again"><input type="checkbox" id="dontShowAgainV5" checked={dontShowAgain} onChange={(e) => setDontShowAgain(e.target.checked)} /><label htmlFor="dontShowAgainV5">Não mostrar novamente</label></div>
             <button className={`sb-btn sb-btn-primary ${glow ? 'glow' : ''}`} onClick={handleNext} disabled={!isStepInteractionComplete}>
-              {currentStep === steps.length - 1 ? 'Começar a Explorar' : 'Próximo'} <ArrowRight size={16} />
+              Continuar <ArrowRight size={16} />
             </button>
           </div>
         </div>
