@@ -1,7 +1,7 @@
 :root {
-  --sb-teal: #0d9488;
-  --sb-teal-hover: #0f766e;
-  --sb-teal-soft: #f0fdfa;
+  --sb-teal: #0ea5e9;
+  --sb-teal-hover: #0284c7;
+  --sb-teal-soft: #f0f9ff;
   --sb-orange: #f97316;
   --sb-orange-hover: #ea580c;
   --sb-orange-soft: #fff7ed;
@@ -12,7 +12,7 @@
   --sb-text: #0f172a;
   --sb-text-light: #64748b;
   --sb-border: #e2e8f0;
-  --sb-shadow: 0 30px 60px -12px rgba(13, 148, 136, 0.15);
+  --sb-shadow: 0 30px 60px -12px rgba(14, 165, 233, 0.15);
   --sb-shadow-lg: 0 40px 80px -20px rgba(15, 23, 42, 0.08);
 }
 
@@ -104,13 +104,13 @@
 .logo-icon {
   width: 3rem;
   height: 3rem;
-  background: var(--sb-teal);
+  background: #0ea5e9;
   border-radius: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.2);
   transition: transform 0.5s ease;
 }
 
@@ -162,7 +162,7 @@
   left: 0;
   width: 0;
   height: 4px;
-  background: var(--sb-teal);
+  background: #0ea5e9;
   border-radius: 2px;
   transition: width 0.3s ease;
 }
@@ -191,7 +191,7 @@
 }
 
 .auth-btn-login:hover {
-  color: var(--sb-teal);
+  color: #0ea5e9;
 }
 
 .auth-btn-register {
@@ -455,8 +455,8 @@
 }
 
 .badge-icon {
-  color: #2dd4bf;
-  fill: #2dd4bf;
+  color: #0ea5e9;
+  fill: #0ea5e9;
 }
 
 .hero-title {
@@ -476,7 +476,7 @@
 }
 
 .title-accent {
-  color: var(--sb-teal);
+  color: #0ea5e9;
   display: block;
 }
 
@@ -496,7 +496,7 @@
 .subtitle-line {
   width: 6px;
   height: 4rem;
-  background: var(--sb-teal);
+  background: #0ea5e9;
   border-radius: 9999px;
 }
 
@@ -543,7 +543,7 @@
   font-weight: 900;
   display: block;
   margin-top: 1rem;
-  border-left: 4px solid rgba(13, 148, 136, 0.2);
+  border-left: 4px solid rgba(14, 165, 233, 0.2);
   padding-left: 1.5rem;
   font-style: italic;
 }
@@ -586,7 +586,7 @@
 }
 
 .hero-btn-primary:hover {
-  background: var(--sb-teal);
+  background: #0ea5e9;
 }
 
 .btn-icon-wrapper {
@@ -791,7 +791,7 @@
   transform: rotate(12deg);
 }
 
-.card-icon.impact { background: var(--sb-teal); }
+.card-icon.impact { background: #0ea5e9; }
 .card-icon.geo { background: var(--sb-orange); }
 
 .card-label {
@@ -814,7 +814,7 @@
 }
 
 .accent {
-  color: var(--sb-teal);
+  color: #0ea5e9;
 }
 
 .decoration-ring {
@@ -884,7 +884,7 @@
   }
 }
 
-.action-card.teal:hover { box-shadow: 0 40px 80px -20px rgba(13, 148, 136, 0.1); }
+.action-card.teal:hover { box-shadow: 0 40px 80px -20px rgba(14, 165, 233, 0.1); }
 .action-card.orange:hover { box-shadow: 0 40px 80px -20px rgba(249, 115, 22, 0.1); }
 .action-card.purple:hover { box-shadow: 0 40px 80px -20px rgba(139, 92, 246, 0.1); }
 
@@ -895,7 +895,7 @@
   transition: opacity 0.7s ease;
 }
 
-.action-card.teal .action-card-gradient { background: linear-gradient(to bottom right, rgba(13, 148, 136, 0.1), transparent); }
+.action-card.teal .action-card-gradient { background: linear-gradient(to bottom right, rgba(14, 165, 233, 0.1), transparent); }
 .action-card.orange .action-card-gradient { background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), transparent); }
 .action-card.purple .action-card-gradient { background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.1), transparent); }
 
@@ -968,7 +968,7 @@
   transition: all 0.3s ease;
 }
 
-.action-card.teal:hover .action-card-button { background: var(--sb-teal); border-color: var(--sb-teal); color: white; }
+.action-card.teal:hover .action-card-button { background: #0ea5e9; border-color: #0ea5e9; color: white; }
 .action-card.orange:hover .action-card-button { background: var(--sb-orange); border-color: var(--sb-orange); color: white; }
 .action-card.purple:hover .action-card-button { background: var(--sb-purple); border-color: var(--sb-purple); color: white; }
 
@@ -1275,7 +1275,7 @@
 }
 
 .text-gradient {
-  background: linear-gradient(90deg, #3b82f6, #0d9488, #8b5cf6);
+  background: linear-gradient(90deg, #3b82f6, #0ea5e9, #8b5cf6);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1489,7 +1489,7 @@
   position: relative;
   z-index: 10;
   opacity: 0.95;
-  filter: drop-shadow(0 0 50px rgba(13, 148, 136, 0.2)) 
+  filter: drop-shadow(0 0 50px rgba(14, 165, 233, 0.2))
           drop-shadow(0 0 100px rgba(59, 130, 246, 0.1))
           saturate(1.2) contrast(1.1);
   transition: filter 0.5s ease;
@@ -1633,7 +1633,7 @@
 }
 
 .heart-icon {
-  color: var(--sb-teal);
+  color: #0ea5e9;
 }
 
 .logo-name {
@@ -2255,8 +2255,8 @@
   background: linear-gradient(to right, rgba(15, 23, 42, 0.2), transparent);
 }
 
-.marker-pulse.teal { background-color: #2dd4bf; }
-.marker-dot.teal { background-color: #14b8a6; }
+.marker-pulse.teal { background-color: #60a5fa; }
+.marker-dot.teal { background-color: #3b82f6; }
 .marker-pulse.blue { background-color: #60a5fa; }
 .marker-dot.blue { background-color: #3b82f6; }
 .marker-pulse.purple { background-color: #c084fc; }

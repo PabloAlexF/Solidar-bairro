@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSpring, animated, useTrail } from 'react-spring';
 import { useInView } from 'react-intersection-observer';
 import toast, { Toaster } from 'react-hot-toast';
@@ -352,9 +353,9 @@ function OrderCard({ order, onViewDetails, onHelp }) {
       </dl>
 
       <div className="card-actions-v4" role="group" aria-label="Ações do pedido">
-        <button 
-          className="btn-view-v4" 
-          onClick={() => onViewDetails(order)}
+        <button
+          className="btn-view-v4"
+          onClick={(e) => onViewDetails(order, e)}
           aria-label={`Ver detalhes do pedido de ${order.userName}`}
         >
           <Eye size={16} aria-hidden="true" />
@@ -859,6 +860,7 @@ export default function QueroAjudarPage() {
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [modalPosition, setModalPosition] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
   const [orderToHelp, setOrderToHelp] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState('brasil');
   const [onlyNew, setOnlyNew] = useState(false);
@@ -1035,6 +1037,33 @@ export default function QueroAjudarPage() {
     });
     setOrderToHelp(null);
     setLiveMessage('Conversa iniciada com sucesso');
+  };
+
+  const handleViewDetails = (order, event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const modalWidth = Math.min(1000, window.innerWidth * 0.9); // max-width of modal or 90% of viewport
+    const modalHeight = window.innerHeight * 0.85; // 85vh
+
+    let top = rect.bottom + 10; // Position below the card
+    let left = (window.innerWidth - modalWidth) / 2; // Center horizontally on viewport
+    let transform = 'none';
+
+    // If positioning below would go off-screen, position above
+    if (top + modalHeight > window.innerHeight - 20) {
+      top = rect.top - modalHeight - 10;
+    }
+
+    // Ensure modal stays within viewport bounds
+    if (top < 10) {
+      top = 10;
+    }
+
+    setModalPosition({
+      top: `${top}px`,
+      left: `${left}px`,
+      transform: 'none'
+    });
+    setSelectedOrder(order);
   };
 
   const clearFilters = () => {
@@ -1509,7 +1538,7 @@ export default function QueroAjudarPage() {
                   <animated.div key={order.id} style={style}>
                     <OrderCard
                       order={order}
-                      onViewDetails={setSelectedOrder}
+                      onViewDetails={handleViewDetails}
                       onHelp={setOrderToHelp}
                     />
                   </animated.div>
@@ -1536,11 +1565,20 @@ export default function QueroAjudarPage() {
       />
 
       {selectedOrder && (
-        <ModalDetalhes 
-          order={selectedOrder} 
-          onClose={() => setSelectedOrder(null)} 
-          onHelp={setOrderToHelp}
-        />
+        <div
+          className="qa-modal-overlay"
+          style={{
+            '--modal-top': modalPosition.top,
+            '--modal-left': modalPosition.left,
+            '--modal-transform': modalPosition.transform
+          }}
+        >
+          <ModalDetalhes
+            order={selectedOrder}
+            onClose={() => setSelectedOrder(null)}
+            onHelp={setOrderToHelp}
+          />
+        </div>
       )}
 
       <ConfirmHelpModal

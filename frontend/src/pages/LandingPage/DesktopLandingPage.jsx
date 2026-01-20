@@ -217,6 +217,11 @@ const Globe = () => {
 export default function DesktopLandingPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+
+  const navigateToTop = (path) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  };
   const [scrolled, setScrolled] = useState(false);
   const [location, setLocation] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -365,7 +370,7 @@ export default function DesktopLandingPage() {
 
       <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className={`section-container nav-container`}>
-          <div className="logo-wrapper" onClick={() => navigate('/')}>
+          <div className="logo-wrapper" onClick={() => navigateToTop('/')}>
             <div className="logo-icon">
               <Heart fill="white" size={24} />
             </div>
@@ -388,15 +393,15 @@ export default function DesktopLandingPage() {
             
             {!isAuthenticated() ? (
               <div className="auth-group">
-                <button 
+                <button
                   className="auth-btn-login"
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigateToTop('/login')}
                 >
                   Entrar
                 </button>
-                <button 
-                  className="auth-btn-register" 
-                  onClick={() => navigate('/cadastro')}
+                <button
+                  className="auth-btn-register"
+                  onClick={() => navigateToTop('/cadastro')}
                 >
                   Cadastrar
                 </button>
@@ -405,9 +410,9 @@ export default function DesktopLandingPage() {
               <div className="user-section">
                 {isAdmin && (
                   <>
-                    <button 
+                    <button
                       className="admin-dashboard-btn"
-                      onClick={() => navigate('/admin')}
+                      onClick={() => navigateToTop('/admin')}
                       title="Dashboard Admin"
                       style={{
                         background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
@@ -435,9 +440,9 @@ export default function DesktopLandingPage() {
                     >
                       <Settings size={20} />
                     </button>
-                    <button 
+                    <button
                       className="admin-dashboard-btn"
-                      onClick={() => navigate('/painel-social')}
+                      onClick={() => navigateToTop('/painel-social')}
                       title="Painel Social"
                       style={{
                         background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
@@ -721,7 +726,7 @@ export default function DesktopLandingPage() {
                 onClick={() => {
                   if (isAdmin) {
                     toast.success('Redirecionando para o painel!');
-                    navigate('/painel-social');
+                    navigateToTop('/painel-social');
                   } else {
                     toast.error('Acesso restrito a administradores');
                   }
@@ -840,32 +845,32 @@ export default function DesktopLandingPage() {
       <section className="action-cards-section">
         <div className="section-container">
           <div className="cards-grid">
-            <ActionCard 
+            <ActionCard
               icon={<Heart size={40} />}
               title="Quero ajudar"
               description="Descubra pessoas próximas que precisam da sua ajuda. Seja a diferença na vida de alguém com pequenos gestos."
               buttonText="Ver oportunidades"
-              onClick={() => navigate('/quero-ajudar')}
+              onClick={() => navigateToTop('/quero-ajudar')}
               color="teal"
               delay={0.1}
             />
 
-            <ActionCard 
+            <ActionCard
               icon={<HandHelping size={40} />}
               title="Preciso de Ajuda"
               description="Compartilhe sua necessidade com vizinhos dispostos a ajudar. Você não está sozinho nesta jornada."
               buttonText="Pedir ajuda"
-              onClick={() => navigate('/preciso-de-ajuda')}
+              onClick={() => navigateToTop('/preciso-de-ajuda')}
               color="orange"
               delay={0.2}
             />
 
-            <ActionCard 
+            <ActionCard
               icon={<Search size={40} />}
               title="Achados e Perdidos"
               description="Localize documentos, veículos or bens perdidos na sua vizinhança. Ajude a devolver o que foi perdido."
               buttonText="Ver itens"
-              onClick={() => navigate('/achados-e-perdidos')}
+              onClick={() => navigateToTop('/achados-e-perdidos')}
               color="purple"
               delay={0.3}
             />
