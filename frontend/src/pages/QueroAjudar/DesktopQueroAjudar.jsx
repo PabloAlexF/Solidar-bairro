@@ -4,7 +4,16 @@ import { useInView } from 'react-intersection-observer';
 import toast, { Toaster } from 'react-hot-toast';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { Tooltip } from 'react-tooltip';
+import ApiService from '../../services/apiService';
+import {
+  Bell,
+  LogOut,
+  Settings,
+  Shield
+} from 'lucide-react';
 import createGlobe from 'cobe';
 import { 
   MapPin, 
@@ -71,92 +80,7 @@ const URGENCY_OPTIONS = [
   { id: 'recorrente', label: 'RECORRENTE', desc: 'Mensal', icon: <RefreshCcw size={14} aria-hidden="true" />, color: '#6366f1' },
 ];
 
-const MOCK_PEDIDOS = [
-  {
-    id: '1',
-    userId: 'user1',
-    userName: 'Maria Silva',
-    city: 'São Paulo',
-    state: 'SP',
-    neighborhood: 'Vila Madalena',
-    urgency: 'urgente',
-    category: 'Alimentos',
-    title: 'Cesta Básica',
-    description: 'Família com 4 filhos pequenos precisando de alimentos básicos. Meu marido perdeu o emprego há 2 meses e estamos passando por dificuldades. Agradeço qualquer ajuda.',
-    isNew: true,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-  },
-  {
-    id: '2',
-    userId: 'user2',
-    userName: 'João Santos',
-    city: 'São Paulo',
-    state: 'SP',
-    neighborhood: 'Pinheiros',
-    urgency: 'critico',
-    category: 'Medicamentos',
-    title: 'Remédios para diabetes',
-    description: 'Idoso de 78 anos precisando de insulina e medicamentos para controle de diabetes. A aposentadoria não está dando para cobrir todos os gastos com saúde.',
-    isNew: true,
-    createdAt: new Date(Date.now() - 30 * 60 * 1000),
-  },
-  {
-    id: '3',
-    userId: 'user3',
-    userName: 'Ana Oliveira',
-    city: 'Rio de Janeiro',
-    state: 'RJ',
-    neighborhood: 'Copacabana',
-    urgency: 'moderada',
-    category: 'Roupas',
-    title: 'Roupas infantis',
-    description: 'Mãe solo com 3 crianças (2, 5 e 8 anos) precisando de roupas de inverno. As crianças cresceram e não tenho condições de comprar roupas novas.',
-    isNew: false,
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: '4',
-    userId: 'user4',
-    userName: 'Carlos Mendes',
-    city: 'Belo Horizonte',
-    state: 'MG',
-    neighborhood: 'Savassi',
-    urgency: 'tranquilo',
-    category: 'Móveis',
-    title: 'Cama e colchão',
-    description: 'Recém chegado na cidade, consegui um emprego mas ainda não tenho móveis. Estou dormindo no chão e preciso de uma cama para conseguir descansar bem.',
-    isNew: false,
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-  },
-  {
-    id: '5',
-    userId: 'user5',
-    userName: 'Fernanda Costa',
-    city: 'São Paulo',
-    state: 'SP',
-    neighborhood: 'Mooca',
-    urgency: 'recorrente',
-    category: 'Alimentos',
-    title: 'Leite e fraldas',
-    description: 'Mãe de gêmeos recém-nascidos precisando de leite em pó e fraldas mensalmente. Estou desempregada e meu companheiro faz bicos.',
-    isNew: true,
-    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
-  },
-  {
-    id: '6',
-    userId: 'user6',
-    userName: 'Roberto Lima',
-    city: 'Curitiba',
-    state: 'PR',
-    neighborhood: 'Centro',
-    urgency: 'urgente',
-    category: 'Serviços',
-    title: 'Conserto de encanamento',
-    description: 'Cano estourado em casa e não tenho dinheiro para pagar um encanador. A água está jorrando e está causando prejuízos.',
-    isNew: false,
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000),
-  },
-];
+
 
 function CobeGlobe() {
   const canvasRef = useRef();
@@ -168,8 +92,8 @@ function CobeGlobe() {
     if (canvasRef.current) {
       const globe = createGlobe(canvasRef.current, {
         devicePixelRatio: 2,
-        width: 450,
-        height: 450,
+        width: 900,
+        height: 900,
         phi: -0.1,
         theta: 0.2,
         dark: 0,
@@ -212,17 +136,13 @@ function CobeGlobe() {
       <canvas
         ref={canvasRef}
         style={{
-          width: 450,
-          height: 450,
+          width: 900,
+          height: 900,
           maxWidth: '100%',
           aspectRatio: 1,
           filter: 'drop-shadow(0 20px 40px rgba(16, 185, 129, 0.2))',
         }}
       />
-      <div className="globe-text">
-        <h3>Conectando o mundo</h3>
-        <p>Uma rede global de solidariedade que une corações</p>
-      </div>
     </div>
   );
 }
@@ -325,6 +245,7 @@ function HeroSection({
         <animated.div className="hero-right" style={rightSpring}>
           <CobeGlobe />
         </animated.div>
+
       </div>
 
       <a href="#orders-list" className="scroll-indicator" aria-label="Rolar para ver os pedidos">
@@ -933,6 +854,8 @@ function LiveRegion({ message }) {
 }
 
 export default function QueroAjudarPage() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -945,18 +868,131 @@ export default function QueroAjudarPage() {
   const [loadingPedidos, setLoadingPedidos] = useState(true);
   const [highContrast, setHighContrast] = useState(false);
   const [liveMessage, setLiveMessage] = useState('');
+  const [scrolled, setScrolled] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const [cardsRef, cardsInView] = useInView({ threshold: 0.1, triggerOnce: true });
 
   useEffect(() => {
-    setTimeout(() => {
-      setPedidos(MOCK_PEDIDOS);
-      setLoadingPedidos(false);
-      setLiveMessage(`${MOCK_PEDIDOS.length} pedidos de ajuda carregados`);
-    }, 1000);
-    
+    const loadPedidos = async () => {
+      try {
+        const response = await ApiService.getPedidos();
+        if (response.success && response.data) {
+          // Mapear dados do backend para o formato esperado pelo frontend
+          const mappedPedidos = response.data.map(pedido => {
+            // Safe date parsing
+            let createdAt = new Date();
+            let isNew = false;
+
+            try {
+              if (pedido.createdAt) {
+                if (pedido.createdAt.seconds) {
+                  // Firebase Timestamp format
+                  createdAt = new Date(pedido.createdAt.seconds * 1000);
+                } else if (pedido.createdAt._seconds) {
+                  // Alternative Firebase format
+                  createdAt = new Date(pedido.createdAt._seconds * 1000);
+                } else if (typeof pedido.createdAt === 'string') {
+                  // ISO string
+                  createdAt = new Date(pedido.createdAt);
+                } else if (pedido.createdAt instanceof Date) {
+                  // Already a Date object
+                  createdAt = pedido.createdAt;
+                }
+
+                // Check if date is valid
+                if (isNaN(createdAt.getTime())) {
+                  createdAt = new Date();
+                } else {
+                  isNew = (new Date() - createdAt) < (24 * 60 * 60 * 1000);
+                }
+              }
+            } catch (error) {
+              console.warn('Error parsing date for pedido:', pedido.id, error);
+              createdAt = new Date();
+            }
+
+            return {
+              id: pedido.id,
+              userId: pedido.userId,
+              userName: pedido.usuario?.nome || 'Usuário',
+              city: pedido.city || 'Não informado',
+              state: pedido.state || 'Não informado',
+              neighborhood: pedido.neighborhood || 'Não informado',
+              urgency: pedido.urgency || 'moderada',
+              category: pedido.category || 'Outros',
+              title: pedido.category || 'Pedido de ajuda', // Usar categoria como título se não houver título específico
+              description: pedido.description || 'Descrição não disponível',
+              isNew,
+              createdAt,
+              status: pedido.status || 'ativo'
+            };
+          });
+
+          setPedidos(mappedPedidos);
+          setLiveMessage(`${mappedPedidos.length} pedidos de ajuda carregados`);
+        } else {
+          console.error('Erro ao carregar pedidos:', response);
+          setLiveMessage('Erro ao carregar pedidos');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar pedidos:', error);
+        setLiveMessage('Erro ao carregar pedidos');
+      } finally {
+        setLoadingPedidos(false);
+      }
+    };
+
+    loadPedidos();
     setUserLocation({ state: 'SP', city: 'São Paulo' });
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const loadNotifications = () => {
+      const savedNotifications = typeof window !== 'undefined' ? localStorage.getItem('solidar-notifications') : null;
+      if (savedNotifications) {
+        try {
+          setNotifications(JSON.parse(savedNotifications));
+        } catch (error) {
+          console.error('Error parsing notifications:', error);
+          setNotifications([]);
+        }
+      }
+    };
+
+    loadNotifications();
+
+    const handleClickOutside = (event) => {
+      if (showUserMenu || showNotifications) {
+        const userMenuElement = document.querySelector('.user-menu-wrapper');
+        const notificationElement = document.querySelector('.notification-wrapper');
+
+        if (userMenuElement && !userMenuElement.contains(event.target)) {
+          setShowUserMenu(false);
+        }
+
+        if (notificationElement && !notificationElement.contains(event.target)) {
+          setShowNotifications(false);
+        }
+      }
+    };
+
+    window.addEventListener('notificationAdded', loadNotifications);
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      window.removeEventListener('notificationAdded', loadNotifications);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu, showNotifications]);
 
   const filteredOrders = useMemo(() => {
     const filtered = pedidos.filter((order) => {
@@ -1009,8 +1045,347 @@ export default function QueroAjudarPage() {
     setLiveMessage('Filtros limpos');
   };
 
+  const markAllAsRead = () => {
+    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updatedNotifications);
+    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    localStorage.removeItem('solidar-notifications');
+  };
+
+  const markAsRead = (notificationId) => {
+    const updatedNotifications = notifications.map(n =>
+      n.id === notificationId ? { ...n, read: true } : n
+    );
+    setNotifications(updatedNotifications);
+    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
+
+  // Verificar se é administrador
+  const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
+  const isAdmin = user?.role === 'admin' ||
+                  user?.isAdmin ||
+                  user?.tipo === 'admin' ||
+                  user?.email === 'admin@solidarbairro.com' ||
+                  storedUser?.role === 'admin' ||
+                  storedUser?.isAdmin ||
+                  storedUser?.tipo === 'admin' ||
+                  storedUser?.email === 'admin@solidarbairro.com';
+
   return (
     <div className={`qa-page-v4 ${highContrast ? 'high-contrast' : ''}`}>
+      <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
+        <div className="section-container nav-container">
+          <div className="logo-wrapper" onClick={() => navigate('/')}>
+            <div className="logo-icon">
+              <Heart fill="white" size={24} />
+            </div>
+            <span className="logo-text">Solidar<span className="logo-accent">Bairro</span></span>
+          </div>
+
+          <div className="nav-menu">
+            <Link to="/preciso-de-ajuda" className="nav-link">
+              Preciso de Ajuda
+              <span className="link-underline" />
+            </Link>
+            <Link to="/achados-e-perdidos" className="nav-link">
+              Achados e Perdidos
+              <span className="link-underline" />
+            </Link>
+
+            {!isAuthenticated() ? (
+              <div className="auth-group">
+                <button
+                  className="auth-btn-login"
+                  onClick={() => navigate('/login')}
+                >
+                  Entrar
+                </button>
+                <button
+                  className="auth-btn-register"
+                  onClick={() => navigate('/cadastro')}
+                >
+                  Cadastrar
+                </button>
+              </div>
+            ) : (
+              <div className="user-section">
+                {isAdmin && (
+                  <>
+                    <button
+                      style={{
+                        background: 'linear-gradient(135deg, rgb(139, 92, 246), rgb(124, 58, 237))',
+                        border: 'none',
+                        color: 'white',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: '0.3s',
+                        boxShadow: 'rgba(139, 92, 246, 0.4) 0px 6px 20px',
+                        marginRight: '0.5rem',
+                        transform: 'translateY(-2px)'
+                      }}
+                      onClick={() => navigate('/admin')}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-settings"
+                        aria-hidden="true"
+                        style={{
+                          transform: 'translateY(0px)',
+                          boxShadow: 'rgba(139, 92, 246, 0.3) 0px 4px 12px'
+                        }}
+                      >
+                        <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                    <button
+                      title="Painel Social"
+                      style={{
+                        background: 'linear-gradient(135deg, rgb(13, 148, 136), rgb(20, 184, 166))',
+                        border: 'none',
+                        color: 'white',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: '0.3s',
+                        boxShadow: 'rgba(13, 148, 136, 0.4) 0px 6px 20px',
+                        marginRight: '1rem',
+                        transform: 'translateY(-2px)'
+                      }}
+                      onClick={() => navigate('/painel-social')}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-shield"
+                        aria-hidden="true"
+                        style={{
+                          transform: 'translateY(0px)',
+                          boxShadow: 'rgba(13, 148, 136, 0.3) 0px 4px 12px'
+                        }}
+                      >
+                        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+                      </svg>
+                    </button>
+                  </>
+                )}
+
+                <div className="notification-wrapper">
+                  <button
+                    className="notification-btn"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                  >
+                    <Bell size={24} />
+                    {unreadCount > 0 && (
+                      <span className="notification-badge">{unreadCount}</span>
+                    )}
+                  </button>
+
+                  {showNotifications && (
+                    <div className="notification-dropdown">
+                      <div className="notification-header">
+                        <h3>Notificações</h3>
+                        {notifications.length > 0 && (
+                          <div className="notification-actions">
+                            {unreadCount > 0 && (
+                              <button
+                                className="action-btn mark-read-btn"
+                                onClick={markAllAsRead}
+                                title="Marcar todas como lidas"
+                              >
+                                ✓
+                              </button>
+                            )}
+                            <button
+                              className="action-btn clear-btn"
+                              onClick={clearAllNotifications}
+                              title="Limpar todas"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="notification-list">
+                        {notifications.length === 0 ? (
+                          <div className="no-notifications">
+                            Nenhuma notificação ainda
+                          </div>
+                        ) : (
+                          notifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                              onClick={() => !notification.read && markAsRead(notification.id)}
+                            >
+                              <div className="notification-content">
+                                <p className="notification-title">{notification.title}</p>
+                                <p className="notification-message">{notification.message}</p>
+                                <span className="notification-time">
+                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                              {!notification.read && <div className="unread-dot"></div>}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="user-menu-wrapper">
+                  <button
+                    className="user-btn"
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                  >
+                    <div className="user-avatar">
+                      {user?.fotoPerfil ? (
+                        <img
+                          src={user.fotoPerfil}
+                          alt="Foto do perfil"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                          onError={(e) => {
+                            console.log('Erro ao carregar imagem:', user.fotoPerfil);
+                            e.target.style.display = 'none';
+                            e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
+                          }}
+                        />
+                      ) : (
+                        userName?.substring(0, 2).toUpperCase()
+                      )}
+                    </div>
+                  </button>
+
+                  {showUserMenu && (
+                    <div className="user-dropdown">
+                      <div className="user-info">
+                        <div className="user-avatar-large">
+                          {user?.fotoPerfil ? (
+                            <img
+                              src={user.fotoPerfil}
+                              alt="Foto do perfil"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                              onError={(e) => {
+                                console.log('Erro ao carregar imagem grande:', user.fotoPerfil);
+                                e.target.style.display = 'none';
+                                e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
+                              }}
+                            />
+                          ) : (
+                            userName?.substring(0, 2).toUpperCase()
+                          )}
+                        </div>
+                        <div className="user-details">
+                          <div className="user-name">
+                            {userName}
+                            {user?.isVerified && (
+                              <span className="verified-text">Verificado</span>
+                            )}
+                          </div>
+                          <div className="user-phone">{user?.phone || user?.telefone || user?.email}</div>
+                        </div>
+                      </div>
+
+                      <div className="user-stats">
+                        <div className="stat">
+                          <div className="stat-number">{user?.helpedCount || 0}</div>
+                          <div className="stat-label">Pessoas ajudadas</div>
+                        </div>
+                        <div className="stat">
+                          <div className="stat-number">{user?.receivedHelpCount || 0}</div>
+                          <div className="stat-label">Ajudas recebidas</div>
+                        </div>
+                      </div>
+
+                      <div className="user-actions">
+                        <button
+                          className="menu-item profile-btn"
+                          onClick={() => {
+                            navigate('/perfil');
+                            setShowUserMenu(false);
+                          }}
+                        >
+                          👤 Ver perfil
+                        </button>
+
+                        <button
+                          className="menu-item"
+                          onClick={() => {
+                            navigate('/conversas');
+                            setShowUserMenu(false);
+                          }}
+                        >
+                          💬 Minhas conversas
+                        </button>
+
+                        {isAdmin && (
+                          <button
+                            className="menu-item"
+                            onClick={() => {
+                              navigate('/admin');
+                              setShowUserMenu(false);
+                            }}
+                          >
+                            ⚙️ Dashboard Admin
+                          </button>
+                        )}
+
+                        <button
+                          className="menu-item logout-btn"
+                          onClick={() => {
+                            localStorage.removeItem('solidar-user');
+                            window.location.reload();
+                          }}
+                        >
+                          🚪 Sair
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
+
       <div className="skip-links">
         <a href="#main-content" className="skip-link">
           Pular para o conteúdo principal
@@ -1023,8 +1398,8 @@ export default function QueroAjudarPage() {
         </a>
       </div>
       <LiveRegion message={liveMessage} />
-      
-        <HeroSection 
+
+        <HeroSection
           filteredCount={filteredOrders.length}
           userLocation={userLocation}
         />

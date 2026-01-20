@@ -27,6 +27,21 @@
   --qa-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --qa-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   --qa-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --sb-teal: #0d9488;
+  --sb-teal-hover: #0f766e;
+  --sb-teal-soft: #f0fdfa;
+  --sb-orange: #f97316;
+  --sb-orange-hover: #ea580c;
+  --sb-orange-soft: #fff7ed;
+  --sb-purple: #8b5cf6;
+  --sb-purple-soft: #f5f3ff;
+  --sb-bg: #ffffff;
+  --sb-bg-soft: #f8fafc;
+  --sb-text: #0f172a;
+  --sb-text-light: #64748b;
+  --sb-border: #e2e8f0;
+  --sb-shadow: 0 30px 60px -12px rgba(13, 148, 136, 0.15);
+  --sb-shadow-lg: 0 40px 80px -20px rgba(15, 23, 42, 0.08);
 }
 
 /* ========================================
@@ -120,7 +135,7 @@ a:focus-visible {
 /* Page Layout */
 .qa-page-v4 {
   min-height: 100vh;
-  background: #ffffff;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -147,10 +162,12 @@ a:focus-visible {
 .hero-bg-pattern {
   position: absolute;
   inset: 0;
-  background-image: 
-    radial-gradient(circle at 15% 25%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 85% 75%, rgba(5, 150, 105, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(52, 211, 153, 0.04) 0%, transparent 70%);
+  background-image:
+    radial-gradient(circle at 15% 25%, rgba(34, 197, 94, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 75%, rgba(22, 163, 74, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(20, 83, 45, 0.04) 0%, transparent 70%),
+    radial-gradient(circle at 25% 75%, rgba(74, 222, 128, 0.05) 0%, transparent 60%),
+    radial-gradient(circle at 75% 25%, rgba(16, 185, 129, 0.03) 0%, transparent 40%);
   pointer-events: none;
 }
 
@@ -177,16 +194,16 @@ a:focus-visible {
   align-items: center;
   gap: 8px;
   padding: 10px 18px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1));
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(22, 163, 74, 0.1));
+  border: 1px solid rgba(34, 197, 94, 0.3);
   border-radius: 100px;
-  color: var(--qa-primary);
+  color: #22c55e;
   font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 28px;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
 }
 
 #hero-title {
@@ -236,8 +253,8 @@ a:focus-visible {
   align-items: center;
   gap: 10px;
   padding: 12px 18px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
   border-radius: var(--qa-radius-md);
   font-size: 0.9rem;
   color: #374151;
@@ -292,7 +309,9 @@ a:focus-visible {
 
 .hero-right {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  align-self: flex-start;
+  padding-top: 40px;
 }
 
 .globe-container {
@@ -300,9 +319,12 @@ a:focus-visible {
   flex-direction: column;
   align-items: center;
   gap: 40px;
-  width: 100%;
-  max-width: 500px;
-  position: relative;
+  width: 1200px;
+  height: 900px;
+  position: absolute;
+  top: 200px;
+  left: 1px;
+  transform: translateY(-50%);
 }
 
 .globe-container::before {
@@ -362,13 +384,27 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   text-decoration: none;
   color: var(--qa-gray-400);
-  font-size: 0.85rem;
-  font-weight: 500;
-  animation: bounce 2s infinite;
+  font-size: 1.2rem;
+  font-weight: 600;
+  animation: slideDown 1.5s ease-out, bounce 2s infinite 1.5s, pulse 3s infinite 1.5s;
   z-index: 10;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.scroll-indicator:hover {
+  color: var(--qa-primary);
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  transform: translateX(-50%) scale(1.05);
+  animation-play-state: paused;
 }
 
 .scroll-indicator:hover {
@@ -377,6 +413,17 @@ a:focus-visible {
 
 .scroll-arrow {
   transform: rotate(90deg);
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateX(-50%) translateY(100px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes bounce {
@@ -396,7 +443,7 @@ a:focus-visible {
   align-items: center;
   gap: 10px;
   padding: 16px 28px;
-  background: linear-gradient(135deg, var(--qa-primary), #059669);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
   border: none;
   border-radius: var(--qa-radius-md);
   color: white;
@@ -405,7 +452,7 @@ a:focus-visible {
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.3);
 }
 
 .btn-hero-primary:hover {
