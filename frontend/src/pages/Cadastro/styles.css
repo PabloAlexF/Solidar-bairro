@@ -1,38 +1,71 @@
-@keyframes fadeIn {
+/* Scoped animations for cadastro page only */
+@keyframes cadastro-fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
+@keyframes cadastro-slideUp {
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
+@keyframes cadastro-slideInLeft {
+  from { opacity: 0; transform: translateX(-50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes cadastro-slideInRight {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes cadastro-scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
   to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes pulse-slow {
+@keyframes cadastro-bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cadastro-pulse-slow {
   0%, 100% { opacity: 0.3; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(1.1); }
 }
 
-.cadastro-wrapper .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
-.cadastro-wrapper .animate-slideUp { animation: slideUp 0.6s ease-out forwards; }
-.cadastro-wrapper .animate-scaleIn { animation: scaleIn 0.5s ease-out forwards; }
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
 
-.cadastro-wrapper .stagger-1 { animation-delay: 0.1s; }
-.cadastro-wrapper .stagger-2 { animation-delay: 0.2s; }
-.cadastro-wrapper .stagger-3 { animation-delay: 0.3s; }
-.cadastro-wrapper .stagger-4 { animation-delay: 0.4s; }
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); }
+  50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.2); }
+}
 
-.cadastro-wrapper {
+.cadastro-page .animate-fadeIn { animation: cadastro-fadeIn 0.5s ease-out forwards; }
+.cadastro-page .animate-slideUp { animation: cadastro-slideUp 0.6s ease-out forwards; }
+.cadastro-page .animate-scaleIn { animation: cadastro-scaleIn 0.5s ease-out forwards; }
+.cadastro-page .animate-slideInLeft { animation: cadastro-slideInLeft 0.7s ease-out forwards; }
+.cadastro-page .animate-slideInRight { animation: cadastro-slideInRight 0.7s ease-out forwards; }
+.cadastro-page .animate-bounceIn { animation: cadastro-bounceIn 0.8s ease-out forwards; }
+
+.cadastro-page .stagger-1 { animation-delay: 0.1s; }
+.cadastro-page .stagger-2 { animation-delay: 0.2s; }
+.cadastro-page .stagger-3 { animation-delay: 0.3s; }
+.cadastro-page .stagger-4 { animation-delay: 0.4s; }
+.cadastro-page .stagger-5 { animation-delay: 0.5s; }
+.cadastro-page .stagger-6 { animation-delay: 0.6s; }
+
+.cadastro-page .cadastro-wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 50%, #e5e7eb 100%);
   overflow: hidden;
   position: relative;
-  padding-top: 80px;
+  padding-top: 20px;
 }
 
 .cadastro-wrapper::selection {
@@ -40,10 +73,14 @@
 }
 
 .cadastro-wrapper .bg-decoration {
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
   pointer-events: none;
+  z-index: -1;
 }
 
 .cadastro-wrapper .blob-orange {
@@ -74,32 +111,38 @@
   animation: pulse-slow 10s ease-in-out infinite, fadeIn 1s ease-out forwards;
 }
 
-.cadastro-wrapper .cadastro-hero {
+.cadastro-page .cadastro-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  margin-bottom: 2rem;
   padding: 2rem 1rem;
+  margin-top: 5rem;
 }
 
-.cadastro-wrapper .badge-sparkles {
+.cadastro-page .badge-sparkles {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #f3e8ff 100%);
   color: #4338ca;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 900;
-  letter-spacing: 0.1em;
-  margin-bottom: 2.5rem;
-  border: 1px solid #e0e7ff;
-  box-shadow: 0 4px 12px rgba(67, 56, 202, 0.1);
+  letter-spacing: 0.15em;
+  margin-bottom: 3.5rem;
+  border: 2px solid #e0e7ff;
+  box-shadow: 0 8px 24px rgba(67, 56, 202, 0.15);
   opacity: 0;
   position: relative;
   overflow: hidden;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
 }
 
-.cadastro-wrapper .badge-sparkles::before {
+.cadastro-page .badge-sparkles::before {
   content: '';
   position: absolute;
   top: 0;
@@ -115,42 +158,76 @@
   100% { left: 100%; }
 }
 
-.cadastro-wrapper .badge-sparkles svg {
+.cadastro-page .badge-sparkles svg {
   width: 0.875rem;
   height: 0.875rem;
 }
 
-.cadastro-wrapper .hero-title {
+.cadastro-page .hero-title {
   font-size: 2.5rem;
-  line-height: 0.9;
+  line-height: 1.1;
   font-weight: 900;
-  color: #111827;
-  margin-bottom: 1.5rem;
-  letter-spacing: -0.05em;
+  color: #0f172a;
+  margin-bottom: 2.5rem;
+  letter-spacing: -0.03em;
   opacity: 0;
+  max-width: 95%;
+  text-align: center;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-@media (min-width: 768px) {
-  .cadastro-wrapper .hero-title {
-    font-size: 5rem;
+@media (min-width: 640px) {
+  .cadastro-page .hero-title {
+    font-size: 3.5rem;
   }
 }
 
-.cadastro-wrapper .text-gradient {
+@media (min-width: 768px) {
+  .cadastro-page .hero-title {
+    font-size: 4.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cadastro-page .hero-title {
+    font-size: 5.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .cadastro-page .hero-title {
+    font-size: 6rem;
+  }
+}
+
+.cadastro-page .text-gradient {
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   background-image: linear-gradient(to right, #4f46e5, #7c3aed);
 }
 
-.cadastro-wrapper .hero-description {
+.cadastro-page .hero-description {
   font-size: 1.125rem;
-  color: #6b7280;
+  color: #374151;
   max-width: 600px;
   margin: 0 auto;
-  line-height: 1.5;
+  line-height: 1.6;
   font-weight: 500;
   opacity: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 640px) {
+  .cadastro-page .hero-description {
+    font-size: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cadastro-page .hero-description {
+    font-size: 1.375rem;
+  }
 }
 
 .cadastro-wrapper .cards-grid {
@@ -196,36 +273,7 @@
   flex-direction: column;
   align-items: center;
   padding: 2.5rem;
-  border-radius: 2rem;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.cadastro-wrapper .stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-}
-
-.cadastro-wrapper .stat-card:hover::before {
-  transform: scaleX(1);
-}
-
-.cadastro-wrapper .stat-card:hover {
-  transform: translateY(-5px) scale(1.02);
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.15);
+  background: transparent;
 }
 
 @media (min-width: 1024px) {
@@ -257,13 +305,40 @@
   letter-spacing: 0.1em;
 }
 
-.cadastro-wrapper .footer {
-  padding: 2rem;
-  border-top: 1px solid rgba(229, 231, 235, 0.5);
-  background-color: #ffffff;
+.footer {
+  padding: 4rem 2rem 2rem;
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899) 1;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 50%, rgba(241, 245, 249, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
 }
 
-.cadastro-wrapper .footer-content {
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899);
+  opacity: 0.6;
+}
+
+.footer::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.footer-content {
   max-width: 100%;
   width: 100%;
   margin: 0 auto;
@@ -272,55 +347,81 @@
   justify-content: space-between;
   align-items: center;
   gap: 2.5rem;
+  position: relative;
+  z-index: 10;
 }
 
 @media (min-width: 768px) {
-  .cadastro-wrapper .footer-content {
+  .footer-content {
     flex-direction: row;
   }
 }
 
-.cadastro-wrapper .footer-logo {
+.footer-logo {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.cadastro-wrapper .footer-icon-wrapper {
+.footer-icon-wrapper {
   padding: 0.625rem;
   border-radius: 0.75rem;
   background-color: #f3f4f6;
+  transition: all 0.3s ease;
 }
 
-.cadastro-wrapper .footer-icon {
+.footer-icon-wrapper:hover {
+  background-color: #e5e7eb;
+  transform: scale(1.05);
+}
+
+.footer-icon {
   width: 1.25rem;
   height: 1.25rem;
   color: #9ca3af;
 }
 
-.cadastro-wrapper .footer-copy {
+.footer-copy {
   font-size: 0.875rem;
   font-weight: 700;
   color: #9ca3af;
+  text-align: center;
 }
 
-.cadastro-wrapper .footer-links {
+.footer-links {
   display: flex;
   gap: 2.5rem;
 }
 
-.cadastro-wrapper .footer-link {
+.footer-link {
   font-size: 0.75rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.2em;
   color: #9ca3af;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
-.cadastro-wrapper .footer-link:hover {
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+  transition: width 0.3s ease;
+}
+
+.footer-link:hover {
   color: #6366f1;
+  transform: translateY(-1px);
+}
+
+.footer-link:hover::after {
+  width: 100%;
 }
 
 .cadastro-wrapper .card-outer {
@@ -336,18 +437,37 @@
   padding: 2.5rem;
   border-radius: 2.5rem;
   background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(99, 102, 241, 0.1);
   box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.15);
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   overflow: hidden;
   text-decoration: none;
   perspective: 1000px;
+  cursor: pointer;
+}
+
+.cadastro-wrapper .card-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899);
+  border-radius: 2.5rem 2.5rem 0 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cadastro-wrapper .card-inner:hover::before {
+  opacity: 1;
 }
 
 .cadastro-wrapper .card-inner:hover {
-  box-shadow: 0 30px 70px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 30px 70px -12px rgba(99, 102, 241, 0.2);
   transform: translateY(-8px) scale(1.02);
-  border-color: rgba(255, 255, 255, 1);
+  border-color: rgba(99, 102, 241, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
 }
 
 .cadastro-wrapper .card-gradient-overlay {
@@ -444,11 +564,44 @@
 }
 
 .cadastro-wrapper .card-description {
-  color: #4b5563;
+  color: #374151;
   line-height: 1.625;
   margin-bottom: 2rem;
   font-weight: 500;
   font-size: 1.125rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.cadastro-wrapper .card-cta {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 2.5rem;
+  right: 2.5rem;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  border: none;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.cadastro-wrapper .card-inner:hover .card-cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cadastro-wrapper .card-cta:hover {
+  background: linear-gradient(135deg, #4338ca, #6d28d9);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
 }
 
 .cadastro-wrapper .card-footer {
@@ -512,4 +665,50 @@
   background: rgba(79, 70, 229, 0.1);
   color: #4f46e5;
   transform: scale(1.05);
+}
+
+/* Floating decorative elements */
+.floating-elements {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.floating-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05));
+  animation: float 6s ease-in-out infinite;
+}
+
+.floating-circle.floating-1 {
+  width: 80px;
+  height: 80px;
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+  animation-duration: 8s;
+}
+
+.floating-circle.floating-2 {
+  width: 60px;
+  height: 60px;
+  top: 60%;
+  right: 15%;
+  animation-delay: -3s;
+  animation-duration: 10s;
+}
+
+.floating-circle.floating-3 {
+  width: 100px;
+  height: 100px;
+  bottom: 30%;
+  left: 20%;
+  animation-delay: -6s;
+  animation-duration: 12s;
 }

@@ -10,6 +10,226 @@
   --ong-text-secondary: #6b7280;
   --ong-bg-light: #f9fafb;
   --ong-gradient: linear-gradient(135deg, #8b5cf6, #a855f7);
+  --ong-shadow: 0 30px 60px -12px rgba(139, 92, 246, 0.15);
+  --ong-shadow-lg: 0 40px 80px -20px rgba(15, 23, 42, 0.08);
+}
+
+/* Familia Registration Styles - Shared with ONG */
+.fam-reg-form-body {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  background: white;
+  overflow-y: auto;
+  max-height: calc(85vh - 200px);
+}
+
+.fam-reg-form-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.fam-reg-form-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.fam-reg-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fam-reg-input-group-full {
+  grid-column: 1 / -1;
+}
+
+.fam-reg-input-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ong-text-primary);
+}
+
+.fam-reg-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.fam-reg-input-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--ong-text-secondary);
+  pointer-events: none;
+}
+
+.fam-reg-form-input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border: 1px solid var(--ong-border);
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.fam-reg-form-input:focus {
+  outline: none;
+  border-color: var(--ong-primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.fam-reg-coverage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.fam-reg-coverage-card {
+  background: white;
+  border: 2px solid var(--ong-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.fam-reg-coverage-card:hover {
+  border-color: var(--ong-primary);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.15);
+}
+
+.fam-reg-coverage-card input {
+  display: none;
+}
+
+.fam-reg-coverage-card input:checked ~ .fam-reg-coverage-card-inner {
+  background: var(--ong-primary-light);
+  border-color: var(--ong-primary);
+}
+
+.fam-reg-coverage-card-inner {
+  transition: all 0.2s;
+}
+
+.fam-reg-coverage-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--ong-bg-light);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.75rem;
+  color: var(--ong-primary);
+  font-size: 1.5rem;
+}
+
+.fam-reg-coverage-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ong-text-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+.fam-reg-coverage-desc {
+  font-size: 0.875rem;
+  color: var(--ong-text-secondary);
+  margin: 0;
+}
+
+.fam-reg-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.fam-reg-checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--ong-bg-light);
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  color: var(--ong-text-primary);
+}
+
+.fam-reg-checkbox-card:hover {
+  background: white;
+  border-color: var(--ong-primary);
+}
+
+.fam-reg-checkbox-card input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.fam-reg-checkbox-card input:checked {
+  accent-color: var(--ong-primary);
+}
+
+.fam-reg-final-box {
+  background: var(--ong-gradient);
+  color: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+  grid-column: 1 / -1;
+}
+
+.fam-reg-final-box h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.fam-reg-final-box p {
+  font-size: 0.95rem;
+  margin: 0;
+  opacity: 0.95;
+}
+
+.fam-reg-info-box {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  grid-column: 1 / -1;
+}
+
+.fam-reg-info-icon-box {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fam-reg-info-content h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+}
+
+.fam-reg-info-content p {
+  font-size: 0.875rem;
+  margin: 0;
+  opacity: 0.9;
 }
 
 .ong-reg-theme {

@@ -4,6 +4,16 @@ import { Users, Building2, Heart, Sparkles, User, Store, ArrowRight, Zap, Trendi
 import LandingHeader from '../../components/layout/LandingHeader';
 import './styles.css';
 
+const scrollToCards = () => {
+  const cardsSection = document.querySelector('.cards-grid');
+  if (cardsSection) {
+    cardsSection.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  }
+};
+
 // Exports dos componentes de cadastro
 export { default as CadastroCidadao } from './CadastroCidadao/CadastroCidadao';
 export { default as CadastroComercio } from './CadastroComercio/CadastroComercio';
@@ -109,8 +119,17 @@ function CadastroCard({ type, index }) {
 }
 
 export default function CadastroPage() {
+  useEffect(() => {
+    // Auto-scroll to cards section after animations complete
+    const timer = setTimeout(() => {
+      scrollToCards();
+    }, 3000); // Wait for hero animations to complete
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="cadastro-wrapper">
+    <div className="cadastro-page cadastro-wrapper">
       <div className="bg-decoration">
         <div className="blob-orange animate-pulse-slow" />
         <div className="blob-indigo animate-pulse-slow" style={{ animationDelay: '-5s' }} />
@@ -118,13 +137,20 @@ export default function CadastroPage() {
 
       <LandingHeader scrolled={true} />
 
+      {/* Floating decorative elements */}
+      <div className="floating-elements">
+        <div className="floating-circle floating-1"></div>
+        <div className="floating-circle floating-2"></div>
+        <div className="floating-circle floating-3"></div>
+      </div>
+
       <main>
         <div className="cadastro-hero">
           <div className="badge-sparkles animate-scaleIn">
             <Sparkles />
             CONSTRUINDO COMUNIDADES FORTES
           </div>
-          
+
           <h2 className="hero-title animate-slideUp stagger-1">
             Como você quer
             <br />
@@ -132,7 +158,7 @@ export default function CadastroPage() {
               transformar o mundo?
             </span>
           </h2>
-          
+
           <p className="hero-description animate-slideUp stagger-2">
             Escolha seu papel nesta rede de solidariedade e comece a impactar vidas positivamente ainda hoje.
           </p>
@@ -144,21 +170,7 @@ export default function CadastroPage() {
           ))}
         </div>
 
-        <div className="stats-section animate-fadeIn" style={{ animationDelay: '0.8s' }}>
-          <div className="stats-grid">
-            {[
-              { label: "Famílias Apoiadas", value: "1.240+", icon: Users },
-              { label: "Voluntários Ativos", value: "850", icon: Heart },
-              { label: "ONGs Parceiras", value: "42", icon: Building2 },
-            ].map((stat, i) => (
-              <div key={i} className="stat-card">
-                <stat.icon className="stat-icon" />
-                <p className="stat-value">{stat.value}</p>
-                <p className="stat-label">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+
       </main>
 
       <footer className="footer">
@@ -168,7 +180,7 @@ export default function CadastroPage() {
               <Heart className="footer-icon" />
             </div>
             <p className="footer-copy">
-              © 2024 SolidarBairro. Made for impact.
+              © 2026 SolidarBairro. Made for impact.
             </p>
           </div>
           <div className="footer-links">
