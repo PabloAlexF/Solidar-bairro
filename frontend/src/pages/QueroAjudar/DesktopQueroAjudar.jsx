@@ -10,6 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Tooltip } from 'react-tooltip';
 import ApiService from '../../services/apiService';
+import { getCurrentLocation } from '../../utils/geolocation';
 import {
   Bell,
   LogOut,
@@ -965,6 +966,7 @@ export default function QueroAjudarPage() {
   const [selectedLocation, setSelectedLocation] = useState('brasil');
   const [onlyNew, setOnlyNew] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(true);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [pedidos, setPedidos] = useState([]);
   const [loadingPedidos, setLoadingPedidos] = useState(true);
@@ -1047,8 +1049,24 @@ export default function QueroAjudarPage() {
       }
     };
 
+    // Get real user location
+    const loadLocation = async () => {
+      try {
+        const location = await getCurrentLocation();
+        setUserLocation(location);
+        toast.success(`Localização: ${location.city}, ${location.state}`);
+      } catch (error) {
+        console.warn('Erro ao obter localização:', error);
+        // Fallback para São Paulo
+        setUserLocation({ city: 'São Paulo', state: 'SP' });
+        toast.error('Não foi possível obter sua localização. Usando São Paulo como padrão.');
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
     loadPedidos();
-    setUserLocation({ state: 'SP', city: 'São Paulo' });
+    loadLocation();
   }, []);
 
   useEffect(() => {
@@ -1130,11 +1148,38 @@ export default function QueroAjudarPage() {
 
   const hasActiveFilters = selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil' || onlyNew;
 
-  const handleConfirmHelp = () => {
-    toast.success('Conversa iniciada! (Demo)', {
-      icon: '💬',
-      duration: 4000,
-    });
+  const handleConfirmHelp = async () => {
+    try {
+      // Primeiro registrar interesse
+      const interesseData = {
+        pedidoId: orderToHelp.id,
+        tipo: 'ajuda',
+        mensagem: 'Interesse em ajudar através da plataforma'
+      };
+      
+      await ApiService.createInteresse(interesseData);
+      
+      // Depois criar conversa
+      const conversationData = {
+        participants: [orderToHelp.userId], // O outro participante
+        pedidoId: orderToHelp.id,
+        type: 'ajuda',
+        title: `Ajuda: ${orderToHelp.title || orderToHelp.category}`,
+        initialMessage: `Olá! Vi seu pedido de ${orderToHelp.category} e gostaria de ajudar. Podemos conversar?`
+      };
+      
+      const response = await ApiService.createConversation(conversationData);
+      
+      if (response.success) {
+        toast.success('Conversa iniciada!');
+        window.location.href = `/chat/${response.data.id}`;
+      } else {
+        throw new Error(response.error || 'Erro ao criar conversa');
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar conversa:', error);
+      toast.error('Erro ao iniciar conversa');
+    }
     setOrderToHelp(null);
     setLiveMessage('Conversa iniciada com sucesso');
   };

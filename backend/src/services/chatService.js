@@ -112,11 +112,14 @@ class ChatService {
 
   async getUserData(id) {
     try {
+      console.log('Buscando dados do usuário:', id);
+      
       // Buscar em cidadãos
       const cidadaoDoc = await this.db.collection('cidadaos').doc(id).get();
       
       if (cidadaoDoc.exists) {
         const cidadaoData = cidadaoDoc.data();
+        console.log('Usuário encontrado em cidadãos:', cidadaoData.nome);
         return {
           id: cidadaoDoc.id,
           nome: cidadaoData.nome,
@@ -130,6 +133,7 @@ class ChatService {
       
       if (comercioDoc.exists) {
         const comercioData = comercioDoc.data();
+        console.log('Usuário encontrado em comércios:', comercioData.nomeFantasia || comercioData.razaoSocial);
         return {
           id: comercioDoc.id,
           nome: comercioData.nomeFantasia || comercioData.razaoSocial,
@@ -143,6 +147,7 @@ class ChatService {
       
       if (ongDoc.exists) {
         const ongData = ongDoc.data();
+        console.log('Usuário encontrado em ONGs:', ongData.nome);
         return {
           id: ongDoc.id,
           nome: ongData.nome,
@@ -151,10 +156,24 @@ class ChatService {
         };
       }
 
-      return null;
+      console.log('Usuário não encontrado em nenhuma coleção:', id);
+      
+      // Retornar dados padrão em vez de null
+      return {
+        id: id,
+        nome: 'Usuário',
+        tipo: 'cidadao',
+        bairro: 'Não informado'
+      };
     } catch (error) {
       console.error('Erro ao buscar dados do usuário:', error);
-      return null;
+      // Retornar dados padrão em caso de erro
+      return {
+        id: id,
+        nome: 'Usuário',
+        tipo: 'cidadao',
+        bairro: 'Não informado'
+      };
     }
   }
 

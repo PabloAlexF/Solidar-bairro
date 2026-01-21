@@ -94,26 +94,24 @@ const Chat = () => {
     (conversation ? {
       id: conversaId,
       name: (() => {
-        // Buscar nome do outro participante
-        if (conversation.otherParticipant?.nome) return conversation.otherParticipant.nome;
+        // Se há participantsData, usar o primeiro (que deve ser o outro usuário)
         if (conversation.participantsData?.length > 0) {
-          const otherUser = conversation.participantsData.find(p => p.uid !== user?.uid);
-          if (otherUser?.nome) return otherUser.nome;
+          return conversation.participantsData[0].nome || 'Carregando...';
         }
-        // Usar título como fallback
-        if (conversation.title && conversation.title !== 'direct') {
-          return conversation.title.replace('Ajuda: ', '');
-        }
+        // Fallback para otherParticipant
+        if (conversation.otherParticipant?.nome) return conversation.otherParticipant.nome;
         return 'Carregando...';
       })(),
       initials: (() => {
-        const name = conversation.otherParticipant?.nome || 
-                    conversation.participantsData?.find(p => p.uid !== user?.uid)?.nome || 
-                    conversation.title?.replace('Ajuda: ', '') || 'CV';
+        // Usar primeiro participante dos participantsData
+        if (conversation.participantsData?.length > 0 && conversation.participantsData[0].nome) {
+          return conversation.participantsData[0].nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+        // Fallback
+        const name = conversation.otherParticipant?.nome || 'CV';
         return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
       })(),
-      type: conversation.otherParticipant?.tipo || 
-            conversation.participantsData?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
+      type: conversation.participantsData?.[0]?.tipo || conversation.otherParticipant?.tipo || 'cidadao',
       distance: '0m de você',
       online: Math.random() > 0.5
     } : chatContacts[0]);
@@ -174,19 +172,29 @@ const Chat = () => {
     try {
       const response = await ApiService.getConversations();
       if (response.success && response.data) {
-        const formattedContacts = response.data.map(conv => ({
-          id: conv.id,
-          name: conv.otherParticipant?.nome || conv.participants?.find(p => p.uid !== user?.uid)?.nome || 'Usuário',
-          initials: (conv.otherParticipant?.nome || conv.participants?.find(p => p.uid !== user?.uid)?.nome || 'US')
-            .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-          type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
-          distance: '0m de você',
-          online: Math.random() > 0.5,
-          lastMessage: conv.lastMessage?.content || 'Nova conversa',
-          lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
-            new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
-          unreadCount: conv.unreadCount || 0
-        }));
+        const formattedContacts = response.data.map(conv => {
+          // Garantir que sempre temos um nome válido
+          let userName = 'Usuário';
+          if (conv.otherParticipant?.nome && conv.otherParticipant.nome.trim()) {
+            userName = conv.otherParticipant.nome;
+          } else if (conv.participants?.find(p => p.uid !== user?.uid)?.nome) {
+            userName = conv.participants.find(p => p.uid !== user?.uid).nome;
+          }
+          
+          return {
+            id: conv.id,
+            name: userName,
+            initials: userName !== 'Usuário' ? 
+              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U',
+            type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
+            distance: '0m de você',
+            online: Math.random() > 0.5,
+            lastMessage: conv.lastMessage?.content || 'Nova conversa',
+            lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
+              new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
+            unreadCount: conv.unreadCount || 0
+          };
+        });
         setChatContacts(formattedContacts);
       }
     } catch (error) {
@@ -203,14 +211,18 @@ const Chat = () => {
       const conversationResponse = await ApiService.getConversation(conversaId);
       const messagesResponse = await ApiService.getMessages(conversaId);
       
-      console.log('Dados da conversa:', conversationResponse.data);
+      console.log('Dados da conversa:', JSON.stringify(conversationResponse.data, null, 2));
       
       if (conversationResponse.success) {
         const convData = conversationResponse.data;
-        console.log('Dados completos da conversa:', convData);
+        console.log('Dados completos da conversa:', JSON.stringify(convData, null, 2));
         console.log('pedidoId:', convData.pedidoId);
         console.log('itemId:', convData.itemId);
         console.log('itemType:', convData.itemType);
+        console.log('otherParticipant:', JSON.stringify(convData.otherParticipant, null, 2));
+        console.log('participantsData:', JSON.stringify(convData.participantsData, null, 2));
+        console.log('user.uid:', user?.uid);
+        console.log('participants array:', convData.participants);
         
         // Dados dos participantes já vêm na conversa, não buscar separadamente
         
@@ -246,11 +258,14 @@ const Chat = () => {
           }
         } else {
           console.log('Conversa sem contexto específico');
-          console.log('Dados da conversa:', {
+          console.log('Dados da conversa:', JSON.stringify({
             pedidoId: convData.pedidoId,
             itemId: convData.itemId,
-            itemType: convData.itemType
-          });
+            itemType: convData.itemType,
+            participants: convData.participants,
+            otherParticipant: convData.otherParticipant,
+            participantsData: convData.participantsData
+          }, null, 2));
         }
         
         setConversation(convData);
@@ -276,11 +291,15 @@ const Chat = () => {
       setError('Erro ao carregar mensagens');
     } finally {
       setLoading(false);
-      console.log('Estado final do contexto:', {
+      console.log('Estado final do contexto:', JSON.stringify({
         contextType,
         pedidoData: !!pedidoData,
-        achadoPerdidoData: !!achadoPerdidoData
-      });
+        achadoPerdidoData: !!achadoPerdidoData,
+        conversationData: {
+          otherParticipant: conversation?.otherParticipant,
+          participantsData: conversation?.participantsData
+        }
+      }, null, 2));
     }
   }, [conversaId, user?.uid]);
 

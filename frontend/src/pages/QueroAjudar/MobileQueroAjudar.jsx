@@ -31,6 +31,7 @@ import {
   SUB_QUESTION_LABELS
 } from './constants';
 import ApiService from '../../services/apiService';
+import { getCurrentLocation } from '../../utils/geolocation';
 
 export const MobileQueroAjudar = () => {
   const { user } = useAuth();
@@ -40,7 +41,8 @@ export const MobileQueroAjudar = () => {
   const [orderToHelp, setOrderToHelp] = useState(null);
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [userLocation] = useState({ state: 'RS', city: 'Porto Alegre' });
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(true);
   const [fontSize, setFontSize] = useState('normal');
   const [highContrast, setHighContrast] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
@@ -133,6 +135,24 @@ export const MobileQueroAjudar = () => {
     document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
     
     loadPedidos();
+    
+    // Get real user location
+    const loadLocation = async () => {
+      try {
+        const location = await getCurrentLocation();
+        setUserLocation(location);
+        toast.success(`Localização: ${location.city}, ${location.state}`);
+      } catch (error) {
+        console.warn('Erro ao obter localização:', error);
+        // Fallback para São Paulo
+        setUserLocation({ city: 'São Paulo', state: 'SP' });
+        toast.error('Não foi possível obter sua localização. Usando São Paulo como padrão.');
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+    
+    loadLocation();
     
     const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
@@ -501,8 +521,12 @@ export const MobileQueroAjudar = () => {
                 <h4>Localização</h4>
                 <div className="pills-grid-mobile">
                   <button className={`pill-mobile ${selectedLocation === 'brasil' ? 'active' : ''}`} onClick={() => setSelectedLocation('brasil')}>Brasil</button>
-                  <button className={`pill-mobile ${selectedLocation === 'meu_estado' ? 'active' : ''}`} onClick={() => setSelectedLocation('meu_estado')}>RS</button>
-                  <button className={`pill-mobile ${selectedLocation === 'minha_cidade' ? 'active' : ''}`} onClick={() => setSelectedLocation('minha_cidade')}>Porto Alegre</button>
+                  {userLocation && (
+                    <>
+                      <button className={`pill-mobile ${selectedLocation === 'meu_estado' ? 'active' : ''}`} onClick={() => setSelectedLocation('meu_estado')}>{userLocation.state}</button>
+                      <button className={`pill-mobile ${selectedLocation === 'minha_cidade' ? 'active' : ''}`} onClick={() => setSelectedLocation('minha_cidade')}>{userLocation.city}</button>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="sheet-section">
@@ -680,20 +704,18 @@ export const MobileQueroAjudar = () => {
                       const interesseData = {
                         pedidoId: orderToHelp.id,
                         tipo: 'ajuda',
-                        observacoes: 'Interesse em ajudar através da plataforma'
+                        mensagem: 'Interesse em ajudar através da plataforma'
                       };
                       
                       await ApiService.createInteresse(interesseData);
                       
                       // Depois criar conversa
                       const conversationData = {
-                        participantId: orderToHelp.userId,
+                        participants: [orderToHelp.userId], // O outro participante
+                        pedidoId: orderToHelp.id,
                         type: 'ajuda',
-                        metadata: {
-                          pedidoId: orderToHelp.id,
-                          categoria: orderToHelp.category,
-                          titulo: orderToHelp.title
-                        }
+                        title: `Ajuda: ${orderToHelp.title || orderToHelp.category}`,
+                        initialMessage: `Olá! Vi seu pedido de ${orderToHelp.category} e gostaria de ajudar. Podemos conversar?`
                       };
                       
                       const response = await ApiService.createConversation(conversationData);

@@ -47,11 +47,17 @@ const Conversas = () => {
           const otherParticipant = conv.otherParticipant || {};
           const lastMessage = conv.lastMessage || {};
           
+          // Garantir que sempre temos um nome válido
+          let userName = 'Usuário';
+          if (otherParticipant.nome && otherParticipant.nome.trim()) {
+            userName = otherParticipant.nome;
+          }
+          
           return {
             id: conv.id,
-            userName: otherParticipant.nome || 'Usuário',
-            userInitials: otherParticipant.nome ? 
-              otherParticipant.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'US',
+            userName: userName,
+            userInitials: userName !== 'Usuário' ? 
+              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U',
             userType: otherParticipant.tipo || 'cidadao',
             time: lastMessage.createdAt ? 
               formatTimeAgo(new Date(lastMessage.createdAt.seconds * 1000)) : 'Agora',
@@ -106,11 +112,17 @@ const Conversas = () => {
               const otherParticipant = conv.otherParticipant || {};
               const lastMessage = conv.lastMessage || {};
               
+              // Garantir que sempre temos um nome válido
+              let userName = 'Usuário';
+              if (otherParticipant.nome && otherParticipant.nome.trim()) {
+                userName = otherParticipant.nome;
+              }
+              
               return {
                 id: conv.id,
-                userName: otherParticipant.nome || 'Usuário',
-                userInitials: otherParticipant.nome ? 
-                  otherParticipant.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'US',
+                userName: userName,
+                userInitials: userName !== 'Usuário' ? 
+                  userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U',
                 userType: otherParticipant.tipo || 'cidadao',
                 time: lastMessage.createdAt ? 
                   formatTimeAgo(new Date(lastMessage.createdAt.seconds * 1000)) : 'Agora',

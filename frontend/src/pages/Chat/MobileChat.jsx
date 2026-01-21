@@ -94,16 +94,12 @@ const Chat = () => {
     (conversation ? {
       id: conversaId,
       name: (() => {
-        // Buscar nome do outro participante
-        if (conversation.otherParticipant?.nome) return conversation.otherParticipant.nome;
+        // Se há participantsData, usar o primeiro (que deve ser o outro usuário)
         if (conversation.participantsData?.length > 0) {
-          const otherUser = conversation.participantsData.find(p => p.uid !== user?.uid);
-          if (otherUser?.nome) return otherUser.nome;
+          return conversation.participantsData[0].nome || 'Carregando...';
         }
-        // Usar título como fallback
-        if (conversation.title && conversation.title !== 'direct') {
-          return conversation.title.replace('Ajuda: ', '');
-        }
+        // Fallback para otherParticipant
+        if (conversation.otherParticipant?.nome) return conversation.otherParticipant.nome;
         return 'Carregando...';
       })(),
       initials: (() => {
@@ -174,19 +170,35 @@ const Chat = () => {
     try {
       const response = await ApiService.getConversations();
       if (response.success && response.data) {
-        const formattedContacts = response.data.map(conv => ({
-          id: conv.id,
-          name: conv.otherParticipant?.nome || conv.participants?.find(p => p.uid !== user?.uid)?.nome || 'Usuário',
-          initials: (conv.otherParticipant?.nome || conv.participants?.find(p => p.uid !== user?.uid)?.nome || 'US')
-            .split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-          type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
-          distance: '0m de você',
-          online: Math.random() > 0.5,
-          lastMessage: conv.lastMessage?.content || 'Nova conversa',
-          lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
-            new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
-          unreadCount: conv.unreadCount || 0
-        }));
+        const formattedContacts = response.data.map(conv => {
+          // Garantir que sempre temos um nome válido
+          let userName = 'Usuário';
+          if (conv.otherParticipant?.nome && conv.otherParticipant.nome.trim()) {
+            userName = conv.otherParticipant.nome;
+          } else if (conv.participants?.find(p => p.uid !== user?.uid)?.nome) {
+            userName = conv.participants.find(p => p.uid !== user?.uid).nome;
+          } else if (conv.otherParticipant?.nomeCompleto) {
+            userName = conv.otherParticipant.nomeCompleto;
+          } else if (conv.otherParticipant?.nomeFantasia) {
+            userName = conv.otherParticipant.nomeFantasia;
+          } else if (conv.otherParticipant?.razaoSocial) {
+            userName = conv.otherParticipant.razaoSocial;
+          }
+          
+          return {
+            id: conv.id,
+            name: userName,
+            initials: userName !== 'Usuário' ? 
+              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U',
+            type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
+            distance: '0m de você',
+            online: Math.random() > 0.5,
+            lastMessage: conv.lastMessage?.content || 'Nova conversa',
+            lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
+              new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
+            unreadCount: conv.unreadCount || 0
+          };
+        });
         setChatContacts(formattedContacts);
       }
     } catch (error) {
