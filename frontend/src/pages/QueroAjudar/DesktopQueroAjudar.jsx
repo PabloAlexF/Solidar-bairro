@@ -368,6 +368,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
   const [activeTab, setActiveTab] = useState('historia');
   const modalRef = useRef(null);
   const closeButtonRef = useRef(null);
+  const scrollRef = useRef(null);
   
   const sections = [
     { id: 'historia', label: 'Relato', icon: <MessageSquare size={18} aria-hidden="true" /> },
@@ -405,20 +406,50 @@ function ModalDetalhes({ order, onClose, onHelp }) {
   }, [order]);
 
   useEffect(() => {
+    if (order && scrollRef.current) {
+      // Focus on the scrollable content and activate scrolling after modal is rendered
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.focus();
+          // Scroll by 1px to activate the scroll bar and make it ready for user interaction
+          scrollRef.current.scrollTop = 1;
+          setTimeout(() => {
+            scrollRef.current.scrollTop = 0;
+          }, 10);
+        }
+      }, 100);
+    }
+  }, [order]);
+
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         onClose();
       }
     };
-    
+
+    const preventScroll = (e) => {
+      // Allow scrolling if the event target is inside the modal
+      if (modalRef.current && modalRef.current.contains(e.target)) {
+        return;
+      }
+      e.preventDefault();
+    };
+
     if (order) {
       document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('wheel', preventScroll, { passive: false });
+      document.addEventListener('touchmove', preventScroll, { passive: false });
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open-body');
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('wheel', preventScroll);
+      document.removeEventListener('touchmove', preventScroll);
       document.body.style.overflow = '';
+      document.body.classList.remove('modal-open-body');
     };
   }, [order, onClose]);
     
@@ -511,7 +542,7 @@ function ModalDetalhes({ order, onClose, onHelp }) {
             </div>
           </animated.header>
 
-          <animated.div className="modal-scroll-v4" style={contentSpring}>
+          <animated.div className="modal-scroll-v4" style={contentSpring} ref={scrollRef} tabIndex="-1">
             <div ref={contentRef}>
               <section id="section-historia" className="content-section-v4" aria-labelledby="section-historia-title">
                 <div className="section-header-v4">

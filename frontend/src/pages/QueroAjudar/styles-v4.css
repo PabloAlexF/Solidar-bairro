@@ -139,6 +139,12 @@ a:focus-visible {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+
+
+.qa-page-v4.modal-open {
+  overflow: hidden;
+}
+
 .qa-page-v4.modal-open .hero-section-v5,
 .qa-page-v4.modal-open .qa-content-v4,
 .qa-page-v4.modal-open nav {
@@ -150,6 +156,14 @@ a:focus-visible {
 .qa-modal-overlay * {
   filter: none !important;
   pointer-events: auto !important;
+}
+
+.modal-open-body {
+  overflow: hidden !important;
+}
+
+.modal-open-body html {
+  overflow: hidden !important;
 }
 
 .qa-content-v4 {
