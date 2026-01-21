@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSpring, animated, useTrail } from 'react-spring';
@@ -16,13 +17,13 @@ import {
   Shield
 } from 'lucide-react';
 import createGlobe from 'cobe';
-import { 
-  MapPin, 
+import {
+  MapPin,
   Heart,
-  AlertTriangle, 
-  Zap, 
-  Calendar, 
-  Coffee, 
+  AlertTriangle,
+  Zap,
+  Calendar,
+  Coffee,
   RefreshCcw,
   MessageCircle,
   Filter,
@@ -50,7 +51,8 @@ import {
   Accessibility,
   Users,
   TrendingUp,
-  ArrowRight
+  ArrowRight,
+  Globe
 } from 'lucide-react';
 import './styles-v4.css';
 
@@ -559,6 +561,85 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                   </dl>
                 </div>
               </section>
+
+              {order.subCategory && order.subCategory.length > 0 && (
+                <section id="section-subcategorias" className="content-section-v4" aria-labelledby="section-subcategorias-title">
+                  <div className="section-header-v4">
+                    <Package size={20} aria-hidden="true" />
+                    <h3 id="section-subcategorias-title">Itens Específicos</h3>
+                  </div>
+                  <div className="story-card-v4">
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                      {order.subCategory.map((sub, index) => (
+                        <li key={index} style={{ marginBottom: '8px', padding: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '8px' }}>
+                          {sub}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+              )}
+
+              {order.visibility && order.visibility.length > 0 && (
+                <section id="section-visibilidade" className="content-section-v4" aria-labelledby="section-visibilidade-title">
+                  <div className="section-header-v4">
+                    <Globe size={20} aria-hidden="true" />
+                    <h3 id="section-visibilidade-title">Alcance Geográfico</h3>
+                  </div>
+                  <div className="story-card-v4">
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                      {order.visibility.map((vis, index) => (
+                        <li key={index} style={{ marginBottom: '8px', padding: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '8px' }}>
+                          {vis === 'bairro' ? 'Meu Bairro' : vis === 'proximos' ? 'Região Próxima' : vis === 'todos' ? 'Toda a Cidade' : vis === 'ongs' ? 'ONGs Parceiras' : vis}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+              )}
+
+              {order.size && (
+                <section id="section-tamanho" className="content-section-v4" aria-labelledby="section-tamanho-title">
+                  <div className="section-header-v4">
+                    <User size={20} aria-hidden="true" />
+                    <h3 id="section-tamanho-title">Tamanho</h3>
+                  </div>
+                  <div className="story-card-v4">
+                    <p>{order.size}</p>
+                  </div>
+                </section>
+              )}
+
+              {order.style && (
+                <section id="section-estilo" className="content-section-v4" aria-labelledby="section-estilo-title">
+                  <div className="section-header-v4">
+                    <Sparkles size={20} aria-hidden="true" />
+                    <h3 id="section-estilo-title">Estilo</h3>
+                  </div>
+                  <div className="story-card-v4">
+                    <p>{order.style}</p>
+                  </div>
+                </section>
+              )}
+
+              {order.subQuestionAnswers && Object.keys(order.subQuestionAnswers).length > 0 && (
+                <section id="section-respostas" className="content-section-v4" aria-labelledby="section-respostas-title">
+                  <div className="section-header-v4">
+                    <MessageSquare size={20} aria-hidden="true" />
+                    <h3 id="section-respostas-title">Respostas Adicionais</h3>
+                  </div>
+                  <div className="story-card-v4">
+                    <dl style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                      {Object.entries(order.subQuestionAnswers).map(([key, value]) => (
+                        <div key={key} style={{ padding: '12px', background: 'rgba(0,0,0,0.05)', borderRadius: '8px' }}>
+                          <dt style={{ fontWeight: 'bold', marginBottom: '4px' }}>{key}</dt>
+                          <dd>{Array.isArray(value) ? value.join(', ') : value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                </section>
+              )}
             </div>
           </animated.div>
 
@@ -566,10 +647,10 @@ function ModalDetalhes({ order, onClose, onHelp }) {
             <button className="btn-secondary-v4" onClick={onClose}>
               Voltar
             </button>
-            <button 
+            <button
               className="btn-primary-v4"
               onClick={() => { onHelp(order); onClose(); }}
-              style={{ background: `linear-gradient(135deg, ${catMeta.color}, ${catMeta.color}dd)` }}
+              style={{ background: catMeta.color }}
               aria-label={`Oferecer ajuda para ${order.userName}`}
             >
               <Heart size={18} fill="white" aria-hidden="true" />
@@ -1096,7 +1177,7 @@ export default function QueroAjudarPage() {
                   storedUser?.email === 'admin@solidarbairro.com';
 
   return (
-    <div className={`qa-page-v4 ${highContrast ? 'high-contrast' : ''}`}>
+    <div className={`qa-page-v4 ${highContrast ? 'high-contrast' : ''} ${selectedOrder ? 'modal-open' : ''}`}>
       <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="section-container nav-container">
           <div className="logo-wrapper" onClick={() => navigate('/')}>
