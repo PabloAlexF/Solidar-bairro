@@ -228,19 +228,7 @@ function HeroSection({
             </Link>
           </div>
 
-          <nav className="hero-inline-nav" role="navigation" aria-label="Navegação de páginas">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.href}
-                to={link.href} 
-                className={`hero-inline-link ${link.active ? 'active' : ''}`}
-                aria-current={link.active ? 'page' : undefined}
-              >
-                {link.icon}
-                <span>{link.label}</span>
-              </Link>
-            ))}
-          </nav>
+
         </animated.div>
 
         <animated.div className="hero-right" style={rightSpring}>
