@@ -53,7 +53,9 @@ import {
   Users,
   TrendingUp,
   ArrowRight,
-  Globe
+  Globe,
+  Receipt,
+  Car
 } from 'lucide-react';
 import './styles-v4.css';
 
@@ -92,7 +94,7 @@ function CobeGlobe() {
 
   useEffect(() => {
     let phi = 0;
-    
+
     if (canvasRef.current) {
       const globe = createGlobe(canvasRef.current, {
         devicePixelRatio: 2,
@@ -124,10 +126,10 @@ function CobeGlobe() {
           state.phi = phi;
         }
       });
-      
+
       setGlobe(globe);
     }
-    
+
     return () => {
       if (globe) {
         globe.destroy();
@@ -136,17 +138,84 @@ function CobeGlobe() {
   }, []);
 
   return (
-    <div className="globe-container">
-      <canvas
-        ref={canvasRef}
-        style={{
-          width: 900,
-          height: 900,
-          maxWidth: '100%',
-          aspectRatio: 1,
-          filter: 'drop-shadow(0 20px 40px rgba(16, 185, 129, 0.2))',
-        }}
-      />
+    <div className="globe-container-with-items">
+      {/* Floating 3D items around the globe */}
+      <div className="floating-3d-items">
+        {/* Food related items */}
+        <div className="floating-item food-item-1" data-tooltip="Alimentos - Cesta Básica">
+          <ShoppingCart size={24} />
+        </div>
+        <div className="floating-item food-item-2" data-tooltip="Proteínas">
+          🍖
+        </div>
+        <div className="floating-item food-item-3" data-tooltip="Hortifruti">
+          🥕
+        </div>
+
+        {/* Clothing related items */}
+        <div className="floating-item clothes-item-1" data-tooltip="Roupas">
+          <Shirt size={24} />
+        </div>
+        <div className="floating-item clothes-item-2" data-tooltip="Agasalhos">
+          🧥
+        </div>
+        <div className="floating-item clothes-item-3" data-tooltip="Calçados">
+          👟
+        </div>
+
+        {/* Resume/CV related items */}
+        <div className="floating-item resume-item-1" data-tooltip="Currículos">
+          <Briefcase size={24} />
+        </div>
+        <div className="floating-item resume-item-2" data-tooltip="Documentos">
+          📄
+        </div>
+
+        {/* Medicine related items */}
+        <div className="floating-item medicine-item-1" data-tooltip="Medicamentos">
+          <Pill size={24} />
+        </div>
+        <div className="floating-item medicine-item-2" data-tooltip="Saúde">
+          💊
+        </div>
+
+        {/* Furniture related items */}
+        <div className="floating-item furniture-item-1" data-tooltip="Móveis">
+          <Sofa size={24} />
+        </div>
+        <div className="floating-item furniture-item-2" data-tooltip="Casa">
+          🏠
+        </div>
+
+        {/* Bills/Utilities related items */}
+        <div className="floating-item bills-item-1" data-tooltip="Contas">
+          <Receipt size={24} />
+        </div>
+        <div className="floating-item bills-item-2" data-tooltip="Energia">
+          ⚡
+        </div>
+
+        {/* Transportation related items */}
+        <div className="floating-item transport-item-1" data-tooltip="Transporte">
+          <Car size={24} />
+        </div>
+        <div className="floating-item transport-item-2" data-tooltip="Mobilidade">
+          🚌
+        </div>
+      </div>
+
+      <div className="globe-container">
+        <canvas
+          ref={canvasRef}
+          style={{
+            width: 900,
+            height: 900,
+            maxWidth: '100%',
+            aspectRatio: 1,
+            filter: 'drop-shadow(0 20px 40px rgba(16, 185, 129, 0.2))',
+          }}
+        />
+      </div>
     </div>
   );
 }
