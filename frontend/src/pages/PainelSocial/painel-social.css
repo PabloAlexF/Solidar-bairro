@@ -329,7 +329,7 @@
 
 .action-secondary:hover { background: var(--slate-200); }
 
-.main-content {
+.panel-main-content {
   padding: 20px;
   display: flex;
   flex-direction: column;

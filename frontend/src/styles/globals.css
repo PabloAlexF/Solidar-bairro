@@ -137,7 +137,6 @@ html, body {
   max-width: none !important;
   margin: 0 !important;
   padding: 0 !important;
-  overflow-x: hidden;
 }
 
 /* Garantir que elementos principais tenham fundo claro */
