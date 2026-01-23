@@ -125,10 +125,21 @@ const ApiService = {
   },
 
   async createConversation(data) {
-    return this.request('/chat/conversations', {
+    const response = await this.request('/chat/conversations', {
       method: 'POST',
       body: JSON.stringify(data)
     });
+    
+    // Criar notificação para nova conversa
+    if (response.success) {
+      const { NotificationManager } = await import('../utils/notifications');
+      NotificationManager.createChatNotification({
+        participantName: data.participantName || 'Alguém',
+        title: data.title || 'Nova conversa'
+      });
+    }
+    
+    return response;
   },
 
   async createOrGetConversation(data) {
@@ -147,7 +158,7 @@ const ApiService = {
   },
 
   async sendMessage(conversationId, text, type = 'text', metadata = null) {
-    return this.request(`/chat/conversations/${conversationId}/messages`, {
+    const response = await this.request(`/chat/conversations/${conversationId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ 
         text, 
@@ -156,6 +167,18 @@ const ApiService = {
         metadata 
       })
     });
+    
+    // Criar notificação para nova mensagem
+    if (response.success) {
+      const { NotificationManager } = await import('../utils/notifications');
+      const user = JSON.parse(localStorage.getItem('solidar-user') || '{}');
+      NotificationManager.createMessageNotification({
+        senderName: user.nome || user.nomeCompleto || 'Alguém',
+        content: text
+      });
+    }
+    
+    return response;
   },
 
   async getMessages(conversationId, limit = 50, lastMessageId = null) {

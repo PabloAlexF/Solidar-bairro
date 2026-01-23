@@ -593,6 +593,14 @@ export function PrecisoDeAjudaDesktop() {
       const response = await ApiService.createPedido(pedidoData);
       
       if (response.success) {
+        // Criar notificação para nova ajuda
+        const { NotificationManager } = await import('../../../utils/notifications');
+        NotificationManager.createHelpNotification({
+          userName: 'Alguém',
+          category: formData.category,
+          neighborhood: formData.neighborhood || 'Região próxima'
+        });
+        
         setAnalysis({
           reason: 'Pedido criado com sucesso! Sua solicitação já está visível na rede Solidar.'
         });
