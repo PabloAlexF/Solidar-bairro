@@ -614,18 +614,21 @@ export default function DesktopLandingPage() {
 
         <div className="section-container">
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '4rem',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
             alignItems: 'center',
+            textAlign: 'center',
             minHeight: '80vh'
           }}>
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
               transition={{ duration: 1.2, ease: "easeOut" }}
               style={{
-                padding: '2rem'
+                padding: '2rem',
+                maxWidth: '900px',
+                margin: '0 auto'
               }}
             >
             {/* Badge */}
