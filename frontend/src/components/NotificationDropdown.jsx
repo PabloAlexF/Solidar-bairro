@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '../contexts/NotificationContext';
 
 export const NotificationDropdown = () => {
@@ -11,18 +12,20 @@ export const NotificationDropdown = () => {
   const { notifications, clearNotifications, addNotification } = useNotifications();
 
   useEffect(() => {
-    // Auto-show notification after component mounts
+    // Auto-show welcome notification only once per session
+    const hasShownWelcome = localStorage.getItem('solidar-welcome-shown');
     const timer = setTimeout(() => {
-      if (!localNotifications.some(n => n.id === 'welcome-notification')) {
+      if (!hasShownWelcome && !localNotifications.some(n => n.id === 'welcome-notification')) {
         setLocalNotifications([{
           id: 'welcome-notification',
-          title: 'Bem-vindo ao SolidarBairro!',
-          message: 'Explore nossa plataforma e conecte-se com sua comunidade.',
+          title: '🎉 Bem-vindo ao SolidarBairro!',
+          message: 'Explore nossa plataforma e conecte-se com sua comunidade. Descubra como ajudar ou receber ajuda dos seus vizinhos.',
           timestamp: new Date()
         }]);
         setShowNotifications(true);
+        localStorage.setItem('solidar-welcome-shown', 'true');
 
-        // Auto-hide after 5 seconds
+        // Auto-hide after 8 seconds (longer for welcome message)
         setTimeout(() => {
           setIsClosing(true);
           setTimeout(() => {
@@ -30,9 +33,9 @@ export const NotificationDropdown = () => {
             setIsClosing(false);
             setLocalNotifications([]);
           }, 300);
-        }, 5000);
+        }, 8000);
       }
-    }, 1000); // Delay to ensure component is mounted
+    }, 2000); // Longer delay for welcome message
 
     // Listen for explore platform button click
     const handleExploreClick = () => {
@@ -85,23 +88,31 @@ export const NotificationDropdown = () => {
           }} />
         )}
       </button>
-      {(showNotifications || isClosing) && (
-        <div className={`notification-dropdown ${isClosing ? 'closing' : ''}`} style={{
-          position: 'absolute',
-          top: '100%',
-          right: 0,
-          width: '320px',
-          maxHeight: '400px',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: '20px',
-          border: '1px solid rgba(0, 0, 0, 0.1)',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
-          zIndex: 1000,
-          marginTop: '8px',
-          padding: '16px',
-          overflow: 'hidden'
-        }}>
+      <AnimatePresence>
+        {(showNotifications || isClosing) && (
+          <motion.div
+            className="notification-dropdown"
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              width: '320px',
+              maxHeight: '400px',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              borderRadius: '20px',
+              border: '1px solid rgba(0, 0, 0, 0.1)',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+              zIndex: 1000,
+              marginTop: '8px',
+              padding: '16px',
+              overflow: 'hidden'
+            }}
+          >
           <div className="notification-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <h4 className="notification-title" style={{ margin: 0, fontSize: '14px', fontWeight: '600', color: '#0f172a' }}>Notificações</h4>
             {(notifications.length > 0 || localNotifications.length > 0) && (
@@ -140,34 +151,55 @@ export const NotificationDropdown = () => {
               ))}
             </div>
           )}
-        </div>
-      )}
-      {(showModalNotification || isModalClosing) && (
-        <div className={`modal-notification ${isModalClosing ? 'closing' : ''}`} style={{
-          position: 'fixed',
-          top: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRadius: '20px',
-          border: '1px solid rgba(0, 0, 0, 0.1)',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
-          padding: '16px 24px',
-          zIndex: 10000,
-          animation: 'slideDown 0.5s ease-out',
-          maxWidth: '400px',
-          width: '90%',
-          textAlign: 'center'
-        }}>
-          <div className="modal-notification-title" style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', marginBottom: '8px' }}>
-            Escolha como contribuir!
-          </div>
-          <div className="modal-notification-message" style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.4' }}>
-            Selecione uma das opções abaixo para começar sua jornada de solidariedade.
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {(showModalNotification || isModalClosing) && (
+          <motion.div
+            className="modal-notification-wrapper"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            style={{
+              position: 'fixed',
+              top: '20px',
+              left: '0',
+              right: '0',
+              zIndex: 10000,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start'
+            }}
+          >
+            <motion.div
+              className="modal-notification"
+              initial={{ opacity: 0, y: -50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -50, scale: 0.9 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              style={{
+                background: 'var(--sb-bg)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '20px',
+                border: '1px solid var(--sb-border)',
+                boxShadow: 'var(--sb-shadow)',
+                padding: '16px 24px',
+                width: '400px',
+                textAlign: 'center'
+              }}
+            >
+              <div className="modal-notification-title" style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', marginBottom: '8px' }}>
+                Escolha como contribuir!
+              </div>
+              <div className="modal-notification-message" style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.4' }}>
+                Selecione uma das opções abaixo para começar sua jornada de solidariedade.
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

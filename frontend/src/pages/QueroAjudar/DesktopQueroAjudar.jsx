@@ -9,18 +9,21 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Tooltip } from 'react-tooltip';
+import { motion } from 'framer-motion';
 import ApiService from '../../services/apiService';
 import { getCurrentLocation } from '../../utils/geolocation';
 import {
   Bell,
   LogOut,
   Settings,
-  Shield
+  Shield,
+  Sparkles,
+  Heart,
+  HelpCircle
 } from 'lucide-react';
 import createGlobe from 'cobe';
 import {
   MapPin,
-  Heart,
   AlertTriangle,
   Zap,
   Calendar,
@@ -42,12 +45,10 @@ import {
   User,
   Package,
   Search,
-  Sparkles,
   Navigation,
   Grid3X3,
   List,
   HandHeart,
-  HelpCircle,
   FileSearch,
   Accessibility,
   Users,
@@ -236,83 +237,776 @@ function SkipLinks() {
   );
 }
 
-function HeroSection({ 
-  filteredCount, 
+function HeroSection({
+  filteredCount,
   userLocation
 }) {
   const [heroRef, heroInView] = useInView({ threshold: 0.1, triggerOnce: true });
-  
-  const leftSpring = useSpring({
-    opacity: heroInView ? 1 : 0,
-    transform: heroInView ? 'translateX(0px)' : 'translateX(-40px)',
-    config: { tension: 200, friction: 40 }
-  });
-
-  const rightSpring = useSpring({
-    opacity: heroInView ? 1 : 0,
-    transform: heroInView ? 'translateX(0px)' : 'translateX(40px)',
-    delay: 150,
-    config: { tension: 200, friction: 40 }
-  });
-
-  const navLinks = [
-    { href: '/quero-ajudar', label: 'Quero Ajudar', icon: <HandHeart size={18} aria-hidden="true" />, active: true },
-    { href: '/preciso-de-ajuda', label: 'Preciso de Ajuda', icon: <HelpCircle size={18} aria-hidden="true" />, active: false },
-    { href: '/achados-e-perdidos', label: 'Achados e Perdidos', icon: <FileSearch size={18} aria-hidden="true" />, active: false },
-  ];
 
   return (
-    <section className="hero-section-v5" ref={heroRef} aria-labelledby="hero-title">
-      <div className="hero-bg-pattern" aria-hidden="true" />
+    <section className="hero-section" ref={heroRef} style={{
+      paddingTop: '8rem',
+      paddingBottom: '6rem',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Background Elements */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
+        zIndex: -1
+      }} />
 
-      <div className="hero-main-content">
-        <animated.div className="hero-left" style={leftSpring}>
-          <div className="hero-badge">
-            <Sparkles size={14} aria-hidden="true" />
-            <span>Rede de solidariedade comunitária</span>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '4rem',
+        alignItems: 'center',
+        minHeight: '80vh'
+      }}>
+        {/* Left Column - Content */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          style={{
+            padding: '2rem'
+          }}
+        >
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={heroInView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '50px',
+              padding: '8px 16px',
+              marginBottom: '2rem',
+              fontSize: '12px',
+              fontWeight: '600',
+              color: '#374151',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <Users size={14} style={{ marginRight: '6px', color: '#0d9488' }} />
+            Rede de Solidariedade Comunitária
+          </motion.div>
+
+          {/* Main Title */}
+          <motion.h1
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={heroInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 30, scale: 0.9 }}
+            transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+            style={{
+              fontSize: 'clamp(2.5rem, 6vw, 4rem)',
+              fontWeight: '800',
+              marginBottom: '1.5rem',
+              lineHeight: '1.1',
+              background: 'linear-gradient(135deg, #1f2937 0%, #0d9488 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}
+          >
+            Transforme vidas através da solidariedade
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+            style={{
+              fontSize: '1.25rem',
+              color: '#6b7280',
+              marginBottom: '2rem',
+              fontWeight: '400',
+              lineHeight: '1.6'
+            }}
+          >
+            Una-se a milhares de pessoas que fazem a diferença todos os dias. Descubra pedidos de ajuda próximos e seja parte da mudança que sua comunidade precisa.
+          </motion.p>
+
+          {/* Description */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
+            style={{
+              fontSize: '1rem',
+              color: '#4b5563',
+              lineHeight: '1.7',
+              marginBottom: '2rem',
+              fontWeight: '400'
+            }}
+          >
+            Conecte-se com vizinhos, ofereça ou receba ajuda, e fortaleça os laços da sua comunidade.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
+            animate={heroInView ? { opacity: 1, scale: 1, rotateX: 0 } : { opacity: 0, scale: 0.95, rotateX: 10 }}
+            transition={{ duration: 0.8, delay: 1, ease: "easeOut" }}
+            whileHover={{
+              scale: 1.02,
+              color: '#374151',
+              transition: { duration: 0.3 }
+            }}
+            style={{
+              fontSize: '0.9rem',
+              color: '#6b7280',
+              fontStyle: 'italic',
+              marginBottom: '2rem',
+              cursor: 'default'
+            }}
+          >
+            "Criamos pontes onde antes existiam apenas muros."
+          </motion.p>
+
+          {/* CTA Button */}
+          <motion.button
+            onClick={() => {
+              const ordersListSection = document.getElementById('orders-list');
+              if (ordersListSection) {
+                const elementPosition = ordersListSection.getBoundingClientRect().top + window.pageYOffset;
+                const offsetPosition = elementPosition - 100; // Position 100px above the section
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: 'smooth'
+                });
+                toast.success('Escolha uma das opções abaixo para começar!');
+                window.dispatchEvent(new Event('explorePlatformClick'));
+              }
+            }}
+            whileHover={{
+              scale: 1.05,
+              y: -2,
+              boxShadow: '0 16px 32px rgba(13, 148, 136, 0.3)'
+            }}
+            whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 1.2, ease: "easeOut" }}
+            style={{
+              background: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)',
+              border: 'none',
+              color: 'white',
+              padding: '16px 32px',
+              borderRadius: '50px',
+              fontSize: '1rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 8px 24px rgba(13, 148, 136, 0.3)',
+              marginBottom: '3rem'
+            }}
+          >
+            Ver pedidos de ajuda
+            <ArrowRight size={18} />
+          </motion.button>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ duration: 0.8, delay: 1.4, ease: "easeOut" }}
+            style={{
+              display: 'flex',
+              gap: '2rem',
+              flexWrap: 'wrap'
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={heroInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.8, delay: 1.6, ease: "easeOut" }}
+              whileHover={{ scale: 1.05 }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <Package size={24} style={{ color: '#0d9488' }} />
+              <div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0d9488' }}>3</div>
+                <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Categorias</div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={heroInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.8, delay: 1.8, ease: "easeOut" }}
+              whileHover={{ scale: 1.05 }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '16px',
+                background: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <Heart size={24} style={{ color: '#7c3aed' }} />
+              <div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#7c3aed' }}>{filteredCount || 0}</div>
+                <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Pedidos Ativos</div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+
+        {/* Right Column - Visual */}
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 30 }}
+          transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem'
+          }}
+        >
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: '400px',
+            aspectRatio: '1'
+          }}>
+            <motion.div
+              animate={{
+                rotate: [0, 5, -5, 0],
+                scale: [1, 1.05, 1]
+              }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              style={{
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.1), rgba(139, 92, 246, 0.1))',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                backdropFilter: 'blur(20px)'
+              }}
+            >
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '16px'
+                }}
+              >
+                <Heart size={80} style={{ color: '#0d9488' }} />
+                <div style={{
+                  fontSize: '1.2rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  textAlign: 'center'
+                }}>
+                  Conectando<br />Vizinhos
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Floating elements */}
+            <motion.div
+              animate={{
+                y: [0, -10, 0],
+                rotate: [0, 5, 0]
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              style={{
+                position: 'absolute',
+                top: '10%',
+                right: '10%',
+                background: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '12px',
+                padding: '8px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <Users size={20} style={{ color: '#0d9488' }} />
+            </motion.div>
+
+            <motion.div
+              animate={{
+                y: [0, 10, 0],
+                rotate: [0, -5, 0]
+              }}
+              transition={{
+                duration: 7,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1
+              }}
+              style={{
+                position: 'absolute',
+                bottom: '15%',
+                left: '10%',
+                background: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '12px',
+                padding: '8px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <Shield size={20} style={{ color: '#7c3aed' }} />
+            </motion.div>
           </div>
-          
-          <h1 id="hero-title">
-            <span className="hero-title-highlight">Transforme vidas através da solidariedade</span>
-          </h1>
-          
-          <p className="hero-subtitle">
-            Una-se a milhares de pessoas que fazem a diferença todos os dias. 
-            Descubra pedidos de ajuda próximos e seja parte da mudança que sua comunidade precisa.
-          </p>
-
-          {userLocation && (
-            <div className="hero-location">
-              <MapPin size={18} aria-hidden="true" />
-              <span>Sua localização: <strong>{userLocation.city}, {userLocation.state}</strong></span>
-            </div>
-          )}
-
-          <div className="hero-cta-group">
-            <a href="#orders-list" className="btn-hero-primary">
-              <Heart size={18} aria-hidden="true" />
-              Ver pedidos de ajuda
-              <ArrowRight size={18} aria-hidden="true" />
-            </a>
-            <Link to="/preciso-de-ajuda" className="btn-hero-secondary">
-              <HelpCircle size={18} aria-hidden="true" />
-              Preciso de ajuda
-            </Link>
-          </div>
-
-
-        </animated.div>
-
-        <animated.div className="hero-right" style={rightSpring}>
-          <CobeGlobe />
-        </animated.div>
-
+        </motion.div>
       </div>
 
-      <a href="#orders-list" className="scroll-indicator" aria-label="Rolar para ver os pedidos">
-        <span>Ver pedidos abaixo</span>
-        <ArrowRight size={18} aria-hidden="true" className="scroll-arrow" />
-      </a>
+      {/* Floating geometric shapes */}
+      <motion.div
+        style={{
+          position: 'absolute',
+          top: '20%',
+          left: '10%',
+          width: '60px',
+          height: '60px',
+          background: 'linear-gradient(45deg, rgba(13, 148, 136, 0.2), rgba(20, 184, 166, 0.2))',
+          borderRadius: '20px',
+          transform: 'rotate(45deg)'
+        }}
+        animate={{
+          y: [0, -20, 0],
+          rotate: [45, 65, 45]
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+
+      <motion.div
+        style={{
+          position: 'absolute',
+          top: '60%',
+          right: '15%',
+          width: '40px',
+          height: '40px',
+          background: 'linear-gradient(45deg, rgba(139, 92, 246, 0.2), rgba(168, 85, 247, 0.2))',
+          borderRadius: '50%',
+        }}
+        animate={{
+          y: [0, 15, 0],
+          scale: [1, 1.1, 1]
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1
+        }}
+      />
+
+      <div className="section-container">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          style={{
+            textAlign: 'center',
+            maxWidth: '900px',
+            margin: '0 auto',
+            padding: '3rem 2rem',
+            position: 'relative'
+          }}
+        >
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20, rotateX: -15 }}
+            animate={heroInView ? { opacity: 1, scale: 1, y: 0, rotateX: 0 } : { opacity: 0, scale: 0.8, y: 20, rotateX: -15 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            whileHover={{
+              scale: 1.05,
+              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
+              transition: { duration: 0.3 }
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '50px',
+              padding: '12px 24px',
+              marginBottom: '3rem',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              cursor: 'default'
+            }}
+          >
+            <motion.div
+              animate={{
+                rotate: [0, 10, -10, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatDelay: 3,
+                ease: "easeInOut"
+              }}
+            >
+              <Sparkles size={16} style={{ marginRight: '8px', color: '#f59e0b' }} />
+            </motion.div>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={heroInView ? { opacity: 1 } : { opacity: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              REDE DE SOLIDARIEDADE COMUNITÁRIA
+            </motion.span>
+          </motion.div>
+
+          {/* Main Title */}
+          <motion.h1
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={heroInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 30, scale: 0.9 }}
+            transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
+            whileHover={{ scale: 1.02 }}
+            style={{
+              fontSize: 'clamp(3rem, 8vw, 5rem)',
+              fontWeight: '800',
+              marginBottom: '1.5rem',
+              lineHeight: '1.1',
+              background: 'linear-gradient(135deg, #1f2937 0%, #374151 50%, #0d9488 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              cursor: 'default'
+            }}
+          >
+            <motion.span
+              initial={{ opacity: 0, x: -20 }}
+              animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              Transforme vidas através da
+            </motion.span>
+            <motion.span
+              initial={{ opacity: 0, x: 20, scale: 0.8 }}
+              animate={heroInView ? { opacity: 1, x: 0, scale: 1 } : { opacity: 0, x: 20, scale: 0.8 }}
+              transition={{ duration: 0.8, delay: 0.8, type: "spring", stiffness: 200 }}
+              whileHover={{
+                scale: 1.1,
+                textShadow: '0 0 20px rgba(13, 148, 136, 0.5)',
+                transition: { duration: 0.3 }
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
+            >
+              solidariedade
+            </motion.span>
+          </motion.h1>
+
+          {/* Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+            style={{
+              fontSize: 'clamp(1.2rem, 3vw, 1.8rem)',
+              color: '#6b7280',
+              marginBottom: '2rem',
+              fontWeight: '400',
+              maxWidth: '600px',
+              margin: '0 auto 2rem'
+            }}
+          >
+            Una-se a milhares de pessoas que fazem a diferença todos os dias. Descubra pedidos de ajuda próximos e seja parte da mudança que sua comunidade precisa.
+          </motion.p>
+
+          {/* Description */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
+            style={{
+              marginBottom: '3rem'
+            }}
+          >
+            <motion.p
+              initial={{ opacity: 0, x: -10 }}
+              animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
+              transition={{ duration: 0.8, delay: 1 }}
+              style={{
+                fontSize: '1.1rem',
+                color: '#4b5563',
+                lineHeight: '1.7',
+                maxWidth: '650px',
+                margin: '0 auto 1.5rem',
+                fontWeight: '400'
+              }}
+            >
+              Conecte-se com vizinhos, ofereça ou receba ajuda, e fortaleça os laços da sua comunidade.
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
+              animate={heroInView ? { opacity: 1, scale: 1, rotateX: 0 } : { opacity: 0, scale: 0.95, rotateX: 10 }}
+              transition={{ duration: 0.8, delay: 1.2, ease: "easeOut" }}
+              whileHover={{
+                scale: 1.02,
+                color: '#374151',
+                transition: { duration: 0.3 }
+              }}
+              style={{
+                fontSize: '1rem',
+                color: '#6b7280',
+                fontStyle: 'italic',
+                maxWidth: '550px',
+                margin: '0 auto',
+                cursor: 'default'
+              }}
+            >
+              "Criamos pontes onde antes existiam apenas muros."
+            </motion.p>
+          </motion.div>
+
+          {/* CTA Button */}
+          <motion.button
+            onClick={() => {
+              const ordersListSection = document.getElementById('orders-list');
+              if (ordersListSection) {
+                const elementPosition = ordersListSection.getBoundingClientRect().top + window.pageYOffset;
+                const offsetPosition = elementPosition - 100; // Position 100px above the section
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: 'smooth'
+                });
+                toast.success('Escolha uma das opções abaixo para começar!');
+                window.dispatchEvent(new Event('explorePlatformClick'));
+              }
+            }}
+            whileHover={{
+              scale: 1.05,
+              y: -3,
+              boxShadow: '0 20px 40px rgba(13, 148, 136, 0.4)'
+            }}
+            whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+            animate={heroInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 20, scale: 0.9 }}
+            transition={{ duration: 0.8, delay: 1, ease: "easeOut", type: "spring", stiffness: 200 }}
+            style={{
+              background: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #0f766e 100%)',
+              border: 'none',
+              color: 'white',
+              padding: '18px 40px',
+              borderRadius: '50px',
+              fontSize: '1.1rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '10px',
+              boxShadow: '0 12px 32px rgba(13, 148, 136, 0.3)',
+              marginBottom: '4rem',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+          >
+            <motion.span
+              initial={{ opacity: 0, x: -10 }}
+              animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
+              transition={{ duration: 0.5, delay: 1.2 }}
+            >
+              Ver pedidos de ajuda
+            </motion.span>
+            <motion.div
+              animate={{
+                x: [0, 5, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatDelay: 2,
+                ease: "easeInOut"
+              }}
+            >
+              <ArrowRight size={20} />
+            </motion.div>
+            <motion.div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: '-100%',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
+              }}
+              animate={{
+                left: ['-100%', '100%']
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatDelay: 3,
+                ease: "easeInOut"
+              }}
+            />
+          </motion.button>
+
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ duration: 0.8, delay: 1.2, ease: "easeOut" }}
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '4rem',
+              flexWrap: 'wrap'
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={heroInView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ duration: 0.8, delay: 1.4, ease: "easeOut" }}
+              whileHover={{
+                scale: 1.05,
+                y: -5,
+                boxShadow: '0 20px 40px rgba(13, 148, 136, 0.2)',
+                transition: { duration: 0.3 }
+              }}
+              style={{
+                textAlign: 'center',
+                padding: '2rem',
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '20px',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                minWidth: '140px',
+                cursor: 'default'
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={heroInView ? { scale: 1 } : { scale: 0 }}
+                transition={{ duration: 0.6, delay: 1.6, type: "spring", stiffness: 200 }}
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: '800',
+                  color: '#0d9488',
+                  marginBottom: '0.5rem'
+                }}
+              >
+                🍖🥕🧥👟📄💊🏠⚡🚌
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                transition={{ duration: 0.5, delay: 1.8 }}
+                style={{
+                  fontSize: '0.9rem',
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}
+              >
+                Categorias
+              </motion.div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={heroInView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.8, y: 20 }}
+              transition={{ duration: 0.8, delay: 1.6, ease: "easeOut" }}
+              whileHover={{
+                scale: 1.05,
+                y: -5,
+                boxShadow: '0 20px 40px rgba(139, 92, 246, 0.2)',
+                transition: { duration: 0.3 }
+              }}
+              style={{
+                textAlign: 'center',
+                padding: '2rem',
+                background: 'rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '20px',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                minWidth: '140px',
+                cursor: 'default'
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={heroInView ? { scale: 1 } : { scale: 0 }}
+                transition={{ duration: 0.6, delay: 1.8, type: "spring", stiffness: 200 }}
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: '800',
+                  color: '#7c3aed',
+                  marginBottom: '0.5rem'
+                }}
+              >
+                {filteredCount || 0}
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+                transition={{ duration: 0.5, delay: 2 }}
+                style={{
+                  fontSize: '0.9rem',
+                  color: '#6b7280',
+                  fontWeight: '500'
+                }}
+              >
+                Pedidos Ativos
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </div>
     </section>
   );
 }

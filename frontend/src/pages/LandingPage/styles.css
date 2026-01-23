@@ -235,6 +235,152 @@
   position: relative;
 }
 
+/* Notification Dropdown - iPhone Dynamic Island Style */
+.notification-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 280px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideDown 0.3s ease-out;
+  max-height: 300px;
+  overflow: hidden;
+}
+
+.notification-dropdown.closing {
+  animation: slideUp 0.3s ease-in forwards;
+}
+
+.notification-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  color: white;
+}
+
+.notification-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.notification-list {
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.notification-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.notification-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.notification-item {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 8px;
+  margin: 0 -8px;
+}
+
+.notification-item.read {
+  opacity: 0.7;
+}
+
+.notification-item.unread {
+  opacity: 1;
+}
+
+.notification-content {
+  color: white;
+}
+
+.notification-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.notification-message {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.notification-time {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.unread-dot {
+  width: 6px;
+  height: 6px;
+  background: #007aff;
+  border-radius: 50%;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 6px rgba(0, 122, 255, 0.5);
+}
+
+.no-notifications {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
 .notification-badge {
   position: absolute;
   top: 0;
@@ -370,6 +516,28 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
   }
 }
 
@@ -584,19 +752,19 @@
 .hero-btn-primary {
   width: 100%;
   padding: 1.75rem 3rem;
-  background: var(--sb-text);
+  background: var(--sb-teal);
   color: white;
-  border-radius: 2rem;
-  font-weight: 900;
-  font-size: 1.5rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  font-size: 1.125rem;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  transition: all 0.5s ease;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: var(--sb-shadow);
 }
 
 @media (min-width: 640px) {
@@ -946,7 +1114,7 @@
 .action-card.purple .action-card-icon { background: var(--sb-purple); }
 
 .action-card:hover .action-card-icon {
-  transform: scale(1.1) rotate(6deg);
+  transform: scale(1.05);
 }
 
 .action-card-title {
