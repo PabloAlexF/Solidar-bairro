@@ -263,10 +263,13 @@ function HeroSection({
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '4rem',
+        gridTemplateColumns: '2fr 1fr',
         alignItems: 'center',
-        minHeight: '80vh'
+        gap: '4rem',
+        minHeight: '80vh',
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '0 2rem'
       }}>
         {/* Left Column - Content */}
         <motion.div
@@ -279,8 +282,8 @@ function HeroSection({
         >
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={heroInView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.8, y: 20 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             style={{
               display: 'inline-flex',
@@ -303,8 +306,8 @@ function HeroSection({
 
           {/* Main Title */}
           <motion.h1
-            initial={{ opacity: 0, y: 30, scale: 0.9 }}
-            animate={heroInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 30, scale: 0.9 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
             style={{
               fontSize: 'clamp(2.5rem, 6vw, 4rem)',
@@ -330,7 +333,8 @@ function HeroSection({
               color: '#6b7280',
               marginBottom: '2rem',
               fontWeight: '400',
-              lineHeight: '1.6'
+              lineHeight: '1.6',
+              maxWidth: '800px'
             }}
           >
             Una-se a milhares de pessoas que fazem a diferença todos os dias. Descubra pedidos de ajuda próximos e seja parte da mudança que sua comunidade precisa.
@@ -346,7 +350,8 @@ function HeroSection({
               color: '#4b5563',
               lineHeight: '1.7',
               marginBottom: '2rem',
-              fontWeight: '400'
+              fontWeight: '400',
+              maxWidth: '800px'
             }}
           >
             Conecte-se com vizinhos, ofereça ou receba ajuda, e fortaleça os laços da sua comunidade.
@@ -424,7 +429,8 @@ function HeroSection({
             style={{
               display: 'flex',
               gap: '2rem',
-              flexWrap: 'wrap'
+              flexWrap: 'wrap',
+              justifyContent: 'flex-start'
             }}
           >
             <motion.div
@@ -446,7 +452,7 @@ function HeroSection({
             >
               <Package size={24} style={{ color: '#0d9488' }} />
               <div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0d9488' }}>3</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0d9488' }}>10+</div>
                 <div style={{ fontSize: '0.8rem', color: '#6b7280' }}>Categorias</div>
               </div>
             </motion.div>
@@ -641,372 +647,6 @@ function HeroSection({
         }}
       />
 
-      <div className="section-container">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 1.2, ease: "easeOut" }}
-          style={{
-            textAlign: 'center',
-            maxWidth: '900px',
-            margin: '0 auto',
-            padding: '3rem 2rem',
-            position: 'relative'
-          }}
-        >
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20, rotateX: -15 }}
-            animate={heroInView ? { opacity: 1, scale: 1, y: 0, rotateX: 0 } : { opacity: 0, scale: 0.8, y: 20, rotateX: -15 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-            whileHover={{
-              scale: 1.05,
-              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
-              transition: { duration: 0.3 }
-            }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '50px',
-              padding: '12px 24px',
-              marginBottom: '3rem',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-              cursor: 'default'
-            }}
-          >
-            <motion.div
-              animate={{
-                rotate: [0, 10, -10, 0],
-                scale: [1, 1.1, 1]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatDelay: 3,
-                ease: "easeInOut"
-              }}
-            >
-              <Sparkles size={16} style={{ marginRight: '8px', color: '#f59e0b' }} />
-            </motion.div>
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={heroInView ? { opacity: 1 } : { opacity: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-            >
-              REDE DE SOLIDARIEDADE COMUNITÁRIA
-            </motion.span>
-          </motion.div>
-
-          {/* Main Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30, scale: 0.9 }}
-            animate={heroInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 30, scale: 0.9 }}
-            transition={{ duration: 1, delay: 0.4, ease: "easeOut" }}
-            whileHover={{ scale: 1.02 }}
-            style={{
-              fontSize: 'clamp(3rem, 8vw, 5rem)',
-              fontWeight: '800',
-              marginBottom: '1.5rem',
-              lineHeight: '1.1',
-              background: 'linear-gradient(135deg, #1f2937 0%, #374151 50%, #0d9488 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              cursor: 'default'
-            }}
-          >
-            <motion.span
-              initial={{ opacity: 0, x: -20 }}
-              animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
-              Transforme vidas através da
-            </motion.span>
-            <motion.span
-              initial={{ opacity: 0, x: 20, scale: 0.8 }}
-              animate={heroInView ? { opacity: 1, x: 0, scale: 1 } : { opacity: 0, x: 20, scale: 0.8 }}
-              transition={{ duration: 0.8, delay: 0.8, type: "spring", stiffness: 200 }}
-              whileHover={{
-                scale: 1.1,
-                textShadow: '0 0 20px rgba(13, 148, 136, 0.5)',
-                transition: { duration: 0.3 }
-              }}
-              style={{
-                background: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}
-            >
-              solidariedade
-            </motion.span>
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
-            style={{
-              fontSize: 'clamp(1.2rem, 3vw, 1.8rem)',
-              color: '#6b7280',
-              marginBottom: '2rem',
-              fontWeight: '400',
-              maxWidth: '600px',
-              margin: '0 auto 2rem'
-            }}
-          >
-            Una-se a milhares de pessoas que fazem a diferença todos os dias. Descubra pedidos de ajuda próximos e seja parte da mudança que sua comunidade precisa.
-          </motion.p>
-
-          {/* Description */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
-            style={{
-              marginBottom: '3rem'
-            }}
-          >
-            <motion.p
-              initial={{ opacity: 0, x: -10 }}
-              animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
-              transition={{ duration: 0.8, delay: 1 }}
-              style={{
-                fontSize: '1.1rem',
-                color: '#4b5563',
-                lineHeight: '1.7',
-                maxWidth: '650px',
-                margin: '0 auto 1.5rem',
-                fontWeight: '400'
-              }}
-            >
-              Conecte-se com vizinhos, ofereça ou receba ajuda, e fortaleça os laços da sua comunidade.
-            </motion.p>
-            <motion.p
-              initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
-              animate={heroInView ? { opacity: 1, scale: 1, rotateX: 0 } : { opacity: 0, scale: 0.95, rotateX: 10 }}
-              transition={{ duration: 0.8, delay: 1.2, ease: "easeOut" }}
-              whileHover={{
-                scale: 1.02,
-                color: '#374151',
-                transition: { duration: 0.3 }
-              }}
-              style={{
-                fontSize: '1rem',
-                color: '#6b7280',
-                fontStyle: 'italic',
-                maxWidth: '550px',
-                margin: '0 auto',
-                cursor: 'default'
-              }}
-            >
-              "Criamos pontes onde antes existiam apenas muros."
-            </motion.p>
-          </motion.div>
-
-          {/* CTA Button */}
-          <motion.button
-            onClick={() => {
-              const ordersListSection = document.getElementById('orders-list');
-              if (ordersListSection) {
-                const elementPosition = ordersListSection.getBoundingClientRect().top + window.pageYOffset;
-                const offsetPosition = elementPosition - 100; // Position 100px above the section
-                window.scrollTo({
-                  top: offsetPosition,
-                  behavior: 'smooth'
-                });
-                toast.success('Escolha uma das opções abaixo para começar!');
-                window.dispatchEvent(new Event('explorePlatformClick'));
-              }
-            }}
-            whileHover={{
-              scale: 1.05,
-              y: -3,
-              boxShadow: '0 20px 40px rgba(13, 148, 136, 0.4)'
-            }}
-            whileTap={{ scale: 0.98 }}
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={heroInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 20, scale: 0.9 }}
-            transition={{ duration: 0.8, delay: 1, ease: "easeOut", type: "spring", stiffness: 200 }}
-            style={{
-              background: 'linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #0f766e 100%)',
-              border: 'none',
-              color: 'white',
-              padding: '18px 40px',
-              borderRadius: '50px',
-              fontSize: '1.1rem',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '10px',
-              boxShadow: '0 12px 32px rgba(13, 148, 136, 0.3)',
-              marginBottom: '4rem',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-          >
-            <motion.span
-              initial={{ opacity: 0, x: -10 }}
-              animate={heroInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -10 }}
-              transition={{ duration: 0.5, delay: 1.2 }}
-            >
-              Ver pedidos de ajuda
-            </motion.span>
-            <motion.div
-              animate={{
-                x: [0, 5, 0],
-                scale: [1, 1.1, 1]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatDelay: 2,
-                ease: "easeInOut"
-              }}
-            >
-              <ArrowRight size={20} />
-            </motion.div>
-            <motion.div
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: '-100%',
-                width: '100%',
-                height: '100%',
-                background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent)'
-              }}
-              animate={{
-                left: ['-100%', '100%']
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatDelay: 3,
-                ease: "easeInOut"
-              }}
-            />
-          </motion.button>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-            transition={{ duration: 0.8, delay: 1.2, ease: "easeOut" }}
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '4rem',
-              flexWrap: 'wrap'
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              animate={heroInView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.8, y: 20 }}
-              transition={{ duration: 0.8, delay: 1.4, ease: "easeOut" }}
-              whileHover={{
-                scale: 1.05,
-                y: -5,
-                boxShadow: '0 20px 40px rgba(13, 148, 136, 0.2)',
-                transition: { duration: 0.3 }
-              }}
-              style={{
-                textAlign: 'center',
-                padding: '2rem',
-                background: 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(20px)',
-                borderRadius: '20px',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                minWidth: '140px',
-                cursor: 'default'
-              }}
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={heroInView ? { scale: 1 } : { scale: 0 }}
-                transition={{ duration: 0.6, delay: 1.6, type: "spring", stiffness: 200 }}
-                style={{
-                  fontSize: '2.5rem',
-                  fontWeight: '800',
-                  color: '#0d9488',
-                  marginBottom: '0.5rem'
-                }}
-              >
-                🍖🥕🧥👟📄💊🏠⚡🚌
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                transition={{ duration: 0.5, delay: 1.8 }}
-                style={{
-                  fontSize: '0.9rem',
-                  color: '#6b7280',
-                  fontWeight: '500'
-                }}
-              >
-                Categorias
-              </motion.div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 20 }}
-              animate={heroInView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.8, y: 20 }}
-              transition={{ duration: 0.8, delay: 1.6, ease: "easeOut" }}
-              whileHover={{
-                scale: 1.05,
-                y: -5,
-                boxShadow: '0 20px 40px rgba(139, 92, 246, 0.2)',
-                transition: { duration: 0.3 }
-              }}
-              style={{
-                textAlign: 'center',
-                padding: '2rem',
-                background: 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(20px)',
-                borderRadius: '20px',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                minWidth: '140px',
-                cursor: 'default'
-              }}
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={heroInView ? { scale: 1 } : { scale: 0 }}
-                transition={{ duration: 0.6, delay: 1.8, type: "spring", stiffness: 200 }}
-                style={{
-                  fontSize: '2.5rem',
-                  fontWeight: '800',
-                  color: '#7c3aed',
-                  marginBottom: '0.5rem'
-                }}
-              >
-                {filteredCount || 0}
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-                transition={{ duration: 0.5, delay: 2 }}
-                style={{
-                  fontSize: '0.9rem',
-                  color: '#6b7280',
-                  fontWeight: '500'
-                }}
-              >
-                Pedidos Ativos
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </div>
     </section>
   );
 }

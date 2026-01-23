@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../../contexts/NotificationContext';
 import { MapaAlcance } from './MapaAlcance';
@@ -64,60 +65,71 @@ const CATEGORIES = [
 ];
 
 const URGENCY_OPTIONS = [
-  { 
-    id: 'critico', 
-    label: 'CRÍTICO', 
-    desc: 'Risco imediato à saúde ou vida', 
-    icon: <AlertTriangle size={32} />, 
-    color: '#ef4444', 
+  {
+    id: 'emergencia',
+    label: 'EMERGÊNCIA',
+    desc: 'Situação de emergência imediata',
+    icon: <AlertTriangle size={32} />,
+    color: '#dc2626',
+    time: 'Imediato',
+    examples: ['Acidente grave', 'Doença crítica', 'Perigo iminente de vida'],
+    priority: 'Máxima',
+    response: '< 30 min'
+  },
+  {
+    id: 'critico',
+    label: 'CRÍTICO',
+    desc: 'Risco imediato à saúde ou vida',
+    icon: <AlertTriangle size={32} />,
+    color: '#ef4444',
     time: 'Imediato',
     examples: ['Falta de medicamento vital', 'Risco de despejo hoje', 'Sem comida há 2+ dias'],
     priority: 'Máxima',
     response: '< 2 horas'
   },
-  { 
-    id: 'urgente', 
-    label: 'URGENTE', 
-    desc: 'Necessário para as próximas 24h', 
-    icon: <Zap size={32} />, 
-    color: '#f97316', 
+  {
+    id: 'urgente',
+    label: 'URGENTE',
+    desc: 'Necessário para as próximas 24h',
+    icon: <Zap size={32} />,
+    color: '#f97316',
     time: '24 horas',
     examples: ['Conta vencendo hoje', 'Entrevista amanhã', 'Medicamento acabando'],
     priority: 'Alta',
     response: '< 24 horas'
   },
-  { 
-    id: 'moderada', 
-    label: 'MODERADA', 
-    desc: 'Pode aguardar alguns dias', 
-    icon: <Calendar size={32} />, 
-    color: '#f59e0b', 
+  {
+    id: 'moderada',
+    label: 'MODERADA',
+    desc: 'Pode aguardar alguns dias',
+    icon: <Calendar size={32} />,
+    color: '#f59e0b',
     time: '3-5 dias',
     examples: ['Roupas para inverno', 'Móveis básicos', 'Documentos'],
     priority: 'Média',
     response: '2-5 dias'
   },
-  { 
-    id: 'tranquilo', 
-    label: 'TRANQUILO', 
-    desc: 'Sem prazo rígido', 
-    icon: <Coffee size={32} />, 
-    color: '#10b981', 
-    time: 'Sem pressa',
-    examples: ['Melhorias gerais', 'Itens extras', 'Complementos'],
-    priority: 'Baixa',
-    response: '1-2 semanas'
-  },
-  { 
-    id: 'recorrente', 
-    label: 'RECORRENTE', 
-    desc: 'Necessidade mensal constante', 
-    icon: <RefreshCcw size={32} />, 
-    color: '#6366f1', 
+  {
+    id: 'recorrente',
+    label: 'RECORRENTE',
+    desc: 'Necessidade mensal constante',
+    icon: <RefreshCcw size={32} />,
+    color: '#6366f1',
     time: 'Mensal',
     examples: ['Cesta básica mensal', 'Medicamentos contínuos', 'Transporte regular'],
     priority: 'Contínua',
     response: 'Agendado'
+  },
+  {
+    id: 'tranquilo',
+    label: 'TRANQUILO',
+    desc: 'Sem prazo rígido',
+    icon: <Coffee size={32} />,
+    color: '#10b981',
+    time: 'Sem pressa',
+    examples: ['Melhorias gerais', 'Itens extras', 'Complementos'],
+    priority: 'Baixa',
+    response: '1-2 semanas'
   },
 ];
 
@@ -639,7 +651,12 @@ export function PrecisoDeAjudaDesktop() {
   }, []);
 
   const renderCategoryStep = () => (
-    <div className="pda-compact-step">
+    <motion.div 
+      className="pda-compact-step"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+    >
       <div className="pda-step-intro">
         <span className="pda-step-badge" style={{ background: 'var(--pda-primary)' }}>
           CATEGORIA PRINCIPAL
@@ -653,27 +670,38 @@ export function PrecisoDeAjudaDesktop() {
         <span>Role para baixo para ver todas as categorias</span>
       </div>
 
-      <div className="pda-categories-grid-compact">
+      <div className="pda-categories-grid-compact" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', paddingBottom: '2rem' }}>
         {CATEGORIES.map((cat, index) => (
-          <button
+          <motion.button
             key={cat.id}
             onClick={() => updateData({ category: cat.id, subCategory: [] })}
             className={`pda-cat-item ${formData.category === cat.id ? 'active' : ''}`}
-            style={{ '--cat-color': cat.color }}
+            whileHover={{ scale: 1.02, translateY: -2 }}
+            whileTap={{ scale: 0.98 }}
+            style={{ 
+              '--cat-color': cat.color,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1.5rem',
+              background: formData.category === cat.id ? `${cat.color}15` : 'white',
+              border: `2px solid ${formData.category === cat.id ? cat.color : '#e2e8f0'}`,
+              borderRadius: '16px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              height: '100%',
+              minHeight: '140px'
+            }}
           >
-            <div className="pda-cat-icon-box">
+            <div className="pda-cat-icon-box" style={{ color: cat.color, marginBottom: '1rem' }}>
               {cat.icon}
             </div>
-            <span className="pda-cat-text">{cat.label}</span>
-            {formData.category === cat.id && (
-              <div className="pda-selection-indicator">
-                <Check size={14} />
-              </div>
-            )}
-          </button>
+            <span className="pda-cat-text" style={{ fontWeight: '600', color: '#334155' }}>{cat.label}</span>
+          </motion.button>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 
   const renderDetailsStep = () => {
@@ -682,7 +710,12 @@ export function PrecisoDeAjudaDesktop() {
     if (!details) return null;
 
     return (
-      <div className="pda-compact-step">
+      <motion.div 
+        className="pda-compact-step"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+      >
         <div className="pda-step-intro">
           <span className="pda-step-badge" style={{ background: selectedCategory?.color }}>
             {formData.category.toUpperCase()} • DETALHES
@@ -696,30 +729,43 @@ export function PrecisoDeAjudaDesktop() {
           <span>Role para baixo para ver todas as opções</span>
         </div>
 
-        <div className="pda-options-grid-v3">
+        <div className="pda-options-grid-v3" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem', paddingBottom: '2rem' }}>
           {details.options.map((opt, index) => (
-            <button
+            <motion.button
               key={opt.id}
               onClick={() => updateData({ subCategory: toggleArrayItem(formData.subCategory, opt.id) })}
               className={`pda-opt-card-v3 ${formData.subCategory.includes(opt.id) ? 'active' : ''}`}
-              style={{ '--opt-color': opt.color }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{ 
+                '--opt-color': opt.color,
+                display: 'flex',
+                alignItems: 'flex-start',
+                padding: '1.25rem',
+                background: formData.subCategory.includes(opt.id) ? `${opt.color}10` : 'white',
+                border: `1px solid ${formData.subCategory.includes(opt.id) ? opt.color : '#e2e8f0'}`,
+                borderRadius: '12px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                position: 'relative'
+              }}
             >
-              <div className="pda-opt-check-v3">
+              <div className="pda-opt-check-v3" style={{ position: 'absolute', top: '10px', right: '10px', color: opt.color }}>
                 {formData.subCategory.includes(opt.id) && <Check size={14} />}
               </div>
               <div className="pda-opt-body-v3">
-                <strong>{opt.label}</strong>
-                <span>{opt.desc}</span>
+                <strong style={{ display: 'block', marginBottom: '4px', color: '#334155' }}>{opt.label}</strong>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{opt.desc}</span>
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   };
 
   const renderDescriptionStep = () => (
-    <div className="pda-compact-step">
+    <motion.div className="pda-compact-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
       <div className="pda-step-intro">
         <span className="pda-step-badge" style={{ background: 'var(--pda-dark)' }}>
           HISTÓRIA E CONTEXTO
@@ -813,11 +859,11 @@ export function PrecisoDeAjudaDesktop() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   const renderUrgencyStep = () => (
-    <div className="pda-compact-step">
+    <motion.div className="pda-compact-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
       <div className="pda-step-intro">
         <span className="pda-step-badge" style={{ background: 'var(--pda-danger)' }}>
           PRIORIDADE DO PEDIDO
@@ -843,13 +889,27 @@ export function PrecisoDeAjudaDesktop() {
           <span className="pda-urgency-level-label" style={{ top: '90%' }}>Baixo</span>
         </div>
 
-        <div className="pda-urgency-grid-v3">
+        <div className="pda-urgency-grid-v3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
           {URGENCY_OPTIONS.map((opt, index) => (
-            <button
+            <motion.button
               key={opt.id}
               onClick={() => updateData({ urgency: opt.id })}
               className={`pda-urgency-card-v3 ${formData.urgency === opt.id ? 'active' : ''}`}
-              style={{ '--urg-color': opt.color }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{ 
+                '--urg-color': opt.color,
+                padding: '1.5rem',
+                background: formData.urgency === opt.id ? `${opt.color}10` : 'white',
+                border: `2px solid ${formData.urgency === opt.id ? opt.color : '#e2e8f0'}`,
+                borderRadius: '16px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}
             >
               <div className="pda-urg-icon-v3">
                 {opt.icon}
@@ -869,15 +929,15 @@ export function PrecisoDeAjudaDesktop() {
               <div className="pda-urg-check-v3">
                 {formData.urgency === opt.id && <Check size={18} />}
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   const renderVisibilityStep = () => (
-    <div className="pda-compact-step">
+    <motion.div className="pda-compact-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
       <div className="pda-step-intro">
         <span className="pda-step-badge" style={{ background: 'var(--pda-info)' }}>
           ALCANCE GEOGRÁFICO
@@ -889,7 +949,7 @@ export function PrecisoDeAjudaDesktop() {
       <div className="pda-vis-container-v4">
         <div className="pda-vis-options-v4">
           {VISIBILITY_OPTIONS.map((opt, index) => (
-            <button
+            <motion.button
               key={opt.id}
               onClick={() => {
                 const newRadius = opt.id === 'bairro' ? 2 : opt.id === 'proximos' ? 10 : opt.id === 'todos' ? 50 : 5;
@@ -899,7 +959,20 @@ export function PrecisoDeAjudaDesktop() {
                 });
               }}
               className={`pda-vis-card-v4 ${formData.visibility.includes(opt.id) ? 'active' : ''}`}
-              style={{ '--vis-color': opt.color }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              style={{ 
+                '--vis-color': opt.color,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                padding: '1.5rem',
+                background: formData.visibility.includes(opt.id) ? `${opt.color}10` : 'white',
+                border: `2px solid ${formData.visibility.includes(opt.id) ? opt.color : '#e2e8f0'}`,
+                borderRadius: '16px',
+                cursor: 'pointer',
+                textAlign: 'left'
+              }}
             >
               <div className="pda-vis-icon-v4">
                 {opt.icon}
@@ -911,7 +984,7 @@ export function PrecisoDeAjudaDesktop() {
               <div className="pda-vis-check-v4">
                 {formData.visibility.includes(opt.id) && <Check size={16} />}
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
 
@@ -923,11 +996,11 @@ export function PrecisoDeAjudaDesktop() {
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   const renderConfirmationStep = () => (
-    <div className="pda-compact-step">
+    <motion.div className="pda-compact-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
       <div className="pda-step-intro">
         <span className="pda-step-badge" style={{ background: 'var(--pda-success)' }}>
           RESUMO FINAL
@@ -953,7 +1026,7 @@ export function PrecisoDeAjudaDesktop() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   const renderStepContent = () => {
@@ -969,14 +1042,39 @@ export function PrecisoDeAjudaDesktop() {
   };
 
   return (
-    <div className="pda-novo-pedido-container">
+    <div className="pda-novo-pedido-container" style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f0fdfa 0%, #f3e8ff 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '2rem'
+    }}>
       {isAnalyzing && <AnalyzingModal stages={stages} analysisStage={analysisStage} />}
       
       {isPublished && <SuccessModal urgencyColor={selectedUrgency?.color || '#f97316'} urgencyLabel={selectedUrgency?.label || ''} urgencyIcon={selectedUrgency?.icon} reason={analysis?.reason || ''} onClose={() => navigate('/')} />}
       {isInconsistent && <InconsistentModal onEdit={() => { setIsInconsistent(false); setStep(3); }} onClose={() => navigate('/')} />}
 
-      <div className="pda-wizard-box-v2">
-        <div className="pda-wizard-sidebar-v2">
+      <div className="pda-wizard-box-v2" style={{
+        display: 'flex',
+        width: '100%',
+        maxWidth: '1600px',
+        height: '85vh',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '24px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        overflow: 'hidden'
+      }}>
+        <div className="pda-wizard-sidebar-v2" style={{
+          width: '300px',
+          background: 'rgb(255 255 255)',
+          color: '#000000',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '2rem',
+          flexShrink: 0
+        }}>
           <div className="pda-sidebar-header-v2">
             <div className="pda-brand-wrapper">
               <div className="pda-logo-container">
@@ -1145,7 +1243,13 @@ export function PrecisoDeAjudaDesktop() {
           </div>
         </div>
 
-        <div className="pda-wizard-content-v2">
+        <div className="pda-wizard-content-v2" style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          position: 'relative'
+        }}>
           <div className="pda-global-progress-container">
             <div 
               className="pda-global-progress-fill" 
@@ -1160,7 +1264,9 @@ export function PrecisoDeAjudaDesktop() {
           <div className="pda-content-body-v2">
             <div className="pda-step-container-v2">
               <div className="pda-step-motion-container">
-                {renderStepContent()}
+                <AnimatePresence mode="wait">
+                  {renderStepContent()}
+                </AnimatePresence>
               </div>
             </div>
           </div>

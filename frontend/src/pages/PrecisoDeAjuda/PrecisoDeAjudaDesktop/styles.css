@@ -105,17 +105,22 @@
   box-shadow: none;
   border-radius: 0;
   overflow: hidden;
+  max-width: 1600px;
 }
 
 /* Enhanced Sidebar - Modern & Minimal */
 .pda-wizard-sidebar-v2 {
   width: 380px;
-  background: rgba(255, 255, 255, 0.3);
-  border-right: 1px solid var(--pda-glass-border);
-  padding: 48px;
+  background: rgba(255, 255, 255, 0.95);
+  border-right: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 12px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 8px 32px rgba(0, 0, 0, 0.02);
+  animation: pda-sidebar-glow 3s ease-in-out infinite alternate;
 }
 
 .pda-sidebar-header-v2 {
@@ -168,9 +173,9 @@
 .pda-step-indicator-v3 {
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 20px;
-  border-radius: 20px;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
@@ -231,7 +236,7 @@
 }
 
 .pda-indicator-label-v3 {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--pda-gray-700);
 }
@@ -719,11 +724,24 @@
 
 .pda-urgency-grid-v3 {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   flex: 1;
-  max-width: 1800px;
+  max-width: 1200px;
   width: 100%;
+}
+
+
+
+.pda-urgency-card-v3:nth-child(1),
+.pda-urgency-card-v3:nth-child(2) {
+  flex: 1.5;
+}
+
+.pda-urgency-card-v3:nth-child(3),
+.pda-urgency-card-v3:nth-child(4),
+.pda-urgency-card-v3:nth-child(5) {
+  flex: 1;
 }
 
 .pda-urgency-card-v3 {
@@ -1089,7 +1107,7 @@
 
 /* Actions Bar - Glassmorphism */
 .pda-content-actions-v2 {
-  padding: 40px 60px;
+  padding: 20px 40px;
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(20px);
   border-top: 1px solid var(--pda-glass-border);
@@ -1194,6 +1212,12 @@
   overflow: hidden;
   position: relative;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  animation: pda-progress-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes pda-progress-shimmer {
+  0%, 100% { background: var(--pda-gray-200); }
+  50% { background: rgba(255, 255, 255, 0.3); }
 }
 
 .pda-progress-fill-v2 {
@@ -1201,6 +1225,25 @@
   background: linear-gradient(90deg, var(--pda-primary), #fb923c, #f59e0b);
   border-radius: 20px;
   box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.pda-progress-fill-v2::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: pda-progress-flow 2s linear infinite;
+}
+
+@keyframes pda-progress-flow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* User Section - Enhanced Avatar & Notifications */
@@ -1268,6 +1311,11 @@
 @keyframes pda-pulse-status {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.7; transform: scale(1.2); }
+}
+
+@keyframes pda-sidebar-glow {
+  0% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.3); }
+  100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(249, 115, 22, 0.1); }
 }
 
 .pda-notifications {
@@ -1664,7 +1712,7 @@
   }
   .pda-urgency-container-v3 {
     flex-direction: column;
-    gap: 20px;
+    gap: 200px;
     padding: 20px;
   }
   .pda-urgency-scale-v3 {
