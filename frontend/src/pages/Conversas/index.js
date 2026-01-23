@@ -63,7 +63,7 @@ const Conversas = () => {
               formatTimeAgo(new Date(lastMessage.createdAt.seconds * 1000)) : 'Agora',
             subject: conv.subject || 'Conversa',
             neighborhood: otherParticipant.bairro || 'Não informado',
-            status: conv.status || 'ativa',
+            status: conv.status === 'closed' ? 'finalizada' : 'ativa',
             lastMessage: lastMessage.content || 'Nova conversa iniciada',
             unreadCount: conv.unreadCount || 0,
             urgency: conv.urgency || 'medium'
@@ -128,7 +128,7 @@ const Conversas = () => {
                   formatTimeAgo(new Date(lastMessage.createdAt.seconds * 1000)) : 'Agora',
                 subject: conv.subject || 'Conversa',
                 neighborhood: otherParticipant.bairro || 'Não informado',
-                status: conv.status || 'ativa',
+                status: conv.status === 'closed' ? 'finalizada' : 'ativa',
                 lastMessage: lastMessage.content || 'Nova conversa iniciada',
                 unreadCount: conv.unreadCount || 0,
                 urgency: conv.urgency || 'medium'
