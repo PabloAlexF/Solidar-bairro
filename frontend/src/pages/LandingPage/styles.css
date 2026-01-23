@@ -1,19 +1,21 @@
 :root {
-  --sb-teal: #0ea5e9;
-  --sb-teal-hover: #0284c7;
+  --sb-teal: #007aff;
+  --sb-teal-hover: #0056cc;
   --sb-teal-soft: #f0f9ff;
-  --sb-orange: #f97316;
-  --sb-orange-hover: #ea580c;
-  --sb-orange-soft: #fff7ed;
-  --sb-purple: #8b5cf6;
-  --sb-purple-soft: #f5f3ff;
+  --sb-orange: #ff9500;
+  --sb-orange-hover: #e68600;
+  --sb-orange-soft: #fff8f0;
+  --sb-purple: #af52de;
+  --sb-purple-soft: #faf5ff;
   --sb-bg: #ffffff;
-  --sb-bg-soft: #f8fafc;
-  --sb-text: #0f172a;
-  --sb-text-light: #64748b;
-  --sb-border: #e2e8f0;
-  --sb-shadow: 0 30px 60px -12px rgba(14, 165, 233, 0.15);
-  --sb-shadow-lg: 0 40px 80px -20px rgba(15, 23, 42, 0.08);
+  --sb-bg-soft: #f2f2f7;
+  --sb-text: #1d1d1f;
+  --sb-text-light: #86868b;
+  --sb-border: #d1d1d6;
+  --sb-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --sb-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.12);
+  --sb-glass: rgba(255, 255, 255, 0.8);
+  --sb-glass-border: rgba(255, 255, 255, 0.2);
 }
 
 .landing-wrapper {
@@ -384,12 +386,19 @@
   padding-top: 6rem;
   padding-bottom: 5rem;
   overflow: hidden;
-  background:
-    linear-gradient(135deg, #ffffff 0%, #f8fafc 30%, #ffffff 70%, #f1f5f9 100%),
-    radial-gradient(circle at 20% 80%, rgba(14, 165, 233, 0.02) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.02) 0%, transparent 50%);
+  background: var(--sb-bg);
   width: 100%;
-  backdrop-filter: blur(0.5px);
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.02) 0%, rgba(255, 149, 0, 0.02) 100%);
+  pointer-events: none;
 }
 
 @media (min-width: 1024px) {
@@ -877,15 +886,15 @@
 
 .action-card {
   position: relative;
-  background: white;
+  background: var(--sb-bg);
   padding: 2.5rem;
-  border-radius: 48px;
-  border: 1px solid var(--sb-bg-soft);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  border: 1px solid var(--sb-border);
+  box-shadow: var(--sb-shadow);
   display: flex;
   flex-direction: column;
   height: 100%;
-  transition: all 0.5s ease;
+  transition: all 0.3s ease;
   overflow: hidden;
 }
 

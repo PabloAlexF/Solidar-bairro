@@ -8,20 +8,21 @@ import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import createGlobe from 'cobe';
 import GlobeFeatureSection from './GlobeFeatureSection';
-import { 
-  Heart, 
-  HandHelping, 
-  Search, 
-  MapPin, 
-  Navigation, 
-  Bell, 
-  User, 
-  MessageSquare, 
-  LogOut, 
-  ArrowRight, 
-  ChevronRight, 
-  ShieldCheck, 
-  Zap, 
+import { NotificationDropdown } from '../../components/NotificationDropdown';
+import {
+  Heart,
+  HandHelping,
+  Search,
+  MapPin,
+  Navigation,
+  Bell,
+  User,
+  MessageSquare,
+  LogOut,
+  ArrowRight,
+  ChevronRight,
+  ShieldCheck,
+  Zap,
   Users,
   Locate,
   Info,
@@ -224,8 +225,6 @@ export default function DesktopLandingPage() {
   };
   const [scrolled, setScrolled] = useState(false);
   const [location, setLocation] = useState(null);
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -244,43 +243,22 @@ export default function DesktopLandingPage() {
   }, []);
 
   useEffect(() => {
-    const loadNotifications = () => {
-      const savedNotifications = typeof window !== 'undefined' ? localStorage.getItem('solidar-notifications') : null;
-      if (savedNotifications) {
-        try {
-          setNotifications(JSON.parse(savedNotifications));
-        } catch (error) {
-          console.error('Error parsing notifications:', error);
-          setNotifications([]);
-        }
-      }
-    };
-    
-    loadNotifications();
-
     const handleClickOutside = (event) => {
-      if (showUserMenu || showNotifications) {
+      if (showUserMenu) {
         const userMenuElement = document.querySelector('.user-menu-wrapper');
-        const notificationElement = document.querySelector('.notification-wrapper');
-        
+
         if (userMenuElement && !userMenuElement.contains(event.target)) {
           setShowUserMenu(false);
         }
-        
-        if (notificationElement && !notificationElement.contains(event.target)) {
-          setShowNotifications(false);
-        }
       }
     };
-    
-    window.addEventListener('notificationAdded', loadNotifications);
+
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     return () => {
-      window.removeEventListener('notificationAdded', loadNotifications);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showUserMenu, showNotifications]);
+  }, [showUserMenu]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -304,24 +282,7 @@ export default function DesktopLandingPage() {
     }
   }, []);
 
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
 
-  const clearAllNotifications = () => {
-    setNotifications([]);
-    localStorage.removeItem('solidar-notifications');
-  };
-
-  const markAsRead = (notificationId) => {
-    const updatedNotifications = notifications.map(n => 
-      n.id === notificationId ? { ...n, read: true } : n
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
 
   const shareContent = async () => {
     const shareData = {
@@ -350,7 +311,6 @@ export default function DesktopLandingPage() {
       .catch(() => toast.error('Erro ao copiar link'));
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
   
   // Verificar se é administrador
@@ -390,7 +350,9 @@ export default function DesktopLandingPage() {
               Missão
               <span className="link-underline" />
             </a>
-            
+
+            <NotificationDropdown />
+
             {!isAuthenticated() ? (
               <div className="auth-group">
                 <button
@@ -472,86 +434,17 @@ export default function DesktopLandingPage() {
                     </button>
                   </>
                 )}
-                
-                <div className="notification-wrapper">
-                  <button 
-                    className="notification-btn"
-                    onClick={() => setShowNotifications(!showNotifications)}
-                  >
-                    <Bell size={24} />
-                    {unreadCount > 0 && (
-                      <span className="notification-badge">{unreadCount}</span>
-                    )}
-                  </button>
-                  
-                  {showNotifications && (
-                    <div className="notification-dropdown">
-                      <div className="notification-header">
-                        <h3>Notificações</h3>
-                        {notifications.length > 0 && (
-                          <div className="notification-actions">
-                            {unreadCount > 0 && (
-                              <button 
-                                className="action-btn mark-read-btn"
-                                onClick={markAllAsRead}
-                                title="Marcar todas como lidas"
-                              >
-                                ✓
-                              </button>
-                            )}
-                            <button 
-                              className="action-btn clear-btn"
-                              onClick={clearAllNotifications}
-                              title="Limpar todas"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div className="notification-list">
-                        {notifications.length === 0 ? (
-                          <div className="no-notifications">
-                            Nenhuma notificação ainda
-                          </div>
-                        ) : (
-                          notifications.map((notification) => (
-                            <div 
-                              key={notification.id} 
-                              className={`notification-item ${notification.read ? 'read' : 'unread'}`}
-                              onClick={() => !notification.read && markAsRead(notification.id)}
-                            >
-                              <div className="notification-content">
-                                <p className="notification-title">{notification.title}</p>
-                                <p className="notification-message">{notification.message}</p>
-                                <span className="notification-time">
-                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                              {!notification.read && <div className="unread-dot"></div>}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
+
                 <div className="user-menu-wrapper">
-                  <button 
+                  <button
                     className="user-btn"
                     onClick={() => setShowUserMenu(!showUserMenu)}
                   >
                     <div className="user-avatar">
                       {user?.fotoPerfil ? (
-                        <img 
-                          src={user.fotoPerfil} 
-                          alt="Foto do perfil" 
+                        <img
+                          src={user.fotoPerfil}
+                          alt="Foto do perfil"
                           style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                           onError={(e) => {
                             console.log('Erro ao carregar imagem:', user.fotoPerfil);
@@ -564,15 +457,15 @@ export default function DesktopLandingPage() {
                       )}
                     </div>
                   </button>
-                  
+
                   {showUserMenu && (
                     <div className="user-dropdown">
                       <div className="user-info">
                         <div className="user-avatar-large">
                           {user?.fotoPerfil ? (
-                            <img 
-                              src={user.fotoPerfil} 
-                              alt="Foto do perfil" 
+                            <img
+                              src={user.fotoPerfil}
+                              alt="Foto do perfil"
                               style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
                               onError={(e) => {
                                 console.log('Erro ao carregar imagem grande:', user.fotoPerfil);
@@ -607,7 +500,7 @@ export default function DesktopLandingPage() {
                       </div>
 
                       <div className="user-actions">
-                        <button 
+                        <button
                           className="menu-item profile-btn"
                           onClick={() => {
                             navigate('/perfil');
@@ -616,8 +509,8 @@ export default function DesktopLandingPage() {
                         >
                           👤 Ver perfil
                         </button>
-                        
-                        <button 
+
+                        <button
                           className="menu-item"
                           onClick={() => {
                             navigate('/conversas');
@@ -626,9 +519,9 @@ export default function DesktopLandingPage() {
                         >
                           💬 Minhas conversas
                         </button>
-                        
+
                         {isAdmin && (
-                          <button 
+                          <button
                             className="menu-item"
                             onClick={() => {
                               navigate('/admin');
@@ -638,8 +531,8 @@ export default function DesktopLandingPage() {
                             ⚙️ Dashboard Admin
                           </button>
                         )}
-                        
-                        <button 
+
+                        <button
                           className="menu-item logout-btn"
                           onClick={() => {
                             localStorage.removeItem('solidar-user');
@@ -721,14 +614,15 @@ export default function DesktopLandingPage() {
             )}
             
             <div className="hero-cta-wrapper">
-              <button 
+              <button
                 className="hero-btn-primary"
                 onClick={() => {
-                  if (isAdmin) {
-                    toast.success('Redirecionando para o painel!');
-                    navigateToTop('/painel-social');
-                  } else {
-                    toast.error('Acesso restrito a administradores');
+                  const actionCardsSection = document.getElementById('action-cards');
+                  if (actionCardsSection) {
+                    actionCardsSection.scrollIntoView({ behavior: 'smooth' });
+                    toast.success('Escolha uma das opções abaixo para começar!');
+                    // Dispatch event to show notification
+                    window.dispatchEvent(new Event('explorePlatformClick'));
                   }
                 }}
                 onMouseEnter={(e) => {
@@ -738,7 +632,7 @@ export default function DesktopLandingPage() {
                   e.target.style.transform = 'scale(1) translateY(0)';
                 }}
                 data-tooltip-id="hero-btn"
-                data-tooltip-content={isAdmin ? "Explore todas as funcionalidades da plataforma" : "Acesso restrito a administradores"}
+                data-tooltip-content="Explore as funcionalidades da plataforma"
               >
                 Explorar Plataforma
                 <div className="btn-icon-wrapper">
@@ -842,7 +736,7 @@ export default function DesktopLandingPage() {
       </header>
 
       {/* Action Cards */}
-      <section className="action-cards-section">
+      <section id="action-cards" className="action-cards-section">
         <div className="section-container">
           <div className="cards-grid">
             <ActionCard
