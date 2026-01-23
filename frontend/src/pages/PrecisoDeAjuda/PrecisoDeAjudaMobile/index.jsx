@@ -411,6 +411,14 @@ export function PrecisoDeAjudaMobile() {
       const response = await ApiService.createPedido(pedidoData);
       
       if (response.success) {
+        // Criar notificação para nova ajuda
+        const { NotificationManager } = await import('../../../utils/notifications');
+        NotificationManager.createHelpNotification({
+          userName: 'Alguém',
+          category: formData.category,
+          neighborhood: formData.neighborhood || 'Região próxima'
+        });
+        
         addNotification({
           title: 'Pedido criado com sucesso!',
           message: `Seu pedido de "${formData.category}" foi publicado e já está visível para a comunidade.`

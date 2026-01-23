@@ -141,12 +141,10 @@ export const MobileQueroAjudar = () => {
       try {
         const location = await getCurrentLocation();
         setUserLocation(location);
-        toast.success(`Localização: ${location.city}, ${location.state}`);
       } catch (error) {
         console.warn('Erro ao obter localização:', error);
         // Fallback para São Paulo
         setUserLocation({ city: 'São Paulo', state: 'SP' });
-        toast.error('Não foi possível obter sua localização. Usando São Paulo como padrão.');
       } finally {
         setLocationLoading(false);
       }
