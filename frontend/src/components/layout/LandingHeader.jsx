@@ -134,7 +134,7 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
           <div className="logo-icon">
             <Heart fill="white" size={24} />
           </div>
-          <span className="logo-text">Solidar<span className="logo-accent">Bairro</span></span>
+          <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
         </div>
         
         <div className="nav-menu">

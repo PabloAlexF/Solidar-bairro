@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import './MobileHeader.css';
 
-const MobileHeader = ({ title = "Solidar Bairro", showBackButton = false, backPath = "/" }) => {
+const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPath = "/" }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -36,7 +36,7 @@ const MobileHeader = ({ title = "Solidar Bairro", showBackButton = false, backPa
         <div className="mob-sidebar-header">
           <div className="mob-logo">
             <Heart size={24} />
-            <span>Solidar Bairro</span>
+            <span>SolidarBrasil</span>
           </div>
         </div>
         <nav className="mob-sidebar-nav">

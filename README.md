@@ -1,4 +1,4 @@
-# Solidar Bairro
+# SolidarBrasil
 
 Plataforma de solidariedade comunitária que conecta pessoas que precisam de ajuda com aquelas que podem ajudar.
 
@@ -266,15 +266,15 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 👥 Equipe
 
-- **Desenvolvimento**: Equipe Solidar Bairro
+- **Desenvolvimento**: Equipe SolidarBrasil
 - **Design**: UI/UX Team
 - **Backend**: API Development Team
 - **Frontend**: React Development Team
 
 ## 📞 Suporte
 
-Para suporte, envie um email para suporte@solidarbairro.com ou abra uma issue no GitHub.
+Para suporte, envie um email para suporte@solidarbrasil.com ou abra uma issue no GitHub.
 
 ---
 
-**Solidar Bairro** - Conectando comunidades, transformando vidas. 💚
+**SolidarBrasil** - Conectando comunidades, transformando vidas. 💚

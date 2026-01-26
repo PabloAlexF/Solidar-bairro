@@ -172,7 +172,7 @@ export const MobileLandingPage = () => {
         <div className="mobile-header-top">
           <div className="logo-small">
             <Heart fill="var(--sb-teal)" size={20} />
-            <span>Solidar<b>Bairro</b></span>
+            <span>Solidar<b>Brasil</b></span>
           </div>
           <div className="header-actions">
             {isAdmin && (
@@ -370,7 +370,7 @@ export const MobileLandingPage = () => {
                   <div className="logo-icon">
                     <Heart fill="white" size={20} />
                   </div>
-                  <span className="logo-text">Solidar<span className="logo-accent">Bairro</span></span>
+                  <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
                 </div>
                 <p className="footer-tagline">
                   Transformando vizinhanças através da colaboração local.
@@ -385,7 +385,7 @@ export const MobileLandingPage = () => {
 
               <div className="footer-bottom">
               <div className="footer-bottom-container">
-                <p className="copyright">&copy; 2024 SolidarBairro.</p>
+                <p className="copyright">&copy; 2024 SolidarBrasil.</p>
                 <div className="footer-bottom-links">
                   <a href="#" className="footer-bottom-link">Privacidade</a>
                   <a href="#" className="footer-bottom-link">Termos</a>

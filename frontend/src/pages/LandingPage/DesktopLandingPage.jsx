@@ -284,7 +284,7 @@ export default function DesktopLandingPage() {
 
   const shareContent = async () => {
     const shareData = {
-      title: 'SolidarBairro - Conectando Vizinhos',
+      title: 'SolidarBrasil - Conectando Vizinhos',
       text: 'Descubra a rede de ajuda da sua vizinhança!',
       url: window.location.href
     };
@@ -332,7 +332,7 @@ export default function DesktopLandingPage() {
             <div className="logo-icon">
               <Heart fill="white" size={24} />
             </div>
-            <span className="logo-text">Solidar<span className="logo-accent">Bairro</span></span>
+            <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
           </div>
           
           <div className="nav-menu">
@@ -721,7 +721,7 @@ export default function DesktopLandingPage() {
                   backgroundClip: 'text'
                 }}
               >
-                Bairro
+                Brasil
               </motion.span>
             </motion.h1>
 
@@ -1033,7 +1033,7 @@ export default function DesktopLandingPage() {
             <div className="footer-brand">
               <div className="logo-wrapper">
                 <Heart className="heart-icon" fill="#0d9488" size={32} />
-                <span className="logo-name">SolidarBairro</span>
+                <span className="logo-name">SolidarBrasil</span>
               </div>
               <p className="footer-tagline">Plataforma de solidariedade comunitária que conecta pessoas que precisam de ajuda com aquelas que podem ajudar.</p>
             </div>
@@ -1049,7 +1049,7 @@ export default function DesktopLandingPage() {
             </div>
           </div>
           <div className="footer-bottom">
-            <p className="copyright">&copy; {new Date().getFullYear()} SolidarBairro. Conectando comunidades, transformando vidas. 💚</p>
+            <p className="copyright">&copy; {new Date().getFullYear()} SolidarBrasil. Conectando comunidades, transformando vidas. 💚</p>
           </div>
         </div>
       </footer>

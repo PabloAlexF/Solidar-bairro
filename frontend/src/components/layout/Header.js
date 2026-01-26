@@ -135,7 +135,7 @@ const Header = ({ showLoginButton = false }) => {
               <i className="fi fi-rr-heart"></i>
             </div>
             <span className="logo-text">
-              Solidar<span className="logo-accent">Bairro</span>
+              Solidar<span className="logo-accent">Brasil</span>
             </span>
           </div>
 
