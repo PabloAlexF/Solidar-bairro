@@ -206,7 +206,7 @@
   text-align: center;
 }
 
-/* Description container */
+/* Description container - Enhanced */
 .description-container {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
@@ -216,36 +216,73 @@
   width: 100%;
 }
 
+.textarea-wrapper {
+  position: relative;
+  background: white;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.textarea-wrapper:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.textarea-wrapper:focus-within {
+  box-shadow: 0 16px 48px rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.2);
+  transform: translateY(-4px);
+}
+
 .textarea-header {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   color: var(--pda-orange);
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  position: relative;
+}
+
+.textarea-header::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--pda-orange), rgba(249, 115, 22, 0.3));
+  border-radius: 2px;
 }
 
 .description-textarea {
   width: 100%;
   min-height: 200px;
-  padding: 1.5rem;
-  border: 1px solid var(--pda-glass-border);
-  border-radius: var(--pda-radius-md);
+  padding: 0;
+  border: none;
+  border-radius: 0;
   font-size: 1.1rem;
-  line-height: 1.6;
+  line-height: 1.7;
   resize: none;
   transition: var(--pda-transition);
-  background: var(--pda-glass);
-  backdrop-filter: blur(12px);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  background: transparent;
+  color: #1e293b;
+  font-family: inherit;
+  position: relative;
 }
 
 .description-textarea:focus {
   outline: none;
-  border-color: var(--pda-orange);
-  background: white;
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+}
+
+.description-textarea::placeholder {
+  color: #94a3b8;
+  font-style: italic;
+  line-height: 1.6;
 }
 
 .voice-btn {
@@ -293,33 +330,55 @@
 }
 
 .tips-card {
-  background: white;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 20px;
+  padding: 2rem;
   backdrop-filter: blur(12px);
   height: fit-content;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.tips-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #f59e0b, #10b981, #3b82f6);
 }
 
 .tips-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-weight: 700;
-  color: #10b981;
-  margin-bottom: 1rem;
-  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
 }
 
 .tips-card li {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  padding: 0.5rem 0;
+  padding: 0.75rem 0;
   color: #475569;
-  font-size: 0.875rem;
-  line-height: 1.4;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.tips-card li:last-child {
+  border-bottom: none;
+}
+
+.tips-card li .w-5 {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 /* Urgency grid */
@@ -645,6 +704,14 @@
   .confirmation-card {
     padding: 2.5rem 1.5rem;
   }
+  
+  .textarea-wrapper {
+    padding: 1.5rem;
+  }
+  
+  .tips-card {
+    margin-top: 1rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -672,6 +739,31 @@
   }
   .content-section {
     padding-bottom: 100px;
+  }
+  
+  .textarea-wrapper {
+    padding: 1rem;
+  }
+  
+  .description-textarea {
+    min-height: 200px !important;
+    padding-bottom: 60px !important;
+  }
+  
+  .textarea-wrapper .absolute.bottom-2 {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  
+  .textarea-wrapper .absolute.bottom-2 > div:last-child {
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .textarea-wrapper .absolute.bottom-2 button {
+    flex: 1;
+    justify-content: center;
   }
 }
 

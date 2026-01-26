@@ -451,10 +451,10 @@ export default function PDAForm() {
   const descriptionQuality = useMemo(() => {
     const len = formData.description.length;
     if (len === 0) return { label: "Esperando sua história", color: "text-slate-400", bg: "bg-slate-100", width: "w-0" };
-    if (len < 30) return { label: "Curto demais", color: "text-rose-500", bg: "bg-rose-100", width: "w-[20%]" };
-    if (len < 100) return { label: "Ficando bom!", color: "text-amber-500", bg: "bg-amber-100", width: "w-[50%]" };
-    if (len < 300) return { label: "História Emocionante", color: "text-emerald-500", bg: "bg-emerald-100", width: "w-[80%]" };
-    return { label: "História Poderosa!", color: "text-blue-600", bg: "bg-blue-100", width: "w-full" };
+    if (len < 30) return { label: "Muito curto", color: "text-rose-500", bg: "bg-rose-50", width: "w-[20%]" };
+    if (len < 100) return { label: "Ficando melhor!", color: "text-amber-500", bg: "bg-amber-50", width: "w-[50%]" };
+    if (len < 300) return { label: "História envolvente", color: "text-emerald-500", bg: "bg-emerald-50", width: "w-[80%]" };
+    return { label: "História completa!", color: "text-blue-600", bg: "bg-blue-50", width: "w-full" };
   }, [formData.description]);
 
   const dynamicTips = useMemo(() => {
@@ -644,72 +644,65 @@ export default function PDAForm() {
               </div>
               <div className="description-container">
                 <div className="textarea-wrapper">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-6">
                     <div className="textarea-header !m-0">
-                      <Heart size={20} className="text-rose-500" />
+                      <Heart size={22} className="text-rose-500" />
                       <span>Sua história importa</span>
                     </div>
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${descriptionQuality.bg} ${descriptionQuality.color}`}>
+                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${descriptionQuality.bg} ${descriptionQuality.color}`}>
+                      <div className={`w-2 h-2 rounded-full ${descriptionQuality.width === 'w-0' ? 'bg-slate-300' : 'bg-current'} animate-pulse`} />
                       {descriptionQuality.label}
                     </div>
                   </div>
                   
                   <div className="relative group">
                     <textarea
-                      placeholder="Exemplo: Sou mãe solteira de 3 filhos e estou desempregada há 2 meses. Preciso de cestas básicas..."
+                      placeholder="Exemplo: Sou mãe solteira de 3 filhos e estou desempregada há 2 meses. Preciso de cestas básicas para alimentar minha família. Meus filhos têm 5, 8 e 12 anos e estamos passando por dificuldades. Qualquer ajuda será muito bem-vinda e Deus abençoará quem puder nos ajudar neste momento difícil."
                       value={formData.description}
                       onChange={(e) => updateData({ description: e.target.value.slice(0, 500) })}
-                      className="description-textarea !min-h-[250px] !pb-16"
+                      className="description-textarea !min-h-[280px]"
                     />
+                  </div>
+                  
+                  <div className="mt-4 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-slate-500">
+                        {formData.description.length}/500
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <div 
+                            key={i}
+                            className={`w-1 h-1 rounded-full transition-all ${
+                              i < Math.ceil((formData.description.length / 500) * 5) 
+                                ? 'bg-blue-500' 
+                                : 'bg-slate-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
                     
-                    <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <motion.button
-                          onClick={toggleRecording}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                            isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-100'
-                          }`}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
-                          {isRecording ? 'Ouvindo...' : 'Voz'}
-                        </motion.button>
-                        <motion.button
-                          onClick={improveWithAI}
-                          disabled={formData.description.length < 20 || isImproving}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                            formData.description.length >= 20 && !isImproving
-                            ? 'bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-100' 
-                            : 'bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed'
-                          }`}
-                          whileHover={formData.description.length >= 20 && !isImproving ? { scale: 1.05 } : {}}
-                          whileTap={formData.description.length >= 20 && !isImproving ? { scale: 0.95 } : {}}
-                        >
-                          {isImproving ? (
-                            <RefreshCcw size={16} className="animate-spin" />
-                          ) : (
-                            <Sparkles size={16} />
-                          )}
-                          {isImproving ? 'Melhorando...' : 'Melhorar'}
-                        </motion.button>
-                      </div>
-                      
-                      <div className="flex flex-col items-end mt-4">
-                        <span className="text-[10px] font-black text-slate-400">
-                          {formData.description.length}/500
-                        </span>
-                      </div>
+                    <div className="h-1 bg-slate-100 rounded-full overflow-hidden flex-1 mx-4">
+                      <div 
+                        className={`h-full transition-all duration-700 ease-out rounded-full ${
+                          formData.description.length === 0 ? 'bg-slate-300' :
+                          formData.description.length < 30 ? 'bg-rose-400' :
+                          formData.description.length < 100 ? 'bg-amber-400' :
+                          formData.description.length < 300 ? 'bg-emerald-400' : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${Math.min((formData.description.length / 500) * 100, 100)}%` }}
+                      />
                     </div>
                   </div>
                 </div>
 
-                <div className="tips-card !bg-white !shadow-xl !border-slate-100">
-                  <div className="tips-header !text-slate-900 !mb-6">
+                <div className="tips-card">
+                  <div className="tips-header">
                     <Lightbulb size={24} className="text-amber-500" />
-                    <span className="text-lg">Sugestões</span>
+                    <span className="text-lg">Dicas para uma boa descrição</span>
                   </div>
-                  <ul className="space-y-4">
+                  <ul className="space-y-0">
                     {dynamicTips.map((tip, i) => (
                       <motion.li 
                         key={i}
@@ -725,7 +718,63 @@ export default function PDAForm() {
                       </motion.li>
                     ))}
                   </ul>
+                  
+                  {/* Quality indicator */}
+                  <div className="mt-6 pt-4 border-t border-slate-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Qualidade da História</span>
+                      <span className={`text-xs font-bold ${descriptionQuality.color}`}>
+                        {Math.round((formData.description.length / 500) * 100)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-700 ease-out ${
+                          formData.description.length === 0 ? 'bg-slate-300' :
+                          formData.description.length < 30 ? 'bg-rose-400' :
+                          formData.description.length < 100 ? 'bg-amber-400' :
+                          formData.description.length < 300 ? 'bg-emerald-400' : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${Math.min((formData.description.length / 500) * 100, 100)}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
+              </div>
+              
+              <div className="flex justify-center items-center gap-3 mt-6">
+                <motion.button
+                  onClick={toggleRecording}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    isRecording 
+                      ? 'bg-red-500 text-white' 
+                      : 'bg-white text-slate-600 hover:bg-slate-50 shadow-sm border border-slate-200'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
+                  {isRecording ? 'Parar Gravação' : 'Gravar Voz'}
+                </motion.button>
+                
+                <motion.button
+                  onClick={improveWithAI}
+                  disabled={formData.description.length < 20 || isImproving}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    formData.description.length >= 20 && !isImproving
+                      ? 'bg-white text-slate-600 hover:bg-slate-50 shadow-sm border border-slate-200' 
+                      : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                  }`}
+                  whileHover={formData.description.length >= 20 && !isImproving ? { scale: 1.05 } : {}}
+                  whileTap={formData.description.length >= 20 && !isImproving ? { scale: 0.95 } : {}}
+                >
+                  {isImproving ? (
+                    <RefreshCcw size={16} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={16} />
+                  )}
+                  {isImproving ? 'Melhorando...' : 'Melhorar com IA'}
+                </motion.button>
               </div>
             </div>
           </motion.div>

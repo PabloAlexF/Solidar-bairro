@@ -118,9 +118,39 @@ export default function NovoPedidoWizard() {
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState(null);
   const [templateUsed, setTemplateUsed] = useState(null);
+  const [showValidationSuggestions, setShowValidationSuggestions] = useState(false);
+  const [validationSuggestions, setValidationSuggestions] = useState([]);
 
   const nextStep = useCallback(() => setStep(s => Math.min(s + 1, TOTAL_STEPS)), []);
   const prevStep = useCallback(() => setStep(s => Math.max(s - 1, 1)), []);
+
+  const showValidationModal = useCallback((suggestions) => {
+    // Corrigir caracteres especiais
+    const cleanSuggestions = suggestions.map(s => ({
+      ...s,
+      message: s.message
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&#39;/g, "'")
+        .replace(/á/g, 'á')
+        .replace(/é/g, 'é')
+        .replace(/í/g, 'í')
+        .replace(/ó/g, 'ó')
+        .replace(/ú/g, 'ú')
+        .replace(/à/g, 'à')
+        .replace(/â/g, 'â')
+        .replace(/ê/g, 'ê')
+        .replace(/ô/g, 'ô')
+        .replace(/ç/g, 'ç')
+        .replace(/ã/g, 'ã')
+        .replace(/õ/g, 'õ')
+    }));
+    
+    setValidationSuggestions(cleanSuggestions);
+    setShowValidationSuggestions(true);
+  }, []);
 
   const updateData = useCallback((data) => {
     setFormData(prev => ({ ...prev, ...data }));
@@ -151,13 +181,65 @@ export default function NovoPedidoWizard() {
     }
   }, [step, formData, isDescriptionValid]);
 
-  const handlePublish = useCallback(() => {
+  const handlePublish = useCallback(async () => {
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      console.log('🔍 Validando pedido...', {
+        category: formData.category,
+        description: formData.description,
+        urgency: formData.urgency
+      });
+      
+      // Primeiro, valida com o bot
+      const validationResponse = await fetch('/api/bot/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          category: formData.category,
+          description: formData.description,
+          urgency: formData.urgency,
+          visibility: formData.visibility
+        })
+      });
+      
+      const validationResult = await validationResponse.json();
+      console.log('📊 Resultado da validação:', validationResult);
+      
+      if (!validationResult.isValid) {
+        console.log('❌ Pedido rejeitado pelo bot');
+        // Criar modal personalizado em vez de alert
+        showValidationModal(validationResult.suggestions);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      console.log('✅ Pedido aprovado, criando...');
+      
+      // Se passou na validação, cria o pedido
+      const response = await fetch('/api/pedidos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        router.push('/painel');
+      } else {
+        throw new Error('Erro ao criar pedido');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('Erro ao publicar pedido. Tente novamente.');
+    } finally {
       setIsSubmitting(false);
-      router.push('/painel');
-    }, 2000);
-  }, [router]);
+    }
+  }, [formData, router, showValidationModal]);
 
   const selectedCategory = useMemo(() => 
     CATEGORIES.find(c => c.id === formData.category), 
@@ -527,6 +609,85 @@ export default function NovoPedidoWizard() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Sugestões de Validação */}
+      {showValidationSuggestions && (
+        <div className="validation-modal-overlay">
+          <div className="validation-modal">
+            <div className="validation-header">
+              <div className="validation-icon">
+                <Lightbulb size={32} color="#f59e0b" />
+              </div>
+              <h3>Sugestões para melhorar seu pedido</h3>
+              <p>Algumas melhorias podem ajudar mais pessoas a te encontrarem:</p>
+            </div>
+            
+            <div className="validation-content">
+              <div className="validation-left">
+                <div className="validation-status">
+                  <h4>Pedido Requer Revisão</h4>
+                  <p>Algumas melhorias são necessárias</p>
+                  
+                  <div className="validation-metrics">
+                    <div className="metric-item">
+                      <div className="metric-value confidence">25%</div>
+                      <div className="metric-label">Confiança</div>
+                    </div>
+                    <div className="metric-item">
+                      <div className="metric-value risk">50%</div>
+                      <div className="metric-label">Risco</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="validation-right">
+                <div className="problems-header">
+                  <AlertTriangle size={20} color="#ef4444" />
+                  Problemas Identificados
+                </div>
+                
+                <div className="validation-suggestions">
+                  {validationSuggestions.map((suggestion, index) => (
+                    <div key={index} className={`suggestion-item ${suggestion.type}`}>
+                      <div className="suggestion-header">
+                        <div className="suggestion-icon">
+                          {suggestion.type === 'critical' && <AlertTriangle size={20} color="#ef4444" />}
+                          {suggestion.type === 'description' && <PenTool size={20} color="#3b82f6" />}
+                          {suggestion.type === 'category' && <Layers size={20} color="#8b5cf6" />}
+                          {suggestion.type === 'urgency' && <Zap size={20} color="#f59e0b" />}
+                        </div>
+                        <div className="suggestion-content">
+                          <div className="suggestion-message">{suggestion.message}</div>
+                          <div className="suggestion-evidence">{suggestion.evidence}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="validation-actions">
+              <button 
+                onClick={() => setShowValidationSuggestions(false)}
+                className="btn-v2 btn-ghost"
+              >
+                Fechar
+              </button>
+              <button 
+                onClick={() => {
+                  setShowValidationSuggestions(false);
+                  setStep(3); // Voltar para o passo da descrição
+                }}
+                className="btn-v2 btn-primary"
+              >
+                <PenTool size={18} /> Editar Pedido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

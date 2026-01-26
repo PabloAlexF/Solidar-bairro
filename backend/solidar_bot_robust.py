@@ -9,6 +9,11 @@ import re
 import json
 import time
 from typing import Dict, List, Any, Tuple
+import sys
+
+# Configurar encoding UTF-8
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
 
 class SolidarBotRobust:
     def __init__(self):
@@ -151,35 +156,36 @@ class SolidarBotRobust:
         text = description.strip()
         words = text.split()
         
-        # Verifica comprimento mínimo
-        if len(words) < 10:
+        # Verifica comprimento mínimo (reduzido para 5 palavras)
+        if len(words) < 5:
             return {
                 'isValid': False,
-                'message': 'Descrição muito curta - mínimo 10 palavras',
-                'severity': 'high'
+                'message': 'Descrição muito curta - mínimo 5 palavras',
+                'severity': 'medium'
             }
         
-        # Verifica diversidade de palavras
+        # Verifica diversidade de palavras (critério mais flexível)
         unique_words = set(word.lower() for word in words)
-        diversity_ratio = len(unique_words) / len(words)
+        diversity_ratio = len(unique_words) / len(words) if len(words) > 0 else 0
         
-        if diversity_ratio < 0.5:
+        if diversity_ratio < 0.3:
             return {
                 'isValid': False,
                 'message': 'Texto com muita repetição de palavras',
-                'severity': 'medium'
+                'severity': 'low'
             }
         
-        # Verifica se tem verbos (indicativo de ação/necessidade)
-        action_words = ['preciso', 'necessito', 'quero', 'busco', 'procuro', 'ajuda', 'socorro']
+        # Verifica se tem verbos (indicativo de ação/necessidade) - mais flexível
+        action_words = ['preciso', 'necessito', 'quero', 'busco', 'procuro', 'ajuda', 'socorro', 'precisa', 'necessita', 'falta', 'faltando', 'sem', 'difícil', 'dificuldade', 'problema']
         has_action = any(word in text.lower() for word in action_words)
         
-        if not has_action:
-            return {
-                'isValid': False,
-                'message': 'Texto deve expressar uma necessidade clara',
-                'severity': 'medium'
-            }
+        # Removido - aceita qualquer texto
+        # if not has_action:
+        #     return {
+        #         'isValid': False,
+        #         'message': 'Texto deve expressar uma necessidade clara',
+        #         'severity': 'medium'
+        #     }
         
         return {
             'isValid': True,
@@ -205,18 +211,20 @@ class SolidarBotRobust:
         # Verifica indicadores falsos
         fake_matches = sum(1 for word in cat_data['fake_indicators'] if word in text)
         
-        # Calcula score de correspondência
+        # Calcula score de correspondência (mais flexível)
         match_score = keyword_matches - (fake_matches * 2)
         
-        if match_score < 1:
+        # Aceita se não há indicadores falsos, mesmo sem palavras-chave específicas
+        if match_score < 0 or fake_matches > 2:
             # Verifica se pode ser outra categoria
             best_match = self._find_best_category_match(text)
-            return {
-                'isValid': False,
-                'message': f'Descrição não corresponde à categoria "{category}". Talvez seja "{best_match}"?',
-                'severity': 'high',
-                'suggestedCategory': best_match
-            }
+            if best_match != category and keyword_matches == 0:
+                return {
+                    'isValid': False,
+                    'message': f'Descrição pode ser mais adequada para categoria "{best_match}"',
+                    'severity': 'medium',
+                    'suggestedCategory': best_match
+                }
         
         return {
             'isValid': True,
@@ -276,14 +284,16 @@ class SolidarBotRobust:
                 'severity': 'high'
             }
         
-        # Verifica palavras obrigatórias para casos críticos/urgentes
-        if urgency in ['critico', 'urgente']:
-            required_found = [word for word in rules['required_words'] if word in text]
-            if len(required_found) < rules['min_score']:
+        # Verifica palavras obrigatórias para casos críticos/urgentes (mais flexível)
+        if urgency == 'critico':
+            # Palavras que indicam urgência real
+            urgency_indicators = ['urgente', 'crítico', 'emergência', 'imediato', 'risco', 'grave', 'desespero', 'hoje', 'agora', 'sem tempo', 'não posso esperar']
+            required_found = [word for word in urgency_indicators if word in text]
+            if len(required_found) == 0:
                 return {
                     'isValid': False,
-                    'message': f'Casos "{urgency}" devem conter palavras que justifiquem a urgência',
-                    'severity': 'high'
+                    'message': f'Casos críticos devem justificar a urgência com palavras como: urgente, crítico, emergência, etc.',
+                    'severity': 'medium'
                 }
         
         return {
@@ -298,11 +308,12 @@ class SolidarBotRobust:
         
         personal_matches = sum(1 for word in self.personal_context_words if word in text)
         
-        if personal_matches < 2:
+        # Mais flexível - aceita com menos contexto
+        if personal_matches < 1 and len(text.split()) > 10:
             return {
                 'isValid': False,
-                'message': 'Descrição precisa incluir mais contexto pessoal (família, situação, etc.)',
-                'severity': 'medium'
+                'message': 'Adicione mais contexto sobre sua situação (família, quantas pessoas, etc.)',
+                'severity': 'low'
             }
         
         return {
@@ -359,11 +370,11 @@ class SolidarBotRobust:
         """Valida comprimento do texto"""
         length = len(description.strip())
         
-        if length < 50:
+        if length < 20:
             return {
                 'isValid': False,
-                'message': 'Descrição muito curta - mínimo 50 caracteres',
-                'severity': 'high'
+                'message': 'Descrição muito curta - mínimo 20 caracteres',
+                'severity': 'medium'
             }
         
         if length > 2000:
@@ -396,19 +407,28 @@ class SolidarBotRobust:
         return min(risk, 100)
 
     def _make_final_decision(self, validations: Dict, risk_score: int) -> bool:
-        """Decisão final sobre validação - Mais leniente"""
-        # Critérios críticos que impedem publicação
+        """Decisão final sobre validação - Forçar rejeição se muitas sugestões"""
+        # Critérios críticos que impedem publicação (apenas spam e texto vazio)
         critical_failures = [
-            'spamDetection',
-            'lengthValidation'
+            'spamDetection'
         ]
         
         for critical in critical_failures:
             if not validations.get(critical, {}).get('isValid', True):
                 return False
         
-        # Se risk score muito alto, rejeita (aumentado de 60 para 80)
-        if risk_score > 80:
+        # Contar sugestões que serão geradas
+        suggestion_count = 0
+        for validation in validations.values():
+            if not validation.get('isValid', True):
+                suggestion_count += 1
+        
+        # Se tem mais de 2 sugestões, rejeita
+        if suggestion_count > 2:
+            return False
+        
+        # Se risk score muito alto, rejeita (aumentado para 95 - quase nunca rejeita)
+        if risk_score > 95:
             return False
         
         return True
@@ -442,10 +462,10 @@ class SolidarBotRobust:
                 elif key == 'textQuality':
                     suggestions.append({
                         'type': 'description',
-                        'message': f'PROBLEMA: {validation["message"]}. Escreva mais detalhes sobre sua situação.',
+                        'message': f'SUGESTÃO: {validation["message"]}. Tente adicionar mais detalhes.',
                         'action': 'Melhorar descrição',
-                        'priority': 'high',
-                        'evidence': 'Texto não atende critérios mínimos de qualidade'
+                        'priority': 'medium',
+                        'evidence': 'Texto pode ser mais detalhado'
                     })
                 
                 elif key == 'categoryMatch':
@@ -453,49 +473,49 @@ class SolidarBotRobust:
                     if suggested_cat:
                         suggestions.append({
                             'type': 'category',
-                            'message': f'PROBLEMA: Sua descrição não corresponde à categoria selecionada. Considere alterar para "{suggested_cat}".',
-                            'action': 'Alterar categoria',
-                            'priority': 'high',
-                            'evidence': f'Palavras-chave indicam categoria "{suggested_cat}"'
+                            'message': f'SUGESTÃO: Sua descrição pode ser mais adequada para "{suggested_cat}". Considere alterar se fizer sentido.',
+                            'action': 'Revisar categoria',
+                            'priority': 'medium',
+                            'evidence': f'Algumas palavras sugerem categoria "{suggested_cat}"'
                         })
                 
                 elif key == 'urgencyAuthenticity':
                     suggestions.append({
                         'type': 'urgency',
-                        'message': f'PROBLEMA: {validation["message"]}. Ajuste o nível de urgência ou justifique melhor.',
+                        'message': f'SUGESTÃO: {validation["message"]}. Considere ajustar o nível ou adicionar mais contexto.',
                         'action': 'Revisar urgência',
-                        'priority': 'medium',
-                        'evidence': 'Nível de urgência não condiz com o texto'
+                        'priority': 'low',
+                        'evidence': 'Nível de urgência pode não condizer com o texto'
                     })
                 
                 elif key == 'personalContext':
                     suggestions.append({
                         'type': 'description',
-                        'message': 'PROBLEMA: Falta contexto pessoal. Adicione informações sobre família, situação atual, quantas pessoas serão ajudadas.',
+                        'message': 'SUGESTÃO: Adicione mais contexto sobre sua situação (família, quantas pessoas serão ajudadas, etc.).',
                         'action': 'Melhorar descrição',
-                        'priority': 'medium',
-                        'evidence': 'Texto não contém informações pessoais suficientes'
+                        'priority': 'low',
+                        'evidence': 'Mais contexto pessoal pode ajudar'
                     })
                 
                 elif key == 'lengthValidation':
                     suggestions.append({
                         'type': 'description',
-                        'message': f'PROBLEMA: {validation["message"]}. Escreva mais detalhes sobre sua necessidade.',
+                        'message': f'SUGESTÃO: {validation["message"]}. Tente escrever um pouco mais sobre sua necessidade.',
                         'action': 'Expandir descrição',
-                        'priority': 'high',
-                        'evidence': 'Texto muito curto para análise adequada'
+                        'priority': 'medium',
+                        'evidence': 'Texto pode ser mais detalhado'
                     })
         
         return suggestions
 
     def _generate_analysis_summary(self, validations: Dict, risk_score: int) -> str:
         """Gera resumo da análise"""
-        if risk_score > 60:
-            return "Alto risco: Pedido requer revisão significativa antes da publicação"
-        elif risk_score > 30:
-            return "Risco moderado: Algumas melhorias são recomendadas"
+        if risk_score > 70:
+            return "Pedido precisa de algumas melhorias antes da publicação"
+        elif risk_score > 40:
+            return "Pedido bom, algumas sugestões podem ajudar"
         else:
-            return "Baixo risco: Pedido adequado para publicação"
+            return "Pedido adequado para publicação"
 
 
 def main():
@@ -510,7 +530,7 @@ def main():
             if input_data:
                 form_data = json.loads(input_data)
                 result = bot.validate_request(form_data)
-                print(json.dumps(result, ensure_ascii=False))
+                print(json.dumps(result, ensure_ascii=False, indent=None))
                 return
         except Exception as e:
             print(json.dumps({
@@ -520,7 +540,7 @@ def main():
                 'confidence': 0,
                 'riskScore': 100,
                 'analysis': 'Erro no processamento'
-            }, ensure_ascii=False))
+            }, ensure_ascii=False, indent=None))
             return
     
     # Default test case

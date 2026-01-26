@@ -23,7 +23,8 @@
     "firebase-functions": "^4.4.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "node-fetch": "^3.3.2"
   },
   "devDependencies": {
     "jest": "^29.6.2",
