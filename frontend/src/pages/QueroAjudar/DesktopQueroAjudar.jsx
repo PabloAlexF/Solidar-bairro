@@ -292,15 +292,15 @@ function HeroSection({
               backdropFilter: 'blur(20px)',
               border: '1px solid rgba(255, 255, 255, 0.3)',
               borderRadius: '50px',
-              padding: '8px 16px',
+              padding: '12px 24px',
               marginBottom: '2rem',
-              fontSize: '12px',
-              fontWeight: '600',
+              fontSize: '18px',
+              fontWeight: '700',
               color: '#374151',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
             }}
           >
-            <Users size={14} style={{ marginRight: '6px', color: '#0d9488' }} />
+            <Users size={18} style={{ marginRight: '8px', color: '#0d9488' }} />
             Rede de Solidariedade Comunitária
           </motion.div>
 
@@ -329,7 +329,7 @@ function HeroSection({
             animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
             style={{
-              fontSize: '1.25rem',
+              fontSize: '1.1rem',
               color: '#6b7280',
               marginBottom: '2rem',
               fontWeight: '400',
@@ -346,7 +346,7 @@ function HeroSection({
             animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ duration: 0.8, delay: 0.8, ease: "easeOut" }}
             style={{
-              fontSize: '1rem',
+              fontSize: '1.1rem',
               color: '#4b5563',
               lineHeight: '1.7',
               marginBottom: '2rem',
@@ -357,25 +357,7 @@ function HeroSection({
             Conecte-se com vizinhos, ofereça ou receba ajuda, e fortaleça os laços da sua comunidade.
           </motion.p>
 
-          <motion.p
-            initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
-            animate={heroInView ? { opacity: 1, scale: 1, rotateX: 0 } : { opacity: 0, scale: 0.95, rotateX: 10 }}
-            transition={{ duration: 0.8, delay: 1, ease: "easeOut" }}
-            whileHover={{
-              scale: 1.02,
-              color: '#374151',
-              transition: { duration: 0.3 }
-            }}
-            style={{
-              fontSize: '0.9rem',
-              color: '#6b7280',
-              fontStyle: 'italic',
-              marginBottom: '2rem',
-              cursor: 'default'
-            }}
-          >
-            "Criamos pontes onde antes existiam apenas muros."
-          </motion.p>
+         
 
           {/* CTA Button */}
           <motion.button

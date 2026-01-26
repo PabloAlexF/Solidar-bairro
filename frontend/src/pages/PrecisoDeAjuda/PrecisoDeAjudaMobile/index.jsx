@@ -2,7 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnalyzingModal, InconsistentModal, SuccessModal } from '../modals';
-import MapaAlcance from '../MapaAlcance';
+import { MapaAlcance } from '../PrecisoDeAjudaDesktop/MapaAlcance';
 import AnimatedParticles from '../AnimatedParticles';
 import LandingHeader from '../../../components/layout/LandingHeader';
 import MobileHeader from '../../../components/layout/MobileHeader';
