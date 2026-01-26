@@ -1,0 +1,14 @@
+# Dependências do Bot de Validação Solidar Bairro
+# Instalação: pip install -r requirements.txt
+
+# Não há dependências externas necessárias
+# O bot usa apenas bibliotecas padrão do Python:
+# - re (regex)
+# - json (JSON)
+# - time (delays)
+# - typing (type hints)
+
+# Para desenvolvimento e testes (opcionais):
+# pytest>=7.0.0
+# black>=22.0.0
+# flake8>=4.0.0

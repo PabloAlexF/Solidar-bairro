@@ -16,6 +16,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const painelSocialRoutes = require('./routes/painelSocialRoutes');
+const botRoutes = require('./routes/botRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -79,6 +80,7 @@ app.use('/api/achados-perdidos', achadosPerdidosRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/painel-social', painelSocialRoutes);
+app.use('/api/bot', botRoutes);
 app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });
