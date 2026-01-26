@@ -225,12 +225,20 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
           className="flex gap-3 relative z-10"
         >
           {!canPublish && (
-            <button 
-              onClick={onRetry}
-              className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2"
-            >
-              <RefreshCcw size={16} /> Revisar Pedido
-            </button>
+            <>
+              <button 
+                onClick={onRetry}
+                className="flex-1 py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2"
+              >
+                <RefreshCcw size={16} /> Revisar Pedido
+              </button>
+              <button 
+                onClick={onForcePublish}
+                className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2"
+              >
+                <Rocket size={16} /> Publicar Mesmo Assim
+              </button>
+            </>
           )}
           {canPublish && (
             <motion.button 
@@ -381,21 +389,42 @@ export default function PDAForm() {
         return;
       }
       
-      // If validation passed, show success
+      // If validation passed, create the pedido in the backend
+      const { default: ApiService } = await import('../../../services/apiService');
+      
+      const pedidoData = {
+        category: formData.category,
+        description: formData.description,
+        urgency: formData.urgency,
+        visibility: formData.visibility,
+        radius: formData.radius,
+        location: formData.userLocation,
+        locationString: formData.locationString,
+        city: formData.city,
+        state: formData.state,
+        neighborhood: formData.neighborhood,
+        status: 'ativo'
+      };
+      
+      console.log('📤 Enviando pedido para API:', pedidoData);
+      const response = await ApiService.createPedido(pedidoData);
+      console.log('✅ Pedido criado com sucesso:', response);
+      
+      // Show success
       setIsPublished(true);
       
     } catch (error) {
-      console.error('AI Analysis error:', error);
+      console.error('❌ Erro ao publicar pedido:', error);
       setIsAnalyzing(false);
       // Show error in validation modal
       setValidationResult({
         canPublish: false,
-        analysis: 'Erro na validação. Tente novamente.',
+        analysis: `Erro ao salvar pedido: ${error.message}`,
         confidence: 0,
         riskScore: 100,
         suggestions: [{
           type: 'error',
-          message: 'Erro de conexão com o sistema de validação',
+          message: error.message.includes('token') ? 'Você precisa estar logado para publicar um pedido' : 'Erro de conexão com o servidor',
           action: 'Tentar novamente',
           priority: 'high'
         }],
@@ -432,10 +461,37 @@ export default function PDAForm() {
     }
   };
 
-  const handleForcePublish = () => {
+  const handleForcePublish = async () => {
     setShowValidationModal(false);
     setValidationResult(null);
-    setIsPublished(true);
+    
+    try {
+      // Force publish even with validation issues
+      const { default: ApiService } = await import('../../../services/apiService');
+      
+      const pedidoData = {
+        category: formData.category,
+        description: formData.description,
+        urgency: formData.urgency,
+        visibility: formData.visibility,
+        radius: formData.radius,
+        location: formData.userLocation,
+        locationString: formData.locationString,
+        city: formData.city,
+        state: formData.state,
+        neighborhood: formData.neighborhood,
+        status: 'ativo'
+      };
+      
+      console.log('📤 Forçando publicação do pedido:', pedidoData);
+      const response = await ApiService.createPedido(pedidoData);
+      console.log('✅ Pedido forçado criado com sucesso:', response);
+      
+      setIsPublished(true);
+    } catch (error) {
+      console.error('❌ Erro ao forçar publicação:', error);
+      alert(`Erro ao publicar pedido: ${error.message}`);
+    }
   };
 
   const selectedCategory = useMemo(() => 
@@ -643,7 +699,7 @@ export default function PDAForm() {
                 <p>Sua descrição ajuda as pessoas a entenderem como podem ser úteis.</p>
               </div>
               <div className="description-container">
-                <div className="textarea-wrapper">
+                <div className="pda-textarea-wrapper">
                   <div className="flex justify-between items-center mb-6">
                     <div className="textarea-header !m-0">
                       <Heart size={22} className="text-rose-500" />

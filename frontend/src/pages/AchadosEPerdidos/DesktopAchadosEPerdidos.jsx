@@ -174,6 +174,14 @@ export default function DesktopAchadosEPerdidos() {
     window.scrollTo(0, 0);
     fetchItems();
     
+    // Auto-fill location from user data
+    if (user && !formData.location) {
+      const userAddr = formatLocation(user?.endereco, user?.cidade, user?.estado) || user?.bairro || "";
+      if (userAddr) {
+        setFormData(prev => ({ ...prev, location: userAddr }));
+      }
+    }
+    
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     
@@ -193,7 +201,7 @@ export default function DesktopAchadosEPerdidos() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [user]);
 
   const fetchItems = async () => {
     try {
@@ -203,9 +211,28 @@ export default function DesktopAchadosEPerdidos() {
       if (typeFilter !== 'all') filters.type = typeFilter;
       if (searchTerm) filters.search = searchTerm;
       
+      // Add location-based filtering
+      if (locationScope === 'city' && user) {
+        filters.city = user.cidade;
+        filters.state = user.estado;
+      }
+      
       const response = await apiService.getAchadosPerdidos(filters);
       if (response.success) {
-        setItems(response.data || []);
+        let itemsData = response.data || [];
+        
+        // Sort by proximity if user location is available
+        if (locationScope === 'city' && user?.cidade) {
+          itemsData = itemsData.sort((a, b) => {
+            const aIsLocal = a.city === user.cidade && a.state === user.estado;
+            const bIsLocal = b.city === user.cidade && b.state === user.estado;
+            if (aIsLocal && !bIsLocal) return -1;
+            if (!aIsLocal && bIsLocal) return 1;
+            return 0;
+          });
+        }
+        
+        setItems(itemsData);
       } else {
         setItems([]);
       }
@@ -325,7 +352,7 @@ export default function DesktopAchadosEPerdidos() {
   // Refetch when filters change
   useEffect(() => {
     fetchItems();
-  }, [categoryFilter, typeFilter, searchTerm]);
+  }, [categoryFilter, typeFilter, searchTerm, locationScope, user]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
@@ -477,8 +504,8 @@ export default function DesktopAchadosEPerdidos() {
                 <input 
                   type="text" 
                   className="lf-input-premium"
-                  placeholder="Ex: Praça Central, próximo ao banco"
-                  value={formData.location}
+                  placeholder={userLocation || "Ex: Praça Central, próximo ao banco"}
+                  value={formData.location || userLocation}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   style={{ paddingLeft: '3.5rem' }}
                 />

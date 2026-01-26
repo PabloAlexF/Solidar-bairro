@@ -216,7 +216,7 @@
   width: 100%;
 }
 
-.textarea-wrapper {
+.pda-textarea-wrapper {
   position: relative;
   background: white;
   border-radius: 24px;
@@ -226,12 +226,12 @@
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.textarea-wrapper:hover {
+.pda-textarea-wrapper:hover {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 
-.textarea-wrapper:focus-within {
+.pda-textarea-wrapper:focus-within {
   box-shadow: 0 16px 48px rgba(249, 115, 22, 0.15);
   border-color: rgba(249, 115, 22, 0.2);
   transform: translateY(-4px);
@@ -706,7 +706,7 @@
     padding: 2.5rem 1.5rem;
   }
   
-  .textarea-wrapper {
+  .pda-textarea-wrapper {
     padding: 1.5rem;
   }
   
@@ -742,7 +742,7 @@
     padding-bottom: 100px;
   }
   
-  .textarea-wrapper {
+  .pda-textarea-wrapper {
     padding: 1rem;
   }
   
@@ -751,18 +751,18 @@
     padding-bottom: 60px !important;
   }
   
-  .textarea-wrapper .absolute.bottom-2 {
+  .pda-textarea-wrapper .absolute.bottom-2 {
     flex-direction: column;
     gap: 0.5rem;
     align-items: stretch;
   }
   
-  .textarea-wrapper .absolute.bottom-2 > div:last-child {
+  .pda-textarea-wrapper .absolute.bottom-2 > div:last-child {
     justify-content: center;
     gap: 0.5rem;
   }
   
-  .textarea-wrapper .absolute.bottom-2 button {
+  .pda-textarea-wrapper .absolute.bottom-2 button {
     flex: 1;
     justify-content: center;
   }

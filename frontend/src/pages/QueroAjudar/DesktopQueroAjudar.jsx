@@ -19,7 +19,8 @@ import {
   Shield,
   Sparkles,
   Heart,
-  HelpCircle
+  HelpCircle,
+  CheckCircle2
 } from 'lucide-react';
 import createGlobe from 'cobe';
 import {
@@ -1763,66 +1764,106 @@ export default function QueroAjudarPage() {
                     className="notification-btn"
                     onClick={() => setShowNotifications(!showNotifications)}
                   >
-                    <Bell size={24} />
+                    <Bell size={20} />
                     {unreadCount > 0 && (
-                      <span className="notification-badge">{unreadCount}</span>
+                      <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
                     )}
                   </button>
 
                   {showNotifications && (
-                    <div className="notification-dropdown">
-                      <div className="notification-header">
-                        <h3>Notificações</h3>
-                        {notifications.length > 0 && (
-                          <div className="notification-actions">
-                            {unreadCount > 0 && (
-                              <button
-                                className="action-btn mark-read-btn"
-                                onClick={markAllAsRead}
-                                title="Marcar todas como lidas"
-                              >
-                                ✓
-                              </button>
-                            )}
+                    <div className="notification-dropdown-improved">
+                      <div className="notification-header-improved">
+                        <div className="notification-title-section">
+                          <h3>Notificações</h3>
+                          {unreadCount > 0 && (
+                            <span className="unread-count">{unreadCount} não lidas</span>
+                          )}
+                        </div>
+                        <button 
+                          className="notification-close-btn"
+                          onClick={() => setShowNotifications(false)}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                      
+                      {notifications.length === 0 ? (
+                        <div className="notification-empty-improved">
+                          <Bell size={32} className="empty-icon" />
+                          <p className="empty-title">Nenhuma notificação</p>
+                          <p className="empty-subtitle">Você receberá notificações sobre mensagens e atividades aqui</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="notification-list-improved">
+                            {notifications.slice(0, 10).map((notification) => {
+                              const timeAgo = (() => {
+                                const now = new Date();
+                                const time = new Date(notification.timestamp);
+                                const diffInMinutes = Math.floor((now - time) / (1000 * 60));
+                                
+                                if (diffInMinutes < 1) return 'Agora mesmo';
+                                if (diffInMinutes < 60) return `${diffInMinutes}min atrás`;
+                                
+                                const diffInHours = Math.floor(diffInMinutes / 60);
+                                if (diffInHours < 24) return `${diffInHours}h atrás`;
+                                
+                                const diffInDays = Math.floor(diffInHours / 24);
+                                if (diffInDays < 7) return `${diffInDays}d atrás`;
+                                
+                                return time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                              })();
+                              
+                              const getNotificationIcon = (type) => {
+                                switch (type) {
+                                  case 'chat': return <MessageCircle size={16} className="text-blue-500" />;
+                                  case 'help': return <Heart size={16} className="text-red-500" />;
+                                  case 'success': return <CheckCircle2 size={16} className="text-green-500" />;
+                                  case 'warning': return <AlertTriangle size={16} className="text-orange-500" />;
+                                  default: return <Bell size={16} className="text-gray-500" />;
+                                }
+                              };
+                              
+                              return (
+                                <div
+                                  key={notification.id}
+                                  className={`notification-item-improved ${!notification.read ? 'unread' : ''}`}
+                                  onClick={() => !notification.read && markAsRead(notification.id)}
+                                >
+                                  <div className="notification-icon-improved">
+                                    {getNotificationIcon(notification.type)}
+                                  </div>
+                                  <div className="notification-content-improved">
+                                    <div className="notification-item-header">
+                                      <h4 className="notification-item-title">{notification.title}</h4>
+                                      <span className="notification-time">
+                                        <Clock size={12} />
+                                        {timeAgo}
+                                      </span>
+                                    </div>
+                                    <p className="notification-item-message">{notification.message}</p>
+                                  </div>
+                                  {!notification.read && <div className="unread-dot" />}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          
+                          <div className="notification-footer-improved">
                             <button
-                              className="action-btn clear-btn"
                               onClick={clearAllNotifications}
-                              title="Limpar todas"
+                              className="clear-all-btn"
                             >
-                              🗑️
+                              Limpar todas
                             </button>
+                            {notifications.length > 10 && (
+                              <span className="more-notifications">
+                                +{notifications.length - 10} mais
+                              </span>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="notification-list">
-                        {notifications.length === 0 ? (
-                          <div className="no-notifications">
-                            Nenhuma notificação ainda
-                          </div>
-                        ) : (
-                          notifications.map((notification) => (
-                            <div
-                              key={notification.id}
-                              className={`notification-item ${notification.read ? 'read' : 'unread'}`}
-                              onClick={() => !notification.read && markAsRead(notification.id)}
-                            >
-                              <div className="notification-content">
-                                <p className="notification-title">{notification.title}</p>
-                                <p className="notification-message">{notification.message}</p>
-                                <span className="notification-time">
-                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                              {!notification.read && <div className="unread-dot"></div>}
-                            </div>
-                          ))
-                        )}
-                      </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

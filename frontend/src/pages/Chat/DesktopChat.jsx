@@ -476,7 +476,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="chat-page-wrapper">
+    <div className="chat-page-wrapper chat-page-isolated">
       <div className="chat-layout">
         {/* Sidebar */}
         <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>

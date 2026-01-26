@@ -1,5 +1,4 @@
 const firebase = require('../config/firebase');
-const Familia = require('../models/familiaModel');
 
 class FamiliaService {
   constructor() {
@@ -11,56 +10,39 @@ class FamiliaService {
   async createFamilia(data) {
     console.log('Dados recebidos:', data);
     
-    const familia = new Familia(data);
-    const errors = familia.validate();
-    
-    if (errors.length > 0) {
-      console.log('Erros de validação:', errors);
-      throw new Error(`Dados inválidos: ${errors.join(', ')}`);
-    }
-
-    // Criar usuário no Firebase Auth se tiver email
-    let userRecord = null;
-    if (data.email) {
-      userRecord = await this.auth.createUser({
-        email: data.email,
-        password: data.telefone || '123456', // Senha padrão baseada no telefone
-        displayName: data.nomeCompleto
-      });
+    // Validação simples
+    if (!data.nomeCompleto?.trim()) {
+      throw new Error('Nome da família é obrigatório');
     }
 
     const familiaData = {
-      nomeCompleto: familia.nomeCompleto,
-      dataNascimento: familia.dataNascimento,
-      estadoCivil: familia.estadoCivil,
-      profissao: familia.profissao,
-      cpf: familia.cpf,
-      rg: familia.rg,
-      nis: familia.nis,
-      rendaFamiliar: familia.rendaFamiliar,
-      telefone: familia.telefone,
-      whatsapp: familia.whatsapp,
-      email: familia.email,
-      horarioContato: familia.horarioContato,
-      endereco: familia.endereco,
-      composicao: familia.composicao,
-      necessidades: familia.necessidades,
-      tipo: familia.tipo,
-      ativo: familia.ativo,
-      status: 'pending', // Aguardando aprovação
+      nomeCompleto: data.nomeCompleto,
+      vulnerability: data.vulnerability || 'Média',
+      composicao: {
+        totalMembros: parseInt(data.composicao?.totalMembros) || 1,
+        criancas: parseInt(data.composicao?.criancas) || 0,
+        jovens: parseInt(data.composicao?.jovens) || 0,
+        adultos: parseInt(data.composicao?.adultos) || 1,
+        idosos: parseInt(data.composicao?.idosos) || 0
+      },
+      rendaFamiliar: data.rendaFamiliar || 'Sem renda',
+      telefone: data.telefone || '',
+      endereco: {
+        logradouro: data.endereco?.logradouro || '',
+        bairro: data.endereco?.bairro || 'São Benedito',
+        latitude: data.endereco?.latitude || -19.768,
+        longitude: data.endereco?.longitude || -43.85
+      },
+      status: data.status || 'ativo',
+      tipo: 'familia',
+      ativo: true,
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };
 
-    if (userRecord) {
-      // Salvar com UID do Firebase Auth
-      await this.db.collection(this.collection).doc(userRecord.uid).set(familiaData);
-      return { uid: userRecord.uid, ...familiaData };
-    } else {
-      // Salvar sem autenticação (apenas no Firestore)
-      const docRef = await this.db.collection(this.collection).add(familiaData);
-      return { id: docRef.id, ...familiaData };
-    }
+    // Salvar no Firestore
+    const docRef = await this.db.collection(this.collection).add(familiaData);
+    return { id: docRef.id, ...familiaData };
   }
 
   async getFamilias() {
