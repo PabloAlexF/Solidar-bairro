@@ -681,6 +681,7 @@
 .btn-next:hover:not(:disabled) {
   transform: translateY(-5px) scale(1.02);
   box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 
 .btn-publish {
