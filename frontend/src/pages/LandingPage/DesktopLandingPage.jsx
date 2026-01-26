@@ -336,16 +336,16 @@ export default function DesktopLandingPage() {
           </div>
           
           <div className="nav-menu">
-            <a href="#features" className="nav-link">
-              Funcionalidades
+            <a href="#action-cards" className="nav-link">
+              Plataforma
               <span className="link-underline" />
             </a>
-            <a href="#how-it-works" className="nav-link">
-              Como Funciona
+            <a href="#features" className="nav-link">
+              Recursos
               <span className="link-underline" />
             </a>
             <a href="#about" className="nav-link">
-              Missão
+              Sobre
               <span className="link-underline" />
             </a>
 
@@ -1039,7 +1039,7 @@ export default function DesktopLandingPage() {
             </div>
             <div className="footer-info-grid">
               <div className="footer-column">
-                <h4 className="column-title">Missão</h4>
+                <h4 className="column-title">Nossa Missão</h4>
                 <p className="column-text">Conectar vizinhos e fortalecer os laços da comunidade através de uma rede de apoio mútuo, promovendo solidariedade e segurança local.</p>
               </div>
               <div className="footer-column">

@@ -104,7 +104,7 @@ export default function GlobeFeatureSection() {
       <div className="ornament ornament-1" />
       <div className="ornament ornament-2" />
 
-      <section className="hero-section">
+      <section id="features" className="hero-section">
         <div className="content-wrapper">
           <motion.div
             variants={containerVariants}
