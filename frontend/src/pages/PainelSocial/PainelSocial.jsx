@@ -441,7 +441,7 @@ export default function PainelSocial() {
         <div className="header-left">
           <button className="logo" onClick={() => navigate("/")}>
             <Shield size={20} />
-            <span>SolidarBairro</span>
+            <span>SolidarBrasil</span>
           </button>
           <div className="header-sep" />
           <span className="header-context">Painel de Gestão Social</span>
