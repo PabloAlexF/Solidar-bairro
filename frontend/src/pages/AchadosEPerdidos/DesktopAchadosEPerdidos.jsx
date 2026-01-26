@@ -176,7 +176,11 @@ export default function DesktopAchadosEPerdidos() {
     
     // Auto-fill location from user data
     if (user && !formData.location) {
-      const userAddr = formatLocation(user?.endereco, user?.cidade, user?.estado) || user?.bairro || "";
+      const userAddr = user?.cidade && user?.estado ? `${user.cidade}, ${user.estado}` : 
+                      user?.bairro && user?.cidade ? `${user.bairro}, ${user.cidade}` :
+                      formatLocation(user?.endereco, user?.cidade, user?.estado) || 
+                      user?.bairro || 
+                      "";
       if (userAddr) {
         setFormData(prev => ({ ...prev, location: userAddr }));
       }
@@ -356,7 +360,11 @@ export default function DesktopAchadosEPerdidos() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
-  const userLocation = formatLocation(user?.endereco, user?.cidade, user?.estado) || user?.bairro || "São Paulo, SP";
+  const userLocation = user?.cidade && user?.estado ? `${user.cidade}, ${user.estado}` : 
+                      user?.bairro && user?.cidade ? `${user.bairro}, ${user.cidade}` :
+                      formatLocation(user?.endereco, user?.cidade, user?.estado) || 
+                      user?.bairro || 
+                      "São Paulo, SP";
 
   const renderStep = () => {
     switch (currentStep) {

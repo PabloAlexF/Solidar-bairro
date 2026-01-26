@@ -149,10 +149,25 @@ export default function MobileAchadosEPerdidos() {
   const cameraInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
 
+  // Get user location for display
+  const userLocation = user?.cidade && user?.estado ? `${user.cidade}, ${user.estado}` : 
+                      user?.bairro && user?.cidade ? `${user.bairro}, ${user.cidade}` :
+                      "São Paulo, SP";
+
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchItems();
-  }, []);
+    
+    // Auto-fill location from user data
+    if (user && !formData.location) {
+      const userAddr = user?.cidade && user?.estado ? `${user.cidade}, ${user.estado}` : 
+                      user?.bairro && user?.cidade ? `${user.bairro}, ${user.cidade}` :
+                      "";
+      if (userAddr) {
+        setFormData(prev => ({ ...prev, location: userAddr }));
+      }
+    }
+  }, [user]);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -412,8 +427,8 @@ export default function MobileAchadosEPerdidos() {
                 <input 
                   type="text" 
                   className="mobile-lf-input-premium with-icon"
-                  placeholder="Ex: Praça Central, próximo ao banco"
-                  value={formData.location}
+                  placeholder={userLocation || "Ex: Praça Central, próximo ao banco"}
+                  value={formData.location || userLocation}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 />
               </div>
@@ -584,7 +599,7 @@ export default function MobileAchadosEPerdidos() {
               </div>
               <div className="mobile-lf-location-text">
                 <span className="mobile-lf-location-label">Sua Localização</span>
-                <span className="mobile-lf-location-value">São Paulo, SP</span>
+                <span className="mobile-lf-location-value">{userLocation}</span>
               </div>
             </div>
             <div className="mobile-lf-location-scope-toggle">
