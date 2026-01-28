@@ -1,78 +1,23 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   Users, ArrowLeft, User, Home, Users2, DollarSign, 
   ListChecks, MapPin, CheckCircle2, ChevronRight, 
   ChevronLeft, Fingerprint, IdCard, Calendar, 
   Phone, Mail, ShieldCheck, Trophy, 
-  Zap, Info
+  Zap, Info, Heart, Sparkles, Target, Sun, Moon, CloudSun, AlertTriangle, Coffee,
+  Apple, BookOpen, Stethoscope, Hammer, Smile, Truck, Share2, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import FormStep from '../../../components/forms/FormStep';
-import Step1ResponsavelData from '../../../components/forms/Step1ResponsavelData';
-import Step2DocumentosData from '../../../components/forms/Step2DocumentosData';
-import Step3ContatoData from '../../../components/forms/Step3ContatoData';
-import Step4EnderecoData from '../../../components/forms/Step4EnderecoData';
-import Step5FamiliaData from '../../../components/forms/Step5FamiliaData';
-import Step6NecessidadesData from '../../../components/forms/Step6NecessidadesData';
+import PasswordField from '../../../components/ui/PasswordField';
 import Toast from '../../../components/ui/Toast';
 import ApiService from '../../../services/apiService';
 import './CadastroFamiliaDesktop.css';
-
-const FamilyCounter = ({ item, count, onUpdate }) => (
-  <div className="fam-reg-family-card-input">
-    <div className="fam-reg-family-card-header">
-      <span className="fam-reg-family-card-emoji">{item.icon}</span>
-      <span className="fam-reg-family-card-label">{item.label}</span>
-    </div>
-    <div className="fam-reg-family-counter-enhanced">
-      <button 
-        type="button" 
-        className="fam-reg-counter-btn fam-reg-counter-minus"
-        onClick={() => onUpdate(item.key, -1)}
-        disabled={count === 0}
-      >
-        -
-      </button>
-      <span className="fam-reg-counter-display">{count}</span>
-      <button 
-        type="button" 
-        className="fam-reg-counter-btn fam-reg-counter-plus"
-        onClick={() => onUpdate(item.key, 1)}
-      >
-        +
-      </button>
-    </div>
-  </div>
-);
-
-const MapLocationButton = ({ isLocating, onClick }) => (
-  <button 
-    type="button" 
-    className="fam-reg-map-button"
-    onClick={onClick}
-    disabled={isLocating}
-  >
-    <div className="fam-reg-map-icon-box">
-      <MapPin size={28} className={isLocating ? 'animate-pulse' : ''} />
-    </div>
-    <div className="fam-reg-map-info">
-      <h4 className="fam-reg-map-title">
-        {isLocating ? 'Localizando...' : 'Localizar no Mapa'}
-      </h4>
-      <p className="fam-reg-map-desc">
-        {isLocating ? 'Obtendo localização' : 'Ajuda as ONGs a te encontrarem com precisão'}
-      </p>
-    </div>
-  </button>
-);
+import '../../../styles/components/PasswordField.css';
+import '../../../styles/components/Toast.css';
 
 export default function CadastroFamiliaDesktop() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState(true);
-  const [showAddressModal, setShowAddressModal] = useState(false);
-  const [addressData, setAddressData] = useState({ endereco: '', bairro: '', referencia: '' });
-  const [isLocating, setIsLocating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
@@ -88,9 +33,9 @@ export default function CadastroFamiliaDesktop() {
     telefone: '',
     whatsapp: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     horarioContato: '',
-    senha: '',
-    confirmarSenha: '',
     endereco: '',
     bairro: '',
     pontoReferencia: '',
@@ -120,6 +65,15 @@ export default function CadastroFamiliaDesktop() {
     { label: 'Idosos (60+)', icon: '👴', key: 'idosos' }
   ];
 
+  const necessidadesOptions = [
+    { label: "Alimentação Básica", icon: <Apple size={24} /> },
+    { label: "Medicamentos", icon: <Stethoscope size={24} /> },
+    { label: "Material Escolar", icon: <BookOpen size={24} /> },
+    { label: "Roupas e Calçados", icon: <Smile size={24} /> },
+    { label: "Móveis e Eletrodomésticos", icon: <Home size={24} /> },
+    { label: "Transporte", icon: <Truck size={24} /> },
+  ];
+
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
   
@@ -130,15 +84,26 @@ export default function CadastroFamiliaDesktop() {
       case 2:
         return formData.cpf.trim() && formData.rg.trim() && formData.rendaFamiliar;
       case 3:
-        return formData.telefone.trim() && formData.horarioContato;
+        return formData.telefone.trim() && formData.email.trim() && formData.password.length >= 6 && formData.password === formData.confirmPassword;
       case 4:
-        return (addressData.endereco.trim() || formData.endereco.trim()) && (addressData.bairro.trim() || formData.bairro.trim()) && formData.tipoMoradia;
+        return formData.endereco.trim() && formData.bairro.trim() && formData.tipoMoradia;
       default:
         return true;
     }
   };
 
   const handleNextStep = () => {
+    if (step === 3) {
+      if (formData.password.length < 6) {
+        showToast('A senha deve ter pelo menos 6 caracteres', 'error');
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        showToast('As senhas não coincidem', 'error');
+        return;
+      }
+    }
+    
     if (validateStep(step)) {
       nextStep();
     } else {
@@ -153,25 +118,27 @@ export default function CadastroFamiliaDesktop() {
 
   const formatCPF = (value) => {
     const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 3) return numbers;
+    if (numbers.length <= 6) return numbers.replace(/(\d{3})(\d+)/, '$1.$2');
+    if (numbers.length <= 9) return numbers.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
     return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
   const formatRG = (value) => {
     const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 9) {
-      return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4');
-    } else {
-      return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-    }
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 5) return numbers.replace(/(\d{2})(\d+)/, '$1.$2');
+    if (numbers.length <= 8) return numbers.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+    if (numbers.length <= 9) return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, '$1.$2.$3-$4');
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   };
 
   const formatPhone = (value) => {
     const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 10) {
-      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-    } else {
-      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    }
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 6) return numbers.replace(/(\d{2})(\d+)/, '($1) $2');
+    if (numbers.length <= 10) return numbers.replace(/(\d{2})(\d{4})(\d+)/, '($1) $2-$3');
+    return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
   };
 
   const handleCPFChange = (e) => {
@@ -192,13 +159,6 @@ export default function CadastroFamiliaDesktop() {
     const value = e.target.value.replace(/\D/g, '');
     if (value.length <= 11) {
       updateFormData('telefone', formatPhone(value));
-    }
-  };
-
-  const handleWhatsAppChange = (e) => {
-    const value = e.target.value.replace(/\D/g, '');
-    if (value.length <= 11) {
-      updateFormData('whatsapp', formatPhone(value));
     }
   };
   
@@ -223,19 +183,24 @@ export default function CadastroFamiliaDesktop() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      showToast('As senhas não coincidem', 'error');
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      showToast('A senha deve ter pelo menos 6 caracteres', 'error');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      const submitData = {
-        ...formData,
-        endereco: addressData.endereco || formData.endereco,
-        bairro: addressData.bairro || formData.bairro,
-        pontoReferencia: addressData.referencia || formData.pontoReferencia
-      };
-      
-      await ApiService.createFamilia(submitData);
+      const { confirmPassword, ...dataToSend } = formData;
+      await ApiService.createFamilia(dataToSend);
       setIsSubmitted(true);
-      showToast('Família cadastrada com sucesso! Seu cadastro está sendo analisado. Você receberá uma notificação em até 24 horas. O administrador precisa liberar seu acesso.', 'success');
+      showToast('Família cadastrada com sucesso! O administrador precisa liberar seu acesso.', 'success');
     } catch (error) {
       console.error('Erro ao cadastrar família:', error);
       showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
@@ -244,140 +209,56 @@ export default function CadastroFamiliaDesktop() {
     }
   };
 
-  const handleMapLocation = () => {
-    if (!navigator.geolocation) {
-      showToast('Geolocalização não suportada', 'error');
-      return;
-    }
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude, accuracy } = position.coords;
-          console.log(`Precisão GPS: ${accuracy}m`);
-          
-          let addressFound = false;
-          
-          try {
-            const viacepResponse = await fetch(`https://viacep.com.br/ws/${latitude},${longitude}/json/`);
-            if (viacepResponse.ok) {
-              const viacepData = await viacepResponse.json();
-              if (viacepData && !viacepData.erro) {
-                setAddressData({
-                  endereco: `${viacepData.logradouro || ''} ${viacepData.complemento || ''}`.trim(),
-                  bairro: viacepData.bairro || '',
-                  referencia: `CEP: ${viacepData.cep || ''} - ${viacepData.localidade || ''}`
-                });
-                addressFound = true;
-              }
-            }
-          } catch (e) {
-            console.log('ViaCEP falhou:', e);
-          }
-          
-          if (!addressFound) {
-            try {
-              const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=19&addressdetails=1`);
-              const data = await response.json();
-              
-              if (data.address) {
-                const addr = data.address;
-                const street = addr.road || addr.pedestrian || addr.footway || '';
-                const number = addr.house_number || '';
-                const neighborhood = addr.suburb || addr.neighbourhood || addr.quarter || addr.city_district || '';
-                
-                setAddressData({
-                  endereco: `${street} ${number}`.trim() || data.display_name?.split(',')[0] || '',
-                  bairro: neighborhood,
-                  referencia: `${addr.amenity || addr.shop || addr.building || 'Localização GPS'}`
-                });
-                addressFound = true;
-              }
-            } catch (e) {
-              console.log('Nominatim falhou:', e);
-            }
-          }
-          
-          if (!addressFound) {
-            setAddressData({
-              endereco: `Coordenadas: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-              bairro: 'Digite o bairro correto',
-              referencia: `Precisão GPS: ${Math.round(accuracy)}m`
-            });
-          }
-          
-          // Mostrar modal de confirmação
-          setShowAddressModal(true);
-          
-        } catch (error) {
-          console.error('Erro:', error);
-          showToast('Erro ao obter endereço', 'error');
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      (error) => {
-        setIsLocating(false);
-        showToast(`Erro GPS: ${error.message}`, 'error');
-      },
-      { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
-    );
-  };
-
   if (isSubmitted) {
     return (
-      <div className="fam-reg-container fam-reg-theme fam-reg-success-view">
-        <div className="fam-reg-form-card-new">
-          <div className="fam-reg-success-grid">
-            <div className="fam-reg-success-left">
-              <div className="fam-reg-success-icon-bg">
-                <Trophy size={48} color="white" />
-              </div>
-              <h1 className="fam-reg-success-title">
-                Família <br/>
-                <span className="fam-reg-text-highlight">Registrada!</span>
-              </h1>
-              <p className="fam-reg-success-description">
-                Sua família agora faz parte da rede oficial. Prepare-se para receber apoio!
-              </p>
-              
-              <div className="fam-reg-xp-card">
-                <div className="fam-reg-xp-header">
-                  <div>
-                    <p className="fam-reg-xp-label">Impacto Familiar</p>
-                    <h3 className="fam-reg-xp-value">+50 XP</h3>
-                  </div>
-                  <Zap size={32} color="#f97316" />
-                </div>
-                <div className="fam-reg-xp-bar">
-                  <div className="fam-reg-xp-inner" style={{ width: '15%' }} />
-                </div>
-                <p className="fam-reg-xp-footer">Complete a verificação para ganhar benefícios</p>
-              </div>
-            </div>
+      <div className="fam-reg-container fam-reg-theme animate-fadeIn">
+        <div className="floating-elements">
+          <div className="float-shape s1-orange"></div>
+          <div className="float-shape s2-orange"></div>
+        </div>
 
-            <div className="fam-reg-success-right">
-              <div>
-                <h2 className="fam-reg-success-steps-title">Próximos Passos</h2>
-                <div className="fam-reg-steps-cards-list">
-                  {[
-                    { title: "Verificação de Dados", desc: "Validaremos os dados da sua família", icon: <ShieldCheck /> },
-                    { title: "Mapa de Apoio", desc: "Veja ONGs próximas a você", icon: <MapPin /> },
-                    { title: "Rede de Solidariedade", desc: "Conecte-se com doadores", icon: <Users /> }
-                  ].map((item, i) => (
-                    <div key={i} className="fam-reg-step-card-mini">
-                      <div className="fam-reg-step-card-icon">{item.icon}</div>
-                      <div>
-                        <h4>{item.title}</h4>
-                        <p>{item.desc}</p>
-                      </div>
-                    </div>
-                  ))}
+        <div className="success-full-wrapper">
+          <div className="success-hero-section">
+            <div className="celebration-master-icon">
+              <div className="icon-pulse-ring-orange"></div>
+              <div className="icon-main-box-orange">
+                <CheckCircle2 size={60} strokeWidth={2.5} />
+              </div>
+              <Sparkles className="sparkle-icon" size={24} style={{ color: '#f97316', position: 'absolute', top: '-5px', right: '-5px' }} />
+            </div>
+            
+            <h1 className="success-main-title">
+              Família <span className="text-gradient-orange">Registrada!</span>
+            </h1>
+            <p className="success-description">
+              Sua família agora faz parte da rede de apoio. Prepare-se para receber ajuda!
+            </p>
+          </div>
+
+          <div className="success-simple-card animate-slide-up">
+            <div className="premium-status-banner-orange">
+              <div className="status-info" style={{ flexDirection: 'column', gap: '0.5rem', textAlign: 'center' }}>
+                <Rocket size={32} style={{ color: '#fb923c', margin: '0 auto' }} />
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Status: <span style={{ color: '#fb923c' }}>Família Ativa</span></h2>
+                  <p style={{ fontSize: '0.85rem', opacity: 0.9, marginTop: '4px' }}>Seu perfil está visível para ONGs locais.</p>
                 </div>
               </div>
-              <div className="fam-reg-success-actions">
-                <Link to="/" className="fam-reg-btn-base fam-reg-btn-primary">Início</Link>
-                <Link to="/quero-ajudar" className="fam-reg-btn-base fam-reg-btn-secondary">Ver meu pedido</Link>
+              <Link to="/" className="btn-go-home-orange" style={{ padding: '1rem 2rem', fontSize: '1rem', width: '100%', justifyContent: 'center', marginTop: '1.5rem' }}>
+                Acessar Painel
+              </Link>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="stat-card-mini" style={{ padding: '1rem' }}>
+                <Heart size={20} />
+                <span style={{ fontSize: '0.7rem' }}>Apoio Local</span>
+                <strong style={{ fontSize: '1rem' }}>+75 XP</strong>
+              </div>
+              <div className="stat-card-mini" style={{ padding: '1rem' }}>
+                <Share2 size={20} />
+                <span style={{ fontSize: '0.7rem' }}>Comunidade</span>
+                <strong style={{ fontSize: '1rem' }}>Compartilhar</strong>
               </div>
             </div>
           </div>
@@ -389,50 +270,38 @@ export default function CadastroFamiliaDesktop() {
   return (
     <div className="fam-reg-container fam-reg-theme">
       <div className="fam-reg-bg-blobs">
-        <div className="fam-reg-blob-1"></div>
-        <div className="fam-reg-blob-2"></div>
+        <div className="fam-reg-blob-1" />
+        <div className="fam-reg-blob-2" />
       </div>
 
       <nav className="fam-reg-navbar">
         <Link to="/" className="fam-reg-back-link">
-          <div className="fam-reg-back-icon">
-            <ArrowLeft size={20} />
-          </div>
+          <div className="fam-reg-back-icon"><ArrowLeft size={20} /></div>
           <span>Voltar</span>
         </Link>
-        
         <div className="fam-reg-brand">
           <div className="fam-reg-brand-logo">
             <Users size={24} />
           </div>
-          <h1 className="fam-reg-brand-name">SolidarBairro</h1>
+          <span className="fam-reg-brand-name">SolidarBairro <span style={{ color: '#f97316', fontSize: '0.8rem' }}>FAMÍLIA</span></span>
         </div>
       </nav>
 
       <div className="fam-reg-main-grid">
         <aside className="fam-reg-sidebar">
           <div className="fam-reg-steps-card">
-            <h2 className="fam-reg-steps-title">Cadastro da Família</h2>
-            
+            <h2 className="fam-reg-steps-title">CADASTRO DE FAMÍLIA</h2>
             <div className="fam-reg-steps-list">
-              {steps.map((stepItem, index) => (
-                <div 
-                  key={stepItem.id} 
-                  className={`fam-reg-step-item ${
-                    stepItem.id === step ? 'fam-reg-active' : 
-                    stepItem.id < step ? 'fam-reg-completed' : 'fam-reg-pending'
-                  }`}
-                >
+              {steps.map((s, i) => (
+                <div key={s.id} className={`fam-reg-step-item ${step === s.id ? 'fam-reg-active' : step > s.id ? 'fam-reg-completed' : ''}`}>
                   <div className="fam-reg-step-icon-box">
-                    {stepItem.id < step ? <CheckCircle2 size={20} /> : stepItem.icon}
+                    {step > s.id ? <CheckCircle2 size={20} /> : s.icon}
                   </div>
                   <div className="fam-reg-step-info">
-                    <p className="fam-reg-step-number">Etapa {stepItem.id}</p>
-                    <h3 className="fam-reg-step-label">{stepItem.title}</h3>
+                    <span className="fam-reg-step-number">PASSO 0{s.id}</span>
+                    <span className="fam-reg-step-label">{s.title}</span>
                   </div>
-                  {index < steps.length - 1 && (
-                    <div className={`fam-reg-step-connector ${stepItem.id < step ? 'fam-reg-completed' : ''}`}></div>
-                  )}
+                  {i < steps.length - 1 && <div className="fam-reg-step-line" />}
                 </div>
               ))}
             </div>
@@ -440,27 +309,22 @@ export default function CadastroFamiliaDesktop() {
         </aside>
 
         <main className="fam-reg-content-area">
-          <div className="fam-reg-form-card">
+          <div className="fam-reg-form-card animate-slide-up">
             <div className="fam-reg-form-header">
-              <div className="fam-reg-progress-container">
-                <div className="fam-reg-step-badge">Etapa {step} de {totalSteps}</div>
+              <div className="header-top">
+                <span className="step-badge">{steps.find(s => s.id === step)?.title}</span>
                 <div className="fam-reg-progress-bar-bg">
-                  <div 
-                    className="fam-reg-progress-bar-fill" 
-                    style={{ width: `${(step / totalSteps) * 100}%` }}
-                  ></div>
+                  <div className="fam-reg-progress-bar-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
                 </div>
               </div>
-              
               <h1 className="fam-reg-form-title">
-                {step === 1 && <>Dados do <span className="fam-reg-text-highlight">Responsável</span></>}
-                {step === 2 && <>Documentos <span className="fam-reg-text-highlight">Pessoais</span></>}
-                {step === 3 && <>Informações de <span className="fam-reg-text-highlight">Contato</span></>}
-                {step === 4 && <>Endereço da <span className="fam-reg-text-highlight">Residência</span></>}
-                {step === 5 && <>Composição <span className="fam-reg-text-highlight">Familiar</span></>}
-                {step === 6 && <>Necessidades <span className="fam-reg-text-highlight">Específicas</span></>}
+                {step === 1 && <>Dados do <span className="fam-reg-text-highlight">responsável</span></>}
+                {step === 2 && <>Seus <span className="fam-reg-text-highlight">documentos</span></>}
+                {step === 3 && <>Informações de <span className="fam-reg-text-highlight">contato</span></>}
+                {step === 4 && <>Endereço da <span className="fam-reg-text-highlight">residência</span></>}
+                {step === 5 && <>Composição <span className="fam-reg-text-highlight">familiar</span></>}
+                {step === 6 && <>Suas <span className="fam-reg-text-highlight">necessidades</span></>}
               </h1>
-              
               <p className="fam-reg-form-description">
                 {step === 1 && "Vamos começar com os dados básicos do responsável pela família."}
                 {step === 2 && "Agora precisamos dos documentos para validação das informações."}
@@ -471,134 +335,359 @@ export default function CadastroFamiliaDesktop() {
               </p>
             </div>
 
-            <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNextStep(); }}>
-              <div className="fam-reg-form-body">
-                {step === 1 && (
-                  <Step1ResponsavelData 
-                    formData={formData}
-                    updateFormData={updateFormData}
-                  />
-                )}
+            <form onSubmit={handleSubmit} className="fam-reg-form-content">
+              {step === 1 && (
+                <div className="form-grid">
+                  <div className="form-group span-2">
+                    <label className="field-label">Nome Completo <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <User className="field-icon" size={20} />
+                      <input 
+                        required 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Seu nome completo"
+                        value={formData.nomeCompleto}
+                        onChange={(e) => updateFormData('nomeCompleto', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Data de Nascimento <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <Calendar className="field-icon" size={20} />
+                      <input 
+                        required 
+                        type="date" 
+                        className="form-input"
+                        value={formData.dataNascimento}
+                        onChange={(e) => updateFormData('dataNascimento', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Estado Civil <span style={{ color: '#ef4444' }}>*</span></label>
+                    <select 
+                      required 
+                      className="form-input" 
+                      value={formData.estadoCivil}
+                      onChange={(e) => updateFormData('estadoCivil', e.target.value)}
+                      style={{ paddingLeft: '1rem' }}
+                    >
+                      <option value="">Selecione</option>
+                      <option value="solteiro">Solteiro(a)</option>
+                      <option value="casado">Casado(a)</option>
+                      <option value="divorciado">Divorciado(a)</option>
+                      <option value="viuvo">Viúvo(a)</option>
+                    </select>
+                  </div>
+                  <div className="form-group span-2">
+                    <label className="field-label">Profissão / Ocupação <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input 
+                      required 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="Ex: Diarista, Vendedor, Desempregado, etc."
+                      value={formData.profissao}
+                      onChange={(e) => updateFormData('profissao', e.target.value)}
+                      style={{ paddingLeft: '1rem' }}
+                    />
+                  </div>
+                </div>
+              )}
 
-                {step === 2 && (
-                  <Step2DocumentosData 
-                    formData={formData}
-                    updateFormData={updateFormData}
-                    formatters={{
-                      handleCPFChange,
-                      handleRGChange
-                    }}
-                  />
-                )}
+              {step === 2 && (
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="field-label">CPF <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <Fingerprint className="field-icon" size={20} />
+                      <input 
+                        required 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="000.000.000-00"
+                        value={formData.cpf}
+                        onChange={handleCPFChange}
+                        maxLength={14}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">RG <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <IdCard className="field-icon" size={20} />
+                      <input 
+                        required 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="00.000.000-0"
+                        value={formData.rg}
+                        onChange={handleRGChange}
+                        maxLength={14}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">NIS (Opcional)</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="00000000000"
+                      value={formData.nis}
+                      onChange={(e) => updateFormData('nis', e.target.value)}
+                      style={{ paddingLeft: '1rem' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Renda Familiar <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <DollarSign className="field-icon" size={20} />
+                      <select 
+                        required 
+                        className="form-input"
+                        value={formData.rendaFamiliar}
+                        onChange={(e) => updateFormData('rendaFamiliar', e.target.value)}
+                      >
+                        <option value="">Selecione</option>
+                        <option value="sem-renda">Sem renda</option>
+                        <option value="ate-1-salario">Até 1 salário mínimo</option>
+                        <option value="1-a-2-salarios">1 a 2 salários mínimos</option>
+                        <option value="2-a-3-salarios">2 a 3 salários mínimos</option>
+                        <option value="acima-3-salarios">Acima de 3 salários</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-info-box span-2">
+                    <div className="info-icon-box">
+                      <ShieldCheck size={32} />
+                    </div>
+                    <div>
+                      <h4 className="info-title">Dados Protegidos</h4>
+                      <p className="info-text">Suas informações são mantidas em sigilo e usadas apenas para conectar sua família com ONGs adequadas.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                {step === 3 && (
-                  <Step3ContatoData 
-                    formData={formData}
-                    updateFormData={updateFormData}
-                    formatters={{
-                      handlePhoneChange,
-                      handleWhatsAppChange
-                    }}
+              {step === 3 && (
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="field-label">Telefone <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <Phone className="field-icon" size={20} />
+                      <input 
+                        required 
+                        type="tel" 
+                        className="form-input" 
+                        placeholder="(00) 00000-0000"
+                        value={formData.telefone}
+                        onChange={handlePhoneChange}
+                        maxLength={15}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">E-mail <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <Mail className="field-icon" size={20} />
+                      <input 
+                        required 
+                        type="email" 
+                        className="form-input" 
+                        placeholder="seu@email.com"
+                        value={formData.email}
+                        onChange={(e) => updateFormData('email', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <PasswordField 
+                    label="Senha de Acesso"
+                    placeholder="Crie uma senha segura"
+                    value={formData.password}
+                    onChange={(e) => updateFormData('password', e.target.value)}
+                    required
                   />
-                )}
+                  <PasswordField 
+                    label="Confirmar Senha"
+                    placeholder="Digite a senha novamente"
+                    value={formData.confirmPassword}
+                    onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                    required
+                  />
+                  <div className="form-group span-2">
+                    <label className="field-label">Melhor horário para contato</label>
+                    <select 
+                      className="form-input"
+                      value={formData.horarioContato}
+                      onChange={(e) => updateFormData('horarioContato', e.target.value)}
+                      style={{ paddingLeft: '1rem' }}
+                    >
+                      <option value="">Selecione</option>
+                      <option value="manha">Manhã (8h às 12h)</option>
+                      <option value="tarde">Tarde (12h às 18h)</option>
+                      <option value="noite">Noite (18h às 22h)</option>
+                      <option value="qualquer">Qualquer horário</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
-                {step === 4 && (
-                  <Step4EnderecoData 
-                    formData={formData}
-                    updateFormData={updateFormData}
-                    addressData={addressData}
-                    setAddressData={setAddressData}
-                    isLocating={isLocating}
-                    handleMapLocation={handleMapLocation}
-                  />
-                )}
+              {step === 4 && (
+                <div className="form-grid">
+                  <div className="form-group span-2">
+                    <label className="field-label">Endereço Completo <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <Home className="field-icon" size={20} />
+                      <input 
+                        required 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="Rua, Número, Complemento"
+                        value={formData.endereco}
+                        onChange={(e) => updateFormData('endereco', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Bairro <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input 
+                      required 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="Nome do bairro"
+                      value={formData.bairro}
+                      onChange={(e) => updateFormData('bairro', e.target.value)}
+                      style={{ paddingLeft: '1rem' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Ponto de Referência</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="Ex: Próximo ao mercado"
+                      value={formData.pontoReferencia}
+                      onChange={(e) => updateFormData('pontoReferencia', e.target.value)}
+                      style={{ paddingLeft: '1rem' }}
+                    />
+                  </div>
+                  <div className="form-group span-2">
+                    <label className="field-label">Tipo de Moradia <span style={{ color: '#ef4444' }}>*</span></label>
+                    <select 
+                      required 
+                      className="form-input"
+                      value={formData.tipoMoradia}
+                      onChange={(e) => updateFormData('tipoMoradia', e.target.value)}
+                      style={{ paddingLeft: '1rem' }}
+                    >
+                      <option value="">Selecione</option>
+                      <option value="casa-propria">Casa própria</option>
+                      <option value="casa-alugada">Casa alugada</option>
+                      <option value="apartamento">Apartamento</option>
+                      <option value="barraco">Barraco</option>
+                      <option value="cortico">Cortiço</option>
+                      <option value="outros">Outros</option>
+                    </select>
+                  </div>
+                </div>
+              )}
 
-                {step === 5 && (
-                  <Step5FamiliaData 
-                    familyCount={familyCount}
-                    updateFamilyCount={updateFamilyCount}
-                  />
-                )}
+              {step === 5 && (
+                <div className="form-grid">
+                  <div className="form-group span-2">
+                    <label className="field-label">Quantas pessoas moram na casa?</label>
+                    <div className="selectable-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '1rem' }}>
+                      {familyTypes.map((item) => (
+                        <div key={item.key} className="family-counter-card">
+                          <div className="family-card-header">
+                            <span className="family-card-emoji">{item.icon}</span>
+                            <span className="family-card-label">{item.label}</span>
+                          </div>
+                          <div className="family-counter">
+                            <button 
+                              type="button" 
+                              className="counter-btn counter-minus"
+                              onClick={() => updateFamilyCount(item.key, -1)}
+                              disabled={familyCount[item.key] === 0}
+                            >
+                              -
+                            </button>
+                            <span className="counter-display">{familyCount[item.key]}</span>
+                            <button 
+                              type="button" 
+                              className="counter-btn counter-plus"
+                              onClick={() => updateFamilyCount(item.key, 1)}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                {step === 6 && (
-                  <Step6NecessidadesData 
-                    formData={formData}
-                    handleCheckboxChange={handleCheckboxChange}
-                  />
-                )}
-              </div>
+              {step === 6 && (
+                <div className="form-grid">
+                  <div className="form-group span-2">
+                    <label className="field-label">Quais são suas principais necessidades?</label>
+                    <div className="selectable-grid">
+                      {necessidadesOptions.map((opt) => (
+                        <label key={opt.label} className="selectable-item">
+                          <input 
+                            type="checkbox" 
+                            name="necessidades" 
+                            value={opt.label}
+                            checked={formData.necessidades.includes(opt.label)}
+                            onChange={(e) => handleCheckboxChange('necessidades', opt.label, e.target.checked)}
+                          />
+                          <div className="selectable-card">
+                            <div className="selectable-card-icon">{opt.icon}</div>
+                            <span className="selectable-card-text">{opt.label}</span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="form-final-box span-2">
+                    <Heart size={48} className="final-icon" />
+                    <p>Ao cadastrar sua família, você se conecta com uma rede de apoio que pode ajudar nas suas necessidades mais urgentes.</p>
+                  </div>
+                </div>
+              )}
 
               <div className="fam-reg-form-footer">
-                {step > 1 && (
-                  <button type="button" className="fam-reg-btn-prev" onClick={prevStep}>
+                {step > 1 ? (
+                  <button type="button" onClick={prevStep} className="fam-reg-btn-prev">
                     <ChevronLeft size={20} />
                     Anterior
                   </button>
-                )}
-                
-                <div style={{ flex: 1 }}></div>
-                
-                {step < totalSteps ? (
-                  <button type="submit" className="fam-reg-btn-next">
-                    Próximo
-                    <ChevronRight size={20} />
-                  </button>
                 ) : (
-                  <button type="submit" className="fam-reg-btn-finish" disabled={isLoading}>
-                    {isLoading ? 'Finalizando...' : 'Finalizar Cadastro'}
-                    <CheckCircle2 size={20} />
-                  </button>
+                  <div />
                 )}
+                
+                <div className="nav-actions" style={{ display: 'flex', gap: '1rem' }}>
+                  {step === 1 && <Link to="/" className="btn-cancel">Cancelar</Link>}
+                  
+                  {step < totalSteps ? (
+                    <button type="button" onClick={handleNextStep} className="fam-reg-btn-next">
+                      <span>Avançar</span>
+                      <ChevronRight size={20} />
+                    </button>
+                  ) : (
+                    <button type="submit" className="fam-reg-btn-finish" disabled={isLoading}>
+                      <span>{isLoading ? 'Cadastrando...' : 'Finalizar Cadastro'}</span>
+                      <CheckCircle2 size={20} />
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
           </div>
         </main>
       </div>
-
-      {showAddressModal && (
-        <div className="fam-reg-modal-overlay">
-          <div className="fam-reg-address-modal">
-            <div className="fam-reg-address-header">
-              <MapPin size={24} color="#f97316" />
-              <h3>Confirme seu Endereço</h3>
-            </div>
-            <div className="fam-reg-address-content">
-              <p><strong>Endereço:</strong> {addressData.endereco}</p>
-              <p><strong>Bairro:</strong> {addressData.bairro}</p>
-              <p><strong>Referência:</strong> {addressData.referencia}</p>
-            </div>
-            <p className="fam-reg-address-warning">
-              Por favor, verifique se as informações estão corretas e faça as correções necessárias nos campos.
-            </p>
-            <button 
-              className="fam-reg-address-btn" 
-              onClick={() => setShowAddressModal(false)}
-            >
-              Entendi, vou conferir
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showPrivacyModal && (
-        <div className="fam-reg-modal-overlay">
-          <div className="fam-reg-privacy-modal">
-            <div className="fam-reg-privacy-header">
-              <ShieldCheck size={24} color="#f97316" />
-              <h3>Proteção de Dados</h3>
-            </div>
-            <p className="fam-reg-privacy-text">
-              Seus dados serão protegidos conforme a LGPD. Utilizamos apenas para conectar sua família com ONGs e doadores.
-            </p>
-            <button 
-              className="fam-reg-privacy-btn" 
-              onClick={() => setShowPrivacyModal(false)}
-            >
-              Entendi, Continuar
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Toast */}
       <Toast 
