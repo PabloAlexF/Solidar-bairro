@@ -9,6 +9,8 @@ class ComercioService {
   }
 
   async createComercio(data) {
+    console.log('Dados recebidos para comércio:', data);
+    
     const comercio = new Comercio(data);
     const errors = comercio.validate();
     
@@ -16,36 +18,26 @@ class ComercioService {
       throw new Error(`Dados inválidos: ${errors.join(', ')}`);
     }
 
-    const email = data.email || `${data.cnpj.replace(/\D/g, '')}@comercio.local`;
-    
-    const userRecord = await this.auth.createUser({
-      email: email,
-      password: data.senha,
-      displayName: data.nomeEstabelecimento
-    });
-
-    // Converter para objeto simples
+    // Converter para objeto simples sem Firebase Auth
     const comercioData = {
-      nomeEstabelecimento: comercio.nomeEstabelecimento,
+      nomeComercio: comercio.nomeComercio,
       cnpj: comercio.cnpj,
-      razaoSocial: comercio.razaoSocial,
-      tipoComercio: comercio.tipoComercio,
-      descricaoAtividade: comercio.descricaoAtividade,
-      responsavel: comercio.responsavel,
-      contato: comercio.contato,
+      email: comercio.email,
+      telefone: comercio.telefone,
       endereco: comercio.endereco,
-      senha: data.senha, // Salvar senha no Firestore
+      categoria: comercio.categoria,
+      descricao: comercio.descricao,
+      horarioFuncionamento: comercio.horarioFuncionamento,
       tipo: comercio.tipo,
       ativo: comercio.ativo,
       verificado: comercio.verificado,
-      status: 'pending', // Aguardando aprovação
+      status: 'pending',
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };
 
-    await this.db.collection(this.collection).doc(userRecord.uid).set(comercioData);
-
-    return { uid: userRecord.uid, ...comercioData };
+    const docRef = await this.db.collection(this.collection).add(comercioData);
+    return { id: docRef.id, ...comercioData };
   }
 
   async getComercios() {

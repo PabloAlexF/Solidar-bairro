@@ -9,6 +9,8 @@ class ONGService {
   }
 
   async createONG(data) {
+    console.log('Dados recebidos para ONG:', data);
+    
     const ong = new ONG(data);
     const errors = ong.validate();
     
@@ -16,35 +18,27 @@ class ONGService {
       throw new Error(`Dados inválidos: ${errors.join(', ')}`);
     }
 
-    const userRecord = await this.auth.createUser({
-      email: data.email,
-      password: data.senha,
-      displayName: data.nomeEntidade
-    });
-
-    // Converter para objeto simples
+    // Converter para objeto simples sem Firebase Auth
     const ongData = {
-      nomeEntidade: ong.nomeEntidade,
+      nome: ong.nome,
       cnpj: ong.cnpj,
-      razaoSocial: ong.razaoSocial,
-      areaTrabalho: ong.areaTrabalho,
-      descricaoAtuacao: ong.descricaoAtuacao,
-      responsavel: ong.responsavel,
-      contato: ong.contato,
+      email: ong.email,
+      telefone: ong.telefone,
       endereco: ong.endereco,
-      senha: data.senha, // Salvar senha no Firestore
+      areasAtuacao: ong.areasAtuacao,
+      descricao: ong.descricao,
+      responsavel: ong.responsavel,
       tipo: ong.tipo,
       ativo: ong.ativo,
       verificado: ong.verificado,
       statusVerificacao: ong.statusVerificacao,
-      status: 'pending', // Aguardando aprovação
+      status: 'pending',
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };
 
-    await this.db.collection(this.collection).doc(userRecord.uid).set(ongData);
-
-    return { uid: userRecord.uid, ...ongData };
+    const docRef = await this.db.collection(this.collection).add(ongData);
+    return { id: docRef.id, ...ongData };
   }
 
   async getONGs() {

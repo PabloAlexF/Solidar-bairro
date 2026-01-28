@@ -165,12 +165,16 @@ export default function CadastroCidadao() {
     try {
       // Preparar dados para envio (remover confirmPassword)
       const { confirmPassword, ...dataToSend } = formData;
-      await ApiService.createCidadao(dataToSend);
+      console.log('Dados sendo enviados para cidadão:', dataToSend);
+      
+      const response = await ApiService.createCidadao(dataToSend);
+      console.log('Resposta da API:', response);
+      
       setIsSubmitted(true);
       showToast('Cadastro realizado com sucesso! O administrador precisa liberar seu acesso.', 'success');
     } catch (error) {
       console.error('Erro ao cadastrar cidadão:', error);
-      showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
+      showToast(`Erro ao realizar cadastro: ${error.message}`, 'error');
     } finally {
       setIsLoading(false);
     }

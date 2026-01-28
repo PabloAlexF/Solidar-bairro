@@ -10,6 +10,8 @@ class CidadaoService {
   }
 
   async createCidadao(data) {
+    console.log('Dados recebidos para cidadão:', data);
+    
     const cidadao = new Cidadao(data);
     const errors = cidadao.validate();
     
@@ -17,7 +19,7 @@ class CidadaoService {
       throw new Error(`Dados inválidos: ${errors.join(', ')}`);
     }
 
-    // Converter para objeto simples
+    // Converter para objeto simples sem Firebase Auth
     const cidadaoData = {
       nome: cidadao.nome,
       email: cidadao.email,
@@ -30,20 +32,18 @@ class CidadaoService {
       disponibilidade: cidadao.disponibilidade,
       interesses: cidadao.interesses,
       proposito: cidadao.proposito,
-      senha: data.senha, // Senha já vem hasheada do controller
       ajudasConcluidas: cidadao.ajudasConcluidas,
       tipo: cidadao.tipo,
       ativo: cidadao.ativo,
-      status: 'pending', // Aguardando aprovação
+      status: 'pending',
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };
 
     const docRef = await this.db.collection(this.collection).add(cidadaoData);
-
     return { 
       success: true,
-      data: { uid: docRef.id, ...cidadaoData }
+      data: { id: docRef.id, ...cidadaoData }
     };
   }
 

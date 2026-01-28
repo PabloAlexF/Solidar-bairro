@@ -7,14 +7,14 @@ class Cidadao {
     this.ocupacao = data.ocupacao;
     this.cpf = data.cpf;
     this.rg = data.rg;
-    this.endereco = data.endereco || '';
+    this.endereco = data.endereco;
     this.disponibilidade = data.disponibilidade || [];
     this.interesses = data.interesses || [];
     this.proposito = data.proposito || '';
     this.senha = data.senha;
-    this.ajudasConcluidas = data.ajudasConcluidas !== undefined ? data.ajudasConcluidas : 0;
-    this.pontos = data.pontos !== undefined ? data.pontos : 0;
-    this.pedidosCriados = data.pedidosCriados !== undefined ? data.pedidosCriados : 0;
+    this.ajudasConcluidas = data.ajudasConcluidas || 0;
+    this.pontos = data.pontos || 0;
+    this.pedidosCriados = data.pedidosCriados || 0;
     this.fotoPerfil = data.fotoPerfil || null;
     this.tipo = 'cidadao';
     this.ativo = true;
@@ -32,7 +32,11 @@ class Cidadao {
     if (!this.ocupacao?.trim()) errors.push('Ocupação é obrigatória');
     if (!this.cpf?.trim()) errors.push('CPF é obrigatório');
     if (!this.rg?.trim()) errors.push('RG é obrigatório');
-    if (!this.endereco?.trim()) errors.push('Endereço é obrigatório');
+    
+    // Validação simplificada de endereço
+    if (!this.endereco) {
+      errors.push('Endereço é obrigatório');
+    }
     
     return errors;
   }

@@ -4,13 +4,8 @@ const authService = require('../services/authService');
 class ComercioController {
   async createComercio(req, res) {
     try {
-      // Hash da senha antes de passar para o service
-      if (req.body.senha) {
-        req.body.senha = await authService.hashPassword(req.body.senha);
-      }
-      
-      const comercio = await comercioService.createComercio(req.body);
-      res.status(201).json({ success: true, data: comercio });
+      const result = await comercioService.createComercio(req.body);
+      res.status(201).json({ success: true, data: result });
     } catch (error) {
       res.status(400).json({ success: false, error: error.message });
     }

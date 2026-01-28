@@ -8,31 +8,69 @@ class FamiliaService {
   }
 
   async createFamilia(data) {
-    console.log('Dados recebidos:', data);
+    console.log('Dados recebidos para família:', JSON.stringify(data, null, 2));
     
-    // Validação simples
-    if (!data.nomeCompleto?.trim()) {
+    // Validação - aceita tanto nomeCompleto quanto nome
+    const nome = data.nomeCompleto || data.nome;
+    if (!nome?.trim()) {
       throw new Error('Nome da família é obrigatório');
     }
 
+    // Calcular total de membros da família
+    const criancas = parseInt(data.criancas) || 0;
+    const jovens = parseInt(data.jovens) || 0;
+    const adultos = parseInt(data.adultos) || 1;
+    const idosos = parseInt(data.idosos) || 0;
+    const totalMembros = criancas + jovens + adultos + idosos;
+    
+    console.log('Debug composição familiar:');
+    console.log('  Crianças:', criancas);
+    console.log('  Jovens:', jovens);
+    console.log('  Adultos:', adultos);
+    console.log('  Idosos:', idosos);
+    console.log('  Total:', totalMembros);
+
     const familiaData = {
-      nomeCompleto: data.nomeCompleto,
-      vulnerability: data.vulnerability || 'Média',
-      composicao: {
-        totalMembros: parseInt(data.composicao?.totalMembros) || 1,
-        criancas: parseInt(data.composicao?.criancas) || 0,
-        jovens: parseInt(data.composicao?.jovens) || 0,
-        adultos: parseInt(data.composicao?.adultos) || 1,
-        idosos: parseInt(data.composicao?.idosos) || 0
-      },
-      rendaFamiliar: data.rendaFamiliar || 'Sem renda',
+      // Dados pessoais do responsável
+      nomeCompleto: nome,
+      dataNascimento: data.dataNascimento || '',
+      estadoCivil: data.estadoCivil || '',
+      profissao: data.profissao || '',
+      cpf: data.cpf || '',
+      rg: data.rg || '',
+      nis: data.nis || '',
+      
+      // Dados de contato
       telefone: data.telefone || '',
+      whatsapp: data.whatsapp || data.telefone || '',
+      email: data.email || '',
+      horarioContato: data.horarioContato || '',
+      
+      // Dados de endereço
       endereco: {
-        logradouro: data.endereco?.logradouro || '',
-        bairro: data.endereco?.bairro || 'São Benedito',
+        logradouro: data.endereco || '',
+        bairro: data.bairro || data.endereco?.bairro || 'São Benedito',
+        pontoReferencia: data.pontoReferencia || '',
+        tipoMoradia: data.tipoMoradia || '',
         latitude: data.endereco?.latitude || -19.768,
         longitude: data.endereco?.longitude || -43.85
       },
+      
+      // Composição familiar
+      composicao: {
+        totalMembros: totalMembros,
+        criancas: criancas,
+        jovens: jovens,
+        adultos: adultos,
+        idosos: idosos
+      },
+      
+      // Dados socioeconômicos
+      rendaFamiliar: data.rendaFamiliar || 'Sem renda',
+      necessidades: data.necessidades || [],
+      
+      // Dados do sistema
+      vulnerability: data.vulnerability || 'Média',
       status: data.status || 'ativo',
       tipo: 'familia',
       ativo: true,

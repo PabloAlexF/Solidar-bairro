@@ -198,12 +198,16 @@ export default function CadastroFamiliaDesktop() {
     
     try {
       const { confirmPassword, ...dataToSend } = formData;
-      await ApiService.createFamilia(dataToSend);
+      console.log('Dados sendo enviados para família:', dataToSend);
+      
+      const response = await ApiService.createFamilia(dataToSend);
+      console.log('Resposta da API:', response);
+      
       setIsSubmitted(true);
       showToast('Família cadastrada com sucesso! O administrador precisa liberar seu acesso.', 'success');
     } catch (error) {
       console.error('Erro ao cadastrar família:', error);
-      showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
+      showToast(`Erro ao realizar cadastro: ${error.message}`, 'error');
     } finally {
       setIsLoading(false);
     }
