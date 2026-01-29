@@ -1,0 +1,87 @@
+.skeleton {
+  background-color: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Specific styles for Dashboard List Item Skeleton */
+.skeleton-list-item {
+  background: white;
+  border-radius: var(--adm-radius-lg, 16px);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(0,0,0,0.03);
+  box-shadow: var(--adm-shadow-sm, 0 1px 3px rgba(0,0,0,0.1));
+}
+
+.skeleton-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.skeleton-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-text-lg {
+  height: 16px;
+  width: 60%;
+  border-radius: 4px;
+}
+
+.skeleton-text-sm {
+  height: 12px;
+  width: 40%;
+  border-radius: 4px;
+}
+
+.skeleton-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 80px;
+}
+
+.skeleton-badge {
+  height: 20px;
+  width: 50px;
+  border-radius: 10px;
+}
+
+.skeleton-btn {
+  height: 32px;
+  width: 80px;
+  border-radius: 6px;
+}

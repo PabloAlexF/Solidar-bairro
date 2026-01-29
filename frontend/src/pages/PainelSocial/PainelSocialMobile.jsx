@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from 'react-hot-toast';
 import ApiService from '../../services/apiService';
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -33,8 +32,17 @@ import {
   Baby,
   BarChart3,
   Filter,
+  RefreshCw,
+  Package,
 } from "lucide-react";
 import "./PainelSocialMobile.css";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
+import Toast from '../../components/ui/Toast';
+import { SkeletonListItem } from '../../components/ui/Skeleton';
+import EmptyState from '../../components/ui/EmptyState';
+import Badge from '../../components/ui/Badge';
+import Avatar from '../../components/ui/Avatar';
+import MapSkeleton from '../../components/ui/MapSkeleton';
 
 const MapaInterativo = lazy(() => import("./MapaInterativo"));
 
@@ -78,6 +86,10 @@ export default function PainelSocialMobile() {
     const userDropdownRef = useRef(null);
     const notificationsRef = useRef(null);
     const filterRef = useRef(null);
+    const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+    const [pullStartY, setPullStartY] = useState(0);
+    const [pullMoveY, setPullMoveY] = useState(0);
+    const [isPulling, setIsPulling] = useState(false);
     
     useEffect(() => {
       loadFamilias();
@@ -99,7 +111,12 @@ export default function PainelSocialMobile() {
           ...p,
           lat: p.endereco?.latitude || p.lat || -19.768 + (Math.random() - 0.5) * 0.01,
           lng: p.endereco?.longitude || p.lng || -43.85 + (Math.random() - 0.5) * 0.01,
-          tipo: 'pedido'
+          tipo: 'pedido',
+          createdAt: p.criadoEm || p.createdAt || new Date().toISOString(),
+          titulo: p.titulo || p.title || p.nome || 'Pedido de Ajuda',
+          categoria: p.categoria || p.category || p.tipo || 'Geral',
+          descricao: p.descricao || p.description || p.detalhes || '',
+          status: p.status || 'ativo'
         })));
       }
       
@@ -117,7 +134,8 @@ export default function PainelSocialMobile() {
           ...o,
           lat: o.endereco?.latitude || o.lat || -19.768 + (Math.random() - 0.5) * 0.01,
           lng: o.endereco?.longitude || o.lng || -43.85 + (Math.random() - 0.5) * 0.01,
-          nome: o.razaoSocial || o.nome_fantasia || o.nome
+          nome: o.razaoSocial || o.nome_fantasia || o.nome,
+          servicos: o.causas || []
         })));
       }
     } catch (error) {
@@ -144,12 +162,13 @@ export default function PainelSocialMobile() {
           address: f.endereco?.logradouro || f.address || 'Endereço não informado',
           status: f.status === 'pending' ? 'pendente' : f.status || 'ativo',
           registeredAt: new Date().toLocaleDateString('pt-BR'),
-          lastUpdate: new Date().toISOString().split('T')[0]
+          lastUpdate: new Date().toISOString().split('T')[0],
+          createdAt: f.criadoEm || f.createdAt || new Date().toISOString()
         }));
         setFamilies(formatted);
       }
     } catch (error) {
-      toast.error('Erro ao carregar famílias');
+      setToast({ show: true, message: 'Erro ao carregar famílias', type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -203,7 +222,7 @@ export default function PainelSocialMobile() {
   }, [families]);
 
   const saveFamily = async () => {
-    if (!formData.name) return toast.error('Nome é obrigatório');
+    if (!formData.name) return setToast({ show: true, message: 'Nome é obrigatório', type: 'error' });
     try {
       const familyData = {
         nomeCompleto: formData.name,
@@ -220,12 +239,12 @@ export default function PainelSocialMobile() {
       };
       const res = editingFamily ? await ApiService.updateFamiliaPanel(editingFamily.id, familyData) : await ApiService.createFamiliaPanel(familyData);
       if (res.success) {
-        toast.success(editingFamily ? 'Atualizado!' : 'Cadastrado!');
+        setToast({ show: true, message: editingFamily ? 'Atualizado!' : 'Cadastrado!', type: 'success' });
         await loadFamilias();
         resetForm();
       }
     } catch (error) {
-      toast.error('Erro ao salvar');
+      setToast({ show: true, message: 'Erro ao salvar', type: 'error' });
     }
   };
 
@@ -234,12 +253,12 @@ export default function PainelSocialMobile() {
     try {
       const res = await ApiService.deleteFamiliaPanel(id);
       if (res.success) {
-        toast.success('Excluído');
+        setToast({ show: true, message: 'Excluído', type: 'success' });
         await loadFamilias();
         setSelectedFamily(null);
       }
     } catch (error) {
-      toast.error('Erro ao excluir');
+      setToast({ show: true, message: 'Erro ao excluir', type: 'error' });
     }
   };
 
@@ -262,39 +281,55 @@ export default function PainelSocialMobile() {
       const res = await ApiService.updateFamiliaPanel(id, { status: nextStatus });
       if (res.success) {
         await loadFamilias();
-        toast.success(`Status: ${nextStatus}`);
+        setToast({ show: true, message: `Status: ${nextStatus}`, type: 'success' });
       }
     } catch (error) {
-      toast.error('Erro ao atualizar');
+      setToast({ show: true, message: 'Erro ao atualizar', type: 'error' });
     }
   };
 
-  const getStatusLabel = (s) => {
-    switch (s) {
-      case 'ativo': return 'Ativo';
-      case 'pendente': return 'Pendente';
-      case 'atendido': return 'Atendido';
-      default: return s;
+  // Pull to Refresh Handlers
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0 && view === 'lista') {
+      setPullStartY(e.touches[0].clientY);
+      setIsPulling(true);
     }
   };
 
-    if (isLoading) return (
-      <div className="loading-screen">
-        <div className="loading-content" style={{ textAlign: 'center' }}>
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            className="loading-spinner" 
-            style={{ margin: '0 auto 20px' }}
-          />
-          <h3 style={{ color: 'var(--text-main)', fontWeight: 800, letterSpacing: '-0.02em' }}>Carregando Painel</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>Sincronizando dados em tempo real...</p>
-        </div>
-      </div>
-    );
+  const handleTouchMove = (e) => {
+    if (!isPulling) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - pullStartY;
+    
+    if (diff > 0 && window.scrollY === 0) {
+      setPullMoveY(Math.min(diff * 0.4, 100));
+    } else {
+      setPullMoveY(0);
+      setIsPulling(false);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (!isPulling) return;
+    setIsPulling(false);
+    
+    if (pullMoveY > 50) {
+      setPullMoveY(0);
+      await Promise.all([loadFamilias(), loadPainelData()]);
+    } else {
+      setPullMoveY(0);
+    }
+  };
+
+  const distributionData = [
+    { name: 'Famílias', value: stats.total, color: '#f97316' },
+    { name: 'Pedidos', value: pedidosData.length, color: '#ef4444' },
+    { name: 'Comércios', value: comerciosData.length, color: '#3b82f6' },
+    { name: 'ONGs', value: ongsData.length, color: '#8b5cf6' },
+  ];
 
   return (
-    <div className="panel panel-mobile">
+    <div className="panel panel-mobile" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       <header className="panel-header">
         <div className="header-left">
           <button className="logo-mobile" onClick={() => navigate("/")}>
@@ -353,13 +388,16 @@ export default function PainelSocialMobile() {
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
                   className="dropdown-menu"
                 >
-                  <button className="dropdown-item" onClick={() => { setShowUserDropdown(false); toast.info("Abrindo perfil..."); }}>
+                  <button className="dropdown-item" onClick={() => { setShowUserDropdown(false); setToast({ show: true, message: "Abrindo perfil...", type: 'info' }); }}>
                     <User size={18} /> Perfil
+                  </button>
+                  <button className="dropdown-item" onClick={() => { setShowUserDropdown(false); navigate("/meus-pedidos"); }}>
+                    <Package size={18} /> Meus Pedidos
                   </button>
                   <button className="dropdown-item" onClick={() => { setShowUserDropdown(false); setView("lista"); }}>
                     <HomeIcon size={18} /> Home
                   </button>
-                  <button className="dropdown-item" onClick={() => { setShowUserDropdown(false); toast.info("Abrindo configurações..."); }}>
+                  <button className="dropdown-item" onClick={() => { setShowUserDropdown(false); setToast({ show: true, message: "Abrindo configurações...", type: 'info' }); }}>
                     <Settings size={18} /> Configurações
                   </button>
                   <div className="dropdown-divider" />
@@ -372,6 +410,16 @@ export default function PainelSocialMobile() {
           </div>
         </div>
       </header>
+
+      <div 
+        className="adm-pull-indicator"
+        style={{ 
+          height: `${pullMoveY}px`,
+          opacity: pullMoveY > 0 ? Math.min(pullMoveY / 40, 1) : 0
+        }}
+      >
+        <RefreshCw className={`adm-pull-icon ${pullMoveY > 50 ? 'active' : ''}`} size={24} />
+      </div>
 
       <div className="panel-body">
         <aside className="sidebar">
@@ -421,6 +469,41 @@ export default function PainelSocialMobile() {
                   <div className="stat-box"><span className="stat-box-value">{stats.idosos}</span><span className="stat-box-label">Idosos</span></div>
                   <div className="stat-box alert"><span className="stat-box-value">{stats.altaVuln}</span><span className="stat-box-label">Crítico</span></div>
                 </div>
+
+                <div style={{ 
+                  background: 'white', 
+                  borderRadius: 'var(--adm-radius-lg)', 
+                  padding: '1.5rem', 
+                  marginTop: '1.5rem', 
+                  boxShadow: 'var(--adm-shadow-md)',
+                  border: '1px solid rgba(0,0,0,0.04)'
+                }}>
+                  <div className="section-header" style={{ marginBottom: '1rem' }}>Distribuição da Rede</div>
+                  <div style={{ width: '100%', height: 250 }}>
+                    <ResponsiveContainer>
+                      <PieChart>
+                        <Pie
+                          data={distributionData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {distributionData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip 
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                        />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
                 <div className="sidebar-section" style={{ marginTop: '32px' }}>
                   <div className="section-header">Atendimento</div>
                   <div className="status-summary">
@@ -516,7 +599,13 @@ export default function PainelSocialMobile() {
                       <div className="th-cell"></div>
                     </div>
                     <div className="table-body">
-                      {filteredFamilies.length > 0 ? filteredFamilies.map((f) => (
+                      {isLoading ? (
+                        <div className="adm-items-list">
+                          {[1, 2, 3, 4, 5].map((i) => (
+                            <SkeletonListItem key={i} />
+                          ))}
+                        </div>
+                      ) : filteredFamilies.length > 0 ? filteredFamilies.map((f) => (
                         <motion.div 
                           layout
                           key={f.id} 
@@ -524,7 +613,11 @@ export default function PainelSocialMobile() {
                           onClick={() => setSelectedFamily(f)}
                         >
                           <div className="td-family">
-                            <div className="family-avatar" data-vuln={f.vulnerability.toLowerCase()}>{f.name.charAt(0)}</div>
+                            <Avatar 
+                              alt={f.name} 
+                              className="family-avatar" 
+                              fallback={<User size={20} />}
+                            />
                             <div className="family-info">
                               <span className="family-name">{f.name}</span>
                               <span className="family-meta">{f.address}</span>
@@ -549,12 +642,9 @@ export default function PainelSocialMobile() {
                             <span className="family-meta">{f.registeredAt}</span>
                           </div>
                           <div className="td-status">
-                            <button 
-                              className={`status-badge ${f.status}`} 
-                              onClick={(e) => { e.stopPropagation(); updateStatus(f.id, f.status); }}
-                            >
-                              {getStatusLabel(f.status)}
-                            </button>
+                            <div onClick={(e) => { e.stopPropagation(); updateStatus(f.id, f.status); }}>
+                              <Badge variant={f.status}>{f.status === 'ativo' ? 'Ativo' : f.status === 'pendente' ? 'Pendente' : 'Atendido'}</Badge>
+                            </div>
                           </div>
                           <div className="td-actions" ref={openMenu === f.id ? menuRef : null}>
                             <button className="menu-trigger" onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === f.id ? null : f.id); }}><MoreVertical size={18} /></button>
@@ -567,21 +657,25 @@ export default function PainelSocialMobile() {
                           </div>
                         </motion.div>
                       )) : (
-                  <div className="empty-state">
-                    <div className="empty-icon-wrapper">
-                      <Users size={48} />
-                    </div>
-                    <h3>Nenhuma família encontrada</h3>
-                    <p>Tente ajustar sua busca ou filtros para encontrar o que procura.</p>
-                  </div>
+                        <EmptyState 
+                          title="Nenhuma família encontrada" 
+                          description="Tente ajustar sua busca ou filtros para encontrar o que procura." 
+                        />
                       )}
                     </div>
                   </div>
                 ) : (
                   <div className="map-layout">
                     <div className="map-container">
-                      <Suspense fallback={<div className="map-skeleton"><div className="map-loader" /></div>}>
-                        <MapaInterativo familias={filteredFamilies} onFamiliaClick={setSelectedFamily} layers={mapLayers} />
+                      <Suspense fallback={<MapSkeleton />}>
+                        <MapaInterativo 
+                          familias={filteredFamilies} 
+                          pedidos={pedidosData}
+                          comercios={comerciosData}
+                          ongs={ongsData}
+                          onFamiliaClick={setSelectedFamily} 
+                          layers={mapLayers} 
+                        />
                       </Suspense>
                     </div>
                   </div>
@@ -626,7 +720,11 @@ export default function PainelSocialMobile() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="modal-head">
-                <div className="modal-avatar" data-vuln={selectedFamily.vulnerability.toLowerCase()}>{selectedFamily.name.charAt(0)}</div>
+                <Avatar 
+                  alt={selectedFamily.name} 
+                  size="lg"
+                  fallback={<User size={24} />}
+                />
                 <div className="modal-title">
                   <h2>{selectedFamily.name}</h2>
                   <span className={`vuln-tag ${selectedFamily.vulnerability.toLowerCase()}`}>{selectedFamily.vulnerability} Vulnerabilidade</span>
@@ -716,6 +814,13 @@ export default function PainelSocialMobile() {
           </div>
         )}
       </AnimatePresence>
+      
+      <Toast 
+        show={toast.show} 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ ...toast, show: false })} 
+      />
     </div>
   );
 }

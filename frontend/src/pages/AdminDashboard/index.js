@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import apiService from '../../services/apiService';
 import DashboardMobile from './DashboardMobile';
-import Toast from '../../components/ui/Toast';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,19 +13,22 @@ import {
   Tooltip,
   Legend,
   ArcElement,
+  PointElement,
+  LineElement,
+  Filler,
 } from 'chart.js';
-import { Bar, Doughnut } from 'react-chartjs-2';
+import { Bar, Doughnut, Line } from 'react-chartjs-2';
 import { 
   LayoutDashboard, Building2, Users, 
   ShieldCheck, LogOut, Search, Filter,
-  Eye, CheckCircle, XCircle, FileText,
-  MapPin, Globe, Mail, Phone, Calendar,
-  ExternalLink, X, User, Fingerprint,
+  Eye, CheckCircle, XCircle, Trash2,
   Key, Shield, Hash, Map, UserCircle,
   Bell, AlertCircle, Clock, ArrowRight,
   Heart, Briefcase, Store, GraduationCap,
   Zap, Target, Sparkles, DollarSign,
-  Home, Users2, ListChecks
+  Home, Users2, ListChecks, RefreshCw,
+  Download, ChevronDown, SlidersHorizontal,
+  MoreHorizontal, Calendar
 } from 'lucide-react';
 import './styles.css';
 
@@ -36,65 +39,21 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  ArcElement,
+  PointElement,
+  LineElement,
+  Filler
 );
-
-// Real API service
-const apiService = {
-  async request(endpoint) {
-    const token = localStorage.getItem('solidar-token');
-    try {
-      const response = await fetch(`http://localhost:3001/api${endpoint}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('Resposta não-JSON:', text);
-        throw new Error(`Servidor retornou ${response.status}. Resposta: ${text.substring(0, 100)}`);
-      }
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        console.error('Erro na API:', data);
-        throw new Error(data.error || `Erro HTTP: ${response.status}`);
-      }
-      
-      return data;
-    } catch (error) {
-      console.error('Erro na requisição:', { endpoint, error: error.message });
-      throw error;
-    }
-  },
-  
-  async updateStatus(entityType, entityId, status, reason) {
-    const token = localStorage.getItem('solidar-token');
-    const response = await fetch(`http://localhost:3001/api/admin/entity/${entityType}/${entityId}/status`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ status, reason })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erro ao atualizar status');
-    }
-    
-    return await response.json();
-  }
-};
 
 export default function AdminDashboard() {
   const isMobile = useIsMobile();
   const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [filterStatus, setFilterStatus] = useState('all'); // all, pending, verified, rejected
+  const [sortBy, setSortBy] = useState('date_desc'); // date_desc, date_asc, name_asc
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [dateStart, setDateStart] = useState('');
+  const [dateEnd, setDateEnd] = useState('');
   const [ongs, setOngs] = useState([]);
   const [commerces, setCommerces] = useState([]);
   const [profiles, setProfiles] = useState([]);
@@ -102,86 +61,129 @@ export default function AdminDashboard() {
   const [selectedOng, setSelectedOng] = useState(null);
   const [selectedCommerce, setSelectedCommerce] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
-  const [stats, setStats] = useState({ 
-    pendingOngs: 0, 
-    pendingCommerces: 0,
-    pendingFamilies: 0,
-    pendingCitizens: 0,
-    totalOngs: 0,
-    totalCommerces: 0,
-    totalFamilies: 0,
-    totalCitizens: 0
-  });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showNotifications, setShowNotifications] = useState(false);
+  const [evaluationChecklist, setEvaluationChecklist] = useState({ check1: false, check2: false, check3: false, check4: false });
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [evaluationChecklist, setEvaluationChecklist] = useState({
-    check1: false,
-    check2: false,
-    check3: false,
-    check4: false
-  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showNotifications, setShowNotifications] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   const showToast = (message, type = 'info') => {
     setToast({ show: true, message, type });
+    setTimeout(() => setToast({ ...toast, show: false }), 3000);
   };
 
   useEffect(() => {
+    setFilterStatus('all');
+    setSearchTerm('');
+    setDateStart('');
+    setDateEnd('');
+    setSelectedItems([]);
     fetchData();
   }, [activeTab]);
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+    showToast('Dados atualizados com sucesso!', 'success');
+  };
+
+  const handleExport = () => {
+    showToast('Gerando relatório CSV...', 'info');
+    
+    const escapeCsv = (field) => {
+      if (field === null || field === undefined) return '';
+      const stringField = String(field);
+      if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+        return `"${stringField.replace(/"/g, '""')}"`;
+      }
+      return stringField;
+    };
+
+    let data = [];
+    let headers = [];
+    let filename = 'relatorio';
+
+    if (activeTab === 'dashboard') {
+      filename = 'dashboard_resumo';
+      headers = ['Categoria', 'Total', 'Pendentes', 'Verificados'];
+      data = [
+        { cat: 'ONGs', total: displayStats.totalOngs, pending: displayStats.pendingOngs, verified: displayStats.totalOngs - displayStats.pendingOngs },
+        { cat: 'Comércios', total: displayStats.totalCommerces, pending: displayStats.pendingCommerces, verified: displayStats.totalCommerces - displayStats.pendingCommerces },
+        { cat: 'Famílias', total: displayStats.totalFamilies, pending: displayStats.pendingFamilies, verified: displayStats.totalFamilies - displayStats.pendingFamilies },
+        { cat: 'Cidadãos', total: displayStats.totalCitizens, pending: displayStats.pendingCitizens, verified: displayStats.totalCitizens - displayStats.pendingCitizens }
+      ];
+    } else if (activeTab === 'ongs') {
+      filename = 'ongs_export';
+      headers = ['Nome Fantasia', 'Razão Social', 'CNPJ', 'Email', 'Telefone', 'Status', 'Data Cadastro'];
+      data = processedOngs.map(item => ({
+        nome: item.nome_fantasia || item.nomeFantasia || item.razaoSocial || '',
+        razao: item.razao_social || item.razaoSocial || '',
+        cnpj: item.cnpj || '',
+        email: item.email || '',
+        tel: item.telefone || '',
+        status: item.status || 'pending',
+        data: new Date(item.created_at || item.createdAt || Date.now()).toLocaleDateString('pt-BR')
+      }));
+    } else if (activeTab === 'commerces') {
+      filename = 'comercios_export';
+      headers = ['Nome Estabelecimento', 'CNPJ', 'Responsável', 'Email', 'Telefone', 'Status', 'Data Cadastro'];
+      data = processedCommerces.map(item => ({
+        nome: item.nomeEstabelecimento || item.nome_fantasia || '',
+        cnpj: item.cnpj || '',
+        resp: item.responsavel?.nome || item.responsavel_legal || '',
+        email: item.contato?.email || item.email || '',
+        tel: item.contato?.telefone || item.telefone || '',
+        status: item.status || 'pending',
+        data: new Date(item.created_at || item.createdAt || Date.now()).toLocaleDateString('pt-BR')
+      }));
+    } else if (activeTab === 'families' || activeTab === 'citizens') {
+      filename = `${activeTab}_export`;
+      headers = ['Nome', 'CPF/Documento', 'Email', 'Telefone', 'Status', 'Data Cadastro'];
+      data = processedProfiles.map(item => ({
+        nome: item.nome || item.nomeCompleto || '',
+        doc: item.cpf || item.nis || '',
+        email: item.email || '',
+        tel: item.telefone || '',
+        status: item.status || 'pending',
+        data: new Date(item.created_at || item.createdAt || Date.now()).toLocaleDateString('pt-BR')
+      }));
+    }
+
+    if (!data.length) {
+      showToast('Nenhum dado para exportar.', 'warning');
+      return;
+    }
+
+    const csvContent = [headers.join(','), ...data.map(row => Object.values(row).map(escapeCsv).join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.csv`;
+    link.click();
+    showToast('Download iniciado!', 'success');
+  };
+
   const fetchData = async () => {
     setLoading(true);
-    if (activeTab === 'dashboard') {
-      await Promise.all([fetchOngs(), fetchCommerces(), fetchProfiles()]);
-    } else if (activeTab === 'ongs') {
-      await fetchOngs();
-    } else if (activeTab === 'commerces') {
-      await fetchCommerces();
-    } else {
-      await fetchProfiles();
-    }
-    setLoading(false);
-  };
-
-  const fetchOngs = async () => {
     try {
-      const response = await apiService.request('/admin/entities/ongs');
-      const data = response.data || [];
-      setOngs(data);
-      const pending = data.filter(o => o.status === 'pending').length;
-      setStats(prev => ({ ...prev, pendingOngs: pending, totalOngs: data.length }));
-    } catch (error) {
-      console.error('Error fetching ONGs:', error);
-      setOngs([]);
-    }
-  };
+      // Fetch ONGs
+      const ongsResponse = await apiService.request('/admin/entities/ongs');
+      setOngs(ongsResponse.data || []);
 
-  const fetchCommerces = async () => {
-    try {
-      const response = await apiService.request('/admin/entities/comercios');
-      const data = response.data || [];
-      setCommerces(data);
-      const pending = data.filter(c => c.status === 'pending').length;
-      setStats(prev => ({ ...prev, pendingCommerces: pending, totalCommerces: data.length }));
-    } catch (error) {
-      console.error('Error fetching commerces:', error);
-      setCommerces([]);
-    }
-  };
+      // Fetch Commerces
+      const commercesResponse = await apiService.request('/admin/entities/comercios');
+      setCommerces(commercesResponse.data || []);
 
-  const fetchProfiles = async () => {
-    try {
-      const [familiasResponse, cidadaosResponse] = await Promise.all([
-        apiService.request('/admin/entities/familias'),
-        apiService.request('/admin/entities/cidadaos')
-      ]);
+      // Fetch Profiles
+      const familiasResponse = await apiService.request('/admin/entities/familias');
+      const cidadaosResponse = await apiService.request('/admin/entities/cidadaos');
       
-      const familias = familiasResponse.data || [];
-      const cidadaos = cidadaosResponse.data || [];
+      const familias = (familiasResponse.data || []).map(f => ({ ...f, _type: 'family' }));
+      const cidadaos = (cidadaosResponse.data || []).map(c => ({ ...c, _type: 'citizen' }));
       
       if (activeTab === 'families') {
         setProfiles(familias);
@@ -190,80 +192,182 @@ export default function AdminDashboard() {
       } else {
         setProfiles([...familias, ...cidadaos]);
       }
-      
-      const pendingFamilies = familias.filter(f => f.status === 'pending').length;
-      const pendingCitizens = cidadaos.filter(c => c.status === 'pending').length;
-      
-      setStats(prev => ({ 
-        ...prev, 
-        totalFamilies: familias.length, 
-        pendingFamilies,
-        totalCitizens: cidadaos.length,
-        pendingCitizens
-      }));
     } catch (error) {
-      console.error('Error fetching profiles:', error);
+      console.error('Error fetching data:', error);
+      // Mock data fallback if API fails
+      setOngs([]);
+      setCommerces([]);
       setProfiles([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpdateStatus = async (id, status, type, reason) => {
-    try {
-      await apiService.updateStatus(type, id, status, reason);
-      
-      if (type === 'ongs') fetchOngs();
-      else if (type === 'comercios') fetchCommerces();
-      else fetchProfiles();
-      
-      setSelectedOng(null);
-      setSelectedCommerce(null);
-      setSelectedProfile(null);
-      setIsRejecting(false);
-      setRejectionReason('');
-      setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false });
-      
-      const entityName = type === 'ongs' ? 'ONG' : type === 'comercios' ? 'Comércio' : type === 'cidadaos' ? 'Cidadão' : 'Família';
-      const statusText = status === 'verified' ? 'aprovado' : 'rejeitado';
-      showToast(`${entityName} ${statusText} com sucesso!`, status === 'verified' ? 'success' : 'info');
-    } catch (error) {
-      console.error('Error updating status:', error);
-      showToast('Erro ao atualizar status. Tente novamente.', 'error');
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = () => {
+    logout();
     navigate('/');
   };
 
-  const filteredOngs = ongs.filter(ong => 
-    ong.razaoSocial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ong.razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ong.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ong.cnpj?.includes(searchTerm) ||
-    ong.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter and Sort Logic
+  const filterAndSortData = (data, type) => {
+    let result = [...data];
 
-  const filteredCommerces = commerces.filter(commerce => 
-    commerce.nomeEstabelecimento?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    commerce.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    commerce.cnpj?.includes(searchTerm) ||
-    commerce.contato?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    commerce.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    // 1. Search
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase();
+      result = result.filter(item => {
+        const name = item.nome || item.nomeCompleto || item.razaoSocial || item.razao_social || item.nome_fantasia || item.nomeFantasia || item.nomeEstabelecimento || '';
+        const email = item.email || item.contato?.email || '';
+        const doc = item.cpf || item.cnpj || '';
+        return name.toLowerCase().includes(lowerTerm) || email.toLowerCase().includes(lowerTerm) || doc.includes(lowerTerm);
+      });
+    }
 
-  const pendingOngs = ongs.filter(o => o.status === 'pending');
-  const pendingCommerces = commerces.filter(c => c.status === 'pending');
+    // 2. Status Filter
+    if (filterStatus !== 'all') {
+      result = result.filter(item => (item.status || 'pending') === filterStatus);
+    }
 
-  const filteredProfiles = profiles.filter(profile => {
-    const matchesSearch = 
-      profile.nomeCompleto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.cpf?.includes(searchTerm);
+    // 3. Date Filter
+    if (dateStart) {
+      const start = new Date(dateStart);
+      start.setHours(0, 0, 0, 0);
+      result = result.filter(item => new Date(item.created_at || item.createdAt || 0) >= start);
+    }
+    if (dateEnd) {
+      const end = new Date(dateEnd);
+      end.setHours(23, 59, 59, 999);
+      result = result.filter(item => new Date(item.created_at || item.createdAt || 0) <= end);
+    }
+
+    // 4. Sort
+    result.sort((a, b) => {
+      if (sortBy === 'name_asc') {
+        const nameA = a.nome || a.nomeCompleto || a.razaoSocial || a.nomeEstabelecimento || '';
+        const nameB = b.nome || b.nomeCompleto || b.razaoSocial || b.nomeEstabelecimento || '';
+        return nameA.localeCompare(nameB);
+      } else if (sortBy === 'date_asc') {
+        const dateA = new Date(a.created_at || a.createdAt || 0);
+        const dateB = new Date(b.created_at || b.createdAt || 0);
+        return dateA - dateB;
+      } else { // date_desc (default)
+        const dateA = new Date(a.created_at || a.createdAt || 0);
+        const dateB = new Date(b.created_at || b.createdAt || 0);
+        return dateB - dateA;
+      }
+    });
+
+    return result;
+  };
+
+  const processedOngs = useMemo(() => filterAndSortData(ongs, 'ongs'), [ongs, searchTerm, filterStatus, sortBy, dateStart, dateEnd]);
+  const processedCommerces = useMemo(() => filterAndSortData(commerces, 'commerces'), [commerces, searchTerm, filterStatus, sortBy, dateStart, dateEnd]);
+  const processedProfiles = useMemo(() => filterAndSortData(profiles, 'profiles'), [profiles, searchTerm, filterStatus, sortBy, dateStart, dateEnd]);
+
+  const getCurrentList = () => {
+    if (activeTab === 'ongs') return processedOngs;
+    if (activeTab === 'commerces') return processedCommerces;
+    if (activeTab === 'families' || activeTab === 'citizens') return processedProfiles;
+    return [];
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const list = getCurrentList();
+      setSelectedItems(list.map(item => item.id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  const handleSelectItem = (id) => {
+    setSelectedItems(prev => {
+      if (prev.includes(id)) return prev.filter(item => item !== id);
+      return [...prev, id];
+    });
+  };
+
+  const handleBulkAction = async (action) => {
+    if (selectedItems.length === 0) return;
     
-    return matchesSearch;
-  });
+    const actionLabel = action === 'verified' ? 'aprovar' : 'rejeitar';
+    if (!window.confirm(`Tem certeza que deseja ${actionLabel} ${selectedItems.length} itens selecionados?`)) {
+      return;
+    }
+
+    setLoading(true);
+    let entityType = '';
+    if (activeTab === 'ongs') entityType = 'ongs';
+    else if (activeTab === 'commerces') entityType = 'comercios';
+    else if (activeTab === 'families') entityType = 'familias';
+    else if (activeTab === 'citizens') entityType = 'cidadaos';
+
+    const promises = selectedItems.map(id => 
+      apiService.updateStatus(entityType, id, action, action === 'rejected' ? 'Ação em massa via Admin' : '')
+    );
+
+    await Promise.allSettled(promises);
+    setLoading(false);
+    setSelectedItems([]);
+    showToast(`${selectedItems.length} itens processados.`, 'success');
+    fetchData();
+  };
+
+  // Calculate stats dynamically based on filtered data
+  const displayStats = useMemo(() => {
+    const pOngs = processedOngs || [];
+    const pCommerces = processedCommerces || [];
+    const pProfiles = processedProfiles || [];
+    
+    const pFamilies = pProfiles.filter(p => p._type === 'family');
+    const pCitizens = pProfiles.filter(p => p._type === 'citizen');
+
+    return {
+      totalOngs: pOngs.length,
+      pendingOngs: pOngs.filter(o => o.status === 'pending').length,
+      totalCommerces: pCommerces.length,
+      pendingCommerces: pCommerces.filter(c => c.status === 'pending').length,
+      totalFamilies: pFamilies.length,
+      pendingFamilies: pFamilies.filter(f => f.status === 'pending').length,
+      totalCitizens: pCitizens.length,
+      pendingCitizens: pCitizens.filter(c => c.status === 'pending').length,
+    };
+  }, [processedOngs, processedCommerces, processedProfiles]);
+
+  // Calculate monthly stats for the last 6 months
+  const monthlyStats = useMemo(() => {
+    const labels = [];
+    const data = [0, 0, 0, 0, 0, 0];
+    const today = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const monthName = d.toLocaleString('pt-BR', { month: 'short' });
+      labels.push(monthName.charAt(0).toUpperCase() + monthName.slice(1));
+    }
+
+    const allEntities = [...processedOngs, ...processedCommerces, ...processedProfiles];
+    allEntities.forEach(entity => {
+      const date = new Date(entity.created_at || entity.createdAt || Date.now());
+      const monthDiff = (today.getFullYear() - date.getFullYear()) * 12 + (today.getMonth() - date.getMonth());
+      if (monthDiff >= 0 && monthDiff < 6) {
+        data[5 - monthDiff]++;
+      }
+    });
+    return { labels, data };
+  }, [processedOngs, processedCommerces, processedProfiles]);
+
+  // Helper for status badge
+  const getStatusBadge = (status) => {
+    const s = status || 'pending';
+    const config = {
+      verified: { className: 'status-badge verified', label: 'Verificado', icon: CheckCircle },
+      pending: { className: 'status-badge pending', label: 'Pendente', icon: Clock },
+      rejected: { className: 'status-badge rejected', label: 'Rejeitado', icon: XCircle },
+    };
+    const { className, label, icon: Icon } = config[s] || config.pending;
+    return <span className={className}><Icon size={12} style={{ marginRight: 4 }} /> {label}</span>;
+  };
 
   // Render mobile version if on mobile device
   if (isMobile) {
@@ -271,68 +375,50 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="admin-dashboard-wrapper">
+    <div className="admin-container">
       {/* Sidebar */}
       <aside className="admin-sidebar">
-        <div className="nav-brand">
-          <div className="brand-logo-wrapper">
-            <div className="admin-logo-box">
-              <ShieldCheck size={24} color="white" />
-            </div>
-            <div className="brand-decoration"></div>
+        <div className="admin-sidebar-header">
+          <div className="admin-logo-box">
+            <ShieldCheck size={24} />
           </div>
-          <div className="brand-text">
-            <span className="brand-name">Solidar</span>
-            <span className="brand-subname">Admin</span>
+          <div className="admin-logo-text">
+            <span className="admin-logo-name">Solidar</span>
+            <span className="admin-logo-sub">Painel Admin</span>
           </div>
         </div>
 
-        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div 
-            className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('dashboard'); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }}
-          >
+        <nav className="admin-sidebar-nav">
+          <button onClick={() => setActiveTab('dashboard')} className={`admin-nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`}>
             <LayoutDashboard size={20} />
-            <span>Dashboard</span>
-          </div>
-          <div 
-            className={`admin-nav-item ${activeTab === 'ongs' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('ongs'); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }}
-          >
+            <span>Visão Geral</span>
+          </button>
+          <button onClick={() => setActiveTab('ongs')} className={`admin-nav-btn ${activeTab === 'ongs' ? 'active' : ''}`}>
             <Building2 size={20} />
             <span>ONGs</span>
-          </div>
-          <div 
-            className={`admin-nav-item ${activeTab === 'commerces' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('commerces'); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }}
-          >
+            {displayStats.pendingOngs > 0 && <span className="admin-nav-badge">{displayStats.pendingOngs}</span>}
+          </button>
+          <button onClick={() => setActiveTab('commerces')} className={`admin-nav-btn ${activeTab === 'commerces' ? 'active' : ''}`}>
             <Store size={20} />
             <span>Comércios</span>
-          </div>
-          <div 
-            className={`admin-nav-item ${activeTab === 'families' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('families'); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }}
-          >
+            {displayStats.pendingCommerces > 0 && <span className="admin-nav-badge">{displayStats.pendingCommerces}</span>}
+          </button>
+          <button onClick={() => setActiveTab('families')} className={`admin-nav-btn ${activeTab === 'families' ? 'active' : ''}`}>
             <Users size={20} />
             <span>Famílias</span>
-          </div>
-          <div 
-            className={`admin-nav-item ${activeTab === 'citizens' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('citizens'); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }}
-          >
+            {displayStats.pendingFamilies > 0 && <span className="admin-nav-badge">{displayStats.pendingFamilies}</span>}
+          </button>
+          <button onClick={() => setActiveTab('citizens')} className={`admin-nav-btn ${activeTab === 'citizens' ? 'active' : ''}`}>
             <UserCircle size={20} />
             <span>Cidadãos</span>
-          </div>
+            {displayStats.pendingCitizens > 0 && <span className="admin-nav-badge">{displayStats.pendingCitizens}</span>}
+          </button>
         </nav>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: 'auto' }}>
-          <button onClick={() => navigate('/')} className="admin-nav-item" style={{ background: 'transparent', border: 'none', width: '100%' }}>
-            <Globe size={20} />
-            <span>Site</span>
-          </button>
-          <button onClick={handleLogout} className="admin-nav-item" style={{ background: 'transparent', border: 'none', width: '100%' }}>
+        <div className="admin-sidebar-footer">
+          <button onClick={handleLogout} className="admin-logout-btn">
             <LogOut size={20} />
-            <span>Sair</span>
+            <span>Sair do Sistema</span>
           </button>
         </div>
       </aside>
@@ -342,7 +428,7 @@ export default function AdminDashboard() {
         <header className="admin-header">
           <div>
             <h1 className="admin-page-title">
-              {activeTab === 'dashboard' ? 'Dashboard Geral' :
+              {activeTab === 'dashboard' ? 'Painel de Controle' : 
                activeTab === 'ongs' ? 'Gestão de ONGs' : 
                activeTab === 'commerces' ? 'Gestão de Comércios' :
                activeTab === 'families' ? 'Gestão de Famílias' : 'Gestão de Cidadãos'}
@@ -353,76 +439,19 @@ export default function AdminDashboard() {
           </div>
           
           <div className="admin-header-actions">
-            <div style={{ position: 'relative' }}>
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)}
-                className={`notification-trigger ${(pendingOngs.length + pendingCommerces.length + stats.pendingFamilies + stats.pendingCitizens) > 0 ? 'has-notifications' : ''}`}
-              >
-                <Bell size={22} />
-                {(pendingOngs.length + pendingCommerces.length + stats.pendingFamilies + stats.pendingCitizens) > 0 && (
-                  <span className="notification-badge">{pendingOngs.length + pendingCommerces.length + stats.pendingFamilies + stats.pendingCitizens}</span>
-                )}
-              </button>
-
-              {showNotifications && (
-                <div className="notification-dropdown animate-scale-in">
-                  <div className="notification-header">
-                    <h3>Pendências</h3>
-                    <span className="badge-count">Aguardando</span>
-                  </div>
-                  <div className="notification-list" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    {pendingOngs.length === 0 && pendingCommerces.length === 0 && stats.pendingFamilies === 0 && stats.pendingCitizens === 0 ? (
-                      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--admin-secondary)' }}>
-                        <Sparkles size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
-                        <p>Tudo em dia!</p>
-                      </div>
-                    ) : (
-                      <>
-                        {pendingOngs.map(ong => (
-                          <div key={ong.id} className="notification-item" onClick={() => { setSelectedOng(ong); setActiveTab('ongs'); setShowNotifications(false); }}>
-                            <div className="notification-icon" style={{ background: '#fef3c7', color: '#92400e' }}><Building2 size={18} /></div>
-                            <div className="notification-content">
-                              <p className="notification-title">ONG: {ong.razaoSocial || ong.razao_social || ong.nome_fantasia}</p>
-                              <p className="notification-desc">Aguardando aprovação</p>
-                            </div>
-                          </div>
-                        ))}
-                        {pendingCommerces.map(commerce => (
-                          <div key={commerce.id} className="notification-item" onClick={() => { setSelectedCommerce(commerce); setActiveTab('commerces'); setShowNotifications(false); }}>
-                            <div className="notification-icon" style={{ background: '#e0f2fe', color: '#0369a1' }}><Store size={18} /></div>
-                            <div className="notification-content">
-                              <p className="notification-title">Comércio: {commerce.nomeEstabelecimento || commerce.nome_fantasia}</p>
-                              <p className="notification-desc">Novo pedido de parceria</p>
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+            <button onClick={handleRefresh} className={`admin-icon-btn ${refreshing ? 'spin' : ''}`} title="Atualizar dados">
+              <RefreshCw size={20} />
+            </button>
+            <button onClick={handleExport} className="admin-icon-btn" title="Exportar relatório">
+              <Download size={20} />
+            </button>
 
             <div className="admin-user-info-card">
               <div className="admin-user-details">
-                <div className="admin-user-name-row">
-                  <p className="admin-user-name">Administrador</p>
-                  <div className="admin-user-score" title="Nível de Acesso">
-                    <Sparkles size={12} />
-                    <span>Admin</span>
-                  </div>
-                </div>
-                <div className="admin-user-access-badge">
-                  <Shield size={10} />
-                  <span>Acesso Total</span>
-                </div>
+                <span className="admin-user-name">Administrador</span>
+                <span className="admin-user-role">Super Admin</span>
               </div>
-              <div className="admin-avatar-wrapper">
-                <div className="admin-avatar-box">
-                  <User size={20} />
-                </div>
-                <div className="admin-status-indicator online"></div>
-              </div>
+              <div className="admin-avatar">A</div>
             </div>
           </div>
         </header>
@@ -433,170 +462,121 @@ export default function AdminDashboard() {
             <>
               <div className="admin-stat-card">
                 <div className="admin-stat-icon" style={{ background: '#f3e8ff', color: '#8b5cf6' }}><Building2 size={24} /></div>
-                <div className="admin-stat-info"><h3>ONGs</h3><p>{stats.totalOngs}</p><small style={{ color: 'var(--admin-warning)' }}>{stats.pendingOngs} pendentes</small></div>
+                <div className="admin-stat-info"><h3>ONGs</h3><p>{displayStats.totalOngs}</p></div>
               </div>
               <div className="admin-stat-card">
                 <div className="admin-stat-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}><Store size={24} /></div>
-                <div className="admin-stat-info"><h3>Comércios</h3><p>{stats.totalCommerces}</p><small style={{ color: 'var(--admin-warning)' }}>{stats.pendingCommerces} pendentes</small></div>
+                <div className="admin-stat-info"><h3>Comércios</h3><p>{displayStats.totalCommerces}</p></div>
               </div>
               <div className="admin-stat-card">
                 <div className="admin-stat-icon" style={{ background: '#fff7ed', color: '#f97316' }}><Users size={24} /></div>
-                <div className="admin-stat-info"><h3>Famílias</h3><p>{stats.totalFamilies}</p><small style={{ color: 'var(--admin-warning)' }}>{stats.pendingFamilies} pendentes</small></div>
+                <div className="admin-stat-info"><h3>Famílias</h3><p>{displayStats.totalFamilies}</p></div>
               </div>
               <div className="admin-stat-card">
                 <div className="admin-stat-icon" style={{ background: '#f0fdf4', color: '#15803d' }}><UserCircle size={24} /></div>
-                <div className="admin-stat-info"><h3>Cidadãos</h3><p>{stats.totalCitizens}</p><small style={{ color: 'var(--admin-warning)' }}>{stats.pendingCitizens} pendentes</small></div>
+                <div className="admin-stat-info"><h3>Cidadãos</h3><p>{displayStats.totalCitizens}</p></div>
               </div>
             </>
           ) : activeTab === 'ongs' ? (
             <>
-              <div className={`admin-stat-card ${stats.pendingOngs > 0 ? 'pulse-urgent' : ''}`}>
-                <div className="admin-stat-icon" style={{ background: '#fef3c7', color: '#92400e' }}><Clock size={24} /></div>
-                <div className="admin-stat-info"><h3>Pendentes</h3><p>{stats.pendingOngs}</p></div>
-              </div>
               <div className="admin-stat-card">
                 <div className="admin-stat-icon" style={{ background: '#e0f2fe', color: '#0369a1' }}><Building2 size={24} /></div>
-                <div className="admin-stat-info"><h3>Total ONGs</h3><p>{stats.totalOngs}</p></div>
+                <div className="admin-stat-info"><h3>Total ONGs</h3><p>{displayStats.totalOngs}</p></div>
               </div>
             </>
           ) : activeTab === 'commerces' ? (
             <>
-              <div className={`admin-stat-card ${stats.pendingCommerces > 0 ? 'pulse-urgent' : ''}`}>
-                <div className="admin-stat-icon" style={{ background: '#fef3c7', color: '#92400e' }}><Clock size={24} /></div>
-                <div className="admin-stat-info"><h3>Aguardando</h3><p>{stats.pendingCommerces}</p></div>
-              </div>
               <div className="admin-stat-card">
                 <div className="admin-stat-icon" style={{ background: '#e0f2fe', color: '#0369a1' }}><Store size={24} /></div>
-                <div className="admin-stat-info"><h3>Parceiros</h3><p>{stats.totalCommerces}</p></div>
+                <div className="admin-stat-info"><h3>Parceiros</h3><p>{displayStats.totalCommerces}</p></div>
               </div>
             </>
           ) : activeTab === 'families' ? (
             <>
-              <div className={`admin-stat-card ${stats.pendingFamilies > 0 ? 'pulse-urgent' : ''}`}>
-                <div className="admin-stat-icon" style={{ background: '#fef3c7', color: '#92400e' }}><Clock size={24} /></div>
-                <div className="admin-stat-info"><h3>Avaliações</h3><p>{stats.pendingFamilies}</p></div>
-              </div>
               <div className="admin-stat-card">
                 <div className="admin-stat-icon" style={{ background: '#fff7ed', color: '#c2410c' }}><Users size={24} /></div>
-                <div className="admin-stat-info"><h3>Famílias</h3><p>{stats.totalFamilies}</p></div>
+                <div className="admin-stat-info"><h3>Famílias</h3><p>{displayStats.totalFamilies}</p></div>
               </div>
             </>
           ) : (
             <>
-              <div className={`admin-stat-card ${stats.pendingCitizens > 0 ? 'pulse-urgent' : ''}`}>
-                <div className="admin-stat-icon" style={{ background: '#fef3c7', color: '#92400e' }}><Clock size={24} /></div>
-                <div className="admin-stat-info"><h3>Novos</h3><p>{stats.pendingCitizens}</p></div>
-              </div>
               <div className="admin-stat-card">
                 <div className="admin-stat-icon" style={{ background: '#f0fdf4', color: '#15803d' }}><UserCircle size={24} /></div>
-                <div className="admin-stat-info"><h3>Cidadãos</h3><p>{stats.totalCitizens}</p></div>
+                <div className="admin-stat-info"><h3>Cidadãos</h3><p>{displayStats.totalCitizens}</p></div>
               </div>
             </>
           )}
         </div>
 
-        <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem' }}>
-          <div className="input-with-icon" style={{ flex: 1 }}>
+        <div className="admin-toolbar">
+          <div className="input-with-icon search-box">
             <Search className="field-icon" size={18} />
             <input 
               type="text" 
-              placeholder="Buscar..."
+              placeholder="Buscar por nome, email ou documento..."
               className="admin-input" 
-              style={{ width: '100%', paddingLeft: '2.75rem' }} 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+          </div>
+          
+          <div className="toolbar-actions">
+            <div className="input-with-icon" style={{ width: 'auto' }}>
+              <Calendar className="field-icon" size={18} />
+              <input 
+                type="text" 
+                className="admin-input" 
+                style={{ paddingLeft: '2.5rem', width: '150px' }}
+                value={dateStart}
+                onChange={(e) => setDateStart(e.target.value)}
+                placeholder="Data Inicial"
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => { if(!e.target.value) e.target.type = 'text' }}
+              />
+            </div>
+            <div className="input-with-icon" style={{ width: 'auto' }}>
+              <Calendar className="field-icon" size={18} />
+              <input 
+                type="text" 
+                className="admin-input" 
+                style={{ paddingLeft: '2.5rem', width: '150px' }}
+                value={dateEnd}
+                onChange={(e) => setDateEnd(e.target.value)}
+                placeholder="Data Final"
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => { if(!e.target.value) e.target.type = 'text' }}
+              />
+            </div>
+
+            <div className="select-wrapper">
+              <Filter size={16} className="select-icon" />
+              <select className="admin-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                <option value="all">Todos os Status</option>
+                <option value="pending">Pendentes</option>
+                <option value="verified">Verificados</option>
+                <option value="rejected">Rejeitados</option>
+              </select>
+            </div>
+
+            <div className="select-wrapper">
+              <SlidersHorizontal size={16} className="select-icon" />
+              <select className="admin-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="date_desc">Mais Recentes</option>
+                <option value="date_asc">Mais Antigos</option>
+                <option value="name_asc">Nome (A-Z)</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {activeTab === 'dashboard' ? (
           <div className="dashboard-overview">
-            <div className="dashboard-grid">
-              <div className="dashboard-section">
-                <h3 className="dashboard-section-title">
-                  <Clock size={18} color="var(--admin-warning)" /> 
-                  Pendentes de Aprovação 
-                  <span className="pending-count-badge">{pendingOngs.length + pendingCommerces.length + stats.pendingFamilies + stats.pendingCitizens}</span>
-                </h3>
-                <div className="dashboard-pending-list">
-                  {pendingOngs.map(ong => (
-                    <div key={ong.id} className="dashboard-pending-item" onClick={() => { setSelectedOng(ong); setActiveTab('ongs'); }}>
-                      <div className="pending-icon ong-icon"><Building2 size={16} /></div>
-                      <div className="pending-info">
-                        <span className="pending-name">{ong.razaoSocial || ong.razao_social || ong.nome_fantasia}</span>
-                        <span className="pending-type">ONG</span>
-                      </div>
-                      <div className="pending-badge">Novo</div>
-                      <ArrowRight size={14} />
-                    </div>
-                  ))}
-                  {pendingCommerces.map(commerce => (
-                    <div key={commerce.id} className="dashboard-pending-item" onClick={() => { setSelectedCommerce(commerce); setActiveTab('commerces'); }}>
-                      <div className="pending-icon commerce-icon"><Store size={16} /></div>
-                      <div className="pending-info">
-                        <span className="pending-name">{commerce.nomeEstabelecimento || commerce.nome_fantasia}</span>
-                        <span className="pending-type">Comércio</span>
-                      </div>
-                      <div className="pending-badge">Parceria</div>
-                      <ArrowRight size={14} />
-                    </div>
-                  ))}
-                  {profiles.filter(p => p.status === 'pending' && (p.nomeCompleto || p.necessidades)).map(profile => (
-                    <div key={profile.id} className="dashboard-pending-item" onClick={() => { setSelectedProfile(profile); setActiveTab('families'); }}>
-                      <div className="pending-icon family-icon"><Users size={16} /></div>
-                      <div className="pending-info">
-                        <span className="pending-name">{profile.nomeCompleto}</span>
-                        <span className="pending-type">Família</span>
-                      </div>
-                      <div className="pending-badge">Cadastro</div>
-                      <ArrowRight size={14} />
-                    </div>
-                  ))}
-                  {profiles.filter(p => p.status === 'pending' && p.nome && !p.nomeCompleto).map(citizen => (
-                    <div key={citizen.id} className="dashboard-pending-item" onClick={() => { setSelectedProfile(citizen); setActiveTab('citizens'); }}>
-                      <div className="pending-icon family-icon"><UserCircle size={16} /></div>
-                      <div className="pending-info">
-                        <span className="pending-name">{citizen.nome}</span>
-                        <span className="pending-type">Cidadão</span>
-                      </div>
-                      <div className="pending-badge">Cadastro</div>
-                      <ArrowRight size={14} />
-                    </div>
-                  ))}
-                  {(pendingOngs.length + pendingCommerces.length + stats.pendingFamilies + stats.pendingCitizens) === 0 && (
-                    <div className="dashboard-empty">
-                      <CheckCircle size={32} color="var(--admin-success)" />
-                      <p>Todas as solicitações foram processadas!</p>
-                      <small>Nenhuma pendência no momento</small>
-                    </div>
-                  )}
-                </div>
-                <div className="pending-summary">
-                  <div className="summary-item">
-                    <span className="summary-number">{pendingOngs.length}</span>
-                    <span className="summary-label">ONGs</span>
-                  </div>
-                  <div className="summary-item">
-                    <span className="summary-number">{pendingCommerces.length}</span>
-                    <span className="summary-label">Comércios</span>
-                  </div>
-                  <div className="summary-item">
-                    <span className="summary-number">{stats.pendingFamilies}</span>
-                    <span className="summary-label">Famílias</span>
-                  </div>
-                  <div className="summary-item">
-                    <span className="summary-number">{stats.pendingCitizens}</span>
-                    <span className="summary-label">Cidadãos</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="dashboard-section">
+            <div className="dashboard-section">
                 <h3 className="dashboard-section-title">
                   <Target size={18} color="var(--admin-success)" /> 
                   Resumo de Atividades
                   <span className="activity-status-badge">
-                    {stats.pendingOngs + stats.pendingCommerces + stats.pendingFamilies + stats.pendingCitizens > 0 ? 'Ativo' : 'Em Dia'}
+                    {displayStats.pendingOngs + displayStats.pendingCommerces + displayStats.pendingFamilies + displayStats.pendingCitizens > 0 ? 'Ativo' : 'Em Dia'}
                   </span>
                 </h3>
                 <div className="dashboard-activity-grid">
@@ -604,7 +584,7 @@ export default function AdminDashboard() {
                     <div className="activity-icon"><Users2 size={18} /></div>
                     <div className="activity-content">
                       <div className="activity-header">
-                        <div className="activity-number">{stats.totalOngs + stats.totalCommerces + stats.totalFamilies + stats.totalCitizens}</div>
+                        <div className="activity-number">{displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens}</div>
                         <div className="activity-trend positive">+{Math.floor(Math.random() * 5) + 1}</div>
                       </div>
                       <div className="activity-label">Total de Cadastros</div>
@@ -615,38 +595,37 @@ export default function AdminDashboard() {
                     <div className="activity-icon warning"><Clock size={18} /></div>
                     <div className="activity-content">
                       <div className="activity-header">
-                        <div className="activity-number">{stats.pendingOngs + stats.pendingCommerces + stats.pendingFamilies + stats.pendingCitizens}</div>
-                        <div className={`activity-trend ${stats.pendingOngs + stats.pendingCommerces + stats.pendingFamilies + stats.pendingCitizens > 0 ? 'urgent' : 'ok'}`}>
-                          {stats.pendingOngs + stats.pendingCommerces + stats.pendingFamilies + stats.pendingCitizens > 0 ? '⚠️' : '✅'}
+                        <div className="activity-number">{displayStats.pendingOngs + displayStats.pendingCommerces + displayStats.pendingFamilies + displayStats.pendingCitizens}</div>
+                        <div className={`activity-trend ${displayStats.pendingOngs + displayStats.pendingCommerces + displayStats.pendingFamilies + displayStats.pendingCitizens > 0 ? 'urgent' : 'ok'}`}>
+                          {displayStats.pendingOngs + displayStats.pendingCommerces + displayStats.pendingFamilies + displayStats.pendingCitizens > 0 ? '⚠️' : '✅'}
                         </div>
                       </div>
                       <div className="activity-label">Aguardando Análise</div>
-                      <div className="activity-subtitle">{stats.pendingOngs + stats.pendingCommerces + stats.pendingFamilies + stats.pendingCitizens > 0 ? 'Requer atenção' : 'Tudo em dia'}</div>
+                      <div className="activity-subtitle">{displayStats.pendingOngs + displayStats.pendingCommerces + displayStats.pendingFamilies + displayStats.pendingCitizens > 0 ? 'Requer atenção' : 'Tudo em dia'}</div>
                     </div>
                   </div>
                   <div className="activity-card approved-card">
                     <div className="activity-icon success"><CheckCircle size={18} /></div>
                     <div className="activity-content">
                       <div className="activity-header">
-                        <div className="activity-number">{(stats.totalOngs - stats.pendingOngs) + (stats.totalCommerces - stats.pendingCommerces) + (stats.totalFamilies - stats.pendingFamilies) + (stats.totalCitizens - stats.pendingCitizens)}</div>
-                        <div className="activity-trend percentage">{Math.round(((stats.totalOngs - stats.pendingOngs) + (stats.totalCommerces - stats.pendingCommerces) + (stats.totalFamilies - stats.pendingFamilies) + (stats.totalCitizens - stats.pendingCitizens)) / Math.max(1, stats.totalOngs + stats.totalCommerces + stats.totalFamilies + stats.totalCitizens) * 100)}%</div>
+                        <div className="activity-number">{(displayStats.totalOngs - displayStats.pendingOngs) + (displayStats.totalCommerces - displayStats.pendingCommerces) + (displayStats.totalFamilies - displayStats.pendingFamilies) + (displayStats.totalCitizens - displayStats.pendingCitizens)}</div>
+                        <div className="activity-trend percentage">{Math.round(((displayStats.totalOngs - displayStats.pendingOngs) + (displayStats.totalCommerces - displayStats.pendingCommerces) + (displayStats.totalFamilies - displayStats.pendingFamilies) + (displayStats.totalCitizens - displayStats.pendingCitizens)) / Math.max(1, displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens) * 100)}%</div>
                       </div>
-                      <div className="activity-label">Aprovados</div>
-                      <div className="activity-subtitle">Taxa de aprovação</div>
+                      <div className="activity-label">Analisados</div>
+                      <div className="activity-subtitle">Taxa de análise</div>
                     </div>
                   </div>
                 </div>
                 <div className="activity-progress">
                   <div className="progress-header">
                     <span>Taxa de Processamento</span>
-                    <span className="progress-percentage">{Math.round(((stats.totalOngs - stats.pendingOngs) + (stats.totalCommerces - stats.pendingCommerces) + (stats.totalFamilies - stats.pendingFamilies) + (stats.totalCitizens - stats.pendingCitizens)) / Math.max(1, stats.totalOngs + stats.totalCommerces + stats.totalFamilies + stats.totalCitizens) * 100)}%</span>
+                    <span className="progress-percentage">{Math.round(((displayStats.totalOngs - displayStats.pendingOngs) + (displayStats.totalCommerces - displayStats.pendingCommerces) + (displayStats.totalFamilies - displayStats.pendingFamilies) + (displayStats.totalCitizens - displayStats.pendingCitizens)) / Math.max(1, displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens) * 100)}%</span>
                   </div>
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${Math.round(((stats.totalOngs - stats.pendingOngs) + (stats.totalCommerces - stats.pendingCommerces) + (stats.totalFamilies - stats.pendingFamilies) + (stats.totalCitizens - stats.pendingCitizens)) / Math.max(1, stats.totalOngs + stats.totalCommerces + stats.totalFamilies + stats.totalCitizens) * 100)}%` }}></div>
+                    <div className="progress-fill" style={{ width: `${Math.round(((displayStats.totalOngs - displayStats.pendingOngs) + (displayStats.totalCommerces - displayStats.pendingCommerces) + (displayStats.totalFamilies - displayStats.pendingFamilies) + (displayStats.totalCitizens - displayStats.pendingCitizens)) / Math.max(1, displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens) * 100)}%` }}></div>
                   </div>
                 </div>
               </div>
-            </div>
             
             <div className="dashboard-charts">
               <div className="chart-section">
@@ -657,7 +636,7 @@ export default function AdminDashboard() {
                       labels: ['ONGs', 'Comércios', 'Famílias', 'Cidadãos'],
                       datasets: [{
                         label: 'Total',
-                        data: [stats.totalOngs, stats.totalCommerces, stats.totalFamilies, stats.totalCitizens],
+                        data: [displayStats.totalOngs, displayStats.totalCommerces, displayStats.totalFamilies, displayStats.totalCitizens],
                         backgroundColor: ['rgba(139, 92, 246, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(249, 115, 22, 0.8)', 'rgba(21, 128, 61, 0.8)'],
                         borderColor: ['#8b5cf6', '#3b82f6', '#f97316', '#15803d'],
                         borderWidth: 2,
@@ -695,44 +674,52 @@ export default function AdminDashboard() {
                   />
                 </div>
               </div>
-              <div className="chart-section">
-                <h3 className="dashboard-section-title"><Target size={18} color="var(--admin-success)" /> Status de Aprovação</h3>
+              <div className="chart-section" style={{ gridColumn: '1 / -1' }}>
+                <h3 className="dashboard-section-title"><Calendar size={18} color="var(--admin-accent)" /> Evolução de Cadastros (6 Meses)</h3>
                 <div className="chart-wrapper">
-                  <Doughnut
+                  <Line
                     data={{
-                      labels: ['Aprovados', 'Pendentes'],
+                      labels: monthlyStats.labels,
                       datasets: [{
-                        data: [
-                          (stats.totalOngs - stats.pendingOngs) + (stats.totalCommerces - stats.pendingCommerces) + (stats.totalFamilies - stats.pendingFamilies) + (stats.totalCitizens - stats.pendingCitizens),
-                          stats.pendingOngs + stats.pendingCommerces + stats.pendingFamilies + stats.pendingCitizens
-                        ],
-                        backgroundColor: ['rgba(21, 128, 61, 0.8)', 'rgba(249, 115, 22, 0.8)'],
-                        borderColor: ['#15803d', '#f97316'],
-                        borderWidth: 3,
-                        hoverBorderWidth: 4
+                        label: 'Novos Cadastros',
+                        data: monthlyStats.data,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#8b5cf6',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
                       }]
                     }}
                     options={{
                       responsive: true,
                       maintainAspectRatio: false,
-                      cutout: '60%',
                       plugins: {
-                        legend: {
-                          position: 'bottom',
-                          labels: { 
-                            padding: 15, 
-                            usePointStyle: true,
-                            color: '#64748b',
-                            font: { weight: 600 }
-                          }
-                        },
+                        legend: { display: false },
                         tooltip: {
+                          mode: 'index',
+                          intersect: false,
                           backgroundColor: 'rgba(15, 23, 42, 0.9)',
                           titleColor: 'white',
                           bodyColor: 'white',
                           borderColor: '#6366f1',
                           borderWidth: 1,
-                          cornerRadius: 8
+                          cornerRadius: 8,
+                          padding: 10
+                        }
+                      },
+                      scales: {
+                        y: { 
+                          beginAtZero: true, 
+                          grid: { color: '#f1f5f9', borderDash: [4, 4] },
+                          ticks: { color: '#94a3b8', stepSize: 1 }
+                        },
+                        x: {
+                          grid: { display: false },
+                          ticks: { color: '#94a3b8' }
                         }
                       }
                     }}
@@ -744,35 +731,64 @@ export default function AdminDashboard() {
           </div>
         ) : (
           /* Table */
+          <>
+          {selectedItems.length > 0 && (
+            <div className="bulk-actions-bar animate-scale-in">
+              <span style={{ fontWeight: 600 }}>{selectedItems.length} itens selecionados</span>
+              <div className="bulk-actions-buttons">
+                <button onClick={() => handleBulkAction('verified')} className="bulk-btn approve">
+                  <CheckCircle size={16} /> Aprovar Selecionados
+                </button>
+                <button onClick={() => handleBulkAction('rejected')} className="bulk-btn reject">
+                  <XCircle size={16} /> Rejeitar Selecionados
+                </button>
+              </div>
+            </div>
+          )}
           <div className="admin-table-container">
             <table className="admin-table">
               <thead>
                 {activeTab === 'ongs' || activeTab === 'commerces' ? (
                 <tr>
-                  <th>Nome</th>
-                  <th>CNPJ</th>
+                  <th style={{ width: '40px' }}>
+                    <input type="checkbox" 
+                      onChange={handleSelectAll} 
+                      checked={getCurrentList().length > 0 && selectedItems.length === getCurrentList().length} 
+                    />
+                  </th>
+                  <th>Nome / Entidade</th>
+                  <th>Documento</th>
                   <th>Data Cadastro</th>
                   <th>Status</th>
-                  <th>Ações</th>
+                  <th style={{ textAlign: 'right' }}>Ações</th>
                 </tr>
               ) : (
                 <tr>
-                  <th>Nome</th>
+                  <th style={{ width: '40px' }}>
+                    <input type="checkbox" 
+                      onChange={handleSelectAll} 
+                      checked={getCurrentList().length > 0 && selectedItems.length === getCurrentList().length} 
+                    />
+                  </th>
+                  <th>Nome / Responsável</th>
                   <th>Documento</th>
                   <th>Contato</th>
                   <th>Status</th>
-                  <th>Ações</th>
+                  <th style={{ textAlign: 'right' }}>Ações</th>
                 </tr>
               )}
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '4rem' }}>
-                  <div className="animate-pulse-custom">Carregando...</div>
+                <tr><td colSpan={6} style={{ textAlign: 'center', padding: '4rem' }}>
+                  <div className="animate-pulse-custom">Carregando dados...</div>
                 </td></tr>
               ) : activeTab === 'ongs' ? (
-                filteredOngs.map((ong) => (
-                  <tr key={ong.id}>
+                processedOngs.length > 0 ? processedOngs.map((ong) => (
+                  <tr key={ong.id} className={selectedItems.includes(ong.id) ? 'selected-row' : ''}>
+                    <td>
+                      <input type="checkbox" checked={selectedItems.includes(ong.id)} onChange={() => handleSelectItem(ong.id)} />
+                    </td>
                     <td>
                       <div style={{ fontWeight: 700, color: 'var(--admin-primary)' }}>{ong.razaoSocial || ong.razao_social || ong.nome_fantasia || ong.nomeFantasia}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--admin-secondary)' }}>{ong.email}</div>
@@ -784,13 +800,20 @@ export default function AdminDashboard() {
                     </td>
                     <td><code>{ong.cnpj}</code></td>
                     <td>{new Date(ong.created_at || ong.createdAt || Date.now()).toLocaleDateString('pt-BR')}</td>
-                    <td><span className={`status-badge ${ong.status || 'pending'}`}>{(ong.status || 'pending') === 'pending' ? 'Pendente' : ong.status === 'verified' ? 'Verificada' : 'Rejeitada'}</span></td>
-                    <td><button onClick={() => { setSelectedOng(ong); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn"><Eye size={16} /> Avaliar</button></td>
+                    <td>{getStatusBadge(ong.status)}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button onClick={() => { setSelectedOng(ong); }} className="admin-action-btn">
+                        <Eye size={16} /> Detalhes
+                      </button>
+                    </td>
                   </tr>
-                ))
+                )) : <tr><td colSpan={6} className="empty-state">Nenhuma ONG encontrada com os filtros atuais.</td></tr>
               ) : activeTab === 'commerces' ? (
-                filteredCommerces.map((commerce) => (
-                  <tr key={commerce.id}>
+                processedCommerces.length > 0 ? processedCommerces.map((commerce) => (
+                  <tr key={commerce.id} className={selectedItems.includes(commerce.id) ? 'selected-row' : ''}>
+                    <td>
+                      <input type="checkbox" checked={selectedItems.includes(commerce.id)} onChange={() => handleSelectItem(commerce.id)} />
+                    </td>
                     <td>
                       <div style={{ fontWeight: 700, color: 'var(--admin-primary)' }}>{commerce.nomeEstabelecimento || commerce.nome_fantasia || commerce.nomeFantasia}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--admin-secondary)' }}>{commerce.contato?.email || commerce.email}</div>
@@ -803,13 +826,20 @@ export default function AdminDashboard() {
                     </td>
                     <td><code>{commerce.cnpj}</code></td>
                     <td>{new Date(commerce.created_at || commerce.createdAt || Date.now()).toLocaleDateString('pt-BR')}</td>
-                    <td><span className={`status-badge ${commerce.status || 'pending'}`}>{(commerce.status || 'pending') === 'pending' ? 'Pendente' : commerce.status === 'verified' ? 'Verificado' : 'Rejeitado'}</span></td>
-                    <td><button onClick={() => { setSelectedCommerce(commerce); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn"><Eye size={16} /> Avaliar</button></td>
+                    <td>{getStatusBadge(commerce.status)}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button onClick={() => { setSelectedCommerce(commerce); }} className="admin-action-btn">
+                        <Eye size={16} /> Detalhes
+                      </button>
+                    </td>
                   </tr>
-                ))
+                )) : <tr><td colSpan={6} className="empty-state">Nenhum comércio encontrado com os filtros atuais.</td></tr>
               ) : activeTab === 'citizens' ? (
-                filteredProfiles.map((citizen) => (
-                  <tr key={citizen.id}>
+                processedProfiles.length > 0 ? processedProfiles.map((citizen) => (
+                  <tr key={citizen.id} className={selectedItems.includes(citizen.id) ? 'selected-row' : ''}>
+                    <td>
+                      <input type="checkbox" checked={selectedItems.includes(citizen.id)} onChange={() => handleSelectItem(citizen.id)} />
+                    </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
                         <div style={{ width: '36px', height: '36px', background: '#f0fdf4', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(0,0,0,0.05)' }}>
@@ -833,13 +863,20 @@ export default function AdminDashboard() {
                         <div style={{ fontSize: '0.7rem', color: 'var(--admin-secondary)' }}>Ocupação: {citizen.ocupacao}</div>
                       )}
                     </td>
-                    <td><span className={`status-badge ${citizen.status || 'pending'}`}>{citizen.status === 'pending' ? 'Pendente' : citizen.status === 'verified' ? 'Verificado' : citizen.status === 'rejected' ? 'Rejeitado' : 'Pendente'}</span></td>
-                    <td><button onClick={() => { setSelectedProfile(citizen); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn"><Eye size={16} /> Detalhes</button></td>
+                    <td>{getStatusBadge(citizen.status)}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button onClick={() => { setSelectedProfile(citizen); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn">
+                        <Eye size={16} /> Detalhes
+                      </button>
+                    </td>
                   </tr>
-                ))
+                )) : <tr><td colSpan={6} className="empty-state">Nenhum cidadão encontrado com os filtros atuais.</td></tr>
               ) : activeTab === 'families' ? (
-                filteredProfiles.map((profile) => (
-                  <tr key={profile.id}>
+                processedProfiles.length > 0 ? processedProfiles.map((profile) => (
+                  <tr key={profile.id} className={selectedItems.includes(profile.id) ? 'selected-row' : ''}>
+                    <td>
+                      <input type="checkbox" checked={selectedItems.includes(profile.id)} onChange={() => handleSelectItem(profile.id)} />
+                    </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
                         <div style={{ width: '36px', height: '36px', background: '#fff7ed', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(0,0,0,0.05)' }}>
@@ -863,289 +900,21 @@ export default function AdminDashboard() {
                         <div style={{ fontSize: '0.7rem', color: 'var(--admin-secondary)' }}>Renda: {profile.rendaFamiliar}</div>
                       )}
                     </td>
-                    <td><span className={`status-badge ${profile.status || 'pending'}`}>{(profile.status || 'pending') === 'pending' ? 'Pendente' : profile.status === 'verified' ? 'Verificado' : 'Rejeitado'}</span></td>
-                    <td><button onClick={() => { setSelectedProfile(profile); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn"><Eye size={16} /> Detalhes</button></td>
+                    <td>{getStatusBadge(profile.status)}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button onClick={() => { setSelectedProfile(profile); setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false }); }} className="admin-action-btn">
+                        <Eye size={16} /> Detalhes
+                      </button>
+                    </td>
                   </tr>
-                ))
+                )) : <tr><td colSpan={6} className="empty-state">Nenhuma família encontrada com os filtros atuais.</td></tr>
               ) : null}
-              {!loading && filteredOngs.length === 0 && activeTab === 'ongs' && (
-                <tr><td colSpan={5} style={{ textAlign: 'center', padding: '3rem', color: 'var(--admin-secondary)' }}>Nenhuma ONG encontrada.</td></tr>
-              )}
             </tbody>
           </table>
         </div>
+        </>
         )}
       </main>
-
-      {/* Modals */}
-      {selectedOng && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal-content animate-scale-in">
-            <header className="admin-modal-header" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)', color: 'white' }}>
-              <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedOng.razaoSocial || selectedOng.razao_social || selectedOng.nome_fantasia || selectedOng.nomeFantasia}</h2>
-                <p style={{ opacity: 0.8, fontSize: '0.75rem' }}>Avaliação Institucional</p>
-              </div>
-              <button onClick={() => setSelectedOng(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: 'white', width: '32px', height: '32px', borderRadius: '8px' }}><X size={20} /></button>
-            </header>
-
-            <div className="admin-modal-body">
-              <div className="detail-section">
-                <h3 className="detail-section-title"><Building2 size={18} /> Dados Institucionais</h3>
-                <div className="detail-grid">
-                  <div className="detail-item"><label>Nome Fantasia</label><p>{selectedOng.razaoSocial || selectedOng.razao_social || selectedOng.nome_fantasia || selectedOng.nomeFantasia}</p></div>
-                  <div className="detail-item"><label>Razão Social</label><p>{selectedOng.razao_social || selectedOng.razaoSocial || '---'}</p></div>
-                  <div className="detail-item"><label>CNPJ</label><p>{selectedOng.cnpj}</p></div>
-                  <div className="detail-item"><label>Data Fundação</label><p>{selectedOng.data_fundacao ? new Date(selectedOng.data_fundacao).toLocaleDateString('pt-BR') : '---'}</p></div>
-                  <div className="detail-item"><label>E-mail</label><p>{selectedOng.email}</p></div>
-                  <div className="detail-item"><label>Telefone</label><p>{selectedOng.telefone}</p></div>
-                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Website</label><p>{selectedOng.website || '---'}</p></div>
-                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Sede</label><p>{selectedOng.sede || '---'}</p></div>
-                </div>
-              </div>
-
-              {selectedOng.causas && selectedOng.causas.length > 0 && (
-                <div className="detail-section">
-                  <h3 className="detail-section-title"><Heart size={18} /> Causas e Atuação</h3>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {selectedOng.causas.map((causa, i) => (
-                      <span key={i} style={{ background: '#f3e8ff', color: '#7c3aed', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700 }}>{causa}</span>
-                    ))}
-                  </div>
-                  {selectedOng.areas_cobertura && (
-                    <div className="detail-item" style={{ marginTop: '1rem' }}><label>Áreas de Cobertura</label><p>{selectedOng.areas_cobertura.join(', ')}</p></div>
-                  )}
-                </div>
-              )}
-
-              {(selectedOng.num_voluntarios || selectedOng.colaboradores_fixos) && (
-                <div className="detail-section">
-                  <h3 className="detail-section-title"><Users size={18} /> Equipe</h3>
-                  <div className="detail-grid">
-                    <div className="detail-item"><label>Voluntários</label><p>{selectedOng.num_voluntarios || 0}</p></div>
-                    <div className="detail-item"><label>Colaboradores Fixos</label><p>{selectedOng.colaboradores_fixos || 0}</p></div>
-                  </div>
-                </div>
-              )}
-
-              <div className="detail-section" style={{ background: '#f8fafc', padding: '2rem', borderRadius: '1.5rem' }}>
-                <h3 className="detail-section-title" style={{ border: 'none' }}><ShieldCheck size={18} color="var(--admin-accent)" /> Checklist de Verificação</h3>
-                <div style={{ display: 'grid', gap: '0.75rem' }}>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check1: !p.check1 }))}><input type="checkbox" checked={evaluationChecklist.check1} readOnly/><label>CNPJ validado na Receita Federal</label></div>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check2: !p.check2 }))}><input type="checkbox" checked={evaluationChecklist.check2} readOnly/><label>Documentos institucionais verificados</label></div>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check3: !p.check3 }))}><input type="checkbox" checked={evaluationChecklist.check3} readOnly/><label>Histórico de atuação comprovado</label></div>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check4: !p.check4 }))}><input type="checkbox" checked={evaluationChecklist.check4} readOnly/><label>Contatos e endereço verificados</label></div>
-                </div>
-              </div>
-
-              {isRejecting && (
-                <div className="detail-section animate-scale-in">
-                  <label className="admin-label" style={{ color: 'var(--admin-danger)' }}>Motivo da Rejeição</label>
-                  <textarea className="admin-input" placeholder="Descreva os motivos..." style={{ minHeight: '100px', marginTop: '0.5rem' }} value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
-                </div>
-              )}
-            </div>
-
-            <footer className="admin-modal-footer">
-              <button onClick={() => { setSelectedOng(null); setIsRejecting(false); }} className="admin-action-btn btn-close"><X size={18} /><span>Fechar</span></button>
-              {!isRejecting ? (
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button onClick={() => setIsRejecting(true)} className="admin-action-btn btn-reject"><XCircle size={18} /><span>Rejeitar</span></button>
-                  <button onClick={() => handleUpdateStatus(selectedOng.id, 'verified', 'ongs')} className="admin-action-btn btn-approve" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2 || !evaluationChecklist.check3 || !evaluationChecklist.check4}><CheckCircle size={18} /><span>Aprovar ONG</span></button>
-                </div>
-              ) : (
-                <button onClick={() => handleUpdateStatus(selectedOng.id, 'rejected', 'ongs', rejectionReason)} className="admin-action-btn btn-reject" disabled={!rejectionReason.trim()}><AlertCircle size={18} /><span>Confirmar Rejeição</span></button>
-              )}
-            </footer>
-          </div>
-        </div>
-      )}
-
-      {selectedCommerce && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal-content animate-scale-in">
-            <header className="admin-modal-header" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%)', color: 'white' }}>
-              <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selectedCommerce.nomeEstabelecimento || selectedCommerce.nome_fantasia || selectedCommerce.nomeFantasia}</h2>
-                <p style={{ opacity: 0.8, fontSize: '0.75rem' }}>Verificação de Parceiro</p>
-              </div>
-              <button onClick={() => setSelectedCommerce(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: 'white', width: '32px', height: '32px', borderRadius: '8px' }}><X size={20} /></button>
-            </header>
-
-            <div className="admin-modal-body">
-              <div className="detail-section">
-                <h3 className="detail-section-title"><Store size={18} /> Dados do Comércio</h3>
-                <div className="detail-grid">
-                  <div className="detail-item"><label>Nome Fantasia</label><p>{selectedCommerce.nomeEstabelecimento || selectedCommerce.nome_fantasia || selectedCommerce.nomeFantasia}</p></div>
-                  <div className="detail-item"><label>CNPJ</label><p>{selectedCommerce.cnpj}</p></div>
-                  <div className="detail-item"><label>Segmento</label><p>{selectedCommerce.descricaoAtividade || selectedCommerce.segmento || '---'}</p></div>
-                  <div className="detail-item"><label>Responsável</label><p>{selectedCommerce.responsavel?.nome || selectedCommerce.responsavel_legal || selectedCommerce.responsavelLegal || '---'}</p></div>
-                  <div className="detail-item"><label>Telefone</label><p>{selectedCommerce.contato?.telefone || selectedCommerce.telefone}</p></div>
-                  <div className="detail-item"><label>E-mail</label><p>{selectedCommerce.contato?.email || selectedCommerce.email}</p></div>
-                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Endereço</label><p>{typeof selectedCommerce.endereco === 'object' ? `${selectedCommerce.endereco.endereco || ''}, ${selectedCommerce.endereco.bairro || ''} - ${selectedCommerce.endereco.cidade || ''}/${selectedCommerce.endereco.uf || ''}` : (selectedCommerce.endereco || '---')}</p></div>
-                </div>
-              </div>
-
-              {selectedCommerce.contribuicoes && selectedCommerce.contribuicoes.length > 0 && (
-                <div className="detail-section">
-                  <h3 className="detail-section-title"><Heart size={18} /> Formas de Contribuição</h3>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                    {selectedCommerce.contribuicoes.map((item, idx) => (
-                      <div key={idx} style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '0.75rem 1.25rem', borderRadius: '12px', fontSize: '0.875rem', fontWeight: 700, color: '#1e40af' }}>
-                        <CheckCircle size={16} style={{ marginRight: '0.5rem', color: 'var(--admin-success)' }} />{item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="detail-section" style={{ background: '#f8fafc', padding: '2rem', borderRadius: '1.5rem' }}>
-                <h3 className="detail-section-title" style={{ border: 'none' }}><Shield size={18} color="var(--admin-accent)" /> Checklist de Verificação</h3>
-                <div style={{ display: 'grid', gap: '0.75rem' }}>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check1: !p.check1 }))}><input type="checkbox" checked={evaluationChecklist.check1} readOnly/><label>CNPJ ativo e regularizado</label></div>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check2: !p.check2 }))}><input type="checkbox" checked={evaluationChecklist.check2} readOnly/><label>Localização física confirmada</label></div>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check3: !p.check3 }))}><input type="checkbox" checked={evaluationChecklist.check3} readOnly/><label>Segmento de atuação verificado</label></div>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check4: !p.check4 }))}><input type="checkbox" checked={evaluationChecklist.check4} readOnly/><label>Termo de parceria aceito</label></div>
-                </div>
-              </div>
-
-              {isRejecting && (
-                <div className="detail-section animate-scale-in">
-                  <label className="admin-label" style={{ color: 'var(--admin-danger)' }}>Motivo da Rejeição</label>
-                  <textarea className="admin-input" placeholder="Justificativa..." style={{ minHeight: '100px', marginTop: '0.5rem' }} value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
-                </div>
-              )}
-            </div>
-
-            <footer className="admin-modal-footer">
-              <button onClick={() => { setSelectedCommerce(null); setIsRejecting(false); }} className="admin-action-btn btn-close"><X size={18} /><span>Fechar</span></button>
-              {!isRejecting ? (
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button onClick={() => setIsRejecting(true)} className="admin-action-btn btn-reject"><XCircle size={18} /><span>Rejeitar</span></button>
-                  <button onClick={() => handleUpdateStatus(selectedCommerce.id, 'verified', 'comercios')} className="admin-action-btn btn-approve" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2 || !evaluationChecklist.check3 || !evaluationChecklist.check4}><CheckCircle size={18} /><span>Aprovar Parceiro</span></button>
-                </div>
-              ) : (
-                <button onClick={() => handleUpdateStatus(selectedCommerce.id, 'rejected', 'comercios', rejectionReason)} className="admin-action-btn btn-reject" disabled={!rejectionReason.trim()}><AlertCircle size={18} /><span>Confirmar Rejeição</span></button>
-              )}
-            </footer>
-          </div>
-        </div>
-      )}
-
-      {selectedProfile && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal-content animate-scale-in" style={{ maxWidth: '850px' }}>
-            <header className="admin-modal-header" style={{ background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', color: 'white' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <div style={{ width: '64px', height: '64px', background: 'rgba(255,255,255,0.2)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Users size={32} />
-                </div>
-                <div>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>{selectedProfile.nome || selectedProfile.nomeCompleto || selectedProfile.full_name}</h2>
-                  <p style={{ opacity: 0.9, fontWeight: 600 }}>Cadastro Familiar</p>
-                </div>
-              </div>
-              <button onClick={() => setSelectedProfile(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer', color: 'white', width: '36px', height: '36px', borderRadius: '10px' }}><X size={24} /></button>
-            </header>
-
-            <div className="admin-modal-body" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
-              <div className="detail-section">
-                <h3 className="detail-section-title"><User size={18} /> Dados Pessoais</h3>
-                <div className="detail-grid">
-                  <div className="detail-item"><label>Nome Completo</label><p>{selectedProfile.nome || selectedProfile.nomeCompleto || selectedProfile.full_name}</p></div>
-                  <div className="detail-item"><label>Data Nascimento</label><p>{selectedProfile.dataNascimento || selectedProfile.data_nascimento || '---'}</p></div>
-                  <div className="detail-item"><label>Estado Civil</label><p>{selectedProfile.estadoCivil || selectedProfile.estado_civil || '---'}</p></div>
-                  <div className="detail-item"><label>Profissão</label><p>{selectedProfile.ocupacao || selectedProfile.profissao || '---'}</p></div>
-                  <div className="detail-item"><label>CPF</label><p>{selectedProfile.cpf || '---'}</p></div>
-                  <div className="detail-item"><label>RG</label><p>{selectedProfile.rg || '---'}</p></div>
-                  <div className="detail-item"><label>NIS</label><p>{selectedProfile.nis || '---'}</p></div>
-                  <div className="detail-item"><label>Renda Familiar</label><p>{selectedProfile.rendaFamiliar || selectedProfile.renda_mensal || '---'}</p></div>
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <h3 className="detail-section-title"><Phone size={18} /> Contato</h3>
-                <div className="detail-grid">
-                  <div className="detail-item"><label>Telefone</label><p>{selectedProfile.telefone || selectedProfile.phone || '---'}</p></div>
-                  <div className="detail-item"><label>WhatsApp</label><p>{selectedProfile.telefone || selectedProfile.phone || '---'}</p></div>
-                  <div className="detail-item"><label>E-mail</label><p>{selectedProfile.email || '---'}</p></div>
-                  <div className="detail-item"><label>Horário Contato</label><p>{selectedProfile.horarioContato || selectedProfile.horario_contato || '---'}</p></div>
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <h3 className="detail-section-title"><Home size={18} /> Residência</h3>
-                <div className="detail-grid">
-                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Endereço</label><p>{typeof selectedProfile.endereco === 'object' ? `${selectedProfile.endereco.endereco || ''}, ${selectedProfile.endereco.bairro || ''} - ${selectedProfile.endereco.cidade || ''}/${selectedProfile.endereco.uf || ''}` : (selectedProfile.endereco || '---')}</p></div>
-                  <div className="detail-item"><label>Bairro</label><p>{typeof selectedProfile.endereco === 'object' ? selectedProfile.endereco.bairro : (selectedProfile.bairro || '---')}</p></div>
-                  <div className="detail-item"><label>Tipo Moradia</label><p>{typeof selectedProfile.endereco === 'object' ? selectedProfile.endereco.tipoMoradia : (selectedProfile.tipoMoradia || selectedProfile.tipo_moradia || '---')}</p></div>
-                  <div className="detail-item" style={{ gridColumn: 'span 2' }}><label>Ponto Referência</label><p>{typeof selectedProfile.endereco === 'object' ? selectedProfile.endereco.pontoReferencia : (selectedProfile.pontoReferencia || selectedProfile.ponto_referencia || '---')}</p></div>
-                </div>
-              </div>
-
-              {(selectedProfile.criancas || selectedProfile.jovens || selectedProfile.adultos || selectedProfile.idosos) && (
-                <div className="detail-section">
-                  <h3 className="detail-section-title"><Users2 size={18} /> Composição Familiar</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', background: '#fff7ed', padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid #ffedd5' }}>
-                    <div style={{ textAlign: 'center' }}><label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: '#9a3412', textTransform: 'uppercase' }}>Crianças</label><strong style={{ fontSize: '1.5rem', color: '#c2410c' }}>{selectedProfile.criancas || 0}</strong></div>
-                    <div style={{ textAlign: 'center' }}><label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: '#9a3412', textTransform: 'uppercase' }}>Jovens</label><strong style={{ fontSize: '1.5rem', color: '#c2410c' }}>{selectedProfile.jovens || 0}</strong></div>
-                    <div style={{ textAlign: 'center' }}><label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: '#9a3412', textTransform: 'uppercase' }}>Adultos</label><strong style={{ fontSize: '1.5rem', color: '#c2410c' }}>{selectedProfile.adultos || 0}</strong></div>
-                    <div style={{ textAlign: 'center' }}><label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: '#9a3412', textTransform: 'uppercase' }}>Idosos</label><strong style={{ fontSize: '1.5rem', color: '#c2410c' }}>{selectedProfile.idosos || 0}</strong></div>
-                  </div>
-                </div>
-              )}
-
-              {selectedProfile.necessidades && selectedProfile.necessidades.length > 0 && (
-                <div className="detail-section">
-                  <h3 className="detail-section-title"><ListChecks size={18} color="var(--admin-danger)" /> Necessidades Identificadas</h3>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.625rem' }}>
-                    {selectedProfile.necessidades.map((item, i) => (
-                      <span key={i} style={{ background: '#fee2e2', color: '#991b1b', padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '0.875rem', fontWeight: 700, border: '1px solid #fecaca' }}>{item}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="detail-section" style={{ background: '#f8fafc', padding: '2rem', borderRadius: '1.5rem' }}>
-                <h3 className="detail-section-title" style={{ border: 'none' }}><ShieldCheck size={18} color="var(--admin-accent)" /> Checklist de Verificação</h3>
-                <div style={{ display: 'grid', gap: '0.75rem' }}>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check1: !p.check1 }))}><input type="checkbox" checked={evaluationChecklist.check1} readOnly/><label>Documentação (CPF/RG) validada</label></div>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check2: !p.check2 }))}><input type="checkbox" checked={evaluationChecklist.check2} readOnly/><label>Dados de contato verificados</label></div>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check3: !p.check3 }))}><input type="checkbox" checked={evaluationChecklist.check3} readOnly/><label>Situação socioeconômica avaliada</label></div>
-                  <div className="checklist-item" onClick={() => setEvaluationChecklist(p => ({ ...p, check4: !p.check4 }))}><input type="checkbox" checked={evaluationChecklist.check4} readOnly/><label>Necessidades prioritárias identificadas</label></div>
-                </div>
-              </div>
-
-              {isRejecting && (
-                <div className="detail-section animate-scale-in">
-                  <label className="admin-label" style={{ color: 'var(--admin-danger)' }}>Motivo da Rejeição</label>
-                  <textarea className="admin-input" placeholder="Justificativa..." style={{ minHeight: '100px', marginTop: '0.5rem' }} value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} />
-                </div>
-              )}
-            </div>
-
-            <footer className="admin-modal-footer">
-              <button onClick={() => { setSelectedProfile(null); setIsRejecting(false); }} className="admin-action-btn btn-close"><X size={18} /><span>Fechar</span></button>
-              {!isRejecting ? (
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button onClick={() => setIsRejecting(true)} className="admin-action-btn btn-reject"><XCircle size={18} /><span>Rejeitar</span></button>
-                  <button onClick={() => handleUpdateStatus(selectedProfile.id, 'verified', activeTab === 'citizens' ? 'cidadaos' : 'familias')} className="admin-action-btn btn-approve" style={{ background: 'linear-gradient(135deg, #f97316, #ea580c)' }} disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2 || !evaluationChecklist.check3 || !evaluationChecklist.check4}><CheckCircle size={18} /><span>Aprovar {activeTab === 'citizens' ? 'Cidadão' : 'Família'}</span></button>
-                </div>
-              ) : (
-                <button onClick={() => handleUpdateStatus(selectedProfile.id, 'rejected', activeTab === 'citizens' ? 'cidadaos' : 'familias', rejectionReason)} className="admin-action-btn btn-reject" disabled={!rejectionReason.trim()}><AlertCircle size={18} /><span>Confirmar Rejeição</span></button>
-              )}
-            </footer>
-          </div>
-        </div>
-      )}
-
-      {/* Toast */}
-      <Toast 
-        show={toast.show}
-        message={toast.message}
-        type={toast.type}
-        onClose={() => setToast({ show: false, message: '', type: 'info' })}
-      />
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from 'react-hot-toast';
 import ApiService from '../../services/apiService';
 import {
   ChevronDown,
@@ -29,6 +28,11 @@ import {
   Baby,
 } from "lucide-react";
 import "./painel-social.css";
+import Toast from '../../components/ui/Toast';
+import Badge from '../../components/ui/Badge';
+import Avatar from '../../components/ui/Avatar';
+import EmptyState from '../../components/ui/EmptyState';
+import MapSkeleton from '../../components/ui/MapSkeleton';
 
 const MapaInterativo = lazy(() => import("./MapaInterativo"));
 
@@ -68,6 +72,7 @@ export default function PainelSocial() {
     address: "",
   });
   const [openMenu, setOpenMenu] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
 
   const dropdownRef = useRef(null);
   const menuRef = useRef(null);
@@ -125,7 +130,8 @@ export default function PainelSocial() {
             titulo: p.titulo || p.title || p.nome || 'Pedido de Ajuda',
             categoria: p.categoria || p.category || p.tipo || 'Geral',
             descricao: p.descricao || p.description || p.detalhes || '',
-            status: p.status || 'ativo'
+            status: p.status || 'ativo',
+            createdAt: p.criadoEm || p.createdAt || new Date().toISOString()
           };
         }));
         setPedidosData(pedidosFormatted);
@@ -247,7 +253,8 @@ export default function PainelSocial() {
               } catch {
                 return new Date().toISOString().split('T')[0];
               }
-            })()
+            })(),
+            createdAt: f.criadoEm || f.createdAt || new Date().toISOString()
           };
         }));
         setFamilies(formatted);
@@ -256,7 +263,7 @@ export default function PainelSocial() {
       }
     } catch (error) {
       console.error('❌ Erro ao carregar famílias:', error);
-      toast.error('Erro ao carregar famílias do banco');
+      setToast({ show: true, message: 'Erro ao carregar famílias do banco', type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -301,7 +308,7 @@ export default function PainelSocial() {
 
   const saveFamily = async () => {
     if (!formData.name) {
-      toast.error('Nome da família é obrigatório');
+      setToast({ show: true, message: 'Nome da família é obrigatório', type: 'error' });
       return;
     }
 
@@ -328,20 +335,20 @@ export default function PainelSocial() {
       if (editingFamily) {
         const response = await ApiService.updateFamiliaPanel(editingFamily.id, familyData);
         if (response.success) {
-          toast.success('Família atualizada com sucesso!');
+          setToast({ show: true, message: 'Família atualizada com sucesso!', type: 'success' });
           await loadFamilias();
         }
       } else {
         const response = await ApiService.createFamiliaPanel(familyData);
         if (response.success) {
-          toast.success('Família cadastrada com sucesso!');
+          setToast({ show: true, message: 'Família cadastrada com sucesso!', type: 'success' });
           await loadFamilias();
         }
       }
       resetForm();
     } catch (error) {
       console.error('Erro ao salvar família:', error);
-      toast.error(error.message || 'Erro ao salvar família');
+      setToast({ show: true, message: error.message || 'Erro ao salvar família', type: 'error' });
     }
   };
 
@@ -351,14 +358,14 @@ export default function PainelSocial() {
     try {
       const response = await ApiService.deleteFamiliaPanel(id);
       if (response.success) {
-        toast.success('Família excluída com sucesso!');
+        setToast({ show: true, message: 'Família excluída com sucesso!', type: 'success' });
         await loadFamilias();
         setSelectedFamily(null);
         setOpenMenu(null);
       }
     } catch (error) {
       console.error('Erro ao excluir família:', error);
-      toast.error('Erro ao excluir família');
+      setToast({ show: true, message: 'Erro ao excluir família', type: 'error' });
     }
   };
 
@@ -392,11 +399,11 @@ export default function PainelSocial() {
       const response = await ApiService.updateFamiliaPanel(id, { status });
       if (response.success) {
         await loadFamilias();
-        toast.success('Status atualizado!');
+        setToast({ show: true, message: 'Status atualizado!', type: 'success' });
       }
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
-      toast.error('Erro ao atualizar status');
+      setToast({ show: true, message: 'Erro ao atualizar status', type: 'error' });
     }
   };
 
@@ -560,7 +567,11 @@ export default function PainelSocial() {
                 {filteredFamilies.length > 0 ? filteredFamilies.map((f) => (
                   <div key={f.id} className="table-row" onClick={() => setSelectedFamily(f)}>
                     <div className="td-cell td-family">
-                      <div className="family-avatar" data-vuln={f.vulnerability.toLowerCase()}>{f.name.charAt(0)}</div>
+                      <Avatar 
+                        alt={f.name} 
+                        className="family-avatar" 
+                        fallback={<Users size={20} />}
+                      />
                       <div className="family-info">
                         <span className="family-name">{f.name}</span>
                         <span className="family-meta">{f.address || "Endereço não informado"}</span>
@@ -590,17 +601,13 @@ export default function PainelSocial() {
                       </div>
                     </div>
                     <div className="td-cell td-status">
-                      <button
-                        className={`status-badge ${f.status}`}
-                        onClick={(e) => {
+                      <div onClick={(e) => {
                           e.stopPropagation();
                           const next = f.status === "ativo" ? "pendente" : f.status === "pendente" ? "atendido" : "ativo";
                           updateStatus(f.id, next);
-                        }}
-                      >
-                        {getStatusIcon(f.status)}
-                        <span>{f.status === "ativo" ? "Ativo" : f.status === "pendente" ? "Pendente" : "Atendido"}</span>
-                      </button>
+                        }}>
+                        <Badge variant={f.status}>{f.status === "ativo" ? "Ativo" : f.status === "pendente" ? "Pendente" : "Atendido"}</Badge>
+                      </div>
                     </div>
                     <div className="td-cell td-actions" ref={openMenu === f.id ? menuRef : null}>
                       <button className="menu-trigger" onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu === f.id ? null : f.id); }}>
@@ -619,17 +626,17 @@ export default function PainelSocial() {
                     </div>
                   </div>
                 )) : (
-                  <div className="empty">
-                    <Users size={40} strokeWidth={1.5} />
-                    <p>Nenhuma família encontrada</p>
-                  </div>
+                  <EmptyState 
+                    title="Nenhuma família encontrada" 
+                    description="Tente ajustar sua busca ou filtros para encontrar o que procura." 
+                  />
                 )}
               </div>
             </div>
           ) : (
             <div className="map-layout">
               <div className="map-container">
-                <Suspense fallback={<div className="map-skeleton"><div className="map-loader" /><span>Carregando mapa...</span></div>}>
+                <Suspense fallback={<MapSkeleton />}>
                   <MapaInterativo 
                     familias={filteredFamilies} 
                     pedidos={pedidosData} 
@@ -685,7 +692,11 @@ export default function PainelSocial() {
         <div className="modal-overlay" onClick={() => setSelectedFamily(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head">
-              <div className="modal-avatar" data-vuln={selectedFamily.vulnerability.toLowerCase()}>{selectedFamily.name.charAt(0)}</div>
+              <Avatar 
+                alt={selectedFamily.name} 
+                size="lg"
+                fallback={<Users size={24} />}
+              />
               <div className="modal-title">
                 <h2>{selectedFamily.name}</h2>
                 <span className={`vuln-tag ${selectedFamily.vulnerability.toLowerCase()}`}>{selectedFamily.vulnerability} vulnerabilidade</span>
@@ -777,6 +788,13 @@ export default function PainelSocial() {
           </div>
         </div>
       )}
+
+      <Toast 
+        show={toast.show} 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ ...toast, show: false })} 
+      />
     </div>
   );
 }

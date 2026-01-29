@@ -7,137 +7,60 @@ import {
   Bell, Clock, ArrowRight,
   Heart, Store, UserCircle,
   Zap, Target, Sparkles,
-  Home, Users2, Menu, X
+  Home, Users2, Menu, X, RefreshCw, Filter, Calendar
 } from 'lucide-react';
 import './DashboardMobile.css';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
+import Toast from '../../components/ui/Toast';
+import { SkeletonListItem } from '../../components/ui/Skeleton';
+import EmptyState from '../../components/ui/EmptyState';
+import Badge from '../../components/ui/Badge';
+import Avatar from '../../components/ui/Avatar';
 
-// Mock data service (same as desktop)
-const mockApiService = {
-  async request(endpoint) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    if (endpoint === '/ongs') {
-      return {
-        data: [
-          {
-            id: '1',
-            nome_fantasia: 'Instituto Esperança',
-            razao_social: 'Instituto Esperança de Desenvolvimento Social LTDA',
-            cnpj: '12.345.678/0001-90',
-            email: 'contato@institutoesperanca.org',
-            telefone: '(11) 98765-4321',
-            data_fundacao: '2015-03-15',
-            website: 'https://institutoesperanca.org',
-            sede: 'Rua das Flores, 123 - Centro, São Paulo - SP',
-            areas_cobertura: ['Centro', 'Zona Norte', 'Periferia'],
-            num_voluntarios: 45,
-            colaboradores_fixos: 8,
-            causas: ['Segurança Alimentar', 'Educação e Cultura', 'Direitos Humanos'],
-            status: 'pending',
-            created_at: new Date().toISOString()
-          }
-        ]
-      };
+// Real API Service
+const API_BASE_URL = 'http://localhost:3001/api';
+
+const apiService = {
+  async request(endpoint, method = 'GET', data = null) {
+    const token = localStorage.getItem('authToken');
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+
+    const config = {
+      method,
+      headers,
+      ...(data && { body: JSON.stringify(data) })
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      
+      const result = await response.json();
+      // Ensure data format compatibility
+      return result.data ? result : { data: Array.isArray(result) ? result : [] };
+    } catch (error) {
+      console.error(`Error requesting ${endpoint}:`, error);
+      throw error;
     }
-    
-    if (endpoint === '/comercios') {
-      return {
-        data: [
-          {
-            id: '2',
-            nome_fantasia: 'Padaria do Bairro',
-            razao_social: 'Padaria e Confeitaria do Bairro LTDA',
-            cnpj: '98.765.432/0001-10',
-            segmento: 'Alimentação',
-            responsavel_legal: 'João Silva Santos',
-            telefone: '(11) 91234-5678',
-            email: 'contato@padariabairro.com',
-            endereco: 'Av. Principal, 456 - Vila Nova, São Paulo - SP',
-            horario_funcionamento: 'Segunda a Sábado das 06h às 20h',
-            contribuicoes: ['Ponto de Coleta de Doações', 'Descontos para Famílias Cadastradas', 'Doação de Excedentes (Alimentos)'],
-            observacoes: 'Disponível para parcerias sociais',
-            status: 'pending',
-            created_at: new Date().toISOString()
-          },
-          {
-            id: '5',
-            nome_fantasia: 'Padaria do Baixo',
-            razao_social: 'Panificadora Baixo Centro LTDA',
-            cnpj: '11.222.333/0001-44',
-            segmento: 'Alimentação',
-            responsavel_legal: 'Ricardo Mendes',
-            telefone: '(11) 97777-8888',
-            email: 'contato@padariabaixo.com',
-            endereco: 'Rua do Baixo, 10 - Centro, São Paulo - SP',
-            horario_funcionamento: 'Todos os dias das 07h às 22h',
-            contribuicoes: ['Doação de Pães', 'Café Solidário'],
-            observacoes: 'Parceiro engajado',
-            status: 'pending',
-            created_at: new Date().toISOString()
-          }
-        ]
-      };
-    }
-    
-    if (endpoint === '/familias') {
-      return {
-        data: [
-          {
-            id: '3',
-            nomeCompleto: 'Maria Santos Silva',
-            dataNascimento: '1985-07-20',
-            estadoCivil: 'Casado(a)',
-            profissao: 'Diarista',
-            cpf: '123.456.789-00',
-            rg: '12.345.678-9',
-            nis: '123.45678.90-1',
-            rendaFamiliar: '501_1000',
-            telefone: '(11) 99876-5432',
-            whatsapp: '(11) 99876-5432',
-            email: 'maria.santos@email.com',
-            horarioContato: 'Tarde',
-            endereco: 'Rua das Palmeiras, 789',
-            bairro: 'Jardim Esperança',
-            pontoReferencia: 'Próximo ao posto de saúde',
-            tipoMoradia: 'Casa Alugada',
-            criancas: 2,
-            jovens: 1,
-            adultos: 2,
-            idosos: 0,
-            necessidades: ['Alimentação', 'Material Escolar', 'Roupas'],
-            status: 'pending',
-            created_at: new Date().toISOString(),
-            role: 'family'
-          }
-        ]
-      };
-    }
-    
-    if (endpoint === '/cidadaos') {
-      return {
-        data: [
-          {
-            id: '4',
-            nomeCompleto: 'Carlos Eduardo Oliveira',
-            email: 'carlos.oliveira@email.com',
-            telefone: '(11) 94567-8901',
-            cpf: '987.654.321-00',
-            dataNascimento: '1990-12-10',
-            profissao: 'Engenheiro de Software',
-            endereco: 'Rua dos Desenvolvedores, 321 - Tech Valley, São Paulo - SP',
-            disponibilidade: ['Fins de semana', 'Noites'],
-            interesses: ['Educação e Cultura', 'Meio Ambiente', 'Tecnologia Social'],
-            proposito: 'Quero usar minhas habilidades técnicas para ajudar ONGs com soluções digitais',
-            status: 'pending',
-            created_at: new Date().toISOString(),
-            role: 'citizen'
-          }
-        ]
-      };
-    }
-    
-    return { data: [] };
   }
+};
+
+const formatAddress = (address) => {
+  if (!address) return "Não informado";
+  if (typeof address === 'string') return address;
+  if (typeof address === 'object') {
+    const parts = [];
+    if (address.logradouro) parts.push(address.logradouro);
+    if (address.numero) parts.push(address.numero);
+    if (address.bairro) parts.push(address.bairro);
+    if (address.cidade) parts.push(address.cidade);
+    if (address.uf) parts.push(address.uf);
+    return parts.join(', ') || "Endereço registrado";
+  }
+  return "N/A";
 };
 
 export default function DashboardMobile() {
@@ -171,62 +94,72 @@ export default function DashboardMobile() {
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [successAction, setSuccessAction] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const [pullStartY, setPullStartY] = useState(0);
+  const [pullMoveY, setPullMoveY] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: 'all',
+    date: 'all',
+    bairro: ''
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
   }, [activeTab]);
 
+  // Generate notifications dynamically based on real data
+  useEffect(() => {
+    const generate = () => {
+      const list = [];
+      const add = (item, type, title, msg) => {
+        list.push({
+          id: `${type}-${item.id}`,
+          title,
+          message: msg,
+          time: item.created_at ? new Date(item.created_at).toLocaleDateString('pt-BR') : 'Recente',
+          type,
+          isRead: false
+        });
+      };
+
+      ongs.filter(i => i.status === 'pending').forEach(i => add(i, 'ong', 'Nova ONG', `${i.nome_fantasia} aguarda análise.`));
+      commerces.filter(i => i.status === 'pending').forEach(i => add(i, 'commerce', 'Parceria', `${i.nome_fantasia} solicitou adesão.`));
+      profiles.filter(i => i.status === 'pending').forEach(i => add(i, 'family', 'Família', `${i.nomeCompleto || i.full_name} enviou dados.`));
+      citizens.filter(i => i.status === 'pending').forEach(i => add(i, 'citizen', 'Cidadão', `${i.nomeCompleto || i.full_name} quer colaborar.`));
+      
+      // Only update if we have items to avoid clearing user interactions unnecessarily in a real app, 
+      // but for this dashboard sync, we want to reflect current state.
+      setNotifications(list);
+    };
+    generate();
+  }, [ongs, commerces, profiles, citizens]);
+
   const fetchData = async () => {
     setLoading(true);
-    if (activeTab === 'dashboard') {
-      await Promise.all([fetchOngs(), fetchCommerces(), fetchProfiles(), fetchCitizens()]);
-      generateNotifications();
-    } else if (activeTab === 'ongs') {
-      await fetchOngs();
-    } else if (activeTab === 'commerces') {
-      await fetchCommerces();
-    } else if (activeTab === 'families') {
-      await fetchProfiles();
-    } else {
-      await fetchCitizens();
+    try {
+      if (activeTab === 'dashboard') {
+        await Promise.all([fetchOngs(), fetchCommerces(), fetchProfiles(), fetchCitizens()]);
+      } else if (activeTab === 'ongs') {
+        await fetchOngs();
+      } else if (activeTab === 'commerces') {
+        await fetchCommerces();
+      } else if (activeTab === 'families') {
+        await fetchProfiles();
+      } else {
+        await fetchCitizens();
+      }
+    } catch (error) {
+      // Errors are handled individually in fetch functions to allow partial loading, but we catch here just in case
     }
     setLoading(false);
   };
 
-  const generateNotifications = () => {
-    const newNotifications = [
-      {
-        id: 'n1',
-        title: 'Nova ONG pendente',
-        message: 'Instituto Esperança aguarda sua revisão.',
-        time: 'Há 5 min',
-        type: 'ong',
-        isRead: false,
-      },
-      {
-        id: 'n2',
-        title: 'Parceria Comercial',
-        message: 'Padaria do Bairro solicitou adesão.',
-        time: 'Há 12 min',
-        type: 'commerce',
-        isRead: false,
-      },
-      {
-        id: 'n3',
-        title: 'Cadastro de Família',
-        message: 'Maria Santos Silva enviou documentos.',
-        time: 'Há 1 hora',
-        type: 'family',
-        isRead: true,
-      }
-    ];
-    setNotifications(newNotifications);
-  };
-
   const fetchOngs = async () => {
     try {
-      const response = await mockApiService.request('/ongs');
+      const response = await apiService.request('/ongs');
       const data = response.data || [];
       setOngs(data);
       const pending = data.filter((o) => o.status === 'pending').length;
@@ -234,12 +167,13 @@ export default function DashboardMobile() {
     } catch (error) {
       console.error('Error fetching ONGs:', error);
       setOngs([]);
+      setToast({ show: true, message: 'Não foi possível carregar as ONGs. Verifique a conexão.', type: 'error' });
     }
   };
 
   const fetchCommerces = async () => {
     try {
-      const response = await mockApiService.request('/comercios');
+      const response = await apiService.request('/comercios');
       const data = response.data || [];
       setCommerces(data);
       const pending = data.filter((c) => c.status === 'pending').length;
@@ -247,12 +181,13 @@ export default function DashboardMobile() {
     } catch (error) {
       console.error('Error fetching commerces:', error);
       setCommerces([]);
+      setToast({ show: true, message: 'Não foi possível carregar os comércios.', type: 'error' });
     }
   };
 
   const fetchProfiles = async () => {
     try {
-      const response = await mockApiService.request('/familias');
+      const response = await apiService.request('/familias');
       const data = response.data || [];
       setProfiles(data);
       const pendingFamilies = data.filter((p) => p.status === 'pending').length;
@@ -264,12 +199,13 @@ export default function DashboardMobile() {
     } catch (error) {
       console.error('Error fetching profiles:', error);
       setProfiles([]);
+      setToast({ show: true, message: 'Erro ao carregar famílias.', type: 'error' });
     }
   };
 
   const fetchCitizens = async () => {
     try {
-      const response = await mockApiService.request('/cidadaos');
+      const response = await apiService.request('/cidadaos');
       const data = response.data || [];
       setCitizens(data);
       const pendingCitizens = data.filter((c) => c.status === 'pending').length;
@@ -281,12 +217,20 @@ export default function DashboardMobile() {
     } catch (error) {
       console.error('Error fetching citizens:', error);
       setCitizens([]);
+      setToast({ show: true, message: 'Erro ao carregar cidadãos.', type: 'error' });
     }
   };
 
   const handleUpdateStatus = async (id, status, type, name) => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      // Determine endpoint based on type
+      let endpoint = '';
+      if (type === 'ongs') endpoint = '/ongs';
+      else if (type === 'commerces') endpoint = '/comercios';
+      else if (type === 'citizens') endpoint = '/cidadaos';
+      else endpoint = '/familias';
+
+      await apiService.request(`${endpoint}/${id}`, 'PATCH', { status });
       
       if (type === 'ongs') fetchOngs();
       else if (type === 'commerces') fetchCommerces();
@@ -298,15 +242,16 @@ export default function DashboardMobile() {
       setSelectedProfile(null);
       setEvaluationChecklist({ check1: false, check2: false, check3: false, check4: false });
 
-      if (status === 'verified') {
+      if (status === 'analyzed') {
         setSuccessAction({
-          title: 'Sucesso!',
-          message: `${name || 'O registro'} foi aprovado com sucesso e já está ativo no sistema.`
+          title: 'Análise Concluída!',
+          message: `${name || 'O registro'} foi marcado como analisado com sucesso.`
         });
       }
 
     } catch (error) {
       console.error('Error updating status:', error);
+      setToast({ show: true, message: 'Erro ao atualizar status. Tente novamente.', type: 'error' });
     }
   };
 
@@ -315,33 +260,47 @@ export default function DashboardMobile() {
     window.location.href = '/login';
   };
 
-  const filteredOngs = ongs.filter(
-    (ong) =>
-      ong.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ong.cnpj?.includes(searchTerm) ||
-      ong.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filterItems = (items) => {
+    return items.filter(item => {
+      // Search Term
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        (item.nome_fantasia || item.nomeCompleto || item.full_name || '').toLowerCase().includes(searchLower) ||
+        (item.cnpj || item.cpf || '').includes(searchTerm) ||
+        (item.email || '').toLowerCase().includes(searchLower);
 
-  const filteredCommerces = commerces.filter(
-    (commerce) =>
-      commerce.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      commerce.cnpj?.includes(searchTerm) ||
-      commerce.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      if (!matchesSearch) return false;
 
-  const filteredCitizens = citizens.filter(
-    (citizen) =>
-      citizen.nomeCompleto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      citizen.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      citizen.cpf?.includes(searchTerm)
-  );
+      // Status Filter
+      if (filters.status !== 'all') {
+        if (filters.status === 'pending' && item.status !== 'pending') return false;
+        if (filters.status === 'analyzed' && item.status === 'pending') return false;
+      }
 
-  const filteredFamilies = profiles.filter(
-    (profile) =>
-      profile.nomeCompleto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.cpf?.includes(searchTerm)
-  );
+      // Date Filter
+      if (filters.date !== 'all') {
+        const itemDate = new Date(item.created_at);
+        const now = new Date();
+        const diffTime = Math.abs(now - itemDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (filters.date === '7days' && diffDays > 7) return false;
+        if (filters.date === '30days' && diffDays > 30) return false;
+      }
+
+      // Bairro Filter
+      if (filters.bairro) {
+        const addressStr = formatAddress(item.sede || item.endereco).toLowerCase();
+        if (!addressStr.includes(filters.bairro.toLowerCase())) return false;
+      }
+
+      return true;
+    });
+  };
+
+  const filteredOngs = filterItems(ongs);
+  const filteredCommerces = filterItems(commerces);
+  const filteredCitizens = filterItems(citizens);
+  const filteredFamilies = filterItems(profiles);
 
   const pendingOngs = ongs.filter((o) => o.status === 'pending');
   const pendingCommerces = commerces.filter((c) => c.status === 'pending');
@@ -373,6 +332,53 @@ export default function DashboardMobile() {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilters({ status: 'all', date: 'all', bairro: '' });
+    setShowFilters(false);
+  };
+
+  // Pull to Refresh Handlers
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0) {
+      setPullStartY(e.touches[0].clientY);
+      setIsPulling(true);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isPulling) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - pullStartY;
+    
+    if (diff > 0 && window.scrollY === 0) {
+      // Add resistance to the pull
+      setPullMoveY(Math.min(diff * 0.4, 100));
+    } else {
+      setPullMoveY(0);
+      setIsPulling(false);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (!isPulling) return;
+    setIsPulling(false);
+    
+    if (pullMoveY > 50) {
+      setPullMoveY(0);
+      await fetchData();
+    } else {
+      setPullMoveY(0);
+    }
+  };
+
+  const distributionData = [
+    { name: 'ONGs', value: stats.totalOngs, color: '#8b5cf6' },
+    { name: 'Comércios', value: stats.totalCommerces, color: '#3b82f6' },
+    { name: 'Famílias', value: stats.totalFamilies, color: '#f97316' },
+    { name: 'Cidadãos', value: stats.totalCitizens, color: '#10b981' },
+  ];
+
   return (
     <div className="adm-wrapper">
       <div className={`adm-mobile-overlay ${mobileMenuOpen ? "adm-active" : ""}`} onClick={() => setMobileMenuOpen(false)} />
@@ -402,6 +408,7 @@ export default function DashboardMobile() {
                       {notification.type === "ong" && <Heart size={14} />}
                       {notification.type === "commerce" && <Store size={14} />}
                       {notification.type === "family" && <Users size={14} />}
+                      {notification.type === "citizen" && <UserCircle size={14} />}
                     </div>
                     <div className="adm-notification-content">
                       <h4>{notification.title}</h4>
@@ -467,7 +474,12 @@ export default function DashboardMobile() {
         </button>
       </aside>
 
-      <main className="adm-admin-main">
+      <main 
+        className="adm-admin-main"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <header className="adm-mobile-header">
           <button className="adm-menu-toggle" onClick={() => setMobileMenuOpen(true)}>
             <Menu size={24} />
@@ -476,6 +488,9 @@ export default function DashboardMobile() {
             <h1>{activeTab === "dashboard" ? "Resumo Geral" : activeTab === "ongs" ? "Gestão de ONGs" : activeTab === "commerces" ? "Parceiros" : activeTab === "families" ? "Família" : "Cidadão"}</h1>
           </div>
           <div className="adm-header-actions">
+            <button className="adm-notification-btn" onClick={fetchData} title="Atualizar dados">
+              <RefreshCw size={20} />
+            </button>
             <button className={`adm-notification-btn ${totalPending > 0 ? "has-badge" : ""}`} onClick={() => setShowNotifications(!showNotifications)}>
               <Bell size={22} />
               {totalPending > 0 && <span className="adm-badge">{totalPending}</span>}
@@ -483,24 +498,37 @@ export default function DashboardMobile() {
           </div>
         </header>
 
+        <div 
+          className="adm-pull-indicator"
+          style={{ 
+            height: `${pullMoveY}px`,
+            opacity: pullMoveY > 0 ? Math.min(pullMoveY / 40, 1) : 0
+          }}
+        >
+          <RefreshCw className={`adm-pull-icon ${pullMoveY > 50 ? 'active' : ''}`} size={24} />
+        </div>
+
         <div className="adm-content-area">
           <div className="adm-search-bar">
             <Search size={18} />
             <input type="text" placeholder="Pesquisar registros..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <button className={`adm-filter-trigger ${filters.status !== 'all' || filters.date !== 'all' || filters.bairro ? 'active' : ''}`} onClick={() => setShowFilters(true)}>
+              <Filter size={20} />
+            </button>
           </div>
 
           {activeTab === "dashboard" && (
             <div className="adm-dashboard-content">
-              <div className="adm-summary-section" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: 'white', border: 'none' }}>
-                <div className="adm-section-header" style={{ marginBottom: '0.5rem' }}>
-                  <h2 style={{ color: 'white' }}>Meta de Aprovação</h2>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, opacity: 0.8 }}>{Math.round(progressPercentage)}%</span>
+              <div className="adm-summary-card">
+                <div className="adm-section-header">
+                  <h2>Meta de Aprovação</h2>
+                  <span className="adm-percentage-badge">{Math.round(progressPercentage)}%</span>
                 </div>
-                <div className="adm-progress-bar-container" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="adm-progress-bar-container">
                   <div className="adm-progress-fill" style={{ width: `${progressPercentage}%`, background: 'linear-gradient(90deg, #10b981, #34d399)' }} />
                 </div>
-                <p style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.5rem' }}>
-                  {approvedItems} de {totalItems} solicitações processadas
+                <p className="adm-summary-footer">
+                  {approvedItems} de {totalItems} registros analisados
                 </p>
               </div>
 
@@ -522,6 +550,42 @@ export default function DashboardMobile() {
                     <span className="adm-stat-label">Comércios</span>
                     <span className="adm-stat-value">{stats.totalCommerces}</span>
                   </div>
+                </div>
+              </div>
+
+              <div style={{ 
+                background: 'white', 
+                borderRadius: 'var(--adm-radius-lg)', 
+                padding: '1.5rem', 
+                marginBottom: '1.5rem', 
+                boxShadow: 'var(--adm-shadow-md)',
+                border: '1px solid rgba(0,0,0,0.04)'
+              }}>
+                <div className="adm-section-header">
+                  <h2>Distribuição da Rede</h2>
+                </div>
+                <div style={{ width: '100%', height: 250 }}>
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie
+                        data={distributionData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {distributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                      />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
@@ -547,8 +611,8 @@ export default function DashboardMobile() {
                             <span className="adm-pending-name">{ong.nome_fantasia}</span>
                             <span className="adm-pending-type">ONG • Pendente</span>
                           </div>
-                          <button className="adm-quick-approve-badge" onClick={(e) => { e.stopPropagation(); setSelectedOng(ong); }}>
-                            Detalhes
+                          <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedOng(ong); }}>
+                            Analisar
                           </button>
                         </div>
                       ))}
@@ -561,8 +625,8 @@ export default function DashboardMobile() {
                             <span className="adm-pending-name">{commerce.nome_fantasia}</span>
                             <span className="adm-pending-type">Parceiro • Pendente</span>
                           </div>
-                          <button className="adm-quick-approve-badge" onClick={(e) => { e.stopPropagation(); setSelectedCommerce(commerce); }}>
-                            Detalhes
+                          <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedCommerce(commerce); }}>
+                            Analisar
                           </button>
                         </div>
                       ))}
@@ -576,88 +640,117 @@ export default function DashboardMobile() {
           {(activeTab === "ongs" || activeTab === "commerces" || activeTab === "families" || activeTab === "citizens") && (
             <div className="adm-list-content">
               {loading ? (
-                <div className="adm-loading-state">
-                  <div className="adm-spinner" />
-                  <p>Sincronizando dados...</p>
+                <div className="adm-items-list">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <SkeletonListItem key={i} />
+                  ))}
                 </div>
               ) : (
                 <div className="adm-items-list">
-                    {activeTab === "ongs" && filteredOngs.map((ong) => (
+                    {activeTab === "ongs" && (
+                      filteredOngs.length > 0 ? filteredOngs.map((ong) => (
                       <div key={ong.id} className="adm-list-item" onClick={() => setSelectedOng(ong)}>
-                        <div className="adm-item-icon adm-ong">
-                          <Heart size={20} />
-                        </div>
+                        <Avatar 
+                          alt={ong.nome_fantasia} 
+                          className="adm-item-icon adm-ong" 
+                          variant="rounded"
+                          fallback={<Heart size={20} />}
+                        />
                         <div className="adm-item-content">
                           <span className="adm-item-name">{ong.nome_fantasia}</span>
                           <span className="adm-item-email">{ong.email}</span>
                         </div>
                         <div className="adm-item-actions">
-                          <span className={`adm-status-badge adm-${ong.status}`}>{ong.status === "pending" ? "Análise" : "OK"}</span>
+                          <Badge variant={ong.status}>{ong.status === "pending" ? "Análise" : "OK"}</Badge>
                           {ong.status === "pending" && (
-                            <button className="adm-quick-approve-badge" onClick={(e) => { e.stopPropagation(); setSelectedOng(ong); }}>
-                              Aprovar
+                            <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedOng(ong); }}>
+                              Analisar
                             </button>
                           )}
                         </div>
                       </div>
-                    ))}
-                    {activeTab === "commerces" && filteredCommerces.map((commerce) => (
+                      )) : (
+                        <EmptyState actionLabel="Limpar Filtros" onAction={clearFilters} />
+                      )
+                    )}
+                    {activeTab === "commerces" && (
+                      filteredCommerces.length > 0 ? filteredCommerces.map((commerce) => (
                       <div key={commerce.id} className="adm-list-item" onClick={() => setSelectedCommerce(commerce)}>
-                        <div className="adm-item-icon adm-commerce">
-                          <Store size={20} />
-                        </div>
+                        <Avatar 
+                          alt={commerce.nome_fantasia} 
+                          className="adm-item-icon adm-commerce" 
+                          variant="rounded"
+                          fallback={<Store size={20} />}
+                        />
                         <div className="adm-item-content">
                           <span className="adm-item-name">{commerce.nome_fantasia}</span>
                           <span className="adm-item-email">{commerce.email}</span>
                         </div>
                         <div className="adm-item-actions">
-                          <span className={`adm-status-badge adm-${commerce.status}`}>{commerce.status === "pending" ? "Análise" : "OK"}</span>
+                          <Badge variant={commerce.status}>{commerce.status === "pending" ? "Análise" : "OK"}</Badge>
                           {commerce.status === "pending" && (
-                            <button className="adm-quick-approve-badge" onClick={(e) => { e.stopPropagation(); setSelectedCommerce(commerce); }}>
-                              Aprovar
+                            <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedCommerce(commerce); }}>
+                              Analisar
                             </button>
                           )}
                         </div>
                       </div>
-                    ))}
-                    {activeTab === "families" && filteredFamilies.map((profile) => (
+                      )) : (
+                        <EmptyState actionLabel="Limpar Filtros" onAction={clearFilters} />
+                      )
+                    )}
+                    {activeTab === "families" && (
+                      filteredFamilies.length > 0 ? filteredFamilies.map((profile) => (
                       <div key={profile.id} className="adm-list-item" onClick={() => setSelectedProfile(profile)}>
-                        <div className="adm-item-icon" style={{ background: 'rgba(249, 115, 22, 0.1)', color: 'var(--adm-family-color)' }}>
-                          <Users size={20} />
-                        </div>
+                        <Avatar 
+                          alt={profile.nomeCompleto || profile.full_name} 
+                          className="adm-item-icon adm-family" 
+                          variant="rounded"
+                          fallback={<Users size={20} />}
+                        />
                         <div className="adm-item-content">
                           <span className="adm-item-name">{profile.nomeCompleto || profile.full_name}</span>
                           <span className="adm-item-email">{profile.email}</span>
                         </div>
                         <div className="adm-item-actions">
-                          <span className={`adm-status-badge adm-${profile.status}`}>{profile.status === "pending" ? "Análise" : "OK"}</span>
+                          <Badge variant={profile.status}>{profile.status === "pending" ? "Análise" : "OK"}</Badge>
                           {profile.status === "pending" && (
-                            <button className="adm-quick-approve-badge" onClick={(e) => { e.stopPropagation(); setSelectedProfile(profile); }}>
-                              Aprovar
+                            <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedProfile(profile); }}>
+                              Analisar
                             </button>
                           )}
                         </div>
                       </div>
-                    ))}
-                    {activeTab === "citizens" && filteredCitizens.map((citizen) => (
+                      )) : (
+                        <EmptyState actionLabel="Limpar Filtros" onAction={clearFilters} />
+                      )
+                    )}
+                    {activeTab === "citizens" && (
+                      filteredCitizens.length > 0 ? filteredCitizens.map((citizen) => (
                       <div key={citizen.id} className="adm-list-item" onClick={() => setSelectedProfile(citizen)}>
-                        <div className="adm-item-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--adm-citizen-color)' }}>
-                          <UserCircle size={20} />
-                        </div>
+                        <Avatar 
+                          alt={citizen.nomeCompleto || citizen.full_name} 
+                          className="adm-item-icon adm-citizen" 
+                          variant="rounded"
+                          fallback={<UserCircle size={20} />}
+                        />
                         <div className="adm-item-content">
                           <span className="adm-item-name">{citizen.nomeCompleto || citizen.full_name}</span>
                           <span className="adm-item-email">{citizen.email}</span>
                         </div>
                         <div className="adm-item-actions">
-                          <span className={`adm-status-badge adm-${citizen.status}`}>{citizen.status === "pending" ? "Análise" : "OK"}</span>
+                          <Badge variant={citizen.status}>{citizen.status === "pending" ? "Análise" : "OK"}</Badge>
                           {citizen.status === "pending" && (
-                            <button className="adm-quick-approve-badge" onClick={(e) => { e.stopPropagation(); setSelectedProfile(citizen); }}>
-                              Aprovar
+                            <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedProfile(citizen); }}>
+                              Analisar
                             </button>
                           )}
                         </div>
                       </div>
-                    ))}
+                      )) : (
+                        <EmptyState actionLabel="Limpar Filtros" onAction={clearFilters} />
+                      )
+                    )}
 
                 </div>
               )}
@@ -688,13 +781,13 @@ export default function DashboardMobile() {
                   <div className="adm-detail-item"><label>E-mail</label><p>{selectedOng.email}</p></div>
                   <div className="adm-detail-item"><label>Telefone</label><p>{selectedOng.telefone}</p></div>
                   <div className="adm-detail-item"><label>Website</label><p>{selectedOng.website || "N/A"}</p></div>
-                  <div className="adm-detail-item"><label>Sede</label><p>{selectedOng.sede || "N/A"}</p></div>
+                  <div className="adm-detail-item"><label>Sede</label><p>{formatAddress(selectedOng.sede)}</p></div>
                   <div className="adm-detail-item"><label>Áreas de Cobertura</label><p>{selectedOng.areas_cobertura?.join(", ") || "N/A"}</p></div>
                   <div className="adm-detail-item"><label>Causas</label><p>{selectedOng.causas?.join(", ") || "N/A"}</p></div>
                 </div>
               </div>
               <div className="adm-checklist-section">
-                <h3>Checklist de Aprovação</h3>
+                <h3>Checklist de Análise</h3>
                 <div className="adm-checklist-items">
                   <div className={`adm-checklist-item ${evaluationChecklist.check1 ? 'adm-checked' : ''}`} onClick={() => setEvaluationChecklist(p => ({ ...p, check1: !p.check1 }))}>
                     <div className="adm-checkbox" /><span>Documentação Legal Validada</span>
@@ -706,8 +799,8 @@ export default function DashboardMobile() {
               </div>
             </div>
             <div className="adm-modal-footer">
-              <button className="adm-btn-secondary" onClick={() => handleUpdateStatus(selectedOng.id, "rejected", "ongs")}>Recusar</button>
-              <button className="adm-btn-primary adm-ong" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2} onClick={() => handleUpdateStatus(selectedOng.id, "verified", "ongs", selectedOng.nome_fantasia)}>Aprovar ONG</button>
+              <button className="adm-btn-secondary" onClick={closeModals}>Cancelar</button>
+              <button className="adm-btn-primary adm-ong" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2} onClick={() => handleUpdateStatus(selectedOng.id, "analyzed", "ongs", selectedOng.nome_fantasia)}>Concluir Análise</button>
             </div>
           </div>
         </div>
@@ -736,7 +829,7 @@ export default function DashboardMobile() {
                   <div className="adm-detail-item"><label>Responsável</label><p>{selectedCommerce.responsavel_legal || "Não informado"}</p></div>
                   <div className="adm-detail-item"><label>E-mail</label><p>{selectedCommerce.email}</p></div>
                   <div className="adm-detail-item"><label>Telefone</label><p>{selectedCommerce.telefone}</p></div>
-                  <div className="adm-detail-item"><label>Endereço</label><p>{selectedCommerce.endereco || "Não informado"}</p></div>
+                  <div className="adm-detail-item"><label>Endereço</label><p>{formatAddress(selectedCommerce.endereco)}</p></div>
                   <div className="adm-detail-item"><label>Funcionamento</label><p>{selectedCommerce.horario_funcionamento || "Não informado"}</p></div>
                 </div>
               </div>
@@ -759,8 +852,8 @@ export default function DashboardMobile() {
               </div>
             </div>
             <div className="adm-modal-footer">
-              <button className="adm-btn-secondary" onClick={() => handleUpdateStatus(selectedCommerce.id, "rejected", "commerces")}>Recusar</button>
-              <button className="adm-btn-primary adm-commerce" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2} onClick={() => handleUpdateStatus(selectedCommerce.id, "verified", "commerces", selectedCommerce.nome_fantasia)}>Aprovar Parceiro</button>
+              <button className="adm-btn-secondary" onClick={closeModals}>Cancelar</button>
+              <button className="adm-btn-primary adm-commerce" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2} onClick={() => handleUpdateStatus(selectedCommerce.id, "analyzed", "commerces", selectedCommerce.nome_fantasia)}>Concluir Análise</button>
             </div>
           </div>
         </div>
@@ -786,7 +879,7 @@ export default function DashboardMobile() {
                   <div className="adm-detail-item"><label>CPF</label><p>{selectedProfile.cpf}</p></div>
                   <div className="adm-detail-item"><label>E-mail</label><p>{selectedProfile.email}</p></div>
                   <div className="adm-detail-item"><label>Telefone</label><p>{selectedProfile.telefone || selectedProfile.phone}</p></div>
-                  <div className="adm-detail-item"><label>Endereço</label><p>{selectedProfile.endereco}</p></div>
+                  <div className="adm-detail-item"><label>Endereço</label><p>{formatAddress(selectedProfile.endereco)}</p></div>
                   
                   {selectedProfile.role === 'family' ? (
                     <>
@@ -824,12 +917,12 @@ export default function DashboardMobile() {
               </div>
             </div>
             <div className="adm-modal-footer">
-              <button className="adm-btn-secondary" onClick={() => handleUpdateStatus(selectedProfile.id, "rejected", selectedProfile.role === 'family' ? "families" : "citizens")}>Recusar</button>
+              <button className="adm-btn-secondary" onClick={closeModals}>Cancelar</button>
               <button className="adm-btn-primary" 
                 style={{ background: selectedProfile.role === 'family' ? 'var(--adm-family-color)' : 'var(--adm-citizen-color)' }}
                 disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2} 
-                onClick={() => handleUpdateStatus(selectedProfile.id, "verified", selectedProfile.role === 'family' ? "families" : "citizens", selectedProfile.nomeCompleto || selectedProfile.full_name)}>
-                Aprovar {selectedProfile.role === 'family' ? 'Família' : 'Cidadão'}
+                onClick={() => handleUpdateStatus(selectedProfile.id, "analyzed", selectedProfile.role === 'family' ? "families" : "citizens", selectedProfile.nomeCompleto || selectedProfile.full_name)}>
+                Concluir Análise
               </button>
             </div>
           </div>
@@ -851,6 +944,75 @@ export default function DashboardMobile() {
           </div>
         </div>
       )}
+
+      {/* Filter Bottom Sheet */}
+      <div className={`adm-filter-sheet-overlay ${showFilters ? 'open' : ''}`} onClick={() => setShowFilters(false)}>
+        <div className="adm-filter-sheet" onClick={e => e.stopPropagation()}>
+          <div className="adm-filter-header">
+            <h3>Filtrar Resultados</h3>
+            <button className="adm-filter-close" onClick={() => setShowFilters(false)}>
+              <X size={20} />
+            </button>
+          </div>
+          <div className="adm-filter-body">
+            {/* Status */}
+            <div className="adm-filter-group">
+              <label>Status</label>
+              <div className="adm-filter-options">
+                <button 
+                  className={`adm-filter-chip ${filters.status === 'all' ? 'active' : ''}`} 
+                  onClick={() => setFilters({...filters, status: 'all'})}
+                >Todos</button>
+                <button 
+                  className={`adm-filter-chip ${filters.status === 'pending' ? 'active' : ''}`} 
+                  onClick={() => setFilters({...filters, status: 'pending'})}
+                >Pendentes</button>
+                <button 
+                  className={`adm-filter-chip ${filters.status === 'analyzed' ? 'active' : ''}`} 
+                  onClick={() => setFilters({...filters, status: 'analyzed'})}
+                >Analisados</button>
+              </div>
+            </div>
+            
+            {/* Date */}
+            <div className="adm-filter-group">
+              <label>Data de Cadastro</label>
+              <select 
+                value={filters.date} 
+                onChange={(e) => setFilters({...filters, date: e.target.value})}
+                className="adm-filter-select"
+              >
+                <option value="all">Todo o período</option>
+                <option value="7days">Últimos 7 dias</option>
+                <option value="30days">Últimos 30 dias</option>
+              </select>
+            </div>
+
+            {/* Bairro */}
+            <div className="adm-filter-group">
+              <label>Bairro</label>
+              <input 
+                type="text" 
+                placeholder="Ex: Centro" 
+                value={filters.bairro}
+                onChange={(e) => setFilters({...filters, bairro: e.target.value})}
+                className="adm-filter-input"
+              />
+            </div>
+          </div>
+          <div className="adm-modal-footer">
+            <button className="adm-btn-secondary" onClick={() => { setFilters({ status: 'all', date: 'all', bairro: '' }); setShowFilters(false); }}>Limpar</button>
+            <button className="adm-btn-primary" onClick={() => setShowFilters(false)}>Aplicar Filtros</button>
+          </div>
+        </div>
+      </div>
+
+      <Toast 
+        show={toast.show} 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ ...toast, show: false })} 
+      />
     </div>
   );
 }

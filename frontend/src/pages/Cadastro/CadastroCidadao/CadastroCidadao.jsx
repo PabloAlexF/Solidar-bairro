@@ -32,7 +32,14 @@ export default function CadastroCidadao() {
     email: '',
     password: '',
     confirmPassword: '',
-    endereco: '',
+    endereco: {
+      rua: '',
+      numero: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      cep: ''
+    },
     disponibilidade: [],
     interesses: [],
     proposito: ''
@@ -49,12 +56,12 @@ export default function CadastroCidadao() {
       case 2:
         return formData.cpf.replace(/\D/g, '').length >= 11 && formData.rg.replace(/\D/g, '').length >= 7;
       case 3:
-        return formData.telefone.replace(/\D/g, '').length >= 10 && 
-               formData.email.trim() && 
-               formData.password.length >= 6 && 
+        return formData.telefone.replace(/\D/g, '').length >= 10 &&
+               formData.email.trim() &&
+               formData.password.length >= 6 &&
                formData.password === formData.confirmPassword;
       case 4:
-        return formData.endereco.trim();
+        return formData.endereco.rua.trim() && formData.endereco.bairro.trim() && formData.endereco.cidade.trim();
       case 5:
         return formData.interesses.length > 0;
       default:

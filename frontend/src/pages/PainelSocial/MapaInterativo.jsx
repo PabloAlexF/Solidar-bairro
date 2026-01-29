@@ -1,6 +1,7 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { Locate, Calendar, Flame } from "lucide-react";
 
 export function MapaInterativo({
   familias,
@@ -25,6 +26,10 @@ export function MapaInterativo({
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const layerGroupsRef = useRef(null);
+  const userLocationRef = useRef(null);
+  const [dateFilter, setDateFilter] = useState('all');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [heatmapEnabled, setHeatmapEnabled] = useState(false);
 
   const createFamiliaMarker = useCallback((familia) => {
     const vulnColors = {
@@ -319,8 +324,35 @@ export function MapaInterativo({
       ongs: L.layerGroup(),
       pontosColeta: L.layerGroup(),
       zonasRisco: L.layerGroup(),
+      heatmap: L.layerGroup(),
     };
     layerGroupsRef.current = layerGroups;
+
+    const filterByDate = (items) => {
+      if (dateFilter === 'all') return items;
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - parseInt(dateFilter));
+      return items.filter(item => {
+        if (!item.createdAt) return true;
+        return new Date(item.createdAt) >= cutoff;
+      });
+    };
+
+    if (heatmapEnabled) {
+      filterByDate(familias).forEach((familia) => {
+        const vuln = familia.vulnerability ? familia.vulnerability.toLowerCase() : '';
+        if (vuln === 'alta' || vuln === 'média') {
+          L.circle([familia.lat, familia.lng], {
+            radius: vuln === 'alta' ? 180 : 120,
+            fillColor: vuln === 'alta' ? '#ef4444' : '#f97316',
+            fillOpacity: 0.15,
+            stroke: false,
+            interactive: false,
+          }).addTo(layerGroups.heatmap);
+        }
+      });
+      layerGroups.heatmap.addTo(map);
+    }
 
     if (layers.zonasRisco) {
       zonasRisco.forEach((zona) => {
@@ -331,7 +363,7 @@ export function MapaInterativo({
     }
 
     if (layers.familias) {
-      familias.forEach((familia) => {
+      filterByDate(familias).forEach((familia) => {
         const marker = createFamiliaMarker(familia);
         layerGroups.familias.addLayer(marker);
       });
@@ -339,7 +371,7 @@ export function MapaInterativo({
     }
 
     if (layers.pedidos) {
-      pedidos.forEach((pedido) => {
+      filterByDate(pedidos).forEach((pedido) => {
         const marker = createPedidoMarker(pedido);
         layerGroups.pedidos.addLayer(marker);
       });
@@ -769,9 +801,118 @@ export function MapaInterativo({
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [familias, pedidos, comercios, ongs, pontosColeta, zonasRisco, layers, centro, zoom, createFamiliaMarker, createPedidoMarker, createComercioMarker, createONGMarker, createPontoColetaMarker, createZonaRisco]);
+  }, [familias, pedidos, comercios, ongs, pontosColeta, zonasRisco, layers, centro, zoom, createFamiliaMarker, createPedidoMarker, createComercioMarker, createONGMarker, createPontoColetaMarker, createZonaRisco, dateFilter, heatmapEnabled]);
 
-  return <div ref={mapRef} style={{ width: "100%", height: "100%", borderRadius: "inherit" }} />;
+  const handleMyLocation = () => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (!navigator.geolocation) {
+      alert("Geolocalização não é suportada pelo seu navegador.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Remove previous marker if exists
+        if (userLocationRef.current) {
+          map.removeLayer(userLocationRef.current);
+        }
+
+        // Create a group for user location (circle + marker)
+        const userGroup = L.featureGroup();
+        
+        // Accuracy circle
+        L.circle([latitude, longitude], {
+          radius: position.coords.accuracy / 2,
+          color: '#3b82f6',
+          fillColor: '#3b82f6',
+          fillOpacity: 0.15,
+          weight: 1
+        }).addTo(userGroup);
+
+        // User dot
+        L.circleMarker([latitude, longitude], {
+          radius: 8,
+          fillColor: '#3b82f6',
+          color: '#ffffff',
+          weight: 3,
+          opacity: 1,
+          fillOpacity: 1
+        }).addTo(userGroup);
+
+        userGroup.addTo(map);
+        userLocationRef.current = userGroup;
+
+        map.flyTo([latitude, longitude], 16, {
+          animate: true,
+          duration: 1.5
+        });
+      },
+      (error) => {
+        console.error("Erro ao obter localização:", error);
+        let msg = "Não foi possível obter sua localização.";
+        if (error.code === 1) msg = "Permissão de localização negada.";
+        alert(msg);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%", borderRadius: "inherit" }}>
+      <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 1000, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+        <button
+          onClick={() => setShowFilterMenu(!showFilterMenu)}
+          title="Filtrar por Data"
+          style={{ backgroundColor: "white", border: "none", borderRadius: "8px", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#0f172a", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+        >
+          <Calendar size={18} color={dateFilter !== 'all' ? '#6366f1' : 'currentColor'} />
+        </button>
+        {showFilterMenu && (
+          <div style={{ backgroundColor: "white", borderRadius: "12px", padding: "8px", boxShadow: "0 4px 20px rgba(0,0,0,0.15)", display: "flex", flexDirection: "column", gap: "4px", minWidth: "140px" }}>
+            <button onClick={() => { setDateFilter('all'); setShowFilterMenu(false); }} style={{ padding: "8px 12px", border: "none", background: dateFilter === 'all' ? "#f1f5f9" : "transparent", borderRadius: "6px", cursor: "pointer", textAlign: "left", fontSize: "13px", fontWeight: "600", color: dateFilter === 'all' ? "#0f172a" : "#64748b" }}>Todo o período</button>
+            <button onClick={() => { setDateFilter('7'); setShowFilterMenu(false); }} style={{ padding: "8px 12px", border: "none", background: dateFilter === '7' ? "#e0e7ff" : "transparent", borderRadius: "6px", cursor: "pointer", textAlign: "left", fontSize: "13px", fontWeight: "600", color: dateFilter === '7' ? "#4338ca" : "#64748b" }}>Últimos 7 dias</button>
+            <button onClick={() => { setDateFilter('30'); setShowFilterMenu(false); }} style={{ padding: "8px 12px", border: "none", background: dateFilter === '30' ? "#e0e7ff" : "transparent", borderRadius: "6px", cursor: "pointer", textAlign: "left", fontSize: "13px", fontWeight: "600", color: dateFilter === '30' ? "#4338ca" : "#64748b" }}>Últimos 30 dias</button>
+          </div>
+        )}
+        <button
+          onClick={() => setHeatmapEnabled(!heatmapEnabled)}
+          title="Mapa de Calor (Vulnerabilidade)"
+          style={{ backgroundColor: heatmapEnabled ? "#fee2e2" : "white", border: "none", borderRadius: "8px", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: heatmapEnabled ? "#dc2626" : "#0f172a", boxShadow: "0 2px 10px rgba(0,0,0,0.1)" }}
+        >
+          <Flame size={18} fill={heatmapEnabled ? "currentColor" : "none"} />
+        </button>
+      </div>
+
+      <div ref={mapRef} style={{ width: "100%", height: "100%", borderRadius: "inherit" }} />
+      <button
+        onClick={handleMyLocation}
+        title="Minha Localização"
+        style={{
+          position: "absolute",
+          bottom: "90px", // Above zoom controls
+          right: "10px",
+          zIndex: 1000,
+          backgroundColor: "white",
+          border: "none",
+          borderRadius: "8px",
+          width: "32px",
+          height: "32px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          color: "#0f172a",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        }}
+      >
+        <Locate size={18} />
+      </button>
+    </div>
+  );
 }
 
 export function calcularDistanciaHaversine(lat1, lng1, lat2, lng2) {

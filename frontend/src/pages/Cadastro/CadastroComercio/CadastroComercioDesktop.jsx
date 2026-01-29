@@ -13,9 +13,28 @@ import './CadastroComercio.css';
 export default function CadastroComercioDesktop() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const [formData, setFormData] = useState({
+    nomeComercio: '',
+    cnpj: '',
+    email: '',
+    telefone: '',
+    endereco: {
+      rua: '',
+      numero: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      cep: ''
+    },
+    categoria: '',
+    horarioFuncionamento: '',
+    senha: '',
+    confirmPassword: ''
+  });
   const totalSteps = 6;
 
   const showToast = (message, type = 'info') => {
@@ -333,12 +352,32 @@ export default function CadastroComercioDesktop() {
 
               {step === 4 && (
                 <div className="comercio-form-grid">
-                  <div className="comercio-form-group comercio-span-2">
-                    <label className="comercio-field-label">Endereço da Loja</label>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Rua</label>
                     <div className="comercio-input-with-icon">
                       <MapPin className="comercio-field-icon" size={20} />
-                      <input required type="text" className="comercio-form-input" placeholder="Rua, Número, Bairro" />
+                      <input required type="text" className="comercio-form-input" placeholder="Nome da rua" />
                     </div>
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Número</label>
+                    <input required type="text" className="comercio-form-input" placeholder="Número" />
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Bairro</label>
+                    <input required type="text" className="comercio-form-input" placeholder="Bairro" />
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Cidade</label>
+                    <input required type="text" className="comercio-form-input" placeholder="Cidade" />
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Estado</label>
+                    <input required type="text" className="comercio-form-input" placeholder="Estado" />
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">CEP</label>
+                    <input required type="text" className="comercio-form-input" placeholder="00000-000" />
                   </div>
                   <div className="comercio-form-group comercio-span-2">
                     <label className="comercio-field-label">Horário de Funcionamento</label>
