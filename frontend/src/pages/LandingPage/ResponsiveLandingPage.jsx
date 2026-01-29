@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { useOnboarding } from '../../hooks/useOnboarding';
-import { MobileLandingPage } from '../../components/MobileLandingPage';
+import { MobileLandingPage } from './MobileLandingPage';
 import DesktopLandingPage from './DesktopLandingPage';
 import Onboarding from '../../components/Onboarding/Onboarding';
 

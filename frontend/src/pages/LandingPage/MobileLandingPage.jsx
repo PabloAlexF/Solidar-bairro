@@ -1,18 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { NotificationDropdown } from './NotificationDropdown';
-import { 
-  Heart, 
-  HandHelping, 
+import { useAuth } from '../../contexts/AuthContext';
+import { NotificationDropdown } from '../../components/NotificationDropdown';
+import {
+  Heart,
+  HandHelping,
   Search,
-  MapPin, 
-  Navigation, 
-  Bell, 
-  User, 
-  ArrowRight, 
-  ChevronRight, 
-  Zap, 
+  MapPin,
+  Navigation,
+  Bell,
+  User,
+  ArrowRight,
+  ChevronRight,
+  Zap,
   Sparkles,
   Home,
   PlusCircle,
@@ -32,13 +32,13 @@ const NeighborhoodRadar = ({ size = "normal" }) => {
   return (
     <div className={`radar-container ${size}`}>
       <div className="radar-circle">
-        <div 
+        <div
           className="radar-ping"
           style={{
             animation: 'radarPing 4s infinite ease-out'
           }}
         />
-        <div 
+        <div
           className="radar-ping"
           style={{
             animation: 'radarPing 4s infinite ease-out 2s'
@@ -47,7 +47,7 @@ const NeighborhoodRadar = ({ size = "normal" }) => {
         <div className="radar-center">
           <Navigation size={size === "small" ? 16 : 20} fill="currentColor" />
         </div>
-        
+
         {[
           { top: '20%', left: '30%', delay: 0.5 },
           { top: '60%', left: '20%', delay: 1.2 },
@@ -58,8 +58,8 @@ const NeighborhoodRadar = ({ size = "normal" }) => {
           <div
             key={i}
             className="neighbor-dot"
-            style={{ 
-              top: pos.top, 
+            style={{
+              top: pos.top,
               left: pos.left,
               animation: `neighborDot 3s infinite ease-in-out ${pos.delay}s`
             }}
@@ -68,7 +68,7 @@ const NeighborhoodRadar = ({ size = "normal" }) => {
           </div>
         ))}
       </div>
-      
+
       {size === "normal" && (
         <div className="radar-info">
           <div className="info-badge">
@@ -96,7 +96,7 @@ const PulseFeed = () => {
         <span>Acontecendo Agora</span>
       </div>
       {activities.map((act, i) => (
-        <div 
+        <div
           key={i}
           className="pulse-card"
           style={{
@@ -119,7 +119,7 @@ const PulseFeed = () => {
 
 const MobileNav = () => {
   const navigate = useNavigate();
-  
+
   const navItems = [
     { icon: <Home size={22} />, label: 'Início', path: '/' },
     { icon: <HandHelping size={22} />, label: 'Ajuda', path: '/quero-ajudar' },
@@ -129,14 +129,14 @@ const MobileNav = () => {
   ];
 
   return (
-    <div 
+    <div
       className="mobile-nav-bar"
       style={{
         animation: 'slideUp 0.5s ease-out'
       }}
     >
       {navItems.map((item, idx) => (
-        <button 
+        <button
           key={idx}
           onClick={() => navigate(item.path)}
           className={`mobile-nav-item ${item.fab ? 'mobile-nav-fab' : ''}`}
@@ -154,15 +154,15 @@ const MobileNav = () => {
 export const MobileLandingPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  
+
   // Verificar se é administrador
   const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
-  const isAdmin = user?.role === 'admin' || 
-                  user?.isAdmin || 
-                  user?.tipo === 'admin' || 
+  const isAdmin = user?.role === 'admin' ||
+                  user?.isAdmin ||
+                  user?.tipo === 'admin' ||
                   user?.email === 'admin@solidarbairro.com' ||
-                  storedUser?.role === 'admin' || 
-                  storedUser?.isAdmin || 
+                  storedUser?.role === 'admin' ||
+                  storedUser?.isAdmin ||
                   storedUser?.tipo === 'admin' ||
                   storedUser?.email === 'admin@solidarbairro.com';
 
@@ -177,7 +177,7 @@ export const MobileLandingPage = () => {
           <div className="header-actions">
             {isAdmin && (
               <>
-                <button 
+                <button
                   onClick={() => navigate('/admin')}
                   style={{
                     background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
@@ -196,7 +196,7 @@ export const MobileLandingPage = () => {
                 >
                   <Settings size={18} />
                 </button>
-                <button 
+                <button
                   onClick={() => navigate('/painel-social')}
                   style={{
                     background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
@@ -218,39 +218,73 @@ export const MobileLandingPage = () => {
               </>
             )}
             {!isAuthenticated() ? (
-              <button className="header-cta" onClick={() => navigate('/cadastro')}>
-                Cadastrar
-              </button>
+              <div className="auth-buttons">
+                <button
+                  className="header-login"
+                  onClick={() => navigate('/login')}
+                  style={{
+                    background: 'linear-gradient(135deg, #64748b, #475569)',
+                    border: 'none',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    marginRight: '8px',
+                    boxShadow: '0 2px 8px rgba(100, 116, 139, 0.3)'
+                  }}
+                >
+                  Entrar
+                </button>
+                <button
+                  className="header-cta"
+                  onClick={() => navigate('/cadastro')}
+                  style={{
+                    background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+                    border: 'none',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(13, 148, 136, 0.3)'
+                  }}
+                >
+                  Cadastrar
+                </button>
+              </div>
             ) : (
-              <button 
-                className="user-avatar-btn" 
-                onClick={() => navigate('/perfil')}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
-                  border: 'none',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 8px rgba(13, 148, 136, 0.3)'
-                }}
-              >
-                {(user?.nome || user?.nomeCompleto || 'U').substring(0, 2).toUpperCase()}
-              </button>
+              <div className="user-actions">
+                <NotificationDropdown />
+                <button
+                  className="user-avatar-btn"
+                  onClick={() => navigate('/perfil')}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+                    border: 'none',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(13, 148, 136, 0.3)'
+                  }}
+                >
+                  {(user?.nome || user?.nomeCompleto || 'U').substring(0, 2).toUpperCase()}
+                </button>
+              </div>
             )}
-            <NotificationDropdown />
           </div>
 
         </div>
 
         <div className="hero-content">
-          <div 
+          <div
             className="hero-tag"
             style={{
               animation: 'fadeInUp 0.5s ease-out'
@@ -259,7 +293,7 @@ export const MobileLandingPage = () => {
             <Zap size={14} fill="currentColor" />
             <span>NO SEU BAIRRO AGORA</span>
           </div>
-          
+
           <h1
             style={{
               animation: 'fadeInUp 0.5s ease-out 0.1s both'
@@ -284,7 +318,7 @@ export const MobileLandingPage = () => {
                   Ver pedidos <ChevronRight size={14} />
                 </div>
               </div>
-              
+
               <div className="quick-card orange" onClick={() => navigate('/preciso-de-ajuda')}>
                 <div className="card-top">
                   <div className="card-icon-badge">
