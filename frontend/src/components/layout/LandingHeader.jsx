@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { Heart, Bell, User, LogOut, Settings, Globe } from 'lucide-react';
+import { Heart, Bell, User, LogOut, Settings, Globe, ArrowLeft } from 'lucide-react';
 import chatNotificationService from '../../services/chatNotificationService';
 import './LandingHeader.css';
 
-const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
+const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastroButtons = false }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   
@@ -130,13 +130,37 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
   return (
     <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
       <div className="section-container nav-container">
+        {showCadastroButtons && (
+          <button
+            className="cadastro-back-btn"
+            onClick={() => window.history.back()}
+            style={{
+              background: 'rgba(0, 0, 0, 0.05)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              marginRight: '12px'
+            }}
+            onMouseEnter={(e) => e.target.style.background = 'rgba(0, 0, 0, 0.1)'}
+            onMouseLeave={(e) => e.target.style.background = 'rgba(0, 0, 0, 0.05)'}
+          >
+            <ArrowLeft size={20} />
+          </button>
+        )}
+
         <div className="logo-wrapper" onClick={() => navigate('/')}>
           <div className="logo-icon">
             <Heart fill="white" size={24} />
           </div>
           <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
         </div>
-        
+
         <div className="nav-menu">
           <a href="/#features" className="nav-link">
             Funcionalidades
@@ -174,97 +198,116 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
             </div>
           )}
           
-          {!isAuthenticated() && !showPanelButtons ? (
+          {showCadastroButtons ? (
+            <button
+              className="cadastro-login-btn"
+              onClick={() => navigate('/login')}
+              style={{
+                background: 'linear-gradient(135deg, #64748b, #475569)',
+                border: 'none',
+                color: 'white',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+              onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            >
+              Entrar
+            </button>
+          ) : !isAuthenticated() && !showPanelButtons ? (
             <div className="auth-group">
-              <button 
+              <button
                 className="auth-btn-login"
                 onClick={() => navigate('/login')}
               >
                 Entrar
               </button>
-              <button 
-                className="auth-btn-register" 
+              <button
+                className="auth-btn-register"
                 onClick={() => navigate('/cadastro')}
               >
                 Cadastrar
               </button>
             </div>
-          ) : isAuthenticated() && (
-                <button 
-                  className="notification-btn"
-                  onClick={() => setShowNotifications(!showNotifications)}
-                >
-                  <Bell size={24} />
-                  {unreadCount > 0 && (
-                    <span className="notification-badge">{unreadCount}</span>
-                  )}
-                </button>
-                
-                {showNotifications && (
-                  <div className="notification-dropdown">
-                    <div className="notification-header">
-                      <h3>Notificações</h3>
-                      {notifications.length > 0 && (
-                        <div className="notification-actions">
-                          {unreadCount > 0 && (
-                            <button 
-                              className="action-btn mark-read-btn"
-                              onClick={markAllAsRead}
-                              title="Marcar todas como lidas"
-                            >
-                              ✓
-                            </button>
-                          )}
-                          <button 
-                            className="action-btn clear-btn"
-                            onClick={clearNotifications}
-                            title="Limpar todas"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                    <div className="notification-list">
-                      {notifications.length === 0 ? (
-                        <div className="no-notifications">
-                          Nenhuma notificação ainda
-                        </div>
-                      ) : (
-                        notifications.map((notification) => (
-                          <div 
-                            key={notification.id} 
-                            className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.type === 'chat' ? 'chat-notification' : ''}`}
-                            onClick={() => handleNotificationClick(notification)}
-                          >
-                            <div className="notification-content">
-                              <div className="notification-icon">
-                                {notification.type === 'chat' ? '💬' : '🔔'}
-                              </div>
-                              <div className="notification-text">
-                                <p className="notification-title">{notification.title}</p>
-                                <p className="notification-message">{notification.message}</p>
-                                <span className="notification-time">
-                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                            {!notification.read && <div className="unread-dot"></div>}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
+          ) : isAuthenticated() ? (
+            <>
+              <button
+                className="notification-btn"
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <Bell size={24} />
+                {unreadCount > 0 && (
+                  <span className="notification-badge">{unreadCount}</span>
                 )}
-              </div>
-              
+              </button>
+
+              {showNotifications && (
+                <div className="notification-dropdown">
+                  <div className="notification-header">
+                    <h3>Notificações</h3>
+                    {notifications.length > 0 && (
+                      <div className="notification-actions">
+                        {unreadCount > 0 && (
+                          <button
+                            className="action-btn mark-read-btn"
+                            onClick={markAllAsRead}
+                            title="Marcar todas como lidas"
+                          >
+                            ✓
+                          </button>
+                        )}
+                        <button
+                          className="action-btn clear-btn"
+                          onClick={clearNotifications}
+                          title="Limpar todas"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="notification-list">
+                    {notifications.length === 0 ? (
+                      <div className="no-notifications">
+                        Nenhuma notificação ainda
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.type === 'chat' ? 'chat-notification' : ''}`}
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          <div className="notification-content">
+                            <div className="notification-icon">
+                              {notification.type === 'chat' ? '💬' : '🔔'}
+                            </div>
+                            <div className="notification-text">
+                              <p className="notification-title">{notification.title}</p>
+                              <p className="notification-message">{notification.message}</p>
+                              <span className="notification-time">
+                                {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                          {!notification.read && <div className="unread-dot"></div>}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="user-menu-wrapper">
-                <button 
+                <button
                   className="user-btn"
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
@@ -273,13 +316,13 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
                       console.log('=== RENDERIZANDO AVATAR ===');
                       console.log('user?.fotoPerfil:', user?.fotoPerfil);
                       console.log('Existe fotoPerfil:', !!user?.fotoPerfil);
-                      
+
                       if (user?.fotoPerfil) {
                         console.log('Renderizando IMAGEM');
                         return (
-                          <img 
-                            src={user.fotoPerfil} 
-                            alt="Foto do perfil" 
+                          <img
+                            src={user.fotoPerfil}
+                            alt="Foto do perfil"
                             className="avatar-image"
                             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
                             onLoad={() => console.log('Imagem carregou com sucesso!')}
@@ -294,18 +337,18 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
                         console.log('Renderizando INICIAIS:', userName?.substring(0, 2).toUpperCase());
                         return userName?.substring(0, 2).toUpperCase();
                       }
-                    })()} 
+                    })()}
                   </div>
                 </button>
-                
+
                 {showUserMenu && (
                   <div className="user-dropdown">
                     <div className="user-info">
                       <div className="user-avatar-large">
                         {hasValidPhoto ? (
-                          <img 
-                            src={user.fotoPerfil} 
-                            alt="Foto do perfil" 
+                          <img
+                            src={user.fotoPerfil}
+                            alt="Foto do perfil"
                             className="avatar-image-large"
                             onError={(e) => {
                               console.log('Erro ao carregar imagem grande:', user.fotoPerfil);
@@ -340,7 +383,7 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
                     </div>
 
                     <div className="user-actions">
-                      <button 
+                      <button
                         className="menu-item profile-btn"
                         onClick={() => {
                           navigate('/perfil');
@@ -349,8 +392,8 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
                       >
                         👤 Ver perfil
                       </button>
-                      
-                      <button 
+
+                      <button
                         className="menu-item"
                         onClick={() => {
                           navigate('/conversas');
@@ -362,9 +405,9 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
                           <span className="menu-badge">{unreadCount}</span>
                         )}
                       </button>
-                      
+
                       {showAdminButton && (
-                        <button 
+                        <button
                           className="menu-item admin-btn"
                           onClick={() => {
                             navigate('/admin');
@@ -374,8 +417,8 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
                           ⚙️ Dashboard Admin
                         </button>
                       )}
-                      
-                      <button 
+
+                      <button
                         className="menu-item logout-btn"
                         onClick={() => {
                           localStorage.removeItem('solidar-user');
@@ -387,9 +430,9 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false }) => {
                     </div>
                   </div>
                 )}
-              )}
-            </div>
-          )}
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
     </nav>

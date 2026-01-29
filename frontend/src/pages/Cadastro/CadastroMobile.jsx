@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LandingHeader from '../../components/layout/LandingHeader';
-import { 
-  Users, Building2, Heart, Sparkles, User, Store, 
-  ArrowRight, MessageCircle, Info, ShieldCheck, ArrowLeft 
+import {
+  Users, Building2, Heart, Sparkles, User, Store,
+  ArrowRight, MessageCircle, Info, ShieldCheck, ArrowLeft
 } from 'lucide-react';
 import './CadastroMobile.css';
 
@@ -98,6 +98,7 @@ function CadastroCard({ type, index }) {
 
 export default function CadastroMobile() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -108,9 +109,63 @@ export default function CadastroMobile() {
 
   return (
     <div className="vlt-reg-wrapper" id="vlt-reg-root">
-      <LandingHeader scrolled={true} />
-      
-      <main id="vlt-reg-main-content" style={{ paddingTop: '80px' }}>
+
+      {/* Custom Header Overlay */}
+      <div className="cadastro-header-overlay" style={{
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        right: '0',
+        zIndex: '1000',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <button
+          className="cadastro-back-btn"
+          onClick={() => window.history.back()}
+          style={{
+            background: 'rgba(0, 0, 0, 0.05)',
+            border: 'none',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.target.style.background = 'rgba(0, 0, 0, 0.1)'}
+          onMouseLeave={(e) => e.target.style.background = 'rgba(0, 0, 0, 0.05)'}
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <button
+          className="cadastro-login-btn"
+          onClick={() => navigate('/login')}
+          style={{
+            background: 'linear-gradient(135deg, #64748b, #475569)',
+            border: 'none',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '8px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+          onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+        >
+          Entrar
+        </button>
+      </div>
+
+      <main id="vlt-reg-main-content" style={{ paddingTop: '120px' }}>
         <div className="vlt-reg-hero">
           <div className="vlt-reg-badge-sparkles">
             <Sparkles />

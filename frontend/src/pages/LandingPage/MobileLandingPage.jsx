@@ -151,7 +151,7 @@ const MobileNav = () => {
   );
 };
 
-export const MobileLandingPage = () => {
+export default function MobileLandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
 
