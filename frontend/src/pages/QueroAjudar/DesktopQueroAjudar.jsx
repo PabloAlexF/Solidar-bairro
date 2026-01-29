@@ -1532,40 +1532,90 @@ export default function QueroAjudarPage() {
 
   const hasActiveFilters = selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil' || onlyNew;
 
+  const handleHelpClick = (order) => {
+    if (!isAuthenticated()) {
+      toast.error('Você precisa estar logado para ajudar.');
+      navigate('/login');
+      return;
+    }
+    setOrderToHelp(order);
+  };
+
   const handleConfirmHelp = async () => {
+    if (!orderToHelp) return;
+
+    // Verificar se o usuário está tentando ajudar seu próprio pedido
+    const currentUserId = user.uid || user.id;
+    if (orderToHelp.userId === currentUserId) {
+      toast.error('Você não pode ajudar seu próprio pedido.');
+      setOrderToHelp(null);
+      return;
+    }
+
     try {
-      // Primeiro registrar interesse
-      const interesseData = {
-        pedidoId: orderToHelp.id,
-        tipo: 'ajuda',
-        mensagem: 'Interesse em ajudar através da plataforma'
-      };
-      
-      await ApiService.createInteresse(interesseData);
-      
+      // Primeiro registrar interesse (opcional, não bloqueia o fluxo)
+      try {
+        const interesseData = {
+          pedidoId: orderToHelp.id,
+          tipo: 'ajuda',
+          mensagem: 'Interesse em ajudar através da plataforma'
+        };
+        await ApiService.createInteresse(interesseData);
+      } catch (err) {
+        console.warn('Erro ao registrar interesse (não bloqueante):', err);
+      }
+
       // Depois criar conversa
       const conversationData = {
-        participants: [orderToHelp.userId], // O outro participante
+        participants: [currentUserId, orderToHelp.userId], // Inclui ambos os participantes
         pedidoId: orderToHelp.id,
         type: 'ajuda',
         title: `Ajuda: ${orderToHelp.title || orderToHelp.category}`,
         initialMessage: `Olá! Vi seu pedido de ${orderToHelp.category} e gostaria de ajudar. Podemos conversar?`
       };
-      
-      const response = await ApiService.createConversation(conversationData);
-      
-      if (response.success) {
+
+      console.log('Criando conversa com dados:', {
+        currentUserId,
+        orderUserId: orderToHelp.userId,
+        conversationData
+      });
+
+      let response;
+      try {
+        // Tenta endpoint /chat/conversations (baseado nos logs do backend: /api/chat + /conversations)
+        response = await ApiService.post('/chat/conversations', conversationData);
+      } catch (err) {
+        console.warn('Falha ao criar conversa via /chat/conversations, tentando alternativas...', err);
+        try {
+             // Tenta endpoint /conversas (padrão antigo)
+             response = await ApiService.post('/conversas', conversationData);
+        } catch (err2) {
+             try {
+                // Tenta endpoint /conversations (fallback em inglês)
+                response = await ApiService.post('/conversations', conversationData);
+             } catch (err3) {
+                 // Tenta endpoint /chats (fallback comum)
+                 try {
+                    response = await ApiService.post('/chats', conversationData);
+                 } catch (err4) {
+                    console.error('Todas as tentativas de endpoint falharam', err4);
+                    throw new Error('Não foi possível iniciar o chat. Verifique sua conexão.');
+                 }
+             }
+        }
+      }
+
+      if (response && response.success) {
         toast.success('Conversa iniciada!');
-        window.location.href = `/chat/${response.data.id}`;
+        navigate(`/chat/${response.data.id}`);
       } else {
-        throw new Error(response.error || 'Erro ao criar conversa');
+        throw new Error(response?.error || 'Erro ao criar conversa');
       }
     } catch (error) {
       console.error('Erro ao iniciar conversa:', error);
-      toast.error('Erro ao iniciar conversa');
+      toast.error(`Erro ao iniciar conversa: ${error.message || 'Tente novamente'}`);
     }
     setOrderToHelp(null);
-    setLiveMessage('Conversa iniciada com sucesso');
   };
 
   const handleViewDetails = (order, event) => {
@@ -2108,7 +2158,7 @@ export default function QueroAjudarPage() {
                     <OrderCard
                       order={order}
                       onViewDetails={handleViewDetails}
-                      onHelp={setOrderToHelp}
+                      onHelp={handleHelpClick}
                     />
                   </animated.div>
                 );
@@ -2145,7 +2195,7 @@ export default function QueroAjudarPage() {
           <ModalDetalhes
             order={selectedOrder}
             onClose={() => setSelectedOrder(null)}
-            onHelp={setOrderToHelp}
+            onHelp={handleHelpClick}
           />
         </div>
       )}

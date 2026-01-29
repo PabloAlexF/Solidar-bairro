@@ -38,15 +38,8 @@ class AuthService {
         throw new Error('Senha incorreta');
       }
 
-      // Verificar se o usuário está aprovado (exceto admin)
-      if (userData.tipo !== 'admin' && userData.status !== 'verified') {
-        const statusMessage = userData.status === 'pending' 
-          ? 'Seu cadastro está aguardando aprovação do administrador'
-          : userData.status === 'rejected'
-          ? 'Seu cadastro foi rejeitado. Entre em contato conosco'
-          : 'Seu cadastro precisa ser aprovado antes do primeiro acesso';
-        throw new Error(statusMessage);
-      }
+      // Usuários registrados podem fazer login imediatamente (exceto admin)
+      // A aprovação é automática no cadastro
 
       // Gerar tokens JWT
       const payload = {

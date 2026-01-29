@@ -1,4 +1,5 @@
 const firebase = require('../config/firebase');
+const authService = require('./authService');
 const Comercio = require('../models/comercioModel');
 
 class ComercioService {
@@ -10,13 +11,16 @@ class ComercioService {
 
   async createComercio(data) {
     console.log('Dados recebidos para comércio:', data);
-    
+
     const comercio = new Comercio(data);
     const errors = comercio.validate();
-    
+
     if (errors.length > 0) {
       throw new Error(`Dados inválidos: ${errors.join(', ')}`);
     }
+
+    // Hash da senha
+    const hashedPassword = await authService.hashPassword(data.senha);
 
     // Converter para objeto simples sem Firebase Auth
     const comercioData = {
@@ -28,10 +32,11 @@ class ComercioService {
       categoria: comercio.categoria,
       descricao: comercio.descricao,
       horarioFuncionamento: comercio.horarioFuncionamento,
+      senha: hashedPassword,
       tipo: comercio.tipo,
-      ativo: comercio.ativo,
-      verificado: comercio.verificado,
-      status: 'pending',
+      ativo: true,
+      verificado: true,
+      status: 'active',
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };

@@ -62,12 +62,12 @@ export default function WizardPage() {
 
   const isStepValid = () => {
     switch (step) {
-      case 1: return formData.category !== "";
-      case 2: return formData.category !== "Alimentos" || formData.foodTypes.length > 0;
-      case 3: return formData.description.length >= 10;
-      case 4: return formData.urgency !== "";
-      case 5: return formData.contactPreferences.length > 0;
-      case 6: return formData.visibility.length > 0;
+      case 1: return formData.category && formData.category !== "";
+      case 2: return formData.category !== "Alimentos" || (formData.foodTypes && formData.foodTypes.length > 0);
+      case 3: return formData.description && formData.description.trim().length >= 10;
+      case 4: return formData.urgency && formData.urgency !== "";
+      case 5: return true; // Contact preferences are now optional
+      case 6: return true; // Visibility is now optional
       default: return true;
     }
   };
@@ -254,7 +254,7 @@ function Step2({ formData, updateData }: { formData: FormData; updateData: (data
   ];
 
   const toggle = (id: string) => {
-    const current = formData.foodTypes;
+    const current = formData.foodTypes || [];
     const next = current.includes(id) ? current.filter(i => i !== id) : [...current, id];
     updateData({ foodTypes: next });
   };
@@ -371,7 +371,7 @@ function Step5({ formData, updateData }: { formData: FormData; updateData: (data
   ];
 
   const toggle = (id: string) => {
-    const current = formData.contactPreferences;
+    const current = formData.contactPreferences || [];
     const next = current.includes(id) ? current.filter(i => i !== id) : [...current, id];
     updateData({ contactPreferences: next });
   };
@@ -420,7 +420,7 @@ function Step6({ formData, updateData }: { formData: FormData; updateData: (data
   ];
 
   const toggle = (id: string) => {
-    const current = formData.visibility;
+    const current = formData.visibility || [];
     const next = current.includes(id) ? current.filter(i => i !== id) : [...current, id];
     updateData({ visibility: next });
   };

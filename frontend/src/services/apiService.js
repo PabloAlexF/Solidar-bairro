@@ -4,7 +4,40 @@ const ApiService = {
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
 
-  async request(endpoint, options = {}, retryCount = 0) {
+  async refreshToken() {
+    const refreshToken = localStorage.getItem('solidar-refresh-token');
+    if (!refreshToken) {
+      throw new Error('Token de refresh não encontrado');
+    }
+
+    try {
+      const response = await fetch(`${this.baseURL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha ao renovar token');
+      }
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        localStorage.setItem('solidar-token', data.data.token);
+        localStorage.setItem('solidar-refresh-token', data.data.refreshToken);
+        return data.data.token;
+      }
+
+      throw new Error('Resposta inválida do refresh');
+    } catch (error) {
+      console.error('Erro ao renovar token:', error);
+      throw error;
+    }
+  },
+
+  async request(endpoint, options = {}, retryCount = 0, isRetry = false) {
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem('solidar-token');
 
@@ -29,13 +62,25 @@ const ApiService = {
 
       const data = await response.json();
 
+      if (response.status === 401 && !isRetry) {
+        // Token expirado, tentar renovar
+        try {
+          await this.refreshToken();
+          // Retry com novo token
+          return this.request(endpoint, options, retryCount, true);
+        } catch (refreshError) {
+          console.error('Falha ao renovar token:', refreshError);
+          // Se refresh falhar, continuar com erro original
+        }
+      }
+
       if (response.status === 429) {
         // Rate limit exceeded - implement exponential backoff
         if (retryCount < 3) {
           const delay = Math.min(1000 * Math.pow(2, retryCount) + Math.random() * 1000, 30000); // Max 30 seconds
           console.warn(`Rate limit atingido. Tentando novamente em ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
-          return this.request(endpoint, options, retryCount + 1);
+          return this.request(endpoint, options, retryCount + 1, isRetry);
         } else {
           throw new Error('Limite de requisições excedido. Tente novamente mais tarde.');
         }
@@ -57,22 +102,29 @@ const ApiService = {
   },
 
   async login(email, password) {
-    if (!email?.trim() || !password?.trim()) {
-      throw new Error('Email e senha são obrigatórios');
+    // More defensive validation
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      throw new Error('Email é obrigatório');
     }
-    
+    if (!password || typeof password !== 'string' || !password.trim()) {
+      throw new Error('Senha é obrigatória');
+    }
+
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
     const response = await this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email: email.trim(), password }),
+      body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
     });
-    
+
     if (response.success && response.data?.token) {
       localStorage.setItem('solidar-token', response.data.token);
       if (response.data.refreshToken) {
         localStorage.setItem('solidar-refresh-token', response.data.refreshToken);
       }
     }
-    
+
     return response;
   },
 

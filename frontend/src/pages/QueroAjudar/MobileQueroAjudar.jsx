@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer';
 import toast, { Toaster } from 'react-hot-toast';
 import Skeleton from 'react-loading-skeleton';
@@ -34,6 +35,7 @@ import ApiService from '../../services/apiService';
 import { getCurrentLocation } from '../../utils/geolocation';
 
 export const MobileQueroAjudar = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedCat, setSelectedCat] = useState('Todas');
   const [selectedUrgency, setSelectedUrgency] = useState(null);
@@ -190,6 +192,15 @@ export const MobileQueroAjudar = () => {
     setHighContrast(newContrast);
     localStorage.setItem('highContrast', newContrast.toString());
     document.documentElement.classList.toggle('high-contrast', newContrast);
+  };
+
+  const handleHelpClick = (order) => {
+    if (!user) {
+      toast.error('Faça login para ajudar');
+      navigate('/login');
+      return;
+    }
+    setOrderToHelp(order);
   };
 
   const { ref } = useInView({ threshold: 0.1, triggerOnce: true });
@@ -481,7 +492,7 @@ export const MobileQueroAjudar = () => {
                         <Eye size={16} /> Detalhes
                       </button>
                       {user?.uid !== order.userId ? (
-                        <button className="btn-help-mobile" onClick={() => setOrderToHelp(order)}>
+                        <button className="btn-help-mobile" onClick={() => handleHelpClick(order)}>
                           <Heart size={16} /> Ajudar
                         </button>
                       ) : (
@@ -670,7 +681,7 @@ export const MobileQueroAjudar = () => {
           </div>
           
           <div className="modal-footer-v4-mobile">
-            <button className="btn-help-now-v4-mobile" onClick={() => { setOrderToHelp(selectedOrder); setSelectedOrder(null); }}>
+            <button className="btn-help-now-v4-mobile" onClick={() => { handleHelpClick(selectedOrder); setSelectedOrder(null); }}>
               <Heart size={22} fill="white" />
               <span>Quero Ajudar Agora</span>
             </button>
@@ -698,35 +709,61 @@ export const MobileQueroAjudar = () => {
                   className="btn-confirm-chat-v4-mobile" 
                   onClick={async () => {
                     try {
-                      // Primeiro registrar interesse
-                      const interesseData = {
-                        pedidoId: orderToHelp.id,
-                        tipo: 'ajuda',
-                        mensagem: 'Interesse em ajudar através da plataforma'
-                      };
-                      
-                      await ApiService.createInteresse(interesseData);
+                      // Primeiro registrar interesse (opcional)
+                      try {
+                        const interesseData = {
+                          pedidoId: orderToHelp.id,
+                          tipo: 'ajuda',
+                          mensagem: 'Interesse em ajudar através da plataforma'
+                        };
+                        await ApiService.createInteresse(interesseData);
+                      } catch (err) {
+                        console.warn('Erro ao registrar interesse:', err);
+                      }
                       
                       // Depois criar conversa
                       const conversationData = {
-                        participants: [orderToHelp.userId], // O outro participante
+                        participants: [user.uid || user.id, orderToHelp.userId], // Inclui ambos os participantes
                         pedidoId: orderToHelp.id,
                         type: 'ajuda',
                         title: `Ajuda: ${orderToHelp.title || orderToHelp.category}`,
                         initialMessage: `Olá! Vi seu pedido de ${orderToHelp.category} e gostaria de ajudar. Podemos conversar?`
                       };
                       
-                      const response = await ApiService.createConversation(conversationData);
+                      let response;
+                      try {
+                        // Tenta endpoint /chat/conversations (baseado nos logs do backend: /api/chat + /conversations)
+                        response = await ApiService.post('/chat/conversations', conversationData);
+                      } catch (err) {
+                        console.warn('Falha ao criar conversa via /chat/conversations, tentando alternativas...', err);
+                        try {
+                             // Tenta endpoint /conversas (padrão antigo)
+                             response = await ApiService.post('/conversas', conversationData);
+                        } catch (err2) {
+                             try {
+                                // Tenta endpoint /conversations (fallback em inglês)
+                                response = await ApiService.post('/conversations', conversationData);
+                             } catch (err3) {
+                                 // Tenta endpoint /chats (fallback comum)
+                                 try {
+                                    response = await ApiService.post('/chats', conversationData);
+                                 } catch (err4) {
+                                    console.error('Todas as tentativas de endpoint falharam', err4);
+                                    throw new Error('Não foi possível iniciar o chat. Verifique sua conexão.');
+                                 }
+                             }
+                        }
+                      }
                       
-                      if (response.success) {
+                      if (response && response.success) {
                         toast.success('Conversa iniciada!');
-                        window.location.href = `/chat/${response.data.id}`;
+                        navigate(`/chat/${response.data.id}`);
                       } else {
-                        throw new Error(response.error || 'Erro ao criar conversa');
+                        throw new Error(response?.error || 'Erro ao criar conversa');
                       }
                     } catch (error) {
                       console.error('Erro ao iniciar conversa:', error);
-                      toast.error('Erro ao iniciar conversa');
+                      toast.error(`Erro ao iniciar conversa: ${error.message}`);
                     }
                     setOrderToHelp(null);
                   }}

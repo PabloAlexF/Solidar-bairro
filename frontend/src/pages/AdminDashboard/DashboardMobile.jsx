@@ -727,10 +727,10 @@ export default function DashboardMobile() {
                     )}
                     {activeTab === "citizens" && (
                       filteredCitizens.length > 0 ? filteredCitizens.map((citizen) => (
-                      <div key={citizen.id} className="adm-list-item" onClick={() => setSelectedProfile(citizen)}>
-                        <Avatar 
-                          alt={citizen.nomeCompleto || citizen.full_name} 
-                          className="adm-item-icon adm-citizen" 
+                      <div key={citizen.uid} className="adm-list-item" onClick={() => setSelectedProfile(citizen)}>
+                        <Avatar
+                          alt={citizen.nomeCompleto || citizen.full_name}
+                          className="adm-item-icon adm-citizen"
                           variant="rounded"
                           fallback={<UserCircle size={20} />}
                         />
@@ -921,7 +921,7 @@ export default function DashboardMobile() {
               <button className="adm-btn-primary" 
                 style={{ background: selectedProfile.role === 'family' ? 'var(--adm-family-color)' : 'var(--adm-citizen-color)' }}
                 disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2} 
-                onClick={() => handleUpdateStatus(selectedProfile.id, "analyzed", selectedProfile.role === 'family' ? "families" : "citizens", selectedProfile.nomeCompleto || selectedProfile.full_name)}>
+                onClick={() => handleUpdateStatus(selectedProfile.uid, "analyzed", selectedProfile.role === 'family' ? "families" : "citizens", selectedProfile.nomeCompleto || selectedProfile.full_name)}>
                 Concluir Análise
               </button>
             </div>

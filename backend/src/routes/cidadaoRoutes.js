@@ -8,5 +8,6 @@ router.get('/', cidadaoController.getCidadaos);
 router.get('/:uid', cidadaoController.getCidadaoById);
 router.get('/:uid/ajudas-concluidas', cidadaoController.getAjudasConcluidas);
 router.put('/:uid', cidadaoController.updateCidadao);
+router.patch('/:uid', cidadaoController.updateCidadao);
 
 module.exports = router;

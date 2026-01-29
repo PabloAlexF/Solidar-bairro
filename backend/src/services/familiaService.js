@@ -1,4 +1,5 @@
 const firebase = require('../config/firebase');
+const authService = require('./authService');
 
 class FamiliaService {
   constructor() {
@@ -9,11 +10,17 @@ class FamiliaService {
 
   async createFamilia(data) {
     console.log('Dados recebidos para família:', JSON.stringify(data, null, 2));
-    
+
     // Validação - aceita tanto nomeCompleto quanto nome
     const nome = data.nomeCompleto || data.nome;
     if (!nome?.trim()) {
       throw new Error('Nome da família é obrigatório');
+    }
+
+    // Hash da senha se fornecida
+    let hashedPassword = null;
+    if (data.senha) {
+      hashedPassword = await authService.hashPassword(data.senha);
     }
 
     // Calcular total de membros da família

@@ -178,11 +178,11 @@ export default function CadastroComercioMobile() {
               </div>
             </div>
             <h1 className="cmr-prm-success-main-title">
-              Parceria em <br/>
-              <span className="cmr-prm-text-gradient-blue">Análise</span>
+              Parceria <br/>
+              <span className="cmr-prm-text-gradient-blue">Aprovada!</span>
             </h1>
             <p className="cmr-prm-success-description">
-              Sua solicitação está sendo processada. Em breve seu comércio será um ponto de apoio oficial!
+              Seu comércio agora é um ponto de apoio oficial da rede SolidarBairro!
             </p>
           </div>
 

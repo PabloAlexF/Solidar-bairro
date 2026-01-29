@@ -432,7 +432,7 @@ export default function CadastroFamiliaMobile() {
               </p>
             </div>
 
-            <form onSubmit={step === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNextStep(); }}>
+            <form onSubmit={(e) => e.preventDefault()} className="fam-mob-form">
               <div className="fam-mob-form-body">
                 {step === 1 && (
                   <div className="fam-mob-form-grid">
@@ -886,8 +886,8 @@ export default function CadastroFamiliaMobile() {
             <div className="fam-mob-alert-icon">
               <ShieldCheck size={32} />
             </div>
-            <h3>Análise Iniciada!</h3>
-            <p>Seu cadastro está sendo analisado. Você receberá uma notificação em até 24 horas.</p>
+            <h3>Cadastro Concluído!</h3>
+            <p>Seu cadastro foi aprovado automaticamente. Você já pode acessar o sistema.</p>
             <button 
               className="fam-mob-alert-btn" 
               onClick={() => setShowAnalysisAlert(false)}

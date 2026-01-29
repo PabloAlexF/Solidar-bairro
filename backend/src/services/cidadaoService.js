@@ -11,13 +11,16 @@ class CidadaoService {
 
   async createCidadao(data) {
     console.log('Dados recebidos para cidadão:', data);
-    
+
     const cidadao = new Cidadao(data);
     const errors = cidadao.validate();
-    
+
     if (errors.length > 0) {
       throw new Error(`Dados inválidos: ${errors.join(', ')}`);
     }
+
+    // Hash da senha
+    const hashedPassword = await authService.hashPassword(cidadao.senha);
 
     // Converter para objeto simples sem Firebase Auth
     const cidadaoData = {
@@ -32,10 +35,11 @@ class CidadaoService {
       disponibilidade: cidadao.disponibilidade,
       interesses: cidadao.interesses,
       proposito: cidadao.proposito,
+      senha: hashedPassword,
       ajudasConcluidas: cidadao.ajudasConcluidas,
       tipo: cidadao.tipo,
-      ativo: cidadao.ativo,
-      status: 'pending',
+      ativo: true,
+      status: 'active',
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };

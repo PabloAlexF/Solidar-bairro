@@ -124,7 +124,7 @@ const MobileNav = () => {
     { icon: <Home size={22} />, label: 'Início', path: '/' },
     { icon: <HandHelping size={22} />, label: 'Ajuda', path: '/quero-ajudar' },
     { icon: <PlusCircle size={28} />, label: 'Criar', path: '/preciso-de-ajuda', fab: true },
-    { icon: <MessageSquare size={22} />, label: 'Chat', path: '/chat' },
+    { icon: <MessageSquare size={22} />, label: 'Chat', path: '/conversas' },
     { icon: <User size={22} />, label: 'Perfil', path: '/perfil' },
   ];
 

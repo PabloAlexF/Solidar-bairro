@@ -1,4 +1,5 @@
 const firebase = require('../config/firebase');
+const authService = require('./authService');
 const ONG = require('../models/ongModel');
 
 class ONGService {
@@ -10,13 +11,16 @@ class ONGService {
 
   async createONG(data) {
     console.log('Dados recebidos para ONG:', data);
-    
+
     const ong = new ONG(data);
     const errors = ong.validate();
-    
+
     if (errors.length > 0) {
       throw new Error(`Dados inválidos: ${errors.join(', ')}`);
     }
+
+    // Hash da senha
+    const hashedPassword = await authService.hashPassword(data.senha);
 
     // Converter para objeto simples sem Firebase Auth
     const ongData = {
@@ -28,11 +32,12 @@ class ONGService {
       areasAtuacao: ong.areasAtuacao,
       descricao: ong.descricao,
       responsavel: ong.responsavel,
+      senha: hashedPassword,
       tipo: ong.tipo,
-      ativo: ong.ativo,
-      verificado: ong.verificado,
-      statusVerificacao: ong.statusVerificacao,
-      status: 'pending',
+      ativo: true,
+      verificado: true,
+      statusVerificacao: 'aprovado',
+      status: 'active',
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };

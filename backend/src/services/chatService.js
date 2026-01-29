@@ -7,11 +7,11 @@ class ChatService {
     this.db = firebase.getDb();
   }
   async createConversation(data) {
-    // Validar participantes - permitir 1 ou mais
+    // Validar participantes - permitir 2 ou mais
     const validParticipants = (data.participants || []).filter(p => p && typeof p === 'string');
-    
-    if (validParticipants.length === 0) {
-      throw new Error('Pelo menos um participante é necessário');
+
+    if (validParticipants.length < 2) {
+      throw new Error('Uma conversa deve ter pelo menos dois participantes');
     }
 
     // Se há um pedidoId, verificar se já existe uma conversa para este pedido

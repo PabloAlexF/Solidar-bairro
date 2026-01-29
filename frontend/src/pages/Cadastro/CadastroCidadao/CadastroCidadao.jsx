@@ -32,14 +32,7 @@ export default function CadastroCidadao() {
     email: '',
     password: '',
     confirmPassword: '',
-    endereco: {
-      rua: '',
-      numero: '',
-      bairro: '',
-      cidade: '',
-      estado: '',
-      cep: ''
-    },
+    endereco: '',
     disponibilidade: [],
     interesses: [],
     proposito: ''
@@ -61,7 +54,7 @@ export default function CadastroCidadao() {
                formData.password.length >= 6 &&
                formData.password === formData.confirmPassword;
       case 4:
-        return formData.endereco.rua.trim() && formData.endereco.bairro.trim() && formData.endereco.cidade.trim();
+        return formData.endereco.trim() !== '';
       case 5:
         return formData.interesses.length > 0;
       default:
@@ -70,22 +63,35 @@ export default function CadastroCidadao() {
   };
 
   const handleNextStep = () => {
-    if (step === 3) {
-      // Validações específicas para o passo 3 (senhas)
-      if (formData.password.length < 6) {
-        showToast('A senha deve ter pelo menos 6 caracteres', 'error');
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        showToast('As senhas não coincidem', 'error');
-        return;
-      }
-    }
-    
     if (validateStep(step)) {
       nextStep();
     } else {
-      showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
+      // Show specific error messages
+      switch (step) {
+        case 1:
+          if (!formData.nome.trim()) showToast('Por favor, informe seu nome completo.', 'error');
+          else if (!formData.dataNascimento) showToast('Por favor, informe sua data de nascimento.', 'error');
+          else if (!formData.ocupacao.trim()) showToast('Por favor, informe sua ocupação ou habilidade.', 'error');
+          break;
+        case 2:
+          if (formData.cpf.replace(/\D/g, '').length < 11) showToast('Por favor, informe um CPF válido.', 'error');
+          else if (formData.rg.replace(/\D/g, '').length < 7) showToast('Por favor, informe um RG válido.', 'error');
+          break;
+        case 3:
+          if (formData.telefone.replace(/\D/g, '').length < 10) showToast('Por favor, informe um telefone válido.', 'error');
+          else if (!formData.email.trim()) showToast('Por favor, informe um e-mail válido.', 'error');
+          else if (formData.password.length < 6) showToast('A senha deve ter pelo menos 6 caracteres.', 'error');
+          else if (formData.password !== formData.confirmPassword) showToast('As senhas não coincidem.', 'error');
+          break;
+        case 4:
+          if (formData.endereco.trim() === '') showToast('Por favor, informe seu endereço de referência.', 'error');
+          break;
+        case 5:
+          if (formData.interesses.length === 0) showToast('Por favor, selecione pelo menos um interesse.', 'error');
+          break;
+        default:
+          showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
+      }
     }
   };
 
@@ -170,15 +176,16 @@ export default function CadastroCidadao() {
     setIsLoading(true);
     
     try {
-      // Preparar dados para envio (remover confirmPassword)
-      const { confirmPassword, ...dataToSend } = formData;
-      console.log('Dados sendo enviados para cidadão:', dataToSend);
-      
-      const response = await ApiService.createCidadao(dataToSend);
+      // Preparar dados para envio (remover confirmPassword e renomear password para senha)
+      const { confirmPassword, password, ...dataToSend } = formData;
+      const dataWithSenha = { ...dataToSend, senha: password };
+      console.log('Dados sendo enviados para cidadão:', dataWithSenha);
+
+      const response = await ApiService.createCidadao(dataWithSenha);
       console.log('Resposta da API:', response);
       
       setIsSubmitted(true);
-      showToast('Cadastro realizado com sucesso! O administrador precisa liberar seu acesso.', 'success');
+      showToast('Cadastro realizado com sucesso! Você já pode acessar o sistema.', 'success');
     } catch (error) {
       console.error('Erro ao cadastrar cidadão:', error);
       showToast(`Erro ao realizar cadastro: ${error.message}`, 'error');
@@ -340,7 +347,7 @@ export default function CadastroCidadao() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="form-content">
+            <form onSubmit={step === totalSteps ? handleSubmit : (e) => e.preventDefault()} className="form-content">
               {step === 1 && (
                 <div className="form-grid">
                   <div className="form-group span-2">

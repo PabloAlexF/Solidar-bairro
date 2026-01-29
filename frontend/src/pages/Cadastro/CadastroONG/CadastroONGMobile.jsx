@@ -267,7 +267,7 @@ export default function CadastroONGMobile() {
             {step === 3 && "Informe os canais oficiais para comunicação."}
           </p>
 
-        <form onSubmit={handleSubmit} className="ong-mob-form">
+        <form onSubmit={step === totalSteps ? handleSubmit : (e) => e.preventDefault()} className="ong-mob-form">
           {step === 1 && (
             <>
               <div className="ong-mob-input-group">
