@@ -42,7 +42,7 @@ export default function LandingPage() {
             <a href="#como-funciona" className="nav-link">Como Funciona</a>
             <a href="#funcionalidades" className="nav-link">Funcionalidades</a>
             <a href="#comunidade" className="nav-link">Comunidade</a>
-            <div className="auth-buttons">
+            <div className="header-actions">
               <button className="btn-login" onClick={() => navigate('/login')}>Entrar</button>
               <button className="btn-register" onClick={() => navigate('/cadastro')}>Cadastrar</button>
             </div>
@@ -61,8 +61,10 @@ export default function LandingPage() {
             <a href="#funcionalidades" onClick={toggleMenu}>Funcionalidades</a>
             <a href="#comunidade" onClick={toggleMenu}>Comunidade</a>
             <div className="mobile-divider" />
-            <button className="btn-login mobile" onClick={() => navigate('/login')}>Entrar</button>
-            <button className="btn-register mobile" onClick={() => navigate('/cadastro')}>Criar Conta</button>
+            <div className="header-actions mobile">
+              <button className="btn-login mobile" onClick={() => navigate('/login')}>Entrar</button>
+              <button className="btn-register mobile" onClick={() => navigate('/cadastro')}>Criar Conta</button>
+            </div>
           </nav>
         </div>
       </header>
