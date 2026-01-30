@@ -4,7 +4,7 @@ import {
   ListChecks, MapPin, CheckCircle2, ChevronRight, 
   ChevronLeft, Fingerprint, IdCard, Calendar, 
   Phone, Mail, ShieldCheck, Trophy, 
-  Zap, Info, Heart, Sparkles, Target, Sun, Moon, CloudSun, AlertTriangle, Coffee,
+  Zap, Info, Heart, Sparkles, Target, Sun, Moon, CloudSun, AlertTriangle, Coffee, X,
   Apple, BookOpen, Stethoscope, Hammer, Smile, Truck, Share2, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -21,6 +21,10 @@ export default function CadastroFamiliaDesktop() {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
+  const [showNeedModal, setShowNeedModal] = useState(false);
+  const [currentNeed, setCurrentNeed] = useState(null);
+  const [tempDetail, setTempDetail] = useState('');
+  const [needDetails, setNeedDetails] = useState({});
   const [formData, setFormData] = useState({
     nomeCompleto: '',
     dataNascimento: '',
@@ -167,18 +171,45 @@ export default function CadastroFamiliaDesktop() {
   };
 
   const handleCheckboxChange = (field, value, checked) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: checked 
-        ? [...prev[field], value]
-        : prev[field].filter(item => item !== value)
-    }));
+    if (field === 'necessidades') {
+      if (checked) {
+        setCurrentNeed(value);
+        setTempDetail(needDetails[value] || '');
+        setShowNeedModal(true);
+        setFormData(prev => ({
+          ...prev,
+          [field]: [...prev[field], value]
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [field]: prev[field].filter(item => item !== value)
+        }));
+        const newDetails = { ...needDetails };
+        delete newDetails[value];
+        setNeedDetails(newDetails);
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: checked 
+          ? [...prev[field], value]
+          : prev[field].filter(item => item !== value)
+      }));
+    }
   };
   
   const updateFamilyCount = (key, increment) => {
     const newCount = Math.max(0, familyCount[key] + increment);
     setFamilyCount(prev => ({ ...prev, [key]: newCount }));
     setFormData(prev => ({ ...prev, [key]: newCount }));
+  };
+
+  const saveNeedDetail = () => {
+    setNeedDetails(prev => ({ ...prev, [currentNeed]: tempDetail }));
+    setShowNeedModal(false);
+    setCurrentNeed(null);
+    setTempDetail('');
   };
 
   const handleSubmit = async (e) => {
@@ -198,6 +229,7 @@ export default function CadastroFamiliaDesktop() {
     
     try {
       const { confirmPassword, ...dataToSend } = formData;
+      dataToSend.subQuestionAnswers = needDetails;
       console.log('Dados sendo enviados para família:', dataToSend);
       
       const response = await ApiService.createFamilia(dataToSend);
@@ -700,6 +732,38 @@ export default function CadastroFamiliaDesktop() {
         type={toast.type}
         onClose={() => setToast({ show: false, message: '', type: 'error' })}
       />
+
+      {showNeedModal && (
+        <div className="fam-reg-modal-overlay" style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div className="fam-reg-modal" style={{
+            background: 'white', padding: '24px', borderRadius: '16px', width: '90%', maxWidth: '500px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+          }}>
+            <div className="fam-reg-modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#1e293b' }}>Especificar: {currentNeed}</h3>
+              <button onClick={() => setShowNeedModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+            </div>
+            <div className="fam-reg-modal-body">
+              <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#475569' }}>Detalhes (opcional):</label>
+              <textarea 
+                value={tempDetail} 
+                onChange={(e) => setTempDetail(e.target.value)}
+                placeholder="Ex: Tamanho, tipo, restrições alimentares..."
+                rows={4}
+                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '1rem' }}
+              />
+            </div>
+            <div className="fam-reg-modal-footer" style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={saveNeedDetail} style={{
+                padding: '12px 24px', background: '#f97316', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer'
+              }}>
+                Salvar Detalhes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

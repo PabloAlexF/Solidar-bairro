@@ -36,7 +36,10 @@ import {
   Rocket,
   Clock,
   CheckCircle2,
-  Eye
+  Eye,
+  Trash2,
+  Edit2,
+  ListChecks
 } from 'lucide-react';
 import './styles.css';
 
@@ -69,8 +72,72 @@ const VISIBILITY_OPTIONS = [
   { id: 'ongs', label: 'ONGs Parceiras', desc: 'Instituições', icon: Building2, color: '#6366f1', rgb: '139, 92, 246' },
 ];
 
-const STEP_LABELS = ['Categoria', 'Descrição', 'Urgência', 'Visibilidade', 'Confirmação'];
-const TOTAL_STEPS = 5;
+const SUBCATEGORIES = {
+  'Alimentos': [
+    { id: 'Cesta Básica', label: 'Cesta Básica', desc: 'Monte sua cesta com o que mais precisa', options: ['Arroz', 'Feijão', 'Açúcar', 'Óleo', 'Macarrão', 'Farinha', 'Café', 'Sal', 'Leite em pó', 'Biscoito', 'Molho de Tomate', 'Sardinha'] },
+    { id: 'Leite', label: 'Leite', desc: 'Caixa, em pó ou especial', options: ['Integral', 'Desnatado', 'Sem lactose', 'Em pó', 'Infantil'] },
+    { id: 'Perecíveis', label: 'Perecíveis', desc: 'Carnes, verduras, legumes, frutas', options: ['Carne Bovina', 'Frango', 'Ovos', 'Legumes', 'Frutas', 'Verduras'] },
+    { id: 'Água', label: 'Água Potável', desc: 'Garrafas ou galões', options: ['Garrafa 1.5L', 'Galão 5L', 'Galão 20L'] }
+  ],
+  'Roupas': [
+    { id: 'Infantil', label: 'Roupas Infantis', desc: 'Para crianças de 0 a 12 anos', options: ['Recém-nascido', '1-3 anos', '4-8 anos', '9-12 anos', 'Menino', 'Menina', 'Calçados', 'Agasalhos'] },
+    { id: 'Adulto', label: 'Roupas Adulto', desc: 'Masculino e Feminino', options: ['P', 'M', 'G', 'GG', 'Plus Size', 'Masculino', 'Feminino', 'Calça', 'Camisa', 'Vestido'] },
+    { id: 'Inverno', label: 'Roupas de Frio', desc: 'Casacos, blusas, toucas', options: ['Casacos pesados', 'Moletom', 'Cobertores', 'Toucas/Luvas', 'Meias'] },
+    { id: 'Acessorios', label: 'Acessórios', desc: 'Cintos, bolsas, bonés', options: ['Cinto', 'Boné', 'Bolsa', 'Mochila'] }
+  ],
+  'Medicamentos': [
+    { id: 'Analgesicos', label: 'Analgésicos', desc: 'Dor e febre', options: ['Dipirona', 'Paracetamol', 'Ibuprofeno', 'Aspirina'] },
+    { id: 'Uso Continuo', label: 'Uso Contínuo', desc: 'Hipertensão, Diabetes...', options: ['Losartana', 'Enalapril', 'Metformina', 'Glibenclamida', 'Insulina'] },
+    { id: 'Primeiros Socorros', label: 'Primeiros Socorros', desc: 'Curativos, antissépticos', options: ['Alcool 70%', 'Gaze', 'Esparadrapo', 'Band-aid', 'Antisséptico', 'Algodão'] }
+  ],
+  'Higiene': [
+    { id: 'Pessoal', label: 'Higiene Pessoal', desc: 'Sabonete, shampoo, pasta...', options: ['Sabonete', 'Shampoo', 'Condicionador', 'Pasta de Dente', 'Escova de Dente', 'Desodorante', 'Absorvente', 'Papel Higiênico'] },
+    { id: 'Limpeza', label: 'Limpeza da Casa', desc: 'Detergente, sabão, água sanitária', options: ['Detergente', 'Sabão em Pó', 'Água Sanitária', 'Desinfetante', 'Esponja'] },
+    { id: 'Bebe', label: 'Higiene do Bebê', desc: 'Fraldas, lenços', options: ['Fraldas P', 'Fraldas M', 'Fraldas G', 'Fraldas XG', 'Lenço Umedecido', 'Pomada'] }
+  ],
+  'Móveis': [
+    { id: 'Cama', label: 'Cama/Colchão', desc: 'Solteiro, Casal, Beliche', options: ['Solteiro', 'Casal', 'Apenas Colchão', 'Cama Box', 'Beliche'] },
+    { id: 'Mesa', label: 'Mesa e Cadeiras', desc: 'Para refeições', options: ['4 lugares', '6 lugares', 'Apenas cadeiras', 'Mesa pequena'] },
+    { id: 'Sofa', label: 'Sofá', desc: 'Para sala de estar', options: ['2 lugares', '3 lugares', 'Retrátil', 'Poltrona'] },
+    { id: 'Armario', label: 'Armário', desc: 'Quarto ou cozinha', options: ['Cozinha', 'Guarda-roupa Solteiro', 'Guarda-roupa Casal', 'Cômoda'] }
+  ],
+  'Eletrodomésticos': [
+    { id: 'Geladeira', label: 'Geladeira', desc: 'Refrigerador', options: ['110v', '220v', 'Duplex', 'Simples'] },
+    { id: 'Fogao', label: 'Fogão', desc: 'Gás ou elétrico', options: ['4 bocas', '6 bocas', 'Cooktop', 'Com forno'] },
+    { id: 'Maquina Lavar', label: 'Máquina de Lavar', desc: 'Roupas', options: ['110v', '220v', 'Tanquinho', 'Automática'] }
+  ],
+  'Calçados': [
+    { id: 'Tenis', label: 'Tênis', desc: 'Esportivo ou casual', options: ['Masculino', 'Feminino', 'Infantil', '34-38', '39-44'] },
+    { id: 'Social', label: 'Sapato Social', desc: 'Para trabalho ou eventos', options: ['Preto', 'Marrom', 'Salto', 'Sapatilha'] },
+    { id: 'Chinelo', label: 'Chinelo/Sandália', desc: 'Uso diário', options: ['Havaianas', 'Sandália', 'Pantufa'] },
+    { id: 'Bota', label: 'Botas', desc: 'Para chuva ou frio', options: ['Galocha', 'Coturno', 'Cano Curto'] }
+  ],
+  'Contas': [
+    { id: 'Luz', label: 'Conta de Luz', desc: 'Pagamento de energia', options: ['Atrasada', 'Vencendo', 'Aviso de Corte'] },
+    { id: 'Agua', label: 'Conta de Água', desc: 'Abastecimento', options: ['Atrasada', 'Vencendo', 'Aviso de Corte'] },
+    { id: 'Aluguel', label: 'Aluguel', desc: 'Moradia', options: ['Atrasado', 'Parcial', 'Despejo'] },
+    { id: 'Gas', label: 'Gás de Cozinha', desc: 'Botijão ou encanado', options: ['Botijão 13kg', 'Conta Gás'] }
+  ],
+  'Emprego': [
+    { id: 'Curriculo', label: 'Currículo', desc: 'Ajuda para montar ou imprimir', options: ['Revisão', 'Impressão', 'Formatação'] },
+    { id: 'Indicacao', label: 'Indicação', desc: 'Oportunidades de trabalho', options: ['CLT', 'Freelance', 'Diária'] },
+    { id: 'Entrevista', label: 'Roupa para Entrevista', desc: 'Traje adequado', options: ['Social', 'Esporte Fino', 'Sapato'] }
+  ],
+  'Transporte': [
+    { id: 'Passagem', label: 'Passagem', desc: 'Transporte público', options: ['Ônibus', 'Metrô', 'Trem', 'Cartão Transporte'] },
+    { id: 'Combustivel', label: 'Combustível', desc: 'Ajuda para abastecer', options: ['Gasolina', 'Etanol'] },
+    { id: 'Bicicleta', label: 'Bicicleta', desc: 'Meio de transporte', options: ['Manutenção', 'Doação'] }
+  ],
+  'Outros': [
+    { id: 'Brinquedos', label: 'Brinquedos', desc: 'Para crianças', options: ['Boneca', 'Carrinho', 'Jogos', 'Educativos'] },
+    { id: 'Livros', label: 'Livros/Material', desc: 'Educação e cultura', options: ['Didáticos', 'Literatura', 'Cadernos'] },
+    { id: 'Ferramentas', label: 'Ferramentas', desc: 'Para trabalho', options: ['Construção', 'Jardinagem', 'Mecânica'] },
+    { id: 'Pet', label: 'Para Pet', desc: 'Ração e cuidados', options: ['Ração Cão', 'Ração Gato', 'Areia', 'Remédio'] }
+  ]
+};
+
+const STEP_LABELS = ['Categoria', 'Itens', 'Descrição', 'Urgência', 'Visibilidade', 'Confirmação'];
+const TOTAL_STEPS = 6;
 
 function AnimatedBackground() {
   return (
@@ -308,6 +375,84 @@ const SuccessModal = ({ urgencyColor, urgencyLabel, urgencyIcon: UrgencyIcon, re
   </div>
 );
 
+const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
+  const [selectedOptions, setSelectedOptions] = useState([]);
+  const [details, setDetails] = useState('');
+
+  const toggleOption = (option) => {
+    if (selectedOptions.includes(option)) {
+      setSelectedOptions(selectedOptions.filter(o => o !== option));
+    } else {
+      setSelectedOptions([...selectedOptions, option]);
+    }
+  };
+
+  const handleSave = () => {
+    onSave({
+      ...item,
+      selectedOptions,
+      details
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+      >
+        <h3 className="text-xl font-bold mb-1" style={{ color: categoryColor }}>{item.label}</h3>
+        <p className="text-sm text-slate-500 mb-4">Selecione os itens que você mais precisa</p>
+        
+        <div className="mb-4">
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Opções</label>
+          <div className="flex flex-wrap gap-2">
+            {item.options?.map(opt => (
+              <button
+                key={opt}
+                onClick={() => toggleOption(opt)}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all border"
+                style={{
+                  backgroundColor: selectedOptions.includes(opt) ? categoryColor : 'white',
+                  color: selectedOptions.includes(opt) ? 'white' : '#475569',
+                  borderColor: selectedOptions.includes(opt) ? categoryColor : '#e2e8f0'
+                }}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Detalhes Adicionais</label>
+          <textarea
+            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+            style={{ '--tw-ring-color': categoryColor }}
+            placeholder="Ex: Tamanho específico, restrições alimentares, voltagem..."
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 text-slate-600 font-medium hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
+          <button 
+            onClick={handleSave} 
+            className="flex-1 py-3 text-white font-bold rounded-xl transition-colors shadow-lg"
+            style={{ backgroundColor: categoryColor, filter: 'brightness(1)' }}
+            onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(0.9)'}
+            onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}
+          >
+            Salvar Item
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 export default function PDAForm() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -321,6 +466,8 @@ export default function PDAForm() {
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
   
   const [isPublished, setIsPublished] = useState(false);
     
@@ -328,6 +475,7 @@ export default function PDAForm() {
 
   const [formData, setFormData] = useState({
     category: '',
+    items: [],
     description: '',
     urgency: '',
     visibility: ['bairro'],
@@ -394,6 +542,11 @@ export default function PDAForm() {
       
       const pedidoData = {
         category: formData.category,
+        subCategory: formData.items.map(i => i.label),
+        subQuestionAnswers: formData.items.reduce((acc, item) => ({
+          ...acc,
+          [item.label]: `${item.selectedOptions.join(', ')}${item.details ? `. Detalhes: ${item.details}` : ''}`
+        }), {}),
         description: formData.description,
         urgency: formData.urgency,
         visibility: formData.visibility,
@@ -471,6 +624,7 @@ export default function PDAForm() {
       
       const pedidoData = {
         category: formData.category,
+        subCategory: formData.items.map(i => i.label),
         description: formData.description,
         urgency: formData.urgency,
         visibility: formData.visibility,
@@ -633,9 +787,10 @@ export default function PDAForm() {
   const isStepValid = useMemo(() => {
     switch (step) {
       case 1: return formData.category !== '';
-      case 2: return formData.description.length >= 10;
-      case 3: return formData.urgency !== '';
-      case 4: return formData.visibility.length > 0;
+      case 2: return true; // Items are optional but recommended
+      case 3: return formData.description.length >= 10;
+      case 4: return formData.urgency !== '';
+      case 5: return formData.visibility.length > 0;
       default: return true;
     }
   }, [step, formData]);
@@ -691,6 +846,89 @@ export default function PDAForm() {
         );
 
       case 2:
+        const currentSubcategories = SUBCATEGORIES[formData.category] || [];
+        const catColor = CATEGORIES.find(c => c.id === formData.category)?.color || '#64748b';
+        
+        return (
+          <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <div className="step-content">
+              <div className="step-header">
+                <h2>O que você precisa exatamente?</h2>
+                <p>Selecione os itens e especifique os detalhes (Ficha Técnica).</p>
+              </div>
+
+              {currentSubcategories.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                  {currentSubcategories.map((sub) => {
+                    const isSelected = formData.items.some(i => i.id === sub.id);
+                    return (
+                      <motion.button
+                        key={sub.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setCurrentItem(sub);
+                          setShowItemModal(true);
+                        }}
+                        className="p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden"
+                        style={{
+                          borderColor: isSelected ? catColor : '#e2e8f0',
+                          backgroundColor: isSelected ? `${catColor}10` : 'white',
+                          boxShadow: isSelected ? `0 10px 25px -5px ${catColor}40` : 'none',
+                          transform: isSelected ? 'scale(1.02)' : 'scale(1)'
+                        }}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-bold text-lg" style={{ color: isSelected ? catColor : '#1e293b' }}>{sub.label}</span>
+                          {isSelected && <CheckCircle2 size={20} style={{ color: catColor }} />}
+                        </div>
+                        <p className="text-sm" style={{ color: isSelected ? `${catColor}cc` : '#64748b' }}>{sub.desc}</p>
+                        {isSelected && (
+                          <div className="mt-3 pt-3 border-t" style={{ borderColor: `${catColor}30` }}>
+                            <p className="text-xs font-semibold" style={{ color: catColor }}>
+                              {formData.items.find(i => i.id === sub.id).selectedOptions.length} opções selecionadas
+                            </p>
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center p-8 bg-slate-50 rounded-2xl border border-slate-200 mb-8">
+                  <p className="text-slate-500">Não há itens específicos pré-definidos para esta categoria. Por favor, descreva detalhadamente na próxima etapa.</p>
+                </div>
+              )}
+
+              {formData.items.length > 0 && (
+                <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                  <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <ListChecks size={20} /> Itens Selecionados
+                  </h3>
+                  <div className="space-y-3">
+                    {formData.items.map((item, idx) => (
+                      <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start">
+                        <div>
+                          <strong className="text-slate-900 block">{item.label}</strong>
+                          <p className="text-sm text-slate-600 mt-1">{item.selectedOptions.join(', ')}</p>
+                          {item.details && <p className="text-xs text-slate-500 mt-1 italic">"{item.details}"</p>}
+                        </div>
+                        <button 
+                          onClick={() => updateData({ items: formData.items.filter(i => i.id !== item.id) })}
+                          className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        );
+
+      case 3:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <div className="step-content">
@@ -836,7 +1074,7 @@ export default function PDAForm() {
           </motion.div>
         );
 
-      case 3:
+      case 4:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <div className="step-content">
@@ -868,7 +1106,7 @@ export default function PDAForm() {
           </motion.div>
         );
 
-      case 4:
+      case 5:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <div className="step-content">
@@ -927,7 +1165,7 @@ export default function PDAForm() {
           </motion.div>
         );
 
-      case 5:
+      case 6:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <div className="step-content">
@@ -947,6 +1185,20 @@ export default function PDAForm() {
                   </div>
                 </div>
                 
+                {formData.items.length > 0 && (
+                  <div className="mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Itens Solicitados</h4>
+                    <ul className="space-y-2">
+                      {formData.items.map((item, idx) => (
+                        <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
+                          <div className="w-1.5 h-1.5 bg-slate-400 rounded-full mt-2 flex-shrink-0" />
+                          <span><strong>{item.label}:</strong> {item.selectedOptions.join(', ')} {item.details && `(${item.details})`}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="description-preview italic text-slate-700">
                   "{formData.description}"
                 </div>
@@ -997,6 +1249,20 @@ export default function PDAForm() {
         onForcePublish={handleForcePublish}
       />
       
+      {showItemModal && currentItem && (
+        <ItemSpecificationModal
+          item={currentItem}
+          onClose={() => setShowItemModal(false)}
+          onSave={(itemData) => {
+            // Remove existing item if present and add new one
+            const newItems = formData.items.filter(i => i.id !== itemData.id);
+            updateData({ items: [...newItems, itemData] });
+            setShowItemModal(false);
+          }}
+          categoryColor={selectedCategory?.color}
+        />
+      )}
+
       {isPublished && (
         <SuccessModal 
           urgencyColor={selectedUrgency?.color || '#f97316'}

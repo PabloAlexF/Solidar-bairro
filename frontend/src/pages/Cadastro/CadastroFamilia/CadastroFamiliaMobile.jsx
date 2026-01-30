@@ -4,7 +4,7 @@ import {
   ListChecks, MapPin, CheckCircle2, ChevronRight, 
   ChevronLeft, Fingerprint, IdCard, Calendar, 
   Phone, Mail, ShieldCheck, Trophy, 
-  Zap, Info
+  Zap, Info, X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
@@ -69,6 +69,10 @@ export default function CadastroFamiliaMobile() {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
+  const [showNeedModal, setShowNeedModal] = useState(false);
+  const [currentNeed, setCurrentNeed] = useState(null);
+  const [tempDetail, setTempDetail] = useState('');
+  const [needDetails, setNeedDetails] = useState({});
   const [formData, setFormData] = useState({
     nomeCompleto: '',
     dataNascimento: '',
@@ -200,18 +204,45 @@ export default function CadastroFamiliaMobile() {
   };
 
   const handleCheckboxChange = (field, value, checked) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: checked 
-        ? [...prev[field], value]
-        : prev[field].filter(item => item !== value)
-    }));
+    if (field === 'necessidades') {
+      if (checked) {
+        setCurrentNeed(value);
+        setTempDetail(needDetails[value] || '');
+        setShowNeedModal(true);
+        setFormData(prev => ({
+          ...prev,
+          [field]: [...prev[field], value]
+        }));
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [field]: prev[field].filter(item => item !== value)
+        }));
+        const newDetails = { ...needDetails };
+        delete newDetails[value];
+        setNeedDetails(newDetails);
+      }
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: checked 
+          ? [...prev[field], value]
+          : prev[field].filter(item => item !== value)
+      }));
+    }
   };
   
   const updateFamilyCount = (key, increment) => {
     const newCount = Math.max(0, familyCount[key] + increment);
     setFamilyCount(prev => ({ ...prev, [key]: newCount }));
     setFormData(prev => ({ ...prev, [key]: newCount }));
+  };
+
+  const saveNeedDetail = () => {
+    setNeedDetails(prev => ({ ...prev, [currentNeed]: tempDetail }));
+    setShowNeedModal(false);
+    setCurrentNeed(null);
+    setTempDetail('');
   };
 
   const handleSubmit = async (e) => {
@@ -223,7 +254,8 @@ export default function CadastroFamiliaMobile() {
         ...formData,
         endereco: addressData.endereco || formData.endereco,
         bairro: addressData.bairro || formData.bairro,
-        pontoReferencia: addressData.referencia || formData.pontoReferencia
+        pontoReferencia: addressData.referencia || formData.pontoReferencia,
+        subQuestionAnswers: needDetails
       };
       
       await ApiService.createFamilia(submitData);
@@ -908,6 +940,38 @@ export default function CadastroFamiliaMobile() {
             >
               ×
             </button>
+          </div>
+        </div>
+      )}
+
+      {showNeedModal && (
+        <div className="fam-mob-modal-overlay" style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000
+        }}>
+          <div className="fam-mob-modal" style={{
+            background: 'white', padding: '20px', borderRadius: '20px', width: '90%', maxWidth: '350px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>Especificar: {currentNeed}</h3>
+              <button onClick={() => setShowNeedModal(false)} style={{ background: 'none', border: 'none', padding: '4px' }}><X size={20} /></button>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', color: '#64748b' }}>Detalhes (opcional):</label>
+              <textarea 
+                value={tempDetail} 
+                onChange={(e) => setTempDetail(e.target.value)}
+                placeholder="Ex: Tamanho, tipo, restrições..."
+                rows={4}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '1rem', fontFamily: 'inherit' }}
+              />
+            </div>
+            <div style={{ marginTop: '20px' }}>
+              <button onClick={saveNeedDetail} style={{
+                width: '100%', padding: '14px', background: '#f97316', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '1rem'
+              }}>
+                Salvar Detalhes
+              </button>
+            </div>
           </div>
         </div>
       )}

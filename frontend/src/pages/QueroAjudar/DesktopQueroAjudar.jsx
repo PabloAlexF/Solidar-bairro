@@ -989,8 +989,13 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                   <div className="story-card-v4">
                     <ul style={{ listStyle: 'none', padding: 0 }}>
                       {order.subCategory.map((sub, index) => (
-                        <li key={index} style={{ marginBottom: '8px', padding: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '8px' }}>
-                          {sub}
+                        <li key={index} style={{ marginBottom: '8px', padding: '12px', background: 'rgba(0,0,0,0.05)', borderRadius: '8px' }}>
+                          <div style={{ fontWeight: '600', color: '#334155' }}>{sub}</div>
+                          {order.subQuestionAnswers && order.subQuestionAnswers[sub] && (
+                             <div style={{ fontSize: '0.9rem', color: '#64748b', marginTop: '6px', padding: '8px', background: 'white', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.05)' }}>
+                               <strong>Especificações:</strong> {order.subQuestionAnswers[sub]}
+                             </div>
+                          )}
                         </li>
                       ))}
                     </ul>

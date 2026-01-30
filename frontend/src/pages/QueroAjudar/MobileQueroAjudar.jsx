@@ -24,7 +24,10 @@ import {
   AlertCircle,
   Calendar,
   Zap,
-  Search
+  Search,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import './mobile-quero-ajudar.css';
 import { 
@@ -75,6 +78,7 @@ export const MobileQueroAjudar = () => {
           title: pedido.title || pedido.category,
           description: pedido.description,
           subCategories: pedido.subCategory || [],
+          items: (pedido.subCategory || []).map(sc => ({ name: sc, details: pedido.subQuestionAnswers?.[sc] || null })),
           subQuestionAnswers: pedido.subQuestionAnswers || {},
           isNew: isNewPedido(pedido.createdAt),
           createdAt: pedido.createdAt
@@ -163,6 +167,7 @@ export const MobileQueroAjudar = () => {
   const [selectedLocation, setSelectedLocation] = useState('brasil');
   const [selectedTimeframe, setSelectedTimeframe] = useState('todos');
   const [activeTab, setActiveTab] = useState('relato');
+  const [expandedItem, setExpandedItem] = useState(null);
 
   const filteredOrders = useMemo(() => {
     return pedidos.filter((order) => {
@@ -213,186 +218,230 @@ export const MobileQueroAjudar = () => {
     const catMeta = CATEGORY_METADATA[selectedOrder.category] || { color: '#64748b', details: {} };
     
     return (
-      <div
+      <motion.div
         key={activeTab}
-        className="tab-panel-mobile"
-        style={{ 
-          opacity: 1,
-          transform: 'translateY(0)',
-          overflow: 'visible',
-          animation: 'fadeInUp 0.2s ease-out'
-        }}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        style={{ paddingBottom: '100px' }}
       >
         {activeTab === 'relato' && (
-          <div className="detail-section-mobile">
-            <div className="section-header-mobile">
-              <div className="icon-wrapper-mobile" style={{ backgroundColor: catMeta.color + '15', color: catMeta.color }}>
-                <FileText size={20} />
-              </div>
-              <div className="section-info-mobile">
-                <div className="section-label-mobile">O Relato</div>
-                <div className="section-sub-mobile">A história por trás do pedido</div>
-              </div>
-            </div>
-            
-            <div 
-              className="story-card-v4-mobile"
-              style={{
-                animation: 'scaleIn 0.3s ease-out'
-              }}
-            >
-              <div className="quote-icon-v4-mobile" style={{ color: catMeta.color }}>"</div>
-              <p className="story-text-v4-mobile" style={{ whiteSpace: 'pre-wrap' }}>{selectedOrder.description}</p>
-              <div className="story-footer-v4-mobile">
-                <div className="author-v4-mobile">
-                  <div className="avatar-v4-mobile" style={{ backgroundColor: catMeta.color }}>
-                    {selectedOrder.userName.charAt(0)}
-                  </div>
-                  <span>{selectedOrder.userName}</span>
+          <div className="detail-section-mobile" style={{ gap: '20px' }}>
+            <div style={{ 
+              background: 'white', 
+              borderRadius: '24px', 
+              padding: '24px', 
+              boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+              position: 'relative',
+              overflow: 'hidden',
+              border: '1px solid #f1f5f9'
+            }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: '-10px', 
+                right: '-10px', 
+                fontSize: '8rem', 
+                color: catMeta.color, 
+                opacity: 0.05, 
+                fontFamily: 'serif',
+                lineHeight: 1 
+              }}>"</div>
+              
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1e293b', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileText size={20} color={catMeta.color} />
+                Relato do Pedido
+              </h3>
+              
+              <p style={{ 
+                fontSize: '1.05rem', 
+                lineHeight: '1.7', 
+                color: '#475569', 
+                whiteSpace: 'pre-wrap',
+                position: 'relative',
+                zIndex: 1
+              }}>
+                {selectedOrder.description}
+              </p>
+
+              <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: catMeta.color, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                  {selectedOrder.userName.charAt(0)}
                 </div>
-                <div className="verified-badge-v4-mobile">
-                  <ShieldCheck size={14} />
-                  <span>Perfil Verificado</span>
+                <div>
+                  <div style={{ fontWeight: '700', color: '#1e293b' }}>{selectedOrder.userName}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <ShieldCheck size={12} color="#10b981" />
+                    Identidade Verificada
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="meta-grid-v4-mobile">
-              <div className="meta-item-v4-mobile">
-                <Calendar size={16} />
-                <span>Publicado em 24/05</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ background: 'white', padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', border: '1px solid #f1f5f9' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600' }}>Publicado</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#1e293b', fontWeight: '600' }}>
+                  <Calendar size={18} color="#64748b" />
+                  {(() => {
+                    const date = selectedOrder.createdAt?.toDate ? selectedOrder.createdAt.toDate() : new Date(selectedOrder.createdAt);
+                    return isNaN(date.getTime()) ? 'Recente' : date.toLocaleDateString('pt-BR');
+                  })()}
+                </div>
               </div>
-              <div className="meta-item-v4-mobile">
-                <Clock size={16} />
-                <span>Atualizado hoje</span>
+              <div style={{ background: 'white', padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', border: '1px solid #f1f5f9' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600' }}>Urgência</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: URGENCY_OPTIONS.find(u => u.id === selectedOrder.urgency)?.color, fontWeight: '700' }}>
+                  <AlertCircle size={18} />
+                  {URGENCY_OPTIONS.find(u => u.id === selectedOrder.urgency)?.label}
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'itens' && (
-          <div className="detail-section-mobile">
-            <div className="section-header-mobile">
-              <div className="icon-wrapper-mobile" style={{ backgroundColor: '#10b98115', color: '#10b981' }}>
+          <div className="detail-section-mobile" style={{ gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#ecfdf5', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <ClipboardList size={20} />
               </div>
-              <div className="section-info-mobile">
-                <div className="section-label-mobile">Itens Necessários</div>
-                <div className="section-sub-mobile">O que {selectedOrder.userName.split(' ')[0]} precisa</div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#1e293b' }}>Itens Necessários</h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Lista de necessidades</p>
               </div>
             </div>
-            
-            <div className="items-list-v4-mobile">
-              {selectedOrder.subCategories?.map((sc, idx) => (
-                <div 
-                  key={sc} 
-                  className="item-card-v4-mobile"
-                  style={{
-                    animation: `slideInLeft 0.3s ease-out ${idx * 0.05}s both`
+
+            <div className="items-list-v4-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {selectedOrder.items?.map((item, idx) => (
+                <motion.div 
+                  key={idx} 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  style={{ 
+                    background: 'white', 
+                    padding: '16px', 
+                    borderRadius: '16px', 
+                    border: '1px solid #f1f5f9',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
                   }}
+                  onClick={() => item.details && setExpandedItem(expandedItem === idx ? null : idx)}
                 >
-                  <div className="item-status-v4-mobile">
-                    <div className="status-dot-v4-mobile" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <CheckCircle2 size={14} color="white" />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <strong style={{ display: 'block', color: '#1e293b', marginBottom: '2px' }}>{catMeta.details?.[item.name]?.label || item.name}</strong>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>{catMeta.details?.[item.name]?.desc || 'Item essencial'}</p>
+                    </div>
+                    {item.details && (
+                      <div style={{ color: '#94a3b8' }}>
+                        {expandedItem === idx ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                      </div>
+                    )}
                   </div>
-                  <div className="item-details-v4-mobile">
-                    <strong>{catMeta.details[sc]?.label || sc}</strong>
-                    <p>{catMeta.details[sc]?.desc || 'Item essencial para as necessidades relatadas.'}</p>
-                  </div>
-                  <div className="item-priority-v4-mobile">
-                    <Zap size={14} />
-                  </div>
-                </div>
+                  
+                  <AnimatePresence>
+                    {expandedItem === idx && item.details && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                        animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
+                        exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ display: 'block', marginBottom: '4px', color: '#334155' }}>Especificações:</strong>
+                          {item.details}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               ))}
             </div>
             
-            <div className="info-banner-v4-mobile">
+            <div style={{ background: '#eff6ff', padding: '16px', borderRadius: '16px', display: 'flex', gap: '12px', alignItems: 'start', color: '#1e40af' }}>
               <AlertCircle size={18} />
-              <p>Combine a forma de entrega ou doação diretamente com o solicitante através do chat.</p>
+              <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>Combine a forma de entrega ou doação diretamente com o solicitante através do chat.</p>
             </div>
           </div>
         )}
 
         {activeTab === 'tecnico' && (
-          <div className="detail-section-mobile">
-            <div className="section-header-mobile">
-              <div className="icon-wrapper-mobile" style={{ backgroundColor: '#3b82f615', color: '#3b82f6' }}>
+          <div className="detail-section-mobile" style={{ gap: '16px' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Wrench size={20} />
               </div>
-              <div className="section-info-mobile">
-                <div className="section-label-mobile">Ficha Técnica</div>
-                <div className="section-sub-mobile">Especificações detalhadas</div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#1e293b' }}>Ficha Técnica</h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Detalhes específicos</p>
               </div>
             </div>
-            
-            <div className="specs-grid-v4-mobile">
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               {Object.entries({ ...(selectedOrder.details || {}), ...(selectedOrder.subQuestionAnswers || {}) })
-                .filter(([key]) => key !== 'ponto_referencia')
+                .filter(([key]) => key !== 'ponto_referencia' && !selectedOrder.subCategories?.includes(key))
                 .map(([key, val], idx) => (
-                <div 
+                <motion.div 
                   key={key} 
-                  className="spec-card-v4-mobile"
-                  style={{
-                    animation: `scaleIn 0.3s ease-out ${idx * 0.03}s both`
-                  }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.05 }}
+                  style={{ background: 'white', padding: '16px', borderRadius: '16px', border: '1px solid #f1f5f9' }}
                 >
-                  <div className="spec-label-v4-mobile">{SUB_QUESTION_LABELS[key] || key.replace(/_/g, ' ')}</div>
-                  <div className="spec-value-v4-mobile">
+                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '700', marginBottom: '4px' }}>
+                    {SUB_QUESTION_LABELS[key] || key.replace(/_/g, ' ')}
+                  </div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b' }}>
                     {Array.isArray(val) ? (
-                      <div className="spec-tags-v4-mobile">
-                        {val.map(v => <span key={v}>{v}</span>)}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {val.map(v => <span key={v} style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>{v}</span>)}
                       </div>
                     ) : val}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
         )}
 
         {activeTab === 'local' && (
-          <div className="detail-section-mobile">
-            <div className="section-header-mobile">
-              <div className="icon-wrapper-mobile" style={{ backgroundColor: '#f59e0b15', color: '#f59e0b' }}>
-                <Navigation size={20} />
-              </div>
-              <div className="section-info-mobile">
-                <div className="section-label-mobile">Localização</div>
-                <div className="section-sub-mobile">Onde a ajuda é necessária</div>
-              </div>
-            </div>
-            
-            <div className="map-view-v4-mobile">
-              <div className="map-radar-v4-mobile" />
-              <div className="map-marker-v4-mobile">
+          <div className="detail-section-mobile" style={{ gap: '16px' }}>
+            <div style={{ height: '200px', background: '#f1f5f9', borderRadius: '24px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
+              <div style={{ position: 'absolute', width: '100px', height: '100px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '50%', animation: 'pulse 2s infinite' }} />
+              <div style={{ position: 'relative', zIndex: 2, filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}>
                 <MapPin size={32} fill="#ef4444" color="white" />
               </div>
-              <div className="map-overlay-v4-mobile">
-                <div className="map-location-v4-mobile">
-                  <strong>{selectedOrder.neighborhood}</strong>
-                  <span>{selectedOrder.city}, {selectedOrder.state}</span>
+              <div style={{ position: 'absolute', bottom: '16px', left: '16px', right: '16px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', padding: '12px 16px', borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                  <strong style={{ display: 'block', color: '#1e293b' }}>{selectedOrder.neighborhood}</strong>
+                  <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedOrder.city}, {selectedOrder.state}</span>
                 </div>
               </div>
             </div>
 
             {selectedOrder.subQuestionAnswers?.ponto_referencia && (
-              <div className="ref-card-v4-mobile">
-                <div className="ref-icon-v4-mobile">
+              <div style={{ background: '#fffbeb', padding: '16px', borderRadius: '16px', display: 'flex', gap: '12px', border: '1px solid #fcd34d' }}>
+                <div style={{ color: '#d97706' }}>
                   <MapPin size={18} />
                 </div>
-                <div className="ref-content-v4-mobile">
-                  <label>Ponto de Referência</label>
-                  <p>{selectedOrder.subQuestionAnswers.ponto_referencia}</p>
+                <div>
+                  <label style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#d97706', display: 'block', marginBottom: '2px' }}>Ponto de Referência</label>
+                  <p style={{ margin: 0, color: '#92400e', fontWeight: '500' }}>{selectedOrder.subQuestionAnswers.ponto_referencia}</p>
                 </div>
               </div>
             )}
             
-            <div className="safety-tip-v4-mobile">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.85rem', marginTop: '8px' }}>
               <ShieldCheck size={18} />
               <span>Localização aproximada para sua segurança</span>
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
     );
   };
 
@@ -705,83 +754,101 @@ export const MobileQueroAjudar = () => {
         </div>
       )}
 
-      {selectedOrder && (
-        <div 
-          className="full-modal-v4-mobile"
-          style={{
-            animation: 'slideInRight 0.3s ease-out'
-          }}
-        >
-          <div className="modal-header-v4-mobile">
-            <button className="back-btn-v4-mobile" onClick={() => setSelectedOrder(null)}>
-              <X size={22} />
-            </button>
-            <div className="header-center-v4-mobile">
-              <span>Solicitação de Ajuda</span>
+      <AnimatePresence>
+        {selectedOrder && (
+          <motion.div 
+            className="full-modal-v4-mobile"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            style={{ 
+              position: 'fixed', 
+              inset: 0, 
+              background: '#f8fafc', 
+              zIndex: 2000, 
+              display: 'flex', 
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}
+          >
+            <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white', borderBottom: '1px solid #f1f5f9', zIndex: 10 }}>
+              <button onClick={() => setSelectedOrder(null)} style={{ width: '40px', height: '40px', borderRadius: '12px', border: 'none', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569' }}>
+                <X size={20} />
+              </button>
+              <span style={{ fontWeight: '700', color: '#1e293b' }}>Detalhes do Pedido</span>
+              <button style={{ width: '40px', height: '40px', borderRadius: '12px', border: 'none', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569' }}>
+                <Zap size={20} />
+              </button>
             </div>
-            <button className="share-btn-v4-mobile">
-              <Zap size={20} />
-            </button>
-          </div>
-          
-          <div className="modal-scroll-v4-mobile">
-            <div className="detail-hero-v4-mobile">
-              <div className="hero-bg-v4-mobile" style={{ 
-                background: `linear-gradient(180deg, ${CATEGORY_METADATA[selectedOrder.category]?.color}20 0%, transparent 100%)` 
-              }} />
-              
-              <div className="hero-content-v4-mobile">
-                <div className="hero-badges-v4-mobile">
-                  <span className="cat-badge-v4-mobile" style={{ backgroundColor: CATEGORY_METADATA[selectedOrder.category]?.color }}>
+            
+            <div style={{ flex: 1, overflowY: 'auto', background: '#f8fafc' }}>
+              <div style={{ position: 'relative', padding: '24px 20px', background: 'white', borderBottomLeftRadius: '32px', borderBottomRightRadius: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.02)', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                  <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800', color: 'white', background: CATEGORY_METADATA[selectedOrder.category]?.color || '#64748b' }}>
                     {selectedOrder.category}
                   </span>
-                  <div className="urgency-badge-v4-mobile" style={{ 
-                    color: URGENCY_OPTIONS.find(u => u.id === selectedOrder.urgency)?.color,
-                    backgroundColor: URGENCY_OPTIONS.find(u => u.id === selectedOrder.urgency)?.color + '15'
-                  }}>
+                  <span style={{ padding: '6px 12px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700', color: URGENCY_OPTIONS.find(u => u.id === selectedOrder.urgency)?.color, background: (URGENCY_OPTIONS.find(u => u.id === selectedOrder.urgency)?.color || '#64748b') + '15' }}>
                     {URGENCY_OPTIONS.find(u => u.id === selectedOrder.urgency)?.label}
-                  </div>
+                  </span>
                 </div>
-                <h1>{selectedOrder.title}</h1>
-                <div className="hero-loc-v4-mobile">
-                  <MapPin size={14} />
+                <h1 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a', lineHeight: '1.2', marginBottom: '12px' }}>{selectedOrder.title}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b', fontSize: '0.9rem', fontWeight: '500' }}>
+                  <MapPin size={16} />
                   <span>{selectedOrder.neighborhood}, {selectedOrder.city}</span>
                 </div>
               </div>
-            </div>
 
-            <div className="tabs-v4-mobile">
-              {[
-                { id: 'relato', label: 'Relato', icon: <FileText size={18} /> },
-                { id: 'itens', label: 'Itens', icon: <ClipboardList size={18} /> },
-                { id: 'tecnico', label: 'Técnico', icon: <Wrench size={18} /> },
-                { id: 'local', label: 'Local', icon: <Navigation size={18} /> },
-              ].map(tab => (
-                <button 
-                  key={tab.id}
-                  className={`tab-btn-v4-mobile ${activeTab === tab.id ? 'active' : ''}`} 
-                  onClick={() => setActiveTab(tab.id)}
-                >
-                  <div className="tab-icon-v4-mobile">{tab.icon}</div>
-                  <span>{tab.label}</span>
-                  {activeTab === tab.id && <div className="tab-indicator-v4-mobile" />}
-                </button>
-              ))}
+              <div className="no-scrollbar" style={{ display: 'flex', gap: '12px', padding: '0 20px', marginBottom: '24px', overflowX: 'auto' }}>
+                {[
+                  { id: 'relato', label: 'Relato', icon: <FileText size={18} /> },
+                  { id: 'itens', label: 'Itens', icon: <ClipboardList size={18} /> },
+                  { id: 'tecnico', label: 'Técnico', icon: <Wrench size={18} /> },
+                  { id: 'local', label: 'Local', icon: <Navigation size={18} /> },
+                ].map(tab => (
+                  <button 
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    style={{ 
+                      flex: '0 0 auto', 
+                      padding: '10px 16px', 
+                      borderRadius: '12px', 
+                      border: activeTab === tab.id ? 'none' : '1px solid #e2e8f0', 
+                      background: activeTab === tab.id ? '#1e293b' : 'white', 
+                      color: activeTab === tab.id ? 'white' : '#64748b',
+                      fontWeight: '600',
+                      fontSize: '0.9rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {tab.icon}
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              
+              <div style={{ padding: '0 20px' }}>
+                <AnimatePresence mode='wait'>
+                  {renderModalContent()}
+                </AnimatePresence>
+              </div>
             </div>
             
-            <div className="tab-content-v4-mobile">
-              {renderModalContent()}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px 32px 20px', background: 'white', borderTop: '1px solid #f1f5f9' }}>
+              <button 
+                onClick={() => { handleHelpClick(selectedOrder); setSelectedOrder(null); }}
+                style={{ width: '100%', padding: '16px', borderRadius: '16px', background: '#0f172a', color: 'white', fontWeight: '700', fontSize: '1rem', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 10px 20px rgba(15, 23, 42, 0.15)' }}
+              >
+                <Heart size={20} fill="white" />
+                Quero Ajudar Agora
+              </button>
             </div>
-          </div>
-          
-          <div className="modal-footer-v4-mobile">
-            <button className="btn-help-now-v4-mobile" onClick={() => { handleHelpClick(selectedOrder); setSelectedOrder(null); }}>
-              <Heart size={22} fill="white" />
-              <span>Quero Ajudar Agora</span>
-            </button>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {orderToHelp && (
         <div className="bottom-sheet-overlay" onClick={() => setOrderToHelp(null)}>
