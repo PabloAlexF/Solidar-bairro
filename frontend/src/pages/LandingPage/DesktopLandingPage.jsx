@@ -9,6 +9,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import { motion } from 'framer-motion';
 import createGlobe from 'cobe';
 import GlobeFeatureSection from './GlobeFeatureSection';
+import ApiService from '../../services/apiService';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
 import {
   Heart,
@@ -225,6 +226,66 @@ export default function DesktopLandingPage() {
   const [location, setLocation] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [userStats, setUserStats] = useState({
+    helpedCount: 0,
+    receivedHelpCount: 0
+  });
+
+  useEffect(() => {
+    if (user) {
+      // Inicializa com dados do contexto se disponíveis, verificando ambas as convenções de nomenclatura
+      setUserStats({
+        helpedCount: Number(user.helpedCount || user.helped_count || user.ajudas_prestadas || 0),
+        receivedHelpCount: Number(user.receivedHelpCount || user.received_help_count || user.ajudas_recebidas || 0)
+      });
+
+      const fetchStats = async () => {
+        try {
+          const userId = user.uid || user.id;
+          if (!userId) return;
+
+          console.log('[DesktopLandingPage] Fetching stats for user:', userId);
+          const response = await ApiService.get(`/users/${userId}`);
+          console.log('[DesktopLandingPage] Stats response:', response);
+
+          if (response.success && response.data) {
+            const userData = response.data;
+            console.log('[DesktopLandingPage] Full user data from API:', userData);
+
+            // Robust parsing for stats
+            const helped = Number(
+              userData.helpedCount ?? 
+              userData.helped_count ?? 
+              userData.helped ?? 
+              userData.ajudas_prestadas ?? 
+              userData.pessoas_ajudadas ?? 
+              0
+            );
+            const received = Number(
+              userData.receivedHelpCount ?? 
+              userData.received_help_count ?? 
+              userData.received ?? 
+              userData.ajudas_recebidas ?? 
+              0
+            );
+            
+            console.log('[DesktopLandingPage] Parsed stats:', { helped, received });
+
+            setUserStats({
+              helpedCount: isNaN(helped) ? 0 : helped,
+              receivedHelpCount: isNaN(received) ? 0 : received
+            });
+          }
+        } catch (error) {
+          console.error('[DesktopLandingPage] Error fetching user stats:', error);
+        }
+      };
+      
+      if (isAuthenticated()) {
+        fetchStats();
+      }
+    }
+  }, [user, isAuthenticated]);
   
   const { ref: heroRef, inView: heroInView } = useInView({ threshold: 0.1, triggerOnce: true });
   const { ref: featuresRef, inView: featuresInView } = useInView({ threshold: 0.1, triggerOnce: true });
@@ -488,11 +549,11 @@ export default function DesktopLandingPage() {
 
                       <div className="user-stats">
                         <div className="stat">
-                          <div className="stat-number">{user?.helpedCount || 0}</div>
+                          <div className="stat-number">{userStats.helpedCount}</div>
                           <div className="stat-label">Pessoas ajudadas</div>
                         </div>
                         <div className="stat">
-                          <div className="stat-number">{user?.receivedHelpCount || 0}</div>
+                          <div className="stat-number">{userStats.receivedHelpCount}</div>
                           <div className="stat-label">Ajudas recebidas</div>
                         </div>
                       </div>

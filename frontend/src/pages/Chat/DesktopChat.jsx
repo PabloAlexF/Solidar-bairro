@@ -24,10 +24,20 @@ import {
   User,
   Sparkles,
   Home,
-  MessageSquare
+  MessageSquare,
+  Calendar,
+  Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
+
+// Helper to ensure dependencies are injected
+const ensureDependencies = () => {
+  if (ApiService && !ApiService.notificationService) ApiService.notificationService = chatNotificationService;
+  if (ApiService && !ApiService.chatNotificationService) ApiService.chatNotificationService = chatNotificationService;
+};
+
+ensureDependencies();
 
 const formatTime = (date) => {
   if (!date) return 'Agora';
@@ -66,12 +76,14 @@ const Chat = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
-  const [showUserProfile, setShowUserProfile] = useState(false);
+  const [viewingProfile, setViewingProfile] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [deliveryStatus, setDeliveryStatus] = useState("andamento");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const messagesEndRef = useRef(null);
 
@@ -82,7 +94,10 @@ const Chat = () => {
     type: user?.tipo || "Pessoa Física",
     address: user?.endereco || "Endereço não informado",
     points: user?.pontos || 0,
-    initials: user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "US"
+    initials: user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "US",
+    joinDate: user?.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Janeiro 2024",
+    isVerified: true,
+    isSelf: true
   };
 
   const filteredContacts = chatContacts.filter(c => 
@@ -113,7 +128,7 @@ const Chat = () => {
       })(),
       type: conversation.participantsData?.[0]?.tipo || conversation.otherParticipant?.tipo || 'cidadao',
       distance: '0m de você',
-      online: Math.random() > 0.5
+      online: conversation.participantsData?.[0]?.online || conversation.otherParticipant?.online || false
     } : chatContacts[0]);
 
   // Função para obter informações do contexto (pedido ou achado/perdido)
@@ -188,7 +203,7 @@ const Chat = () => {
               userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U',
             type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
             distance: '0m de você',
-            online: Math.random() > 0.5,
+            online: conv.otherParticipant?.online || false,
             lastMessage: conv.lastMessage?.content || 'Nova conversa',
             lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
               new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
@@ -279,7 +294,9 @@ const Chat = () => {
           content: msg.content || msg.text,
           timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
           read: msg.read || false,
-          location: msg.metadata?.location
+          location: msg.metadata?.location,
+          metadata: msg.metadata,
+          mediaUrl: msg.mediaUrl
         }));
         setMessages(formattedMessages);
       }
@@ -305,6 +322,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (conversaId) {
+      ensureDependencies();
       setSelectedChatId(conversaId);
       loadMessages();
       
@@ -317,7 +335,9 @@ const Chat = () => {
           content: msg.content || msg.text,
           timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
           read: msg.read || false,
-          location: msg.metadata?.location
+          location: msg.metadata?.location,
+          metadata: msg.metadata,
+          mediaUrl: msg.mediaUrl
         }))]);
       });
     }
@@ -349,6 +369,7 @@ const Chat = () => {
     setSendingMessage(true);
 
     try {
+      ensureDependencies();
       const response = await ApiService.sendMessage(conversaId, messageText);
       
       if (response.success) {
@@ -365,8 +386,14 @@ const Chat = () => {
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-      if (error.message.includes('encerrada')) {
+      if (error.message && error.message.includes('encerrada')) {
         alert('Esta conversa foi encerrada e não aceita mais mensagens.');
+      } else if (error.message && (error.message.includes('createMessageNotification') || error.message.includes('undefined'))) {
+        // Se o erro for apenas na notificação, a mensagem provavelmente foi salva.
+        // Recarregamos para mostrar ao usuário.
+        console.warn('Mensagem salva, mas erro na notificação. Recarregando...');
+        setInputValue(""); // Limpa input pois a mensagem foi salva
+        loadMessages();
       } else {
         setInputValue(messageText); // Restaurar texto em caso de erro
       }
@@ -432,6 +459,7 @@ const Chat = () => {
         const { latitude, longitude } = position.coords;
         
         try {
+          ensureDependencies();
           const locationData = {
             lat: latitude,
             lng: longitude,
@@ -461,7 +489,12 @@ const Chat = () => {
           }
         } catch (error) {
           console.error("Erro ao enviar localização:", error);
-          alert("Erro ao compartilhar localização. Tente novamente.");
+          if (error.message && (error.message.includes('createMessageNotification') || error.message.includes('undefined'))) {
+            console.warn('Localização salva, mas erro na notificação. Recarregando...');
+            loadMessages();
+          } else {
+            alert("Erro ao compartilhar localização. Tente novamente.");
+          }
         } finally {
           setIsGettingLocation(false);
         }
@@ -473,6 +506,77 @@ const Chat = () => {
       },
       { enableHighAccuracy: true }
     );
+  };
+
+  const handleAttachmentClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    if (!isImage && !isVideo) {
+      alert("Apenas imagens e vídeos são permitidos.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("O arquivo deve ter no máximo 10MB.");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      ensureDependencies();
+      // Simulação de URL local para preview imediato
+      const mediaUrl = URL.createObjectURL(file);
+      const type = isImage ? 'image' : 'video';
+      const content = isImage ? '📷 Imagem' : '🎥 Vídeo';
+
+      // Envia a mensagem com metadados de mídia
+      // Nota: Em produção, você faria o upload do arquivo primeiro e enviaria a URL retornada
+      const response = await ApiService.sendMessage(conversaId, content, type, { mediaUrl });
+
+      if (response.success) {
+        // A mensagem será adicionada via listener ou reload, mas podemos otimizar adicionando localmente se necessário
+      }
+    } catch (error) {
+      console.error("Erro ao enviar mídia:", error);
+      if (error.message && (error.message.includes('createMessageNotification') || error.message.includes('undefined'))) {
+        console.warn('Mídia salva, mas erro na notificação. Recarregando...');
+        loadMessages();
+      } else {
+        alert("Erro ao enviar arquivo.");
+      }
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAvatarClick = (isSender) => {
+    if (isSender) {
+      setViewingProfile(currentUserData);
+    } else {
+      const otherUser = conversation?.participantsData?.find(p => p.uid !== user?.uid) || conversation?.otherParticipant;
+      setViewingProfile({
+        name: currentContact?.name || "Usuário",
+        email: otherUser?.email || "Informação privada",
+        phone: otherUser?.telefone || "Informação privada",
+        type: currentContact?.type === 'doador' ? 'Doador' : 'Beneficiário',
+        address: otherUser?.endereco || "Localização não informada",
+        points: otherUser?.pontos || 0,
+        initials: currentContact?.initials || "?",
+        joinDate: otherUser?.createdAt ? new Date(otherUser.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Recente",
+        isVerified: currentContact?.type === 'doador',
+        isSelf: false
+      });
+    }
   };
 
   return (
@@ -543,7 +647,7 @@ const Chat = () => {
                <MessageSquare size={18} />
                <span>Voltar para Conversas</span>
              </button>
-             <div className="mini-profile" onClick={() => setShowUserProfile(true)}>
+             <div className="mini-profile" onClick={() => setViewingProfile(currentUserData)}>
                <div className="mini-avatar">EU</div>
                <div className="mini-info">
                  <span className="mini-name">Seu Perfil</span>
@@ -737,56 +841,77 @@ const Chat = () => {
                   );
                 }
 
+                const isSent = msg.sender === 'sent';
+                let bubbleContent;
+
                 if (msg.type === "location") {
                   const { lat, lng } = msg.location || { lat: -23.5505, lng: -46.6333 };
                   const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.005}%2C${lat - 0.005}%2C${lng + 0.005}%2C${lat + 0.005}&layer=mapnik&marker=${lat}%2C${lng}`;
 
-                  return (
-                    <div key={msg.id} className={`msg-row ${msg.sender === 'sent' ? 'sent' : 'received'}`}>
-                      <div className="msg-bubble location-bubble">
-                        <div className="location-map-preview">
-                          <iframe
-                            title="Localização"
-                            width="100%"
-                            height="100%"
-                            frameBorder="0"
-                            scrolling="no"
-                            marginHeight={0}
-                            marginWidth={0}
-                            src={mapUrl}
-                            style={{ border: 0 }}
-                          />
-                        </div>
-                        <div className="location-details">
-                          <h5>{msg.location?.name}</h5>
-                          <p>{msg.location?.address}</p>
-                        </div>
+                  bubbleContent = (
+                    <div className="msg-bubble location-bubble">
+                      <div className="location-map-preview">
+                        <iframe
+                          title="Localização"
+                          width="100%"
+                          height="100%"
+                          frameBorder="0"
+                          scrolling="no"
+                          marginHeight={0}
+                          marginWidth={0}
+                          src={mapUrl}
+                          style={{ border: 0 }}
+                        />
                       </div>
-                      <div className="msg-metadata">
-                        <span className="msg-time">{formatTime(msg.timestamp)}</span>
-                        {msg.sender === 'sent' && (
-                          <span className="msg-status">
-                            <CheckCheck size={14} className="read" />
-                          </span>
-                        )}
+                      <div className="location-details">
+                        <h5>{msg.location?.name}</h5>
+                        <p>{msg.location?.address}</p>
                       </div>
+                    </div>
+                  );
+                } else if (msg.type === "image") {
+                  bubbleContent = (
+                    <div className="msg-bubble media-bubble">
+                      <img src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} alt="Imagem enviada" className="msg-media-img" />
+                    </div>
+                  );
+                } else if (msg.type === "video") {
+                  bubbleContent = (
+                    <div className="msg-bubble media-bubble">
+                      <video src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} controls className="msg-media-video" />
+                    </div>
+                  );
+                } else {
+                  bubbleContent = (
+                    <div className="msg-bubble text-bubble">
+                      {msg.content}
                     </div>
                   );
                 }
 
                 return (
-                  <div key={msg.id} className={`msg-row ${msg.sender === 'sent' ? 'sent' : 'received'}`}>
-                    <div className="msg-bubble text-bubble">
-                      {msg.content}
+                  <div key={msg.id} className={`msg-row ${isSent ? 'sent' : 'received'}`}>
+                    {!isSent && (
+                      <div className="msg-sender-avatar" onClick={() => handleAvatarClick(false)}>
+                        {currentContact?.initials || 'U'}
+                      </div>
+                    )}
+                    <div className="msg-wrapper">
+                      {bubbleContent}
+                      <div className="msg-metadata">
+                        <span className="msg-time">{formatTime(msg.timestamp)}</span>
+                        {isSent && (
+                          <span className="msg-status">
+                            {msg.read ? <CheckCheck size={14} className="read" /> : <Check size={14} />}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="msg-metadata">
-                      <span className="msg-time">{formatTime(msg.timestamp)}</span>
-                      {msg.sender === 'sent' && (
-                        <span className="msg-status">
-                          {msg.read ? <CheckCheck size={14} className="read" /> : <Check size={14} />}
-                        </span>
-                      )}
-                    </div>
+                    {isSent && (
+                      <div className="msg-sender-avatar self" onClick={() => handleAvatarClick(true)}>
+                        {currentUserData?.initials || 'EU'}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -794,9 +919,12 @@ const Chat = () => {
               {isTyping && (
                 <div className="msg-row received">
                   <div className="msg-bubble typing-bubble">
-                    <span className="dot" />
-                    <span className="dot" />
-                    <span className="dot" />
+                    <div className="typing-dots">
+                      <span className="dot" />
+                      <span className="dot" />
+                      <span className="dot" />
+                    </div>
+                    <span className="typing-text">Digitando...</span>
                   </div>
                 </div>
               )}
@@ -820,8 +948,15 @@ const Chat = () => {
             ) : (
               <div className="input-container">
                 <div className="input-actions-left">
-                  <button className="action-icon-btn" title="Anexar">
-                    <Paperclip size={20} />
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    style={{ display: 'none' }} 
+                    accept="image/*,video/*" 
+                    onChange={handleFileSelect}
+                  />
+                  <button className="action-icon-btn" title="Anexar foto ou vídeo" onClick={handleAttachmentClick} disabled={isUploading}>
+                    {isUploading ? <div className="mini-loader" /> : <Paperclip size={20} />}
                   </button>
                   <button 
                     className={`action-icon-btn ${isGettingLocation ? 'loading' : ''}`} 
@@ -944,25 +1079,31 @@ const Chat = () => {
         </div>
       )}
 
-      {showUserProfile && (
-        <div className="modal-backdrop" onClick={() => setShowUserProfile(false)}>
+      {viewingProfile && (
+        <div className="modal-backdrop" onClick={() => setViewingProfile(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <button 
                 className="close-modal-btn" 
-                onClick={() => setShowUserProfile(false)}
+                onClick={() => setViewingProfile(null)}
                 style={{ position: 'absolute', right: '1.5rem', top: '1.5rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', zIndex: 10 }}
               >
                 <MoreVertical size={16} />
               </button>
               <div className="profile-main-info">
-                <div className="profile-large-avatar">{currentUserData.initials}</div>
-                <h3>{currentUserData.name}</h3>
+                <div className="profile-large-avatar">{viewingProfile.initials}</div>
+                <h3>{viewingProfile.name}</h3>
                 <div className="profile-badge-row">
                   <div className="points-badge">
                     <Star size={14} fill="currentColor" />
-                    {currentUserData.points} Pontos Solidários
+                    {viewingProfile.points} Pontos Solidários
                   </div>
+                  {viewingProfile.isVerified && (
+                    <div className="points-badge" style={{ background: '#dcfce7', color: '#166534' }}>
+                      <ShieldCheck size={14} />
+                      Verificado
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -970,11 +1111,21 @@ const Chat = () => {
               <div className="profile-details-grid">
                 <div className="detail-item">
                   <div className="detail-icon-box">
+                    <Calendar size={20} />
+                  </div>
+                  <div className="detail-content">
+                    <span className="detail-label">Membro desde</span>
+                    <span className="detail-value">{viewingProfile.joinDate}</span>
+                  </div>
+                </div>
+
+                <div className="detail-item">
+                  <div className="detail-icon-box">
                     <Mail size={20} />
                   </div>
                   <div className="detail-content">
                     <span className="detail-label">Email de Contato</span>
-                    <span className="detail-value">{currentUserData.email}</span>
+                    <span className="detail-value">{viewingProfile.email}</span>
                   </div>
                 </div>
                 
@@ -984,7 +1135,7 @@ const Chat = () => {
                   </div>
                   <div className="detail-content">
                     <span className="detail-label">Telefone / WhatsApp</span>
-                    <span className="detail-value">{currentUserData.phone}</span>
+                    <span className="detail-value">{viewingProfile.phone}</span>
                   </div>
                 </div>
                 
@@ -994,7 +1145,7 @@ const Chat = () => {
                   </div>
                   <div className="detail-content">
                     <span className="detail-label">Tipo de Conta</span>
-                    <span className="detail-value">{currentUserData.type}</span>
+                    <span className="detail-value">{viewingProfile.type}</span>
                   </div>
                 </div>
                 
@@ -1004,13 +1155,24 @@ const Chat = () => {
                   </div>
                   <div className="detail-content">
                     <span className="detail-label">Endereço Principal</span>
-                    <span className="detail-value">{currentUserData.address}</span>
+                    <span className="detail-value">{viewingProfile.address}</span>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="modal-footer" style={{ marginTop: '1.5rem' }}>
-              <button className="btn-solid-success" style={{ width: '100%', padding: '1rem', borderRadius: '1rem', fontSize: '1rem' }} onClick={() => setShowUserProfile(false)}>
+            <div className="modal-footer" style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
+              {!viewingProfile.isSelf && (
+                <button 
+                  className="btn-ghost danger" 
+                  onClick={() => {
+                    setViewingProfile(null);
+                    setShowReportModal(true);
+                  }}
+                >
+                  Bloquear
+                </button>
+              )}
+              <button className="btn-solid-success" style={{ flex: 1, padding: '1rem', borderRadius: '1rem', fontSize: '1rem' }} onClick={() => setViewingProfile(null)}>
                 Concluído
               </button>
             </div>

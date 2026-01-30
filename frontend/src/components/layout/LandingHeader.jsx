@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { Heart, Bell, User, LogOut, Settings, Globe, ArrowLeft } from 'lucide-react';
 import chatNotificationService from '../../services/chatNotificationService';
+import ApiService from '../../services/apiService';
 import './LandingHeader.css';
 
 const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastroButtons = false }) => {
@@ -26,6 +27,10 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [globalMonitoringInterval, setGlobalMonitoringInterval] = useState(null);
+  const [userStats, setUserStats] = useState({
+    helpedCount: 0,
+    receivedHelpCount: 0
+  });
 
   // Verificar se é administrador
   const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
@@ -96,6 +101,62 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
       chatNotificationService.cleanup();
     };
   }, [showUserMenu, showNotifications, isAuthenticated, user, addChatNotification]);
+
+  useEffect(() => {
+    if (user) {
+      // Inicializa com dados do contexto se disponíveis, verificando ambas as convenções de nomenclatura
+      setUserStats({
+        helpedCount: Number(user.helpedCount || user.helped_count || user.ajudas_prestadas || 0),
+        receivedHelpCount: Number(user.receivedHelpCount || user.received_help_count || user.ajudas_recebidas || 0)
+      });
+
+      const fetchStats = async () => {
+        try {
+          const userId = user.uid || user.id;
+          if (!userId) return;
+
+          console.log('[LandingHeader] Fetching stats for user:', userId);
+          const response = await ApiService.get(`/users/${userId}`);
+          console.log('[LandingHeader] Stats response:', response);
+
+          if (response.success && response.data) {
+            const userData = response.data;
+            console.log('[LandingHeader] Full user data from API:', userData);
+
+            // Robust parsing for stats
+            const helped = Number(
+              userData.helpedCount ?? 
+              userData.helped_count ?? 
+              userData.helped ?? 
+              userData.ajudas_prestadas ?? 
+              userData.pessoas_ajudadas ?? 
+              0
+            );
+            const received = Number(
+              userData.receivedHelpCount ?? 
+              userData.received_help_count ?? 
+              userData.received ?? 
+              userData.ajudas_recebidas ?? 
+              0
+            );
+            
+            console.log('[LandingHeader] Parsed stats:', { helped, received });
+
+            setUserStats({
+              helpedCount: isNaN(helped) ? 0 : helped,
+              receivedHelpCount: isNaN(received) ? 0 : received
+            });
+          }
+        } catch (error) {
+          console.error('[LandingHeader] Error fetching user stats:', error);
+        }
+      };
+      
+      if (isAuthenticated()) {
+        fetchStats();
+      }
+    }
+  }, [user, isAuthenticated]);
 
   const handleNotificationClick = (notification) => {
     // Marcar como lida
@@ -372,11 +433,11 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
 
                     <div className="user-stats">
                       <div className="stat">
-                        <div className="stat-number">{user?.helpedCount || 0}</div>
+                        <div className="stat-number">{userStats.helpedCount}</div>
                         <div className="stat-label">Pessoas ajudadas</div>
                       </div>
                       <div className="stat">
-                        <div className="stat-number">{user?.receivedHelpCount || 0}</div>
+                        <div className="stat-number">{userStats.receivedHelpCount}</div>
                         <div className="stat-label">Ajudas recebidas</div>
                       </div>
                     </div>

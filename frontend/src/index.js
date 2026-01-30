@@ -5,6 +5,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { setupApiInterceptors } from './middleware/auth';
 import './styles/index.css';
+import './pages/Chat/styles.css';
+import './pages/Chat/MobileChat.css';
 import App from './App';
 import ToastContainer from './components/ToastContainer';
 
