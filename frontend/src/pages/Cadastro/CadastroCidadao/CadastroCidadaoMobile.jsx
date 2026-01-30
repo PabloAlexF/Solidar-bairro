@@ -61,7 +61,30 @@ export default function CadastroCidadaoMobile() {
     if (validateStep(step)) {
       nextStep();
     } else {
-      showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
+      // Show specific error messages
+      switch (step) {
+        case 1:
+          if (!formData.nome.trim()) showToast('Por favor, informe seu nome completo.', 'error');
+          else if (!formData.dataNascimento) showToast('Por favor, informe sua data de nascimento.', 'error');
+          else if (!formData.ocupacao.trim()) showToast('Por favor, informe sua ocupação ou habilidade.', 'error');
+          break;
+        case 2:
+          if (formData.cpf.replace(/\D/g, '').length < 11) showToast('Por favor, informe um CPF válido.', 'error');
+          else if (formData.rg.replace(/\D/g, '').length < 7) showToast('Por favor, informe um RG válido.', 'error');
+          break;
+        case 3:
+          if (formData.telefone.replace(/\D/g, '').length < 10) showToast('Por favor, informe um telefone válido.', 'error');
+          else if (!formData.email.trim()) showToast('Por favor, informe um e-mail válido.', 'error');
+          break;
+        case 4:
+          if (formData.endereco.trim() === '') showToast('Por favor, informe seu endereço de referência.', 'error');
+          break;
+        case 5:
+          if (formData.interesses.length === 0) showToast('Por favor, selecione pelo menos um interesse.', 'error');
+          break;
+        default:
+          showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
+      }
     }
   };
 

@@ -7,6 +7,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import LandingHeader from '../../components/layout/LandingHeader';
 import MobileHeader from '../../components/layout/MobileHeader';
 import { useAuth } from '../../contexts/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin, 
   Heart,
@@ -22,7 +23,8 @@ import {
   ShieldCheck,
   AlertCircle,
   Calendar,
-  Zap
+  Zap,
+  Search
 } from 'lucide-react';
 import './mobile-quero-ajudar.css';
 import { 
@@ -395,118 +397,210 @@ export const MobileQueroAjudar = () => {
   };
 
   return (
-    <div className="qa-page-mobile">
-      <MobileHeader title="Quero Ajudar" />
-      <div className="qa-main-wrapper-mobile">
-        <header className="page-header-mobile">
-          <div className="brand-box-mobile">
-            <h1>Solidariedade <span>Próxima</span></h1>
+    <div className="qa-page-mobile" style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '20px' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #e2e8f0' }}>
+        <MobileHeader title="Quero Ajudar" />
+        
+        <div style={{ padding: '12px 16px 4px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', letterSpacing: '-0.5px', margin: 0 }}>
+                Explorar
+              </h1>
+              <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>
+                {filteredOrders.length} pedidos próximos
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+               <button 
+                onClick={() => setShowAccessibility(true)}
+                style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+              >
+                <span style={{ fontSize: '1.2rem' }}>Aa</span>
+              </button>
+              <button 
+                onClick={() => setShowFiltersModal(true)}
+                style={{ 
+                  width: '40px', height: '40px', borderRadius: '12px', 
+                  border: '1px solid #e2e8f0', 
+                  background: (selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil') ? '#eff6ff' : 'white',
+                  color: (selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil') ? '#3b82f6' : '#64748b',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative'
+                }}
+              >
+                <Filter size={20} />
+                {(selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil') && (
+                  <span style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#3b82f6', borderRadius: '50%', border: '1px solid white' }} />
+                )}
+              </button>
+            </div>
           </div>
 
-          <div className="header-controls-mobile">
-            <button className="accessibility-btn-mobile" onClick={() => setShowAccessibility(true)}>
-              ♿
-            </button>
-            <button className="btn-toggle-filters-mobile" onClick={() => setShowFiltersModal(true)}>
-              <Filter size={18} />
-              {(selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil' || selectedTimeframe !== 'todos') && <div className="filter-badge" />}
-            </button>
+          <div className="no-scrollbar" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', margin: '0 -16px', paddingLeft: '16px', paddingRight: '16px' }}>
+            {CATEGORIES.map(cat => (
+              <motion.button
+                key={cat.id}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedCat(cat.id)}
+                style={{
+                  whiteSpace: 'nowrap',
+                  padding: '8px 16px',
+                  borderRadius: '100px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  border: 'none',
+                  background: selectedCat === cat.id ? (CATEGORY_METADATA[cat.id]?.color || '#3b82f6') : 'white',
+                  color: selectedCat === cat.id ? 'white' : '#64748b',
+                  boxShadow: selectedCat === cat.id ? `0 4px 12px ${CATEGORY_METADATA[cat.id]?.color}40` : '0 1px 2px rgba(0,0,0,0.05)',
+                  border: selectedCat === cat.id ? 'none' : '1px solid #e2e8f0'
+                }}
+              >
+                {cat.label}
+              </motion.button>
+            ))}
           </div>
-        </header>
+        </div>
+      </div>
 
-        <div className="orders-grid-mobile" ref={ref}>
+      <div style={{ padding: '16px' }} ref={ref}>
+        <AnimatePresence mode='popLayout'>
           {loadingPedidos ? (
-            [...Array(4)].map((_, i) => (
-              <div key={i} className="skeleton-card-mobile">
-                <Skeleton height={180} borderRadius={16} />
+            [...Array(3)].map((_, i) => (
+              <div key={i} style={{ background: 'white', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
+                <Skeleton height={20} width="60%" style={{ marginBottom: '12px' }} />
+                <Skeleton height={60} style={{ marginBottom: '12px' }} />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Skeleton height={30} width={80} />
+                  <Skeleton height={30} width={80} />
+                </div>
               </div>
             ))
+          ) : filteredOrders.length === 0 ? (
+             <motion.div 
+               initial={{ opacity: 0, y: 20 }} 
+               animate={{ opacity: 1, y: 0 }}
+               style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}
+             >
+               <div style={{ width: '80px', height: '80px', background: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                 <Search size={32} color="#94a3b8" />
+               </div>
+               <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1e293b', marginBottom: '8px' }}>Nenhum pedido encontrado</h3>
+               <p>Tente ajustar os filtros para ver mais resultados.</p>
+               <button 
+                 onClick={() => { setSelectedCat('Todas'); setSelectedUrgency(null); setSelectedLocation('brasil'); }}
+                 style={{ marginTop: '16px', padding: '8px 16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', fontWeight: '600', color: '#3b82f6' }}
+               >
+                 Limpar Filtros
+               </button>
+             </motion.div>
           ) : (
-            <>
-              {filteredOrders.map((order) => {
-                const urg = URGENCY_OPTIONS.find(u => u.id === order.urgency);
-                const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b' };
-                return (
-                  <div 
-                    key={order.id}
-                    className="order-card-mobile"
-                    style={{
-                      animation: 'fadeInUp 0.5s ease-out'
-                    }}
-                  >
-                    <div className="card-header-mobile">
-                      <span className="cat-badge-mobile" style={{ backgroundColor: catMeta.color }}>
-                        {order.category}
-                      </span>
-                      {order.isNew && <span className="new-badge-mobile">NOVO</span>}
-                      <div className="time-info-mobile">
-                        <div className="time-relative-mobile">
+            filteredOrders.map((order) => {
+              const urg = URGENCY_OPTIONS.find(u => u.id === order.urgency);
+              const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b' };
+              
+              return (
+                <motion.div
+                  key={order.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    background: 'white',
+                    borderRadius: '20px',
+                    padding: '16px',
+                    marginBottom: '16px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.04), 0 10px 24px rgba(0,0,0,0.02)',
+                    border: '1px solid rgba(0,0,0,0.02)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {/* Urgency Strip */}
+                  <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: urg?.color || '#e2e8f0' }} />
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', paddingLeft: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: catMeta.color, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 'bold' }}>
+                        {order.userName.charAt(0)}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1e293b' }}>{order.userName}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={10} />
+                          {/* Time logic inline */}
                           {(() => {
                             const createdAt = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
-                            if (!createdAt || isNaN(createdAt.getTime())) {
-                              return 'Agora';
-                            }
+                            if (!createdAt || isNaN(createdAt.getTime())) return 'Recente';
                             const now = new Date();
                             const diffMs = now - createdAt;
-                            const diffMinutes = Math.floor(diffMs / (1000 * 60));
                             const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-                            const diffDays = Math.floor(diffHours / 24);
-                            
-                            if (diffMinutes < 1) return 'Agora';
-                            if (diffMinutes < 60) return `${diffMinutes}min`;
-                            if (diffHours < 24) return `${diffHours}h`;
-                            if (diffDays === 1) return 'Ontem';
-                            if (diffDays < 7) return `${diffDays}d`;
+                            if (diffHours < 24) return `Há ${diffHours}h`;
                             return createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                          })()} 
-                        </div>
-                        <div className="time-exact-mobile">
-                          {(() => {
-                            const createdAt = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
-                            if (!createdAt || isNaN(createdAt.getTime())) {
-                              return '--:--';
-                            }
-                            return createdAt.toLocaleTimeString('pt-BR', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            });
-                          })()} 
+                          })()}
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="card-content-mobile">
-                      <h3>{order.title}</h3>
-                      <div className="loc-row-mobile">
-                        <MapPin size={12} />
-                        <span>{order.neighborhood}</span>
-                      </div>
-                      <div className="urg-row-mobile" style={{ color: urg?.color }}>
-                        {urg?.icon}
-                        <span>{urg?.label}</span>
-                      </div>
-                    </div>
+                    {order.isNew && (
+                      <span style={{ background: '#dbeafe', color: '#2563eb', fontSize: '0.7rem', fontWeight: '700', padding: '4px 8px', borderRadius: '100px' }}>
+                        NOVO
+                      </span>
+                    )}
+                  </div>
 
-                    <div className="card-footer-mobile">
-                      <button className="btn-view-mobile" onClick={() => { setSelectedOrder(order); setActiveTab('relato'); }}>
-                        <Eye size={16} /> Detalhes
-                      </button>
-                      {user?.uid !== order.userId ? (
-                        <button className="btn-help-mobile" onClick={() => handleHelpClick(order)}>
-                          <Heart size={16} /> Ajudar
-                        </button>
-                      ) : (
-                        <button className="btn-own-mobile" disabled>
-                          <Heart size={16} /> Seu Pedido
-                        </button>
-                      )}
+                  <div style={{ paddingLeft: '8px', marginBottom: '16px' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a', marginBottom: '6px', lineHeight: '1.3' }}>
+                      {order.title}
+                    </h3>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '6px', background: `${catMeta.color}15`, color: catMeta.color, fontWeight: '600' }}>
+                        {order.category}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '6px', background: `${urg?.color}15`, color: urg?.color, fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {urg?.icon && React.cloneElement(urg.icon, { size: 12 })}
+                        {urg?.label}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#64748b', fontSize: '0.875rem' }}>
+                      <MapPin size={14} />
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+                        {order.neighborhood}, {order.city}
+                      </span>
                     </div>
                   </div>
-                );
-              })}
-            </>
+
+                  <div style={{ display: 'flex', gap: '8px', paddingLeft: '8px' }}>
+                    <button 
+                      onClick={() => { setSelectedOrder(order); setActiveTab('relato'); }}
+                      style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontWeight: '600', fontSize: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    >
+                      <Eye size={16} />
+                      Detalhes
+                    </button>
+                    {user?.uid !== order.userId ? (
+                      <button 
+                        onClick={() => handleHelpClick(order)}
+                        style={{ flex: 1, padding: '10px', borderRadius: '12px', background: '#10b981', color: 'white', fontWeight: '600', fontSize: '0.875rem', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
+                      >
+                        <Heart size={16} fill="white" />
+                        Ajudar
+                      </button>
+                    ) : (
+                      <button 
+                        disabled
+                        style={{ flex: 1, padding: '10px', borderRadius: '12px', background: '#f1f5f9', color: '#94a3b8', fontWeight: '600', fontSize: '0.875rem', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                      >
+                        Seu Pedido
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
       {showFiltersModal && (
