@@ -1,5 +1,5 @@
-/* Landing Header Styles */
-.landing-nav {
+/* Achados e Perdidos Header Navigation - Replicating Landing Page Style */
+.achados-nav {
   position: fixed;
   top: 0;
   left: 0;
@@ -11,25 +11,49 @@
   transition: all 0.3s ease;
 }
 
-.landing-nav.scrolled {
+.achados-nav.scrolled {
   background: #ffffff !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.section-container {
+.achados-nav-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
-}
-
-.nav-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 80px;
 }
 
-.logo-wrapper {
+.achados-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.achados-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.achados-back-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.achados-logo-wrapper {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -37,11 +61,11 @@
   transition: transform 0.2s ease;
 }
 
-.logo-wrapper:hover {
+.achados-logo-wrapper:hover {
   transform: scale(1.05);
 }
 
-.logo-icon {
+.achados-logo-icon {
   width: 40px;
   height: 40px;
   background: linear-gradient(135deg, #0d9488, #14b8a6);
@@ -52,25 +76,25 @@
   box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
 }
 
-.logo-text {
+.achados-logo-text {
   font-size: 1.5rem;
   font-weight: 800;
   color: #1e293b;
   letter-spacing: -0.02em;
 }
 
-.logo-accent {
+.achados-logo-accent {
   color: #14b8a6;
 }
 
-.nav-menu {
+.achados-nav-menu {
   display: flex;
   align-items: center;
   gap: 2rem;
   position: relative;
 }
 
-.nav-link {
+.achados-nav-link {
   position: relative;
   color: rgba(30, 41, 59, 0.8);
   text-decoration: none;
@@ -78,16 +102,13 @@
   font-size: 0.95rem;
   padding: 0.5rem 0;
   transition: color 0.3s ease;
-  appearance: none;
-  background: transparent;
-  border: none;
 }
 
-.nav-link:hover {
+.achados-nav-link:hover {
   color: #1e293b;
 }
 
-.link-underline {
+.achados-link-underline {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -97,17 +118,17 @@
   transition: width 0.3s ease;
 }
 
-.nav-link:hover .link-underline {
+.achados-nav-link:hover .achados-link-underline {
   width: 100%;
 }
 
-.auth-group {
+.achados-auth-group {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.auth-btn-login {
+.achados-auth-btn-login {
   background: transparent;
   border: 1px solid rgba(30, 41, 59, 0.2);
   color: #1e293b;
@@ -119,12 +140,12 @@
   transition: all 0.3s ease;
 }
 
-.auth-btn-login:hover {
+.achados-auth-btn-login:hover {
   background: rgba(30, 41, 59, 0.1);
   border-color: rgba(30, 41, 59, 0.3);
 }
 
-.auth-btn-register {
+.achados-auth-btn-register {
   background: linear-gradient(135deg, #14b8a6, #0d9488);
   border: none;
   color: white;
@@ -137,32 +158,22 @@
   box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
 }
 
-.auth-btn-register:hover {
+.achados-auth-btn-register:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
 }
 
-.user-section {
+.achados-user-section {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
-.menu-item.admin-btn {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  color: white;
-  margin-top: 0.5rem;
-}
 
-.menu-item.admin-btn:hover {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  color: white;
-}
-
-.notification-wrapper {
+.achados-notification-wrapper {
   position: relative;
 }
 
-.notification-btn {
+.achados-notification-btn {
   background: rgba(30, 41, 59, 0.1);
   border: 1px solid rgba(30, 41, 59, 0.2);
   color: #1e293b;
@@ -177,11 +188,11 @@
   position: relative;
 }
 
-.notification-btn:hover {
+.achados-notification-btn:hover {
   background: rgba(30, 41, 59, 0.15);
 }
 
-.notification-badge {
+.achados-notification-badge {
   position: absolute;
   top: -6px;
   right: -6px;
@@ -195,7 +206,7 @@
   text-align: center;
 }
 
-.notification-dropdown {
+.achados-notification-dropdown {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
@@ -208,7 +219,7 @@
   z-index: 1001;
 }
 
-.notification-header {
+.achados-notification-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -217,19 +228,19 @@
   background: #f8fafc;
 }
 
-.notification-header h3 {
+.achados-notification-header h3 {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
   color: #1e293b;
 }
 
-.notification-actions {
+.achados-notification-actions {
   display: flex;
   gap: 0.5rem;
 }
 
-.action-btn {
+.achados-action-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -238,23 +249,23 @@
   transition: background 0.2s ease;
 }
 
-.action-btn:hover {
+.achados-action-btn:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
-.notification-list {
+.achados-notification-list {
   max-height: 300px;
   overflow-y: auto;
 }
 
-.no-notifications {
+.achados-no-notifications {
   padding: 2rem;
   text-align: center;
   color: #64748b;
   font-size: 0.9rem;
 }
 
-.notification-item {
+.achados-notification-item {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
@@ -265,91 +276,52 @@
   position: relative;
 }
 
-.notification-item:hover {
+.achados-notification-item:hover {
   background: #f8fafc;
 }
 
-.notification-item.unread {
+.achados-notification-item.unread {
   background: #f0f9ff;
 }
 
-.notification-item.chat-notification {
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.notification-item.chat-notification:hover {
-  background-color: #f0f9ff;
-  transform: translateX(2px);
-}
-
-.notification-content {
+.achados-notification-content {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   width: 100%;
 }
 
-.notification-icon {
+.achados-notification-icon {
   font-size: 16px;
   flex-shrink: 0;
   margin-top: 2px;
 }
 
-.notification-text {
+.achados-notification-text {
   flex: 1;
   min-width: 0;
 }
 
-.menu-badge {
-  background: #ef4444;
-  color: white;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 10px;
-  margin-left: auto;
-  min-width: 16px;
-  text-align: center;
-}
-
-/* Animação para novas notificações */
-@keyframes notification-pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.notification-badge {
-  animation: notification-pulse 2s infinite;
-}
-
-.notification-title {
+.achados-notification-title {
   margin: 0 0 0.25rem 0;
   font-weight: 600;
   font-size: 0.9rem;
   color: #1e293b;
 }
 
-.notification-message {
+.achados-notification-message {
   margin: 0 0 0.5rem 0;
   font-size: 0.85rem;
   color: #64748b;
   line-height: 1.4;
 }
 
-.notification-time {
+.achados-notification-time {
   font-size: 0.75rem;
   color: #94a3b8;
 }
 
-.unread-dot {
+.achados-unread-dot {
   width: 8px;
   height: 8px;
   background: #3b82f6;
@@ -359,11 +331,11 @@
   right: 1rem;
 }
 
-.user-menu-wrapper {
+.achados-user-menu-wrapper {
   position: relative;
 }
 
-.user-btn {
+.achados-user-btn {
   background: rgba(30, 41, 59, 0.1);
   border: 1px solid rgba(30, 41, 59, 0.2);
   color: #1e293b;
@@ -377,11 +349,11 @@
   transition: all 0.3s ease;
 }
 
-.user-btn:hover {
+.achados-user-btn:hover {
   background: rgba(30, 41, 59, 0.15);
 }
 
-.user-avatar {
+.achados-user-avatar {
   width: 32px;
   height: 32px;
   background: linear-gradient(135deg, #14b8a6, #0d9488);
@@ -395,7 +367,7 @@
   overflow: hidden;
 }
 
-.avatar-image {
+.achados-avatar-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -403,7 +375,7 @@
   display: block;
 }
 
-.user-dropdown {
+.achados-user-dropdown {
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
@@ -416,7 +388,7 @@
   z-index: 1001;
 }
 
-.user-info {
+.achados-user-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -425,7 +397,7 @@
   background: #f8fafc;
 }
 
-.user-avatar-large {
+.achados-user-avatar-large {
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, #14b8a6, #0d9488);
@@ -439,7 +411,7 @@
   overflow: hidden;
 }
 
-.avatar-image-large {
+.achados-avatar-image-large {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -447,11 +419,11 @@
   display: block;
 }
 
-.user-details {
+.achados-user-details {
   flex: 1;
 }
 
-.user-name {
+.achados-user-name {
   font-weight: 700;
   font-size: 0.95rem;
   color: #1e293b;
@@ -461,7 +433,7 @@
   gap: 0.5rem;
 }
 
-.verified-text {
+.achados-verified-text {
   font-size: 0.7rem;
   background: #10b981;
   color: white;
@@ -470,40 +442,40 @@
   font-weight: 600;
 }
 
-.user-phone {
+.achados-user-phone {
   font-size: 0.8rem;
   color: #64748b;
 }
 
-.user-stats {
+.achados-user-stats {
   display: flex;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.stat {
+.achados-stat {
   flex: 1;
   text-align: center;
 }
 
-.stat-number {
+.achados-stat-number {
   font-size: 1.25rem;
   font-weight: 700;
   color: #14b8a6;
   margin-bottom: 0.25rem;
 }
 
-.stat-label {
+.achados-stat-label {
   font-size: 0.75rem;
   color: #64748b;
   font-weight: 600;
 }
 
-.user-actions {
+.achados-user-actions {
   padding: 0.5rem;
 }
 
-.menu-item {
+.achados-menu-item {
   width: 100%;
   background: none;
   border: none;
@@ -518,92 +490,53 @@
   margin-bottom: 0.25rem;
 }
 
-.menu-item:hover {
+.achados-menu-item:hover {
   background: #f1f5f9;
   color: #1e293b;
 }
 
-.logout-btn:hover {
+.achados-logout-btn:hover {
   background: #fef2f2;
   color: #dc2626;
 }
 
-@media (max-width: 768px) {
-  .nav-container {
-    padding: 0 1rem;
-    height: 70px;
-  }
-  
-  .nav-menu {
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-  
-  .nav-link {
-    font-size: 0.8rem;
-    padding: 0.4rem 0;
-  }
-  
-  .notification-dropdown,
-  .user-dropdown {
-    width: 280px;
-    right: -1rem;
-  }
-}
-
-
-.painel-social-btn {
-  background: linear-gradient(135deg, #10b981, #059669);
-  border: none;
+.achados-menu-badge {
+  background: #ef4444;
   color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
+  font-size: 10px;
   font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+  min-width: 16px;
+  text-align: center;
 }
 
-.painel-social-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+/* Animação para novas notificações */
+@keyframes achados-notification-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
-.admin-dashboard-btn {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  border: none;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.achados-notification-badge {
+  animation: achados-notification-pulse 2s infinite;
 }
 
-.admin-dashboard-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
-}
-
-
-/* Panel buttons positioning */
-.panel-buttons-container {
+.achados-panel-buttons-container {
   position: absolute;
   right: 420px;
   display: flex;
   gap: 10px;
 }
 
-.panel-icon-button {
+.achados-panel-icon-button {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
   width: 44px;
@@ -618,17 +551,50 @@
   transition: all 0.3s ease;
 }
 
-.panel-icon-button:hover {
+.achados-panel-icon-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
-.panel-icon-button.admin {
+.achados-panel-icon-button.admin {
   background: linear-gradient(135deg, #8b5cf6, #7c3aed);
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
-.panel-icon-button.admin:hover {
+.achados-panel-icon-button.admin:hover {
   box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
 }
 
+.achados-menu-item.admin-btn {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  margin-top: 0.5rem;
+}
+
+.achados-menu-item.admin-btn:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .achados-nav-container {
+    padding: 0 1rem;
+    height: 70px;
+  }
+
+  .achados-nav-menu {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .achados-nav-link {
+    font-size: 0.8rem;
+    padding: 0.4rem 0;
+  }
+
+  .achados-notification-dropdown,
+  .achados-user-dropdown {
+    width: 280px;
+    right: -1rem;
+  }
+}

@@ -39,7 +39,8 @@ import {
   Eye,
   Trash2,
   Edit2,
-  ListChecks
+  ListChecks,
+  X
 } from 'lucide-react';
 import './styles.css';
 
@@ -77,23 +78,31 @@ const SUBCATEGORIES = {
     { id: 'Cesta Básica', label: 'Cesta Básica', desc: 'Monte sua cesta com o que mais precisa', options: ['Arroz', 'Feijão', 'Açúcar', 'Óleo', 'Macarrão', 'Farinha', 'Café', 'Sal', 'Leite em pó', 'Biscoito', 'Molho de Tomate', 'Sardinha'] },
     { id: 'Leite', label: 'Leite', desc: 'Caixa, em pó ou especial', options: ['Integral', 'Desnatado', 'Sem lactose', 'Em pó', 'Infantil'] },
     { id: 'Perecíveis', label: 'Perecíveis', desc: 'Carnes, verduras, legumes, frutas', options: ['Carne Bovina', 'Frango', 'Ovos', 'Legumes', 'Frutas', 'Verduras'] },
+    { id: 'Marmita', label: 'Marmita/Refeição', desc: 'Alimento pronto para consumo', options: ['Almoço', 'Jantar', 'Sopa', 'Sanduíche'] },
+    { id: 'Formula', label: 'Fórmula Infantil', desc: 'Leite específico para bebês', options: ['NAN', 'Aptamil', 'Nestogeno', '0-6 meses', '6-12 meses'] },
+    { id: 'Padaria', label: 'Padaria', desc: 'Pães e massas', options: ['Pão Francês', 'Pão de Forma', 'Bolo', 'Salgados'] },
+    { id: 'Suplemento', label: 'Suplementos', desc: 'Nutrição especial', options: ['Ensure', 'Nutren', 'Whey', 'Vitamina'] },
     { id: 'Água', label: 'Água Potável', desc: 'Garrafas ou galões', options: ['Garrafa 1.5L', 'Galão 5L', 'Galão 20L'] }
   ],
   'Roupas': [
     { id: 'Infantil', label: 'Roupas Infantis', desc: 'Para crianças de 0 a 12 anos', options: ['Recém-nascido', '1-3 anos', '4-8 anos', '9-12 anos', 'Menino', 'Menina', 'Calçados', 'Agasalhos'] },
     { id: 'Adulto', label: 'Roupas Adulto', desc: 'Masculino e Feminino', options: ['P', 'M', 'G', 'GG', 'Plus Size', 'Masculino', 'Feminino', 'Calça', 'Camisa', 'Vestido'] },
     { id: 'Inverno', label: 'Roupas de Frio', desc: 'Casacos, blusas, toucas', options: ['Casacos pesados', 'Moletom', 'Cobertores', 'Toucas/Luvas', 'Meias'] },
-    { id: 'Acessorios', label: 'Acessórios', desc: 'Cintos, bolsas, bonés', options: ['Cinto', 'Boné', 'Bolsa', 'Mochila'] }
+    { id: 'Acessorios', label: 'Acessórios', desc: 'Cintos, bolsas, bonés', options: ['Cinto', 'Boné', 'Bolsa', 'Mochila'] },
+    { id: 'CamaBanho', label: 'Cama e Banho', desc: 'Lençóis, toalhas, cobertores', options: ['Lençol Solteiro', 'Lençol Casal', 'Toalha de Banho', 'Cobertor', 'Travesseiro'] },
+    { id: 'Enxoval', label: 'Enxoval Bebê', desc: 'Itens para recém-nascido', options: ['Banheira', 'Saída Maternidade', 'Cueiro', 'Mantas'] }
   ],
   'Medicamentos': [
     { id: 'Analgesicos', label: 'Analgésicos', desc: 'Dor e febre', options: ['Dipirona', 'Paracetamol', 'Ibuprofeno', 'Aspirina'] },
     { id: 'Uso Continuo', label: 'Uso Contínuo', desc: 'Hipertensão, Diabetes...', options: ['Losartana', 'Enalapril', 'Metformina', 'Glibenclamida', 'Insulina'] },
-    { id: 'Primeiros Socorros', label: 'Primeiros Socorros', desc: 'Curativos, antissépticos', options: ['Alcool 70%', 'Gaze', 'Esparadrapo', 'Band-aid', 'Antisséptico', 'Algodão'] }
+    { id: 'Primeiros Socorros', label: 'Primeiros Socorros', desc: 'Curativos, antissépticos', options: ['Alcool 70%', 'Gaze', 'Esparadrapo', 'Band-aid', 'Antisséptico', 'Algodão'] },
+    { id: 'Vitaminas', label: 'Vitaminas', desc: 'Suplementação vitamínica', options: ['Vitamina C', 'Vitamina D', 'Complexo B', 'Ferro'] }
   ],
   'Higiene': [
     { id: 'Pessoal', label: 'Higiene Pessoal', desc: 'Sabonete, shampoo, pasta...', options: ['Sabonete', 'Shampoo', 'Condicionador', 'Pasta de Dente', 'Escova de Dente', 'Desodorante', 'Absorvente', 'Papel Higiênico'] },
     { id: 'Limpeza', label: 'Limpeza da Casa', desc: 'Detergente, sabão, água sanitária', options: ['Detergente', 'Sabão em Pó', 'Água Sanitária', 'Desinfetante', 'Esponja'] },
-    { id: 'Bebe', label: 'Higiene do Bebê', desc: 'Fraldas, lenços', options: ['Fraldas P', 'Fraldas M', 'Fraldas G', 'Fraldas XG', 'Lenço Umedecido', 'Pomada'] }
+    { id: 'Bebe', label: 'Higiene do Bebê', desc: 'Fraldas, lenços', options: ['Fraldas P', 'Fraldas M', 'Fraldas G', 'Fraldas XG', 'Lenço Umedecido', 'Pomada'] },
+    { id: 'Geriatrica', label: 'Higiene Geriátrica', desc: 'Fraldas e cuidados para idosos', options: ['Fralda Geriátrica M', 'Fralda Geriátrica G', 'Fralda Geriátrica XG', 'Lenço Umedecido'] }
   ],
   'Móveis': [
     { id: 'Cama', label: 'Cama/Colchão', desc: 'Solteiro, Casal, Beliche', options: ['Solteiro', 'Casal', 'Apenas Colchão', 'Cama Box', 'Beliche'] },
@@ -396,57 +405,118 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        transition={{
+          type: "spring",
+          damping: 30,
+          stiffness: 400,
+          duration: 0.3
+        }}
+        className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-lg border border-slate-100/50 relative"
       >
-        <h3 className="text-xl font-bold mb-1" style={{ color: categoryColor }}>{item.label}</h3>
-        <p className="text-sm text-slate-500 mb-4">Selecione os itens que você mais precisa</p>
-        
-        <div className="mb-4">
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Opções</label>
-          <div className="flex flex-wrap gap-2">
-            {item.options?.map(opt => (
-              <button
-                key={opt}
-                onClick={() => toggleOption(opt)}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all border"
-                style={{
-                  backgroundColor: selectedOptions.includes(opt) ? categoryColor : 'white',
-                  color: selectedOptions.includes(opt) ? 'white' : '#475569',
-                  borderColor: selectedOptions.includes(opt) ? categoryColor : '#e2e8f0'
-                }}
-              >
-                {opt}
-              </button>
-            ))}
+        {/* Subtle background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50/30 to-transparent rounded-3xl" />
+
+        <div className="relative z-10">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex-1">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
+                {item.label}
+              </h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Selecione os itens que você precisa
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors ml-4"
+            >
+              <X size={20} />
+            </button>
           </div>
-        </div>
 
-        <div className="mb-6">
-          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Detalhes Adicionais</label>
-          <textarea
-            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
-            style={{ '--tw-ring-color': categoryColor }}
-            placeholder="Ex: Tamanho específico, restrições alimentares, voltagem..."
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-          />
-        </div>
+          {/* Options Grid */}
+          <div className="mb-6">
+            <div className="grid grid-cols-2 gap-3">
+              {item.options?.map((opt, index) => {
+                const isSelected = selectedOptions.includes(opt);
+                return (
+                  <motion.button
+                    key={opt}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => toggleOption(opt)}
+                    className={`group relative p-4 rounded-2xl text-sm font-medium transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                      isSelected
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'bg-slate-50 text-slate-700 hover:bg-white'
+                    }`}
+                    style={isSelected ? {
+                      '--tw-ring-color': categoryColor
+                    } : {}}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`truncate font-medium ${isSelected ? 'text-slate-900' : 'text-slate-700 group-hover:text-slate-900'}`}>
+                        {opt}
+                      </span>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ml-3"
+                          style={{ backgroundColor: categoryColor }}
+                        >
+                          <Check size={10} className="text-white" />
+                        </motion.div>
+                      )}
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
 
-        <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 text-slate-600 font-medium hover:bg-slate-50 rounded-xl transition-colors">Cancelar</button>
-          <button 
-            onClick={handleSave} 
-            className="flex-1 py-3 text-white font-bold rounded-xl transition-colors shadow-lg"
-            style={{ backgroundColor: categoryColor, filter: 'brightness(1)' }}
-            onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(0.9)'}
-            onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1)'}
-          >
-            Salvar Item
-          </button>
+          {/* Details Input */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-slate-700 mb-3">
+              Observações adicionais
+            </label>
+            <textarea
+              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:border-transparent transition-all resize-none min-h-[80px] text-sm"
+              style={{ '--tw-ring-color': categoryColor }}
+              placeholder="Ex: Quantidade específica, preferências..."
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 py-3 px-4 text-slate-600 font-medium bg-slate-100 hover:bg-slate-200 rounded-2xl transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex-1 py-3 px-4 text-white font-medium rounded-2xl transition-all hover:shadow-lg"
+              style={{
+                backgroundColor: categoryColor,
+                boxShadow: `0 4px 12px ${categoryColor}25`
+              }}
+            >
+              Confirmar
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
@@ -864,32 +934,45 @@ export default function PDAForm() {
                     return (
                       <motion.button
                         key={sub.id}
-                        whileHover={{ scale: 1.02 }}
+                        whileHover={{ y: -4, boxShadow: '0 16px 32px rgba(0,0,0,0.08)' }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => {
                           setCurrentItem(sub);
                           setShowItemModal(true);
                         }}
-                        className="p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden"
-                        style={{
-                          borderColor: isSelected ? catColor : '#e2e8f0',
-                          backgroundColor: isSelected ? `${catColor}10` : 'white',
-                          boxShadow: isSelected ? `0 10px 25px -5px ${catColor}40` : 'none',
-                          transform: isSelected ? 'scale(1.02)' : 'scale(1)'
-                        }}
+                        className={`p-5 rounded-[24px] text-left transition-all duration-300 relative overflow-hidden group ${
+                          isSelected
+                            ? 'bg-gradient-to-br from-white to-slate-50/30'
+                            : 'bg-white'
+                        }`}
+                        style={isSelected ? {
+                          boxShadow: `0 20px 40px -12px ${catColor}25, 0 8px 16px -8px rgba(0,0,0,0.04)`
+                        } : {}}
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="font-bold text-lg" style={{ color: isSelected ? catColor : '#1e293b' }}>{sub.label}</span>
-                          {isSelected && <CheckCircle2 size={20} style={{ color: catColor }} />}
+                        <div className={`absolute top-0 right-0 p-4 opacity-0 transition-opacity duration-300 ${isSelected ? 'opacity-100' : 'group-hover:opacity-100'}`}>
+                           <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: isSelected ? catColor : '#f1f5f9' }}>
+                             {isSelected ? <CheckCircle2 size={18} className="text-white" /> : <Plus size={18} className="text-slate-400" />}
+                           </div>
                         </div>
-                        <p className="text-sm" style={{ color: isSelected ? `${catColor}cc` : '#64748b' }}>{sub.desc}</p>
-                        {isSelected && (
-                          <div className="mt-3 pt-3 border-t" style={{ borderColor: `${catColor}30` }}>
-                            <p className="text-xs font-semibold" style={{ color: catColor }}>
-                              {formData.items.find(i => i.id === sub.id).selectedOptions.length} opções selecionadas
-                            </p>
-                          </div>
-                        )}
+
+                        <div className="flex justify-between items-start mb-2">
+                          <span className={`block text-lg font-black mb-1 ${isSelected ? '' : 'text-slate-700'}`} style={isSelected ? { color: catColor } : {}}>{sub.label}</span>
+                        </div>
+                        <p className="text-sm font-medium text-slate-400 leading-relaxed pr-8">{sub.desc}</p>
+                        <div className="mt-4 min-h-[28px] flex items-center">
+                          {isSelected && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50"
+                            >
+                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: catColor }} />
+                              <span className="text-xs font-bold text-slate-600">
+                                {formData.items.find(i => i.id === sub.id).selectedOptions.length} opções
+                              </span>
+                            </motion.div>
+                          )}
+                        </div>
                       </motion.button>
                     );
                   })}

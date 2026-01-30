@@ -1,0 +1,726 @@
+/* Achados e Perdidos Page Styles - Replicating Landing Page Style */
+:root {
+  --achados-teal: #007aff;
+  --achados-teal-hover: #0056cc;
+  --achados-teal-soft: #f0f9ff;
+  --achados-orange: #ff9500;
+  --achados-orange-hover: #e68600;
+  --achados-orange-soft: #fff8f0;
+  --achados-purple: #af52de;
+  --achados-purple-soft: #faf5ff;
+  --achados-bg: #ffffff;
+  --achados-bg-soft: #f2f2f7;
+  --achados-text: #1d1d1f;
+  --achados-text-light: #86868b;
+  --achados-border: #d1d1d6;
+  --achados-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --achados-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.12);
+  --achados-glass: rgba(255, 255, 255, 0.8);
+  --achados-glass-border: rgba(255, 255, 255, 0.2);
+}
+
+.achados-wrapper {
+  color: var(--achados-text);
+  background-color: var(--achados-bg);
+  scroll-behavior: smooth;
+  font-family: system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+.achados-section-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .achados-section-container {
+    padding: 0 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .achados-section-container {
+    padding: 0 3rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .achados-section-container {
+    padding: 0 4rem;
+  }
+}
+
+.achados-bg-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  opacity: 0.08;
+  background-image:
+    radial-gradient(circle at 20% 80%, var(--achados-teal) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, var(--achados-orange) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, var(--achados-purple) 0%, transparent 50%),
+    conic-gradient(from 0deg at 50% 50%, transparent, rgba(13, 148, 136, 0.1), transparent);
+  background-size: 800px 800px, 600px 600px, 400px 400px, 100% 100%;
+  animation: achados-mesh-rotate 60s linear infinite;
+  pointer-events: none;
+}
+
+/* Hero Section */
+.achados-hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 2rem 0 5rem;
+  overflow: hidden;
+  background: var(--achados-bg);
+  width: 100%;
+}
+
+.achados-hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.02) 0%, rgba(255, 149, 0, 0.02) 100%);
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+  .achados-hero-section {
+    padding: 3rem 0 8rem;
+  }
+}
+
+.achados-hero-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.achados-mesh-blob {
+  position: absolute;
+  width: 1000px;
+  height: 1000px;
+  border-radius: 50%;
+  filter: blur(140px);
+}
+
+.achados-mesh-blob.teal {
+  top: -25%;
+  right: -25%;
+  background: radial-gradient(circle at center, rgba(153, 246, 228, 0.6) 0%, rgba(153, 246, 228, 0.2) 50%, transparent 100%);
+  animation: achados-float-teal 20s ease-in-out infinite;
+}
+
+.achados-mesh-blob.orange {
+  bottom: -25%;
+  left: -25%;
+  background: radial-gradient(circle at center, rgba(255, 237, 213, 0.5) 0%, rgba(255, 237, 213, 0.2) 50%, transparent 100%);
+  animation: achados-float-orange 25s ease-in-out infinite;
+}
+
+.achados-hero-grid {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  gap: 3rem;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .achados-hero-grid {
+    grid-template-columns: 1.3fr 0.7fr;
+    gap: 6rem;
+  }
+}
+
+.achados-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1.5rem;
+  background: var(--achados-text);
+  color: white;
+  border-radius: 9999px;
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.achados-badge-icon {
+  color: #0ea5e9;
+  fill: #0ea5e9;
+}
+
+.achados-hero-title {
+  font-size: 3.75rem;
+  font-weight: 900;
+  color: var(--achados-text);
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  margin-bottom: 3rem;
+  margin-top: 0;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 2px 4px rgba(0, 0, 0, 0.02);
+  background: linear-gradient(135deg, var(--achados-text) 0%, rgba(15, 23, 42, 0.9) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@media (min-width: 1024px) {
+  .achados-hero-title {
+    font-size: 7.5rem;
+  }
+}
+
+.achados-title-accent {
+  color: #0ea5e9;
+  display: block;
+}
+
+@media (min-width: 640px) {
+  .achados-title-accent {
+    display: inline;
+  }
+}
+
+.achados-hero-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.achados-subtitle-line {
+  width: 6px;
+  height: 4rem;
+  background: #0ea5e9;
+  border-radius: 9999px;
+}
+
+.achados-subtitle-text {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--achados-text);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+@media (min-width: 1024px) {
+  .achados-subtitle-text {
+    font-size: 1.875rem;
+  }
+}
+
+.achados-text-highlight {
+  color: var(--achados-teal);
+  text-decoration: underline;
+  text-decoration-color: rgba(13, 148, 136, 0.3);
+  text-decoration-thickness: 8px;
+  text-underline-offset: 8px;
+}
+
+.achados-hero-description {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--achados-text-light);
+  line-height: 1.625;
+  margin-bottom: 4rem;
+  max-width: 36rem;
+}
+
+@media (min-width: 1024px) {
+  .achados-hero-description {
+    font-size: 1.5rem;
+  }
+}
+
+.achados-description-quote {
+  color: var(--achados-text);
+  font-weight: 900;
+  display: block;
+  margin-top: 1rem;
+  border-left: 4px solid rgba(14, 165, 233, 0.2);
+  padding-left: 1.5rem;
+  font-style: italic;
+}
+
+.achados-hero-cta-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+@media (min-width: 640px) {
+  .achados-hero-cta-wrapper {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.achados-hero-btn-primary {
+  width: 100%;
+  padding: 1.75rem 3rem;
+  background: var(--achados-teal);
+  color: white;
+  border-radius: 1rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--achados-shadow);
+}
+
+@media (min-width: 640px) {
+  .achados-hero-btn-primary {
+    width: auto;
+  }
+}
+
+.achados-hero-btn-primary:hover {
+  background: #0ea5e9;
+}
+
+.achados-btn-icon-wrapper {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.achados-hero-btn-primary:hover .achados-btn-icon-wrapper {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.achados-btn-arrow {
+  transition: transform 0.3s ease;
+}
+
+.achados-hero-btn-primary:hover .achados-btn-arrow {
+  transform: translateX(4px);
+}
+
+.achados-hero-stats-group {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.achados-stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.achados-stat-value {
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: var(--achados-text);
+  letter-spacing: -0.05em;
+}
+
+.achados-stat-desc {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--achados-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-top: 0.25rem;
+}
+
+.achados-stat-divider {
+  width: 1px;
+  height: 4rem;
+  background: var(--achados-border);
+}
+
+/* Hero Image */
+.achados-hero-image-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (min-width: 1024px) {
+  .achados-hero-image-wrapper {
+    right: 7rem;
+  }
+}
+
+.achados-main-image-frame {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 4/5;
+  border-radius: 50px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 12px solid white;
+  outline: 1px solid var(--achados-border);
+}
+
+@media (min-width: 1024px) {
+  .achados-main-image-frame {
+    max-width: 550px;
+    aspect-ratio: 3/4;
+  }
+}
+
+.achados-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 2s ease;
+}
+
+.achados-main-image-frame:hover .achados-hero-img {
+  transform: scale(1.1);
+}
+
+.achados-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(15, 23, 42, 0.8), transparent, transparent);
+  opacity: 0.6;
+  transition: opacity 0.7s ease;
+}
+
+.achados-main-image-frame:hover .achados-image-overlay {
+  opacity: 0.4;
+}
+
+.achados-image-caption {
+  position: absolute;
+  bottom: 6rem;
+  left: 1.5rem;
+  right: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.achados-caption-text {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.achados-floating-card {
+  position: absolute;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 1.25rem;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.5s ease;
+  min-width: 200px;
+}
+
+.achados-floating-card:hover {
+  transform: scale(1.05) translateY(-5px);
+  box-shadow: 0 35px 70px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+.achados-impact-card {
+  top: 2rem;
+  right: -2rem;
+  border-color: rgba(13, 148, 136, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+}
+
+.achados-geo-card {
+  bottom: 2rem;
+  left: -2rem;
+  border-color: rgba(249, 115, 22, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+}
+
+@media (min-width: 1024px) {
+  .achados-impact-card {
+    top: 0.5rem;
+    right: -4rem;
+  }
+
+  .achados-geo-card {
+    bottom: 0.5rem;
+    left: -4rem;
+  }
+
+  .achados-main-image-frame {
+    max-width: 550px;
+    aspect-ratio: 5/4;
+  }
+}
+
+.achados-card-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.achados-floating-card:hover .achados-card-icon {
+  transform: rotate(12deg);
+}
+
+.achados-card-icon.impact { background: #0ea5e9; }
+.achados-card-icon.geo { background: var(--achados-orange); }
+
+.achados-card-label {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: var(--achados-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.25rem 0;
+  line-height: 1;
+}
+
+.achados-card-value {
+  font-size: 1.125rem;
+  font-weight: 900;
+  color: var(--achados-text);
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1;
+}
+
+.achados-accent {
+  color: #0ea5e9;
+}
+
+.achados-decoration-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 100px;
+  z-index: -10;
+}
+
+.achados-decoration-ring.outer {
+  width: 120%;
+  height: 120%;
+  border: 2px solid rgba(13, 148, 136, 0.1);
+  animation: achados-spin 60s linear infinite;
+  box-shadow: 0 0 100px rgba(13, 148, 136, 0.05);
+}
+
+.achados-decoration-ring.inner {
+  width: 105%;
+  height: 105%;
+  border: 1px solid rgba(249, 115, 22, 0.15);
+  animation: achados-spin 40s linear infinite reverse;
+  box-shadow: 0 0 50px rgba(249, 115, 22, 0.03);
+}
+
+/* Action Cards Section */
+.achados-action-cards-section {
+  padding: 6rem 0;
+}
+
+@media (min-width: 1024px) {
+  .achados-action-cards-section {
+    padding: 10rem 0;
+  }
+}
+
+.achados-cards-grid {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 1024px) {
+  .achados-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.achados-action-card {
+  position: relative;
+  background: var(--achados-bg);
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--achados-border);
+  box-shadow: var(--achados-shadow);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .achados-action-card {
+    padding: 3rem;
+  }
+}
+
+.achados-action-card.teal:hover { box-shadow: 0 40px 80px -20px rgba(14, 165, 233, 0.1); }
+.achados-action-card.orange:hover { box-shadow: 0 40px 80px -20px rgba(249, 115, 22, 0.1); }
+.achados-action-card.purple:hover { box-shadow: 0 40px 80px -20px rgba(139, 92, 246, 0.1); }
+
+.achados-action-card-gradient {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+
+.achados-action-card.teal .achados-action-card-gradient { background: linear-gradient(to bottom right, rgba(14, 165, 233, 0.1), transparent); }
+.achados-action-card.orange .achados-action-card-gradient { background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), transparent); }
+.achados-action-card.purple .achados-action-card-gradient { background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.1), transparent); }
+
+.achados-action-card:hover .achados-action-card-gradient {
+  opacity: 1;
+}
+
+.achados-action-card-body {
+  position: relative;
+  z-index: 10;
+}
+
+.achados-action-card-icon {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transition: all 0.5s ease;
+}
+
+.achados-action-card.teal .achados-action-card-icon { background: var(--achados-teal); }
+.achados-action-card.orange .achados-action-card-icon { background: var(--achados-orange); }
+.achados-action-card.purple .achados-action-card-icon { background: var(--achados-purple); }
+
+.achados-action-card:hover .achados-action-card-icon {
+  transform: scale(1.05);
+}
+
+.achados-action-card-title {
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: var(--achados-text);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+@media (min-width: 1024px) {
+  .achados-action-card-title {
+    font-size: 2.25rem;
+  }
+}
+
+.achados-action-card-description {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--achados-text-light);
+  line-height: 1.625;
+  margin-bottom: 2.5rem;
+}
+
+.achados-action-card-button {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  border: 2px solid var(--achados-text);
+  background: transparent;
+  color: var(--achados-text);
+  font-weight: 900;
+  font-size: 1.125rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.achados-action-card.teal:hover .achados-action-card-button { background: #0ea5e9; border-color: #0ea5e9; color: white; }
+.achados-action-card.orange:hover .achados-action-card-button { background: var(--achados-orange); border-color: var(--achados-orange); color: white; }
+.achados-action-card.purple:hover .achados-action-card-button { background: var(--achados-purple); border-color: var(--achados-purple); color: white; }
+
+.achados-button-icon {
+  transition: transform 0.3s ease;
+}
+
+.achados-action-card-button:hover .achados-button-icon {
+  transform: translateX(4px);
+}
+
+.achados-action-card-sparkle {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  color: var(--achados-bg-soft);
+  opacity: 0;
+  transition: all 0.7s ease;
+  transform: translate(1rem, -1rem);
+}
+
+.achados-action-card:hover .achados-action-card-sparkle {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* Animations */
+@keyframes achados-mesh-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes achados-float-teal {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-30px, 20px) scale(1.1); }
+  66% { transform: translate(20px, -30px) scale(0.9); }
+}
+
+@keyframes achados-float-orange {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, -20px) scale(1.2); }
+}
+
+@keyframes achados-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}

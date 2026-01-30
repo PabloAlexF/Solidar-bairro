@@ -175,7 +175,6 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
             <span className="link-underline" />
           </button>
           <button className="nav-link" onClick={() => navigate('/achados-perdidos')}>
-            Achados e Perdidos
             <span className="link-underline" />
           </button>
           

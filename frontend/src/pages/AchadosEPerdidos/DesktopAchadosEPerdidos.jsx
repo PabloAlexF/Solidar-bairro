@@ -4,15 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatLocation } from '../../utils/addressUtils';
 import apiService from '../../services/apiService';
-import LandingHeader from '../../components/layout/LandingHeader';
-import { 
-  Search, 
-  Plus, 
-  MapPin, 
-  Calendar, 
-  Filter, 
-  X, 
-  Camera, 
+import {
+  Search,
+  Plus,
+  MapPin,
+  Calendar,
+  Filter,
+  X,
+  Camera,
   Package,
   Loader2,
   ChevronRight,
@@ -30,9 +29,12 @@ import {
   Heart,
   ArrowLeft,
   Bell,
-  User
+  User,
+  LogOut,
+  Settings
 } from 'lucide-react';
 import ThreeScene from '../../components/ThreeScene';
+import LandingHeader from '../../components/layout/LandingHeader';
 import './styles.css';
 
 const CATEGORIES = [
@@ -130,6 +132,156 @@ const ItemCard = ({ item, onOpenDetails, handleOpenChat, isPreview = false }) =>
   );
 };
 
+const Header = ({ notifications = [] }) => {
+  const { user, logout } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
+  
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleLogout = async () => {
+    if (logout) await logout();
+    navigate('/login');
+  };
+  
+  return (
+    <header className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-md border-b border-slate-200 h-20">
+      <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+        <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-200">
+            S
+          </div>
+          <span className="text-xl font-bold text-slate-900">Solidar</span>
+        </a>
+        
+        <nav className="hidden md:flex items-center gap-8">
+          <a href="/" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
+            Início
+          </a>
+          <a href="/chat" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
+            Mensagens
+          </a>
+          <a href="/perfil" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
+            Meu Perfil
+          </a>
+        </nav>
+
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="w-10 h-10 rounded-full bg-white border border-slate-200 text-slate-600 flex items-center justify-center hover:bg-slate-50 hover:text-blue-600 transition-all relative"
+            >
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            <AnimatePresence>
+              {showNotifications && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute top-full right-0 mt-2 w-80 bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/10 overflow-hidden z-50"
+                >
+                  <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                    <h3 className="font-bold text-white">Notificações</h3>
+                    {unreadCount > 0 && (
+                      <span className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-full border border-blue-500/20">
+                        {unreadCount} novas
+                      </span>
+                    )}
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                    {notifications.length > 0 ? (
+                      notifications.map((notif, i) => (
+                        <div key={i} className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors ${!notif.read ? 'bg-blue-500/10' : ''}`}>
+                          <div className="flex gap-3">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0 border border-blue-500/20">
+                              <Bell size={14} />
+                            </div>
+                            <div>
+                              <p className="text-sm text-white font-medium">{notif.title}</p>
+                              <p className="text-xs text-slate-400 mt-1">{notif.message}</p>
+                              <p className="text-[10px] text-slate-500 mt-2">{notif.time}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-8 text-center text-slate-500">
+                        <Bell size={32} className="mx-auto mb-3 opacity-20" />
+                        <p className="text-sm">Nenhuma notificação</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {user ? (
+            <div className="relative">
+              <button 
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-3 pl-6 border-l border-slate-200 hover:opacity-80 transition-opacity"
+              >
+                <div className="text-right hidden lg:block">
+                  <p className="text-sm font-bold text-slate-900">{user.nome || 'Usuário'}</p>
+                  <p className="text-xs text-slate-500">Ver Perfil</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-blue-600 text-white flex items-center justify-center font-bold shadow-md">
+                  {user.nome ? user.nome[0].toUpperCase() : <User size={20} />}
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {showUserMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50"
+                  >
+                    <div className="p-4 border-b border-slate-100 lg:hidden">
+                      <p className="font-bold text-slate-900">{user.nome || 'Usuário'}</p>
+                      <p className="text-xs text-slate-500">{user.email}</p>
+                    </div>
+                    <div className="p-2">
+                      <a href="/perfil" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600 rounded-xl transition-colors">
+                        <User size={18} /> Meu Perfil
+                      </a>
+                      <a href="/configuracoes" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600 rounded-xl transition-colors">
+                        <Settings size={18} /> Configurações
+                      </a>
+                      <div className="h-px bg-slate-100 my-1" />
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                      >
+                        <LogOut size={18} /> Sair
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <a href="/login" className="px-6 py-2.5 rounded-full bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+              Entrar
+            </a>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
+
 // --- Main Component ---
 export default function DesktopAchadosEPerdidos() {
   const navigate = useNavigate();
@@ -144,7 +296,6 @@ export default function DesktopAchadosEPerdidos() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [showImageError, setShowImageError] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -186,9 +337,6 @@ export default function DesktopAchadosEPerdidos() {
       }
     }
     
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    
     const loadNotifications = () => {
       const saved = localStorage.getItem('solidar-notifications');
       if (saved) {
@@ -202,9 +350,6 @@ export default function DesktopAchadosEPerdidos() {
     
     loadNotifications();
     
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
   }, [user]);
 
   const fetchItems = async () => {
@@ -652,8 +797,7 @@ export default function DesktopAchadosEPerdidos() {
   return (
     <div className="lost-found-wrapper">
       <div className="lf-bg-mesh"></div>
-      
-      <LandingHeader scrolled={scrolled} />
+      <LandingHeader />
       
       {/* Hero Section */}
       <header className="lf-header" style={{ paddingTop: '80px' }}>

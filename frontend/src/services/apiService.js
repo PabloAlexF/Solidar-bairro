@@ -153,6 +153,13 @@ const ApiService = {
     return this.request('/pedidos');
   },
 
+  async post(endpoint, data) {
+    return this.request(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
   async get(endpoint) {
     return this.request(endpoint);
   },
