@@ -2,8 +2,14 @@ const achadosPerdidosModel = require('../models/achadosPerdidosModel');
 
 class AchadosPerdidosService {
   async createItem(data, userId) {
-    // Validação básica
-    if (!data.title || !data.description || !data.category || !data.type || !data.contact_info) {
+    // Validação básica com verificação de tipo
+    if (!data.title || typeof data.title !== 'string' || !data.title.trim()) {
+      throw new Error('Título é obrigatório e deve ser uma string válida');
+    }
+    if (!data.description || typeof data.description !== 'string' || !data.description.trim()) {
+      throw new Error('Descrição é obrigatória e deve ser uma string válida');
+    }
+    if (!data.category || !data.type || !data.contact_info) {
       throw new Error('Campos obrigatórios: title, description, category, type, contact_info');
     }
 
@@ -20,18 +26,18 @@ class AchadosPerdidosService {
       throw new Error('Categoria inválida');
     }
 
-    // Preparar dados para salvar
+    // Preparar dados para salvar com validação de tipos
     const itemData = {
       title: data.title.trim(),
       description: data.description.trim(),
       category: data.category,
       type: data.type,
-      location: data.location?.trim() || '',
+      location: (data.location && typeof data.location === 'string') ? data.location.trim() : '',
       date_occurrence: data.date_occurrence || new Date().toISOString().split('T')[0],
-      contact_info: data.contact_info.trim(),
+      contact_info: (typeof data.contact_info === 'string') ? data.contact_info.trim() : String(data.contact_info).trim(),
       image_url: data.image_url || '',
-      reward: data.reward?.trim() || '',
-      tags: Array.isArray(data.tags) ? data.tags.filter(tag => tag.trim()) : [],
+      reward: (data.reward && typeof data.reward === 'string') ? data.reward.trim() : (data.reward ? String(data.reward).trim() : ''),
+      tags: Array.isArray(data.tags) ? data.tags.filter(tag => typeof tag === 'string' && tag.trim()) : [],
       user_id: userId,
       city: data.city || '',
       state: data.state || '',
@@ -64,13 +70,17 @@ class AchadosPerdidosService {
     }
 
     const updateData = {};
-    if (data.title) updateData.title = data.title.trim();
-    if (data.description) updateData.description = data.description.trim();
-    if (data.location) updateData.location = data.location.trim();
-    if (data.contact_info) updateData.contact_info = data.contact_info.trim();
+    if (data.title && typeof data.title === 'string') updateData.title = data.title.trim();
+    if (data.description && typeof data.description === 'string') updateData.description = data.description.trim();
+    if (data.location && typeof data.location === 'string') updateData.location = data.location.trim();
+    if (data.contact_info && typeof data.contact_info === 'string') updateData.contact_info = data.contact_info.trim();
     if (data.image_url !== undefined) updateData.image_url = data.image_url;
-    if (data.reward !== undefined) updateData.reward = data.reward.trim();
-    if (data.tags) updateData.tags = Array.isArray(data.tags) ? data.tags.filter(tag => tag.trim()) : [];
+    if (data.reward !== undefined) {
+      updateData.reward = (typeof data.reward === 'string') ? data.reward.trim() : String(data.reward).trim();
+    }
+    if (data.tags && Array.isArray(data.tags)) {
+      updateData.tags = data.tags.filter(tag => typeof tag === 'string' && tag.trim());
+    }
 
     return await achadosPerdidosModel.update(id, updateData);
   }

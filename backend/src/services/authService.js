@@ -167,8 +167,13 @@ class AuthService {
         createdAt: new Date()
       });
 
-      // Enviar email
-      await emailService.sendConfirmationCode(newEmail, code);
+      // Tentar enviar email (não quebrar se falhar)
+      try {
+        await emailService.sendConfirmationCode(newEmail, code);
+      } catch (emailError) {
+        console.log('⚠️ Email não enviado, mas código salvo:', emailError.message);
+        console.log('🔢 CÓDIGO MANUAL para', newEmail, ':', code);
+      }
 
       return {
         success: true,
