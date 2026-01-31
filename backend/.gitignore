@@ -12,3 +12,19 @@ build/
 serviceAccountKey.json
 .firebase/
 firebase-debug.log
+
+# Arquivos Python desnecessários
+*.py
+*.pyc
+__pycache__/
+requirements.txt
+
+# Arquivos de teste temporários
+test-*.js
+teste-*.js
+debug-*.js
+create-test-*.js
+verificar-*.js
+check-*.js
+run-*.js
+simple-*.js

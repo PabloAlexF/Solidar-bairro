@@ -24,7 +24,8 @@ import {
   HandHelping,
   Palette,
   Bell,
-  Sparkles
+  Sparkles,
+  Mail
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -82,6 +83,11 @@ const ProfileComponent = () => {
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [ajudasConcluidas, setAjudasConcluidas] = useState(0);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailChangeStep, setEmailChangeStep] = useState('input');
+  const [newEmail, setNewEmail] = useState('');
+  const [emailVerificationCode, setEmailVerificationCode] = useState('');
+  const [isSendingCode, setIsSendingCode] = useState(false);
   const [pontos, setPontos] = useState(0);
   const [pedidosCriados, setPedidosCriados] = useState(0);
   
@@ -139,7 +145,7 @@ const ProfileComponent = () => {
   }, [accentColor]);
 
   useEffect(() => {
-    if (isSettingsOpen || isEditingBanner || isViewingHistory || isPhoneModalOpen) {
+    if (isSettingsOpen || isEditingBanner || isViewingHistory || isPhoneModalOpen || isEmailModalOpen) {
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
       setTimeout(() => {
@@ -157,7 +163,7 @@ const ProfileComponent = () => {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
     };
-  }, [isSettingsOpen, isEditingBanner, isViewingHistory, isPhoneModalOpen]);
+  }, [isSettingsOpen, isEditingBanner, isViewingHistory, isPhoneModalOpen, isEmailModalOpen]);
 
   if (!user) {
     return (
@@ -198,8 +204,63 @@ const ProfileComponent = () => {
     }
   };
 
+  const handleSendEmailCode = async () => {
+    if (!newEmail || !newEmail.includes('@')) {
+      toast.error('Por favor, insira um e-mail válido.');
+      return;
+    }
+    
+    setIsSendingCode(true);
+    try {
+      const response = await apiService.requestEmailChange(user.uid || user.id, newEmail);
+      if (response.success) {
+        setEmailChangeStep('verify');
+        toast.success('Código de verificação enviado para o novo e-mail!');
+      } else {
+        throw new Error(response.error || 'Erro ao enviar código.');
+      }
+    } catch (error) {
+      console.error('Erro ao solicitar troca de email:', error);
+      toast.error(error.message || 'Erro ao solicitar alteração.');
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
+  const handleVerifyEmailCode = async () => {
+    if (!emailVerificationCode || emailVerificationCode.length < 4) {
+      toast.error('Código inválido.');
+      return;
+    }
+
+    setIsSendingCode(true);
+    try {
+      const response = await apiService.confirmEmailChange(user.uid || user.id, newEmail, emailVerificationCode);
+      if (response.success) {
+        updateUser({ ...user, email: newEmail });
+        setEmail(newEmail);
+        setIsEmailModalOpen(false);
+        toast.success('E-mail alterado com sucesso!');
+      } else {
+        throw new Error(response.error || 'Código incorreto.');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar código:', error);
+      toast.error(error.message || 'Erro ao verificar código.');
+    } finally {
+      setIsSendingCode(false);
+    }
+  };
+
   const handleSecurityAction = (action) => {
-    toast.success(`${action} solicitado com sucesso!`);
+    if (action === "Alterar E-mail") {
+      setIsEmailModalOpen(true);
+      setEmailChangeStep('input');
+      setNewEmail('');
+      setEmailVerificationCode('');
+    } else {
+      toast.success(`${action} solicitado com sucesso!`);
+    }
   };
 
   const handleAvatarChange = () => {
@@ -901,6 +962,105 @@ const ProfileComponent = () => {
                   Receber Código SMS
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isEmailModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsEmailModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Alterar E-mail</h3>
+              <button className="close-btn" onClick={() => setIsEmailModalOpen(false)}><X size={24} /></button>
+            </div>
+            <div className="settings-body">
+              {emailChangeStep === 'input' ? (
+                <>
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <Mail size={30} color="#10b981" />
+                    </div>
+                    <h4 style={{ marginBottom: '8px', color: 'var(--text-main)' }}>Novo endereço de e-mail</h4>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
+                      Enviaremos um código de verificação para confirmar que este e-mail pertence a você.
+                    </p>
+                    
+                    <div style={{ textAlign: 'left', marginBottom: '24px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-main)' }}>E-mail</label>
+                      <input 
+                        type="email" 
+                        placeholder="exemplo@email.com" 
+                        className="input-field"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                        autoFocus
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setIsEmailModalOpen(false)}>Cancelar</button>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ flex: 1, justifyContent: 'center' }} 
+                        onClick={handleSendEmailCode}
+                        disabled={isSendingCode}
+                      >
+                        {isSendingCode ? 'Enviando...' : 'Enviar Código'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                      <ShieldCheck size={30} color="#10b981" />
+                    </div>
+                    <h4 style={{ marginBottom: '8px', color: 'var(--text-main)' }}>Verifique seu e-mail</h4>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
+                      Digite o código de 6 dígitos enviado para <br/><strong>{newEmail}</strong>
+                    </p>
+                    
+                    <div style={{ marginBottom: '24px' }}>
+                      <input 
+                        type="text" 
+                        placeholder="000000" 
+                        className="input-field"
+                        value={emailVerificationCode}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                          setEmailVerificationCode(val);
+                        }}
+                        style={{ 
+                          width: '200px', 
+                          padding: '12px', 
+                          borderRadius: '8px', 
+                          border: '1px solid var(--border-color)',
+                          textAlign: 'center',
+                          fontSize: '1.5rem',
+                          letterSpacing: '0.5rem',
+                          fontWeight: 'bold'
+                        }}
+                        maxLength={6}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEmailChangeStep('input')}>Voltar</button>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ flex: 1, justifyContent: 'center' }} 
+                        onClick={handleVerifyEmailCode}
+                        disabled={isSendingCode || emailVerificationCode.length < 6}
+                      >
+                        {isSendingCode ? 'Verificando...' : 'Confirmar'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

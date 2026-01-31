@@ -1,9 +1,21 @@
 const familiaService = require('../services/familiaService');
+const emailService = require('../services/emailService');
 
 class FamiliaController {
   async createFamilia(req, res) {
     try {
       const familia = await familiaService.createFamilia(req.body);
+
+      // Enviar email de boas-vindas
+      try {
+        const nome = req.body.nomeCompleto || req.body.nome;
+        await emailService.sendWelcomeEmail(req.body.email, nome);
+        console.log('Email de boas-vindas enviado para:', req.body.email);
+      } catch (emailError) {
+        console.error('Erro ao enviar email de boas-vindas:', emailError);
+        // Não falhar o cadastro por causa do email
+      }
+
       res.status(201).json({ success: true, data: familia });
     } catch (error) {
       res.status(400).json({ success: false, error: error.message });

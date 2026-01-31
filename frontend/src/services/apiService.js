@@ -300,6 +300,20 @@ const ApiService = {
     return this.request(`/users/${id}`);
   },
 
+  async requestEmailChange(userId, newEmail) {
+    return this.request(`/users/${userId}/request-email-change`, {
+      method: 'POST',
+      body: JSON.stringify({ newEmail })
+    });
+  },
+
+  async confirmEmailChange(userId, newEmail, code) {
+    return this.request(`/users/${userId}/confirm-email-change`, {
+      method: 'POST',
+      body: JSON.stringify({ newEmail, code })
+    });
+  },
+
   async getPedido(id) {
     return this.request(`/pedidos/${id}`);
   },

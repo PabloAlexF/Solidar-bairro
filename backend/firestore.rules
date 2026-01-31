@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regras básicas - ajuste conforme necessário
+    match /{document=**} {
+      allow read, write: if true; // ATENÇÃO: Muito permissivo, ajustar para produção
+    }
+  }
+}

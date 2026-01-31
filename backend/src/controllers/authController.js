@@ -79,6 +79,68 @@ class AuthController {
       });
     }
   }
+
+  async requestEmailChange(req, res) {
+    try {
+      const { userId } = req.params;
+      const { newEmail } = req.body;
+
+      if (!newEmail || !newEmail.includes('@')) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email inválido'
+        });
+      }
+
+      // Verificar se o usuário autenticado é o mesmo que está fazendo a solicitação
+      if (req.user.id !== userId) {
+        return res.status(403).json({
+          success: false,
+          error: 'Acesso negado'
+        });
+      }
+
+      const result = await authService.sendConfirmationCode(userId, newEmail);
+      res.json(result);
+    } catch (error) {
+      console.error('Erro ao solicitar mudança de email:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async confirmEmailChange(req, res) {
+    try {
+      const { userId } = req.params;
+      const { newEmail, code } = req.body;
+
+      if (!newEmail || !code) {
+        return res.status(400).json({
+          success: false,
+          error: 'Email e código são obrigatórios'
+        });
+      }
+
+      // Verificar se o usuário autenticado é o mesmo que está fazendo a solicitação
+      if (req.user.id !== userId) {
+        return res.status(403).json({
+          success: false,
+          error: 'Acesso negado'
+        });
+      }
+
+      const result = await authService.verifyConfirmationCode(userId, newEmail, code);
+      res.json(result);
+    } catch (error) {
+      console.error('Erro ao confirmar mudança de email:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new AuthController();

@@ -5,6 +5,7 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import { Heart, Bell, User, LogOut, Settings, Globe, ArrowLeft } from 'lucide-react';
 import chatNotificationService from '../../services/chatNotificationService';
 import ApiService from '../../services/apiService';
+import apiService from '../../services/apiService';
 import './LandingHeader.css';
 
 const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastroButtons = false }) => {
@@ -103,58 +104,27 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
   }, [showUserMenu, showNotifications, isAuthenticated, user, addChatNotification]);
 
   useEffect(() => {
-    if (user) {
-      // Inicializa com dados do contexto se disponíveis, verificando ambas as convenções de nomenclatura
-      setUserStats({
-        helpedCount: Number(user.helpedCount || user.helped_count || user.ajudas_prestadas || 0),
-        receivedHelpCount: Number(user.receivedHelpCount || user.received_help_count || user.ajudas_recebidas || 0)
-      });
-
-      const fetchStats = async () => {
+    // Load user stats
+    const loadUserStats = async () => {
+      if (user?.uid || user?.id) {
         try {
-          const userId = user.uid || user.id;
-          if (!userId) return;
+          // Buscar pedidos do usuário (ajudas recebidas)
+          const pedidosResponse = await apiService.getMeusPedidos();
+          const receivedHelpCount = pedidosResponse?.data?.length || 0;
 
-          console.log('[LandingHeader] Fetching stats for user:', userId);
-          const response = await ApiService.get(`/users/${userId}`);
-          console.log('[LandingHeader] Stats response:', response);
+          // Buscar interesses do usuário (pessoas ajudadas)
+          const interessesResponse = await apiService.getMeusInteresses();
+          const helpedCount = interessesResponse?.data?.length || 0;
 
-          if (response.success && response.data) {
-            const userData = response.data;
-            console.log('[LandingHeader] Full user data from API:', userData);
-
-            // Robust parsing for stats
-            const helped = Number(
-              userData.helpedCount ?? 
-              userData.helped_count ?? 
-              userData.helped ?? 
-              userData.ajudas_prestadas ?? 
-              userData.pessoas_ajudadas ?? 
-              0
-            );
-            const received = Number(
-              userData.receivedHelpCount ?? 
-              userData.received_help_count ?? 
-              userData.received ?? 
-              userData.ajudas_recebidas ?? 
-              0
-            );
-            
-            console.log('[LandingHeader] Parsed stats:', { helped, received });
-
-            setUserStats({
-              helpedCount: isNaN(helped) ? 0 : helped,
-              receivedHelpCount: isNaN(received) ? 0 : received
-            });
-          }
+          setUserStats({ helpedCount, receivedHelpCount });
         } catch (error) {
-          console.error('[LandingHeader] Error fetching user stats:', error);
+          console.error('Erro ao carregar estatísticas:', error);
         }
-      };
-      
-      if (isAuthenticated()) {
-        fetchStats();
       }
+    };
+
+    if (isAuthenticated()) {
+      loadUserStats();
     }
   }, [user, isAuthenticated]);
 

@@ -1,22 +1,13 @@
-# TODO - Database Chat Issue Fix
+# Email Confirmation Implementation
 
-## Issue
-- Error when starting chat from "Quero Ajudar" page: "TypeError: _services_apiService__WEBPACK_IMPORTED_MODULE_10__.default.post is not a function"
-
-## Root Cause
-- Frontend code was calling `ApiService.post()` method which didn't exist in the ApiService
-- ApiService only had specific methods like `createConversation()`, but not a generic `post()` method
-
-## Fix Applied
-- ✅ Added generic `post(endpoint, data)` method to ApiService in `Frontend/src/services/apiService.js`
-- ✅ This allows the frontend to call `ApiService.post('/chat/conversations', conversationData)` successfully
-
-## Testing
-- ✅ Code syntax verified
-- ✅ Backend routes and controllers confirmed working
-- ⏳ Manual testing needed: Start servers and test chat creation flow from "Quero Ajudar" page
-
-## Status
-- ✅ **ISSUE RESOLVED** - The TypeError has been fixed
-- ✅ Code changes applied successfully
-- ✅ Ready for manual testing
+## Tasks
+- [x] Add nodemailer dependency to package.json
+- [x] Create emailService.js for handling email sending
+- [x] Add confirmation code generation, sending, and verification methods to authService.js
+- [x] Add controller methods for sending confirmation code and verifying it in authController.js
+- [x] Add new routes for email confirmation in userRoutes.js
+- [x] Store confirmation codes temporarily in Firestore with expiration
+- [x] Install new dependencies
+- [x] Test email sending functionality
+- [x] Verify code expiration and security
+- [x] Integrate welcome email sending in all registration controllers (cidadao, familia, ong, comercio)

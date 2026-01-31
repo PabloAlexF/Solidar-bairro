@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwtUtils = require('../utils/jwt');
 const firebase = require('../config/firebase');
+const emailService = require('./emailService');
 
 class AuthService {
   constructor() {
@@ -134,6 +136,130 @@ class AuthService {
 
   async hashPassword(password) {
     return await bcrypt.hash(password, 10);
+  }
+
+  // Gerar código de confirmação de 6 dígitos
+  generateConfirmationCode() {
+    return crypto.randomInt(100000, 999999).toString();
+  }
+
+  // Enviar código de confirmação por email
+  async sendConfirmationCode(userId, newEmail) {
+    try {
+      console.log('Enviando código de confirmação para:', newEmail);
+
+      // Verificar se o usuário existe
+      const userData = await this.getUserDataById(userId);
+      if (!userData) {
+        throw new Error('Usuário não encontrado');
+      }
+
+      // Gerar código
+      const code = this.generateConfirmationCode();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+
+      // Salvar código no Firestore
+      await this.db.collection('emailConfirmations').doc(userId).set({
+        userId,
+        newEmail,
+        code,
+        expiresAt,
+        createdAt: new Date()
+      });
+
+      // Enviar email
+      await emailService.sendConfirmationCode(newEmail, code);
+
+      return {
+        success: true,
+        message: 'Código de confirmação enviado com sucesso'
+      };
+    } catch (error) {
+      console.error('Erro ao enviar código de confirmação:', error);
+      throw error;
+    }
+  }
+
+  // Verificar código de confirmação
+  async verifyConfirmationCode(userId, newEmail, code) {
+    try {
+      console.log('Verificando código de confirmação para usuário:', userId);
+
+      // Buscar código no Firestore
+      const confirmationDoc = await this.db.collection('emailConfirmations').doc(userId).get();
+
+      if (!confirmationDoc.exists) {
+        throw new Error('Código de confirmação não encontrado');
+      }
+
+      const confirmationData = confirmationDoc.data();
+
+      // Verificar se o código expirou
+      if (confirmationData.expiresAt.toDate() < new Date()) {
+        // Remover código expirado
+        await this.db.collection('emailConfirmations').doc(userId).delete();
+        throw new Error('Código de confirmação expirado');
+      }
+
+      // Verificar código e email
+      if (confirmationData.code !== code || confirmationData.newEmail !== newEmail) {
+        throw new Error('Código de confirmação inválido');
+      }
+
+      // Atualizar email do usuário
+      const userData = await this.getUserDataById(userId);
+      if (!userData) {
+        throw new Error('Usuário não encontrado');
+      }
+
+      // Determinar coleção baseada no tipo
+      let collectionName;
+      if (userData.tipo === 'admin') {
+        collectionName = 'admins';
+      } else {
+        collectionName = userData.tipo + 's'; // cidadaos, comercios, ongs, familias
+      }
+
+      // Atualizar email
+      await this.db.collection(collectionName).doc(userId).update({
+        email: newEmail,
+        updatedAt: new Date()
+      });
+
+      // Remover código usado
+      await this.db.collection('emailConfirmations').doc(userId).delete();
+
+      return {
+        success: true,
+        message: 'Email atualizado com sucesso'
+      };
+    } catch (error) {
+      console.error('Erro ao verificar código de confirmação:', error);
+      throw error;
+    }
+  }
+
+  // Buscar dados do usuário por ID
+  async getUserDataById(userId) {
+    const collections = ['admins', 'cidadaos', 'comercios', 'ongs', 'familias'];
+
+    for (const collection of collections) {
+      try {
+        const doc = await this.db.collection(collection).doc(userId).get();
+        if (doc.exists) {
+          const data = doc.data();
+          return {
+            uid: doc.id,
+            ...data,
+            tipo: collection === 'admins' ? 'admin' : collection.slice(0, -1)
+          };
+        }
+      } catch (error) {
+        console.log(`Erro ao buscar em ${collection}:`, error.message);
+      }
+    }
+
+    return null;
   }
 }
 

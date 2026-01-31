@@ -5,6 +5,16 @@ class ONGController {
   async createONG(req, res) {
     try {
       const result = await ongService.createONG(req.body);
+
+      // Enviar email de boas-vindas
+      try {
+        await emailService.sendWelcomeEmail(req.body.email, req.body.nome);
+        console.log('Email de boas-vindas enviado para:', req.body.email);
+      } catch (emailError) {
+        console.error('Erro ao enviar email de boas-vindas:', emailError);
+        // Não falhar o cadastro por causa do email
+      }
+
       res.status(201).json({ success: true, data: result });
     } catch (error) {
       res.status(400).json({ success: false, error: error.message });
