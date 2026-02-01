@@ -5,6 +5,7 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import apiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
 import LogoutButton from '../LogoutButton';
+import logo from '../../assets/images/marca.png';
 import '../../styles/components/Header.css';
 
 const Header = ({ showLoginButton = false }) => {
@@ -132,7 +133,7 @@ const Header = ({ showLoginButton = false }) => {
         <div className="header-content">
           <div className="logo" onClick={() => navigate('/')}>
             <div className="logo-icon">
-              <i className="fi fi-rr-heart"></i>
+              <img src={logo} alt="SolidarBrasil" style={{ width: '40px', height: '40px' }} />
             </div>
             <span className="logo-text">
               Solidar<span className="logo-accent">Brasil</span>

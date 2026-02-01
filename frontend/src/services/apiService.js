@@ -1,8 +1,32 @@
 import { API_CONFIG, VALIDATION_CONFIG } from '../config';
+import SecurityMiddleware from '../utils/securityMiddleware';
 
 const ApiService = {
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
+
+  // Validação de segurança antes de requisições
+  validateRequest(endpoint, data = null) {
+    // Validar endpoint
+    if (!endpoint || typeof endpoint !== 'string') {
+      throw new Error('Endpoint inválido');
+    }
+    
+    // Prevenir path traversal
+    if (endpoint.includes('..') || endpoint.includes('//')) {
+      throw new Error('Endpoint contém caracteres suspeitos');
+    }
+    
+    // Validar dados se fornecidos
+    if (data && typeof data === 'object') {
+      const integrity = SecurityMiddleware.verifyDataIntegrity(data);
+      if (!integrity.valid) {
+        throw new Error(integrity.error);
+      }
+    }
+    
+    return true;
+  },
 
   async refreshToken() {
     const refreshToken = localStorage.getItem('solidar-refresh-token');
@@ -38,12 +62,16 @@ const ApiService = {
   },
 
   async request(endpoint, options = {}, retryCount = 0, isRetry = false) {
+    // Validação de segurança
+    this.validateRequest(endpoint, options.body ? JSON.parse(options.body) : null);
+    
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem('solidar-token');
 
     const config = {
       headers: {
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest', // Header de segurança adicional
         ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
@@ -88,7 +116,8 @@ const ApiService = {
 
       if (!response.ok) {
         console.error('Erro na API:', data);
-        throw new Error(data.error || `Erro HTTP: ${response.status}`);
+        const secureError = SecurityMiddleware.handleSecureError(new Error(data.error || `Erro HTTP: ${response.status}`));
+        throw new Error(secureError.message);
       }
 
       return data;

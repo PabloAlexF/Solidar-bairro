@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationDropdown } from '../NotificationDropdown';
 import { SecurityUtils } from '../../utils/security';
+import logo from '../../assets/images/marca.png';
 import { 
   Menu, 
   X, 
@@ -36,7 +37,7 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
       <aside className={`mob-sidebar ${mobileMenuOpen ? "mob-open" : ""}`}>
         <div className="mob-sidebar-header">
           <div className="mob-logo">
-            <Heart size={24} />
+            <img src={logo} alt="SolidarBrasil" style={{ width: '40px', height: '40px' }} />
             <span>SolidarBrasil</span>
           </div>
         </div>
@@ -86,7 +87,11 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
           <Menu size={24} />
         </button>
         <div className="mob-header-title">
-          <h1>{title}</h1>
+          {title === "SolidarBrasil" ? (
+            <img src={logo} alt="SolidarBrasil" style={{ height: '36px' }} />
+          ) : (
+            <h1>{title}</h1>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <NotificationDropdown />

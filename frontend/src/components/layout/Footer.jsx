@@ -1,5 +1,6 @@
 import React from 'react';
 import { Heart } from 'lucide-react';
+import logo from '../../assets/images/marca.png';
 import './Footer.css';
 
 const Footer = () => {
@@ -9,7 +10,7 @@ const Footer = () => {
         <div className="footer-main">
           <div className="footer-brand">
             <div className="logo-wrapper">
-              <Heart className="heart-icon" fill="#0d9488" size={32} />
+              <img src={logo} alt="SolidarBrasil" style={{ width: '48px', height: '48px' }} />
               <span className="logo-name">SolidarBrasil</span>
             </div>
             <p className="footer-tagline">
@@ -28,7 +29,7 @@ const Footer = () => {
             <div className="footer-column">
               <h4 className="column-title">Contato</h4>
               <p className="column-text">
-                📧 Email: <a href="mailto:solidarbrasil@gmail.com">solidarbrasil@gmail.com</a><br/>
+                📧 Email: <a href="mailto:contato@solidarbrasil.com">contato@solidarbrasil.com</a><br/>
                 📱 Telefone: <a href="tel:+5531925383871">(31) 9253-8371</a>
               </p>
             </div>
