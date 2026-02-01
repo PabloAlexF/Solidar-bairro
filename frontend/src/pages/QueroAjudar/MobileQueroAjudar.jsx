@@ -148,11 +148,12 @@ export const MobileQueroAjudar = () => {
     const loadLocation = async () => {
       try {
         const location = await getCurrentLocation();
+        console.log('Localização obtida:', location);
         setUserLocation(location);
       } catch (error) {
         console.warn('Erro ao obter localização:', error);
-        // Fallback para São Paulo
-        setUserLocation({ city: 'São Paulo', state: 'SP' });
+        // Usar localização genérica apenas se realmente não conseguir obter
+        setUserLocation({ city: 'Sua Cidade', state: 'Seu Estado' });
       } finally {
         setLocationLoading(false);
       }
@@ -447,7 +448,15 @@ export const MobileQueroAjudar = () => {
 
   return (
     <div className="qa-page-mobile" style={{ background: '#f8fafc', minHeight: '100vh', paddingBottom: '20px' }}>
-      <div style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid #e2e8f0' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 1000 }}>
+        <div style={{ 
+          position: 'absolute', 
+          inset: 0, 
+          background: 'rgba(255,255,255,0.95)', 
+          backdropFilter: 'blur(10px)', 
+          borderBottom: '1px solid #e2e8f0',
+          zIndex: -1
+        }} />
         <MobileHeader title="Quero Ajudar" />
         
         <div style={{ padding: '12px 16px 4px 16px' }}>
@@ -585,8 +594,14 @@ export const MobileQueroAjudar = () => {
                             if (!createdAt || isNaN(createdAt.getTime())) return 'Recente';
                             const now = new Date();
                             const diffMs = now - createdAt;
+                            const diffMinutes = Math.floor(diffMs / (1000 * 60));
                             const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                            
+                            if (diffMinutes < 1) return 'Agora';
+                            if (diffMinutes < 60) return `Há ${diffMinutes} min`;
                             if (diffHours < 24) return `Há ${diffHours}h`;
+                            if (diffDays < 7) return `Há ${diffDays} dia${diffDays > 1 ? 's' : ''}`;
                             return createdAt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
                           })()}
                         </div>
@@ -652,107 +667,129 @@ export const MobileQueroAjudar = () => {
         </AnimatePresence>
       </div>
 
-      {showFiltersModal && (
-        <div className="bottom-sheet-overlay" onClick={() => setShowFiltersModal(false)}>
-          <div 
-            className="bottom-sheet" 
-            onClick={e => e.stopPropagation()}
-            style={{
-              animation: 'slideUp 0.3s ease-out'
-            }}
+      <AnimatePresence>
+        {showFiltersModal && (
+          <motion.div 
+            className="bottom-sheet-overlay" 
+            onClick={() => setShowFiltersModal(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ zIndex: 2000 }}
           >
-            <div className="sheet-header">
-              <div className="sheet-handle" />
-              <div className="sheet-title-row">
-                <h2>Filtros</h2>
-                <button onClick={() => setShowFiltersModal(false)}><X size={20} /></button>
-              </div>
-            </div>
-            <div className="sheet-content">
-              <div className="sheet-section">
-                <h4>Localização</h4>
-                <div className="pills-grid-mobile">
-                  <button className={`pill-mobile ${selectedLocation === 'brasil' ? 'active' : ''}`} onClick={() => setSelectedLocation('brasil')}>Brasil</button>
-                  {userLocation && (
-                    <>
-                      <button className={`pill-mobile ${selectedLocation === 'meu_estado' ? 'active' : ''}`} onClick={() => setSelectedLocation('meu_estado')}>{userLocation.state}</button>
-                      <button className={`pill-mobile ${selectedLocation === 'minha_cidade' ? 'active' : ''}`} onClick={() => setSelectedLocation('minha_cidade')}>{userLocation.city}</button>
-                    </>
-                  )}
+            <motion.div 
+              className="bottom-sheet" 
+              onClick={e => e.stopPropagation()}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            >
+              <div className="sheet-header">
+                <div className="sheet-handle" />
+                <div className="sheet-title-row">
+                  <h2>Filtros</h2>
+                  <button onClick={() => setShowFiltersModal(false)}><X size={20} /></button>
                 </div>
               </div>
-              <div className="sheet-section">
-                <h4>Categorias</h4>
-                <div className="pills-grid-mobile">
-                  {CATEGORIES.map(cat => (
-                    <button 
-                      key={cat.id} 
-                      className={`pill-mobile ${selectedCat === cat.id ? 'active' : ''}`}
-                      onClick={() => setSelectedCat(cat.id)}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
+              <div className="sheet-content">
+                <div className="sheet-section">
+                  <h4>Localização</h4>
+                  <div className="pills-grid-mobile">
+                    <button className={`pill-mobile ${selectedLocation === 'brasil' ? 'active' : ''}`} onClick={() => setSelectedLocation('brasil')}>Brasil</button>
+                    {userLocation && userLocation.city !== 'Sua Cidade' ? (
+                      <>
+                        <button className={`pill-mobile ${selectedLocation === 'meu_estado' ? 'active' : ''}`} onClick={() => setSelectedLocation('meu_estado')}>{userLocation.state}</button>
+                        <button className={`pill-mobile ${selectedLocation === 'minha_cidade' ? 'active' : ''}`} onClick={() => setSelectedLocation('minha_cidade')}>{userLocation.city}</button>
+                      </>
+                    ) : (
+                      <button className="pill-mobile" disabled style={{ opacity: 0.5 }}>Localização indisponível</button>
+                    )}
+                  </div>
+                </div>
+                <div className="sheet-section">
+                  <h4>Categorias</h4>
+                  <div className="pills-grid-mobile">
+                    {CATEGORIES.map(cat => (
+                      <button 
+                        key={cat.id} 
+                        className={`pill-mobile ${selectedCat === cat.id ? 'active' : ''}`}
+                        onClick={() => setSelectedCat(cat.id)}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="sheet-section">
+                  <h4>Urgência</h4>
+                  <div className="pills-grid-mobile">
+                    {URGENCY_OPTIONS.map(urg => (
+                      <button 
+                        key={urg.id} 
+                        className={`pill-mobile ${selectedUrgency === urg.id ? 'active' : ''}`}
+                        onClick={() => setSelectedUrgency(selectedUrgency === urg.id ? null : urg.id)}
+                      >
+                        {urg.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div className="sheet-section">
-                <h4>Urgência</h4>
-                <div className="pills-grid-mobile">
-                  {URGENCY_OPTIONS.map(urg => (
-                    <button 
-                      key={urg.id} 
-                      className={`pill-mobile ${selectedUrgency === urg.id ? 'active' : ''}`}
-                      onClick={() => setSelectedUrgency(selectedUrgency === urg.id ? null : urg.id)}
-                    >
-                      {urg.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="sheet-footer">
-              <button className="btn-apply-mobile" onClick={() => setShowFiltersModal(false)}>
-                Aplicar Filtros
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAccessibility && (
-        <div className="bottom-sheet-overlay" onClick={() => setShowAccessibility(false)}>
-          <div 
-            className="bottom-sheet" 
-            onClick={e => e.stopPropagation()}
-            style={{
-              animation: 'slideUp 0.3s ease-out'
-            }}
-          >
-            <div className="sheet-header">
-              <div className="sheet-handle" />
-              <div className="sheet-title-row">
-                <h2>Acessibilidade</h2>
-                <button onClick={() => setShowAccessibility(false)}><X size={20} /></button>
-              </div>
-            </div>
-            <div className="sheet-content">
-              <div className="sheet-section">
-                <h4>Tamanho da Fonte</h4>
-                <div className="font-options-mobile">
-                  <button className={fontSize === 'small' ? 'active' : ''} onClick={() => changeFontSize('small')}>A-</button>
-                  <button className={fontSize === 'normal' ? 'active' : ''} onClick={() => changeFontSize('normal')}>A</button>
-                  <button className={fontSize === 'large' ? 'active' : ''} onClick={() => changeFontSize('large')}>A+</button>
-                </div>
-              </div>
-              <div className="sheet-section">
-                <button className={`contrast-btn-mobile ${highContrast ? 'active' : ''}`} onClick={toggleContrast}>
-                  {highContrast ? 'Desativar Alto Contraste' : 'Ativar Alto Contraste'}
+              <div className="sheet-footer">
+                <button className="btn-apply-mobile" onClick={() => setShowFiltersModal(false)}>
+                  Aplicar Filtros
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showAccessibility && (
+          <motion.div 
+            className="bottom-sheet-overlay" 
+            onClick={() => setShowAccessibility(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ zIndex: 2000 }}
+          >
+            <motion.div 
+              className="bottom-sheet" 
+              onClick={e => e.stopPropagation()}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            >
+              <div className="sheet-header">
+                <div className="sheet-handle" />
+                <div className="sheet-title-row">
+                  <h2>Acessibilidade</h2>
+                  <button onClick={() => setShowAccessibility(false)}><X size={20} /></button>
+                </div>
+              </div>
+              <div className="sheet-content">
+                <div className="sheet-section">
+                  <h4>Tamanho da Fonte</h4>
+                  <div className="font-options-mobile">
+                    <button className={fontSize === 'small' ? 'active' : ''} onClick={() => changeFontSize('small')}>A-</button>
+                    <button className={fontSize === 'normal' ? 'active' : ''} onClick={() => changeFontSize('normal')}>A</button>
+                    <button className={fontSize === 'large' ? 'active' : ''} onClick={() => changeFontSize('large')}>A+</button>
+                  </div>
+                </div>
+                <div className="sheet-section">
+                  <button className={`contrast-btn-mobile ${highContrast ? 'active' : ''}`} onClick={toggleContrast}>
+                    {highContrast ? 'Desativar Alto Contraste' : 'Ativar Alto Contraste'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {selectedOrder && (
@@ -850,95 +887,105 @@ export const MobileQueroAjudar = () => {
         )}
       </AnimatePresence>
 
-      {orderToHelp && (
-        <div className="bottom-sheet-overlay" onClick={() => setOrderToHelp(null)}>
-          <div 
-            className="bottom-sheet" 
-            onClick={e => e.stopPropagation()}
-            style={{
-              animation: 'slideUp 0.3s ease-out'
-            }}
+      <AnimatePresence>
+        {orderToHelp && (
+          <motion.div 
+            className="bottom-sheet-overlay" 
+            onClick={() => setOrderToHelp(null)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ zIndex: 2000 }}
           >
-            <div className="confirm-help-v4-mobile">
-              <div className="heart-circle-v4-mobile">
-                <Heart size={44} fill="#ef4444" color="#ef4444" />
-              </div>
-              <h2>Ajudar {orderToHelp.userName}?</h2>
-              <p>Você será conectado diretamente para combinar os detalhes da doação ou ajuda.</p>
-              <div className="confirm-actions-v4-mobile">
-                <button 
-                  className="btn-confirm-chat-v4-mobile" 
-                  onClick={async () => {
-                    try {
-                      // Primeiro registrar interesse (opcional)
+            <motion.div 
+              className="bottom-sheet" 
+              onClick={e => e.stopPropagation()}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            >
+              <div className="confirm-help-v4-mobile">
+                <div className="heart-circle-v4-mobile">
+                  <Heart size={44} fill="#ef4444" color="#ef4444" />
+                </div>
+                <h2>Ajudar {orderToHelp.userName}?</h2>
+                <p>Você será conectado diretamente para combinar os detalhes da doação ou ajuda.</p>
+                <div className="confirm-actions-v4-mobile">
+                  <button 
+                    className="btn-confirm-chat-v4-mobile" 
+                    onClick={async () => {
                       try {
-                        const interesseData = {
-                          pedidoId: orderToHelp.id,
-                          tipo: 'ajuda',
-                          mensagem: 'Interesse em ajudar através da plataforma'
-                        };
-                        await ApiService.createInteresse(interesseData);
-                      } catch (err) {
-                        console.warn('Erro ao registrar interesse:', err);
-                      }
-                      
-                      // Depois criar conversa
-                      const conversationData = {
-                        participants: [user.uid || user.id, orderToHelp.userId], // Inclui ambos os participantes
-                        pedidoId: orderToHelp.id,
-                        type: 'ajuda',
-                        title: `Ajuda: ${orderToHelp.title || orderToHelp.category}`,
-                        initialMessage: `Olá! Vi seu pedido de ${orderToHelp.category} e gostaria de ajudar. Podemos conversar?`
-                      };
-                      
-                      let response;
-                      try {
-                        // Tenta endpoint /chat/conversations (baseado nos logs do backend: /api/chat + /conversations)
-                        response = await ApiService.post('/chat/conversations', conversationData);
-                      } catch (err) {
-                        console.warn('Falha ao criar conversa via /chat/conversations, tentando alternativas...', err);
+                        // Primeiro registrar interesse (opcional)
                         try {
-                             // Tenta endpoint /conversas (padrão antigo)
-                             response = await ApiService.post('/conversas', conversationData);
-                        } catch (err2) {
-                             try {
-                                // Tenta endpoint /conversations (fallback em inglês)
-                                response = await ApiService.post('/conversations', conversationData);
-                             } catch (err3) {
-                                 // Tenta endpoint /chats (fallback comum)
-                                 try {
-                                    response = await ApiService.post('/chats', conversationData);
-                                 } catch (err4) {
-                                    console.error('Todas as tentativas de endpoint falharam', err4);
-                                    throw new Error('Não foi possível iniciar o chat. Verifique sua conexão.');
-                                 }
-                             }
+                          const interesseData = {
+                            pedidoId: orderToHelp.id,
+                            tipo: 'ajuda',
+                            mensagem: 'Interesse em ajudar através da plataforma'
+                          };
+                          await ApiService.createInteresse(interesseData);
+                        } catch (err) {
+                          console.warn('Erro ao registrar interesse:', err);
                         }
+                        
+                        // Depois criar conversa
+                        const conversationData = {
+                          participants: [user.uid || user.id, orderToHelp.userId], // Inclui ambos os participantes
+                          pedidoId: orderToHelp.id,
+                          type: 'ajuda',
+                          title: `Ajuda: ${orderToHelp.title || orderToHelp.category}`,
+                          initialMessage: `Olá! Vi seu pedido de ${orderToHelp.category} e gostaria de ajudar. Podemos conversar?`
+                        };
+                        
+                        let response;
+                        try {
+                          // Tenta endpoint /chat/conversations (baseado nos logs do backend: /api/chat + /conversations)
+                          response = await ApiService.post('/chat/conversations', conversationData);
+                        } catch (err) {
+                          console.warn('Falha ao criar conversa via /chat/conversations, tentando alternativas...', err);
+                          try {
+                               // Tenta endpoint /conversas (padrão antigo)
+                               response = await ApiService.post('/conversas', conversationData);
+                          } catch (err2) {
+                               try {
+                                  // Tenta endpoint /conversations (fallback em inglês)
+                                  response = await ApiService.post('/conversations', conversationData);
+                               } catch (err3) {
+                                   // Tenta endpoint /chats (fallback comum)
+                                   try {
+                                      response = await ApiService.post('/chats', conversationData);
+                                   } catch (err4) {
+                                      console.error('Todas as tentativas de endpoint falharam', err4);
+                                      throw new Error('Não foi possível iniciar o chat. Verifique sua conexão.');
+                                   }
+                               }
+                          }
+                        }
+                        
+                        if (response && response.success) {
+                          toast.success('Conversa iniciada!');
+                          navigate(`/chat/${response.data.id}`);
+                        } else {
+                          throw new Error(response?.error || 'Erro ao criar conversa');
+                        }
+                      } catch (error) {
+                        console.error('Erro ao iniciar conversa:', error);
+                        toast.error(`Erro ao iniciar conversa: ${error.message}`);
                       }
-                      
-                      if (response && response.success) {
-                        toast.success('Conversa iniciada!');
-                        navigate(`/chat/${response.data.id}`);
-                      } else {
-                        throw new Error(response?.error || 'Erro ao criar conversa');
-                      }
-                    } catch (error) {
-                      console.error('Erro ao iniciar conversa:', error);
-                      toast.error(`Erro ao iniciar conversa: ${error.message}`);
-                    }
-                    setOrderToHelp(null);
-                  }}
-                >
-                  <MessageCircle size={20} /> Conversar Agora
-                </button>
-                <button className="btn-cancel-help-v4-mobile" onClick={() => setOrderToHelp(null)}>
-                  Voltar
-                </button>
+                      setOrderToHelp(null);
+                    }}
+                  >
+                    <MessageCircle size={20} /> Conversar Agora
+                  </button>
+                  <button className="btn-cancel-help-v4-mobile" onClick={() => setOrderToHelp(null)}>
+                    Voltar
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <Toaster position="bottom-center" />
     </div>
   );

@@ -7,6 +7,7 @@ import AnimatedParticles from '../AnimatedParticles';
 import LandingHeader from '../../../components/layout/LandingHeader';
 import MobileHeader from '../../../components/layout/MobileHeader';
 import { useNotifications } from '../../../contexts/NotificationContext';
+import './styles.css';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -42,7 +43,7 @@ import {
   Globe,
   Rocket
 } from 'lucide-react';
-import './styles.css';
+import { SecurityUtils, geocodingRateLimiter } from '../../../utils/security';
 
 const CATEGORIES = [
   { id: 'Alimentos', label: 'Alimentos', icon: <ShoppingCart size={20} />, color: '#f97316' },
@@ -271,6 +272,49 @@ export function PrecisoDeAjudaMobile() {
     setFormData(prev => ({ ...prev, ...data }));
   }, []);
 
+  const safeGeocodeRequest = async (coords) => {
+    // Validar coordenadas usando SecurityUtils
+    const coordValidation = SecurityUtils.validateCoordinates(coords);
+    if (!coordValidation.valid) {
+      throw new Error(coordValidation.error);
+    }
+    
+    // Rate limiting
+    const rateLimitCheck = geocodingRateLimiter('geocoding');
+    if (!rateLimitCheck.allowed) {
+      throw new Error(rateLimitCheck.error);
+    }
+    
+    const baseUrl = 'https://nominatim.openstreetmap.org/reverse';
+    const params = new URLSearchParams({
+      format: 'json',
+      lat: coords.lat.toFixed(6),
+      lon: coords.lng.toFixed(6),
+      addressdetails: '1',
+      zoom: '18'
+    });
+    
+    // Validar URL final
+    const fullUrl = `${baseUrl}?${params}`;
+    const urlValidation = SecurityUtils.validateUrl(fullUrl);
+    if (!urlValidation.valid) {
+      throw new Error(urlValidation.error);
+    }
+    
+    const response = await fetch(fullUrl, {
+      headers: {
+        'User-Agent': 'SolidarBairro/1.0'
+      },
+      signal: AbortSignal.timeout(10000) // Timeout de 10s
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Erro na geocodificação: ${response.status}`);
+    }
+    
+    return response.json();
+  };
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -278,10 +322,7 @@ export function PrecisoDeAjudaMobile() {
           const coords = { lat: position.coords.latitude, lng: position.coords.longitude };
           
           try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}&addressdetails=1&zoom=18`
-            );
-            const data = await response.json();
+            const data = await safeGeocodeRequest(coords);
             
             if (data?.address) {
               const bairro = data.address.suburb || data.address.neighbourhood || '';
@@ -294,22 +335,70 @@ export function PrecisoDeAjudaMobile() {
                 neighborhood: bairro
               });
             }
-          } catch {
-            setLocationError('Erro ao obter endereço');
+          } catch (error) {
+            console.error('Erro na geocodificação:', error);
+            setLocationError('Não foi possível obter sua localização precisa');
+            addNotification({
+              title: 'Localização',
+              message: 'Usando localização padrão. Você pode ajustar manualmente.'
+            });
+            updateData({ 
+              userLocation: { lat: -23.5505, lng: -46.6333 },
+              locationString: 'São Paulo, SP (Padrão)',
+              city: 'São Paulo',
+              neighborhood: 'Centro'
+            });
           }
         },
-        () => {
-          setLocationError('Localização não disponível');
+        (error) => {
+          console.error('Erro de geolocalização:', error);
+          let errorMessage = 'Localização não disponível';
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Permissão de localização negada';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Localização indisponível';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Tempo limite para obter localização';
+              break;
+          }
+          
+          setLocationError(errorMessage);
+          addNotification({
+            title: 'Localização',
+            message: `${errorMessage}. Usando São Paulo como padrão.`
+          });
+          
           updateData({ 
             userLocation: { lat: -23.5505, lng: -46.6333 },
-            locationString: 'São Paulo, SP',
+            locationString: 'São Paulo, SP (Padrão)',
             city: 'São Paulo',
             neighborhood: 'Centro'
           });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000
         }
       );
+    } else {
+      setLocationError('Geolocalização não suportada');
+      addNotification({
+        title: 'Localização',
+        message: 'Seu navegador não suporta geolocalização. Usando São Paulo como padrão.'
+      });
+      updateData({ 
+        userLocation: { lat: -23.5505, lng: -46.6333 },
+        locationString: 'São Paulo, SP (Padrão)',
+        city: 'São Paulo',
+        neighborhood: 'Centro'
+      });
     }
-  }, [updateData]);
+  }, [updateData, addNotification]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -412,12 +501,17 @@ export function PrecisoDeAjudaMobile() {
       
       if (response.success) {
         // Criar notificação para nova ajuda
-        const { NotificationManager } = await import('../../../utils/notifications');
-        NotificationManager.createHelpNotification({
-          userName: 'Alguém',
-          category: formData.category,
-          neighborhood: formData.neighborhood || 'Região próxima'
-        });
+        try {
+          const { notificationManager } = await import('../../../utils/notifications');
+          await notificationManager.createHelpNotification({
+            userName: 'Alguém',
+            category: formData.category,
+            neighborhood: formData.neighborhood || 'Região próxima',
+            urgency: formData.urgency
+          });
+        } catch (notifError) {
+          console.warn('Erro ao criar notificação:', notifError);
+        }
         
         addNotification({
           title: 'Pedido criado com sucesso!',
@@ -570,7 +664,14 @@ export function PrecisoDeAjudaMobile() {
           <textarea
             placeholder="Descreva sua necessidade aqui com o máximo de detalhes possível..."
             value={formData.description}
-            onChange={(e) => updateData({ description: e.target.value.slice(0, 500) })}
+            onChange={(e) => {
+              const validation = SecurityUtils.validateFormInput(e.target.value, 'description');
+              if (validation.valid) {
+                updateData({ description: validation.value });
+              } else {
+                updateData({ description: e.target.value.slice(0, 500) });
+              }
+            }}
             className={`pdam-textarea-v4 ${templateUsed && !isDescriptionValid ? 'warning' : ''}`}
           />
           

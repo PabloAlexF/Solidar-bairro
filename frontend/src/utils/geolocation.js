@@ -48,12 +48,7 @@ const reverseGeocode = async (lat, lon) => {
       coordinates: { lat, lon }
     };
   } catch (error) {
-    // Fallback para São Paulo se houver erro
-    return {
-      city: 'São Paulo',
-      state: 'SP',
-      country: 'Brasil',
-      coordinates: { lat, lon }
-    };
+    console.warn('Erro na geocodificação reversa:', error);
+    throw new Error('Não foi possível identificar a localização');
   }
 };

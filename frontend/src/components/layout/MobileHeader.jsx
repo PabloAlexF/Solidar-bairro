@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationDropdown } from '../NotificationDropdown';
+import { SecurityUtils } from '../../utils/security';
 import { 
   Menu, 
   X, 
@@ -20,7 +21,7 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
   const navigate = useNavigate();
 
   // Verificar se é administrador
-  const user = JSON.parse(localStorage.getItem('solidar-user') || '{}');
+  const user = SecurityUtils.safeParseJSON(localStorage.getItem('solidar-user'));
   const isAdmin = user?.role === 'admin' || user?.isAdmin || user?.tipo === 'admin';
 
   const handleNavigation = (path) => {
@@ -66,12 +67,15 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
             <MapPin size={20} />
             <span>Achados e Perdidos</span>
           </button>
-          <button className="mob-nav-btn" onClick={() => handleNavigation('/chat')}>
+          <button className="mob-nav-btn" onClick={() => handleNavigation('/conversas')}>
             <MessageSquare size={20} />
             <span>Conversas</span>
           </button>
         </nav>
-        <button className="mob-logout-btn" onClick={() => handleNavigation('/login')}>
+        <button className="mob-logout-btn" onClick={() => {
+          SecurityUtils.clearUserSession();
+          handleNavigation('/login');
+        }}>
           <ArrowRight size={20} />
           <span>Sair</span>
         </button>
