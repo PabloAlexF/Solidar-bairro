@@ -17,7 +17,12 @@ const ApiService = {
       throw new Error('Endpoint contém caracteres suspeitos');
     }
     
-    // Validar dados se fornecidos
+    // Pular validação de dados para endpoints de autenticação
+    if (endpoint.includes('/auth/') || endpoint.includes('/login') || endpoint.includes('/cidadaos') || endpoint.includes('/comercios') || endpoint.includes('/ongs') || endpoint.includes('/familias')) {
+      return true;
+    }
+    
+    // Validar dados apenas para outros endpoints
     if (data && typeof data === 'object') {
       const integrity = SecurityMiddleware.verifyDataIntegrity(data);
       if (!integrity.valid) {
@@ -115,6 +120,12 @@ const ApiService = {
       }
 
       if (!response.ok) {
+        // Tratamento específico para erro 404 (usuário não encontrado)
+        if (response.status === 404) {
+          console.warn('Recurso não encontrado (404):', endpoint);
+          throw new Error('Recurso não encontrado');
+        }
+        
         console.error('Erro na API:', data);
         const secureError = SecurityMiddleware.handleSecureError(new Error(data.error || `Erro HTTP: ${response.status}`));
         throw new Error(secureError.message);

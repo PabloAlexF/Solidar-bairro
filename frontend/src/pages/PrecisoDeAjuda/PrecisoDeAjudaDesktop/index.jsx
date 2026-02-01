@@ -4,6 +4,8 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { AIAssistant } from './AIAssistant';
+import { StatsManager } from '../../../utils/statsManager';
+import { useAuth } from '../../../contexts/AuthContext';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -524,6 +526,7 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
 };
 
 export default function PDAForm() {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -633,6 +636,11 @@ export default function PDAForm() {
       const response = await ApiService.createPedido(pedidoData);
       console.log('✅ Pedido criado com sucesso:', response);
       
+      // Registrar estatísticas
+      if (user?.uid || user?.id) {
+        StatsManager.registerPedidoCriado(user.uid || user.id, pedidoData);
+      }
+      
       // Show success
       setIsPublished(true);
       
@@ -710,6 +718,11 @@ export default function PDAForm() {
       console.log('📤 Forçando publicação do pedido:', pedidoData);
       const response = await ApiService.createPedido(pedidoData);
       console.log('✅ Pedido forçado criado com sucesso:', response);
+      
+      // Registrar estatísticas
+      if (user?.uid || user?.id) {
+        StatsManager.registerPedidoCriado(user.uid || user.id, pedidoData);
+      }
       
       setIsPublished(true);
     } catch (error) {

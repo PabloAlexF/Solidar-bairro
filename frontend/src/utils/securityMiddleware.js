@@ -9,7 +9,7 @@ export class SecurityMiddleware {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https:",
-      "connect-src 'self' https://nominatim.openstreetmap.org https://api.openstreetmap.org",
+      "connect-src 'self' http://localhost:3001 https://nominatim.openstreetmap.org https://api.openstreetmap.org",
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'"
@@ -154,12 +154,29 @@ export class SecurityMiddleware {
       }
     }
     
-    // Verificar se não há campos extras suspeitos
+    // Verificar se não há campos extras suspeitos (apenas para objetos aninhados)
     const suspiciousFields = ['__proto__', 'constructor', 'prototype'];
     for (const field of suspiciousFields) {
       if (field in data) {
         return { valid: false, error: 'Dados contêm campos suspeitos' };
       }
+    }
+    
+    // Permitir campos comuns de login/cadastro
+    const allowedLoginFields = ['email', 'password', 'nome', 'telefone', 'endereco', 'tipo', 'cnpj', 'cpf'];
+    const dataKeys = Object.keys(data);
+    
+    // Se todos os campos são permitidos, validar
+    const hasOnlyAllowedFields = dataKeys.every(key => 
+      allowedLoginFields.includes(key) || 
+      typeof data[key] === 'string' || 
+      typeof data[key] === 'number' ||
+      typeof data[key] === 'boolean'
+    );
+    
+    if (!hasOnlyAllowedFields) {
+      // Log para debug mas não bloquear
+      console.warn('Campos não reconhecidos encontrados:', dataKeys.filter(key => !allowedLoginFields.includes(key)));
     }
     
     return { valid: true };

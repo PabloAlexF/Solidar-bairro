@@ -148,7 +148,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAuthenticated = () => {
-    return !!(user && token);
+    return !!(user && token && (user.uid || user.id));
+  };
+
+  const hasValidUserId = () => {
+    return !!(user && (user.uid || user.id));
   };
 
   const value = {
@@ -159,7 +163,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     updateUser,
-    isAuthenticated
+    isAuthenticated,
+    hasValidUserId
   };
 
   return (

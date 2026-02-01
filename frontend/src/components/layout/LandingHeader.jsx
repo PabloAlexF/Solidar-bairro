@@ -47,7 +47,7 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
                   storedUser?.tipo === 'admin' ||
                   storedUser?.email === 'admin@solidarbairro.com';
   
-  const showAdminButton = true; // Forçar sempre
+  const showAdminButton = isAdmin;
 
   useEffect(() => {
     // Iniciar monitoramento global de mensagens

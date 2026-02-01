@@ -7,6 +7,7 @@ import 'react-loading-skeleton/dist/skeleton.css';
 import LandingHeader from '../../components/layout/LandingHeader';
 import MobileHeader from '../../components/layout/MobileHeader';
 import { useAuth } from '../../contexts/AuthContext';
+import { StatsManager } from '../../utils/statsManager';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin, 
@@ -62,6 +63,7 @@ export const MobileQueroAjudar = () => {
       setLoadingPedidos(true);
       setError(null);
       
+      // Verificar se a API está disponível
       const response = await ApiService.getPedidos();
       
       if (response.success && response.data) {
@@ -91,7 +93,15 @@ export const MobileQueroAjudar = () => {
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error);
       setError(error.message);
-      toast.error('Erro ao carregar pedidos');
+      
+      // Se for erro de conexão, mostrar dados mock para desenvolvimento
+      if (error.message.includes('conectar com a API')) {
+        console.warn('Usando dados mock para desenvolvimento');
+        setPedidos([]); // Dados vazios por enquanto
+        toast.error('Servidor offline. Inicie o backend em localhost:3001');
+      } else {
+        toast.error('Erro ao carregar pedidos');
+      }
     } finally {
       setLoadingPedidos(false);
     }
@@ -144,20 +154,25 @@ export const MobileQueroAjudar = () => {
     
     loadPedidos();
     
-    // Get real user location
-    const loadLocation = async () => {
-      try {
-        const location = await getCurrentLocation();
-        console.log('Localização obtida:', location);
-        setUserLocation(location);
-      } catch (error) {
-        console.warn('Erro ao obter localização:', error);
-        // Usar localização genérica apenas se realmente não conseguir obter
-        setUserLocation({ city: 'Sua Cidade', state: 'Seu Estado' });
-      } finally {
-        setLocationLoading(false);
+  const loadLocation = async () => {
+    try {
+      // Verificar se geolocalização está disponível
+      if (!navigator.geolocation) {
+        throw new Error('Geolocalização não suportada');
       }
-    };
+      
+      // Solicitar localização apenas se o usuário interagir
+      const location = await getCurrentLocation();
+      console.log('Localização obtida:', location);
+      setUserLocation(location);
+    } catch (error) {
+      console.warn('Erro ao obter localização:', error);
+      // Usar localização genérica apenas se realmente não conseguir obter
+      setUserLocation({ city: 'Sua Cidade', state: 'Seu Estado' });
+    } finally {
+      setLocationLoading(false);
+    }
+  };
     
     loadLocation();
     
@@ -924,6 +939,11 @@ export const MobileQueroAjudar = () => {
                             mensagem: 'Interesse em ajudar através da plataforma'
                           };
                           await ApiService.createInteresse(interesseData);
+                          
+                          // Registrar estatística de ajuda oferecida
+                          if (user?.uid || user?.id) {
+                            StatsManager.registerAjudaOferecida(user.uid || user.id, orderToHelp.id, interesseData);
+                          }
                         } catch (err) {
                           console.warn('Erro ao registrar interesse:', err);
                         }
