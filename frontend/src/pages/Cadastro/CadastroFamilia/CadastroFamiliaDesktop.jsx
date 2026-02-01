@@ -10,6 +10,7 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import Toast from '../../../components/ui/Toast';
+import AddressInput from '../../../components/ui/AddressInput';
 import ApiService from '../../../services/apiService';
 import './CadastroFamiliaDesktop.css';
 import '../../../styles/components/PasswordField.css';
@@ -43,6 +44,11 @@ export default function CadastroFamiliaDesktop() {
     endereco: '',
     bairro: '',
     pontoReferencia: '',
+    cep: '',
+    numero: '',
+    cidade: '',
+    estado: '',
+    referencia: '',
     tipoMoradia: '',
     criancas: 0,
     jovens: 0,
@@ -54,12 +60,12 @@ export default function CadastroFamiliaDesktop() {
   const totalSteps = 6;
   
   const steps = [
-    { id: 1, title: "Responsável", icon: <User size={20} /> },
-    { id: 2, title: "Documentos", icon: <Fingerprint size={20} /> },
-    { id: 3, title: "Contato", icon: <Phone size={20} /> },
-    { id: 4, title: "Residência", icon: <MapPin size={20} /> },
-    { id: 5, title: "Família", icon: <Users2 size={20} /> },
-    { id: 6, title: "Necessidades", icon: <ListChecks size={20} /> },
+    { id: 1, title: "Responsável", icon: <User size={22} /> },
+    { id: 2, title: "Documentos", icon: <Fingerprint size={22} /> },
+    { id: 3, title: "Contato", icon: <Phone size={22} /> },
+    { id: 4, title: "Residência", icon: <MapPin size={22} /> },
+    { id: 5, title: "Família", icon: <Users2 size={22} /> },
+    { id: 6, title: "Necessidades", icon: <ListChecks size={22} /> },
   ];
   
   const familyTypes = [
@@ -90,7 +96,7 @@ export default function CadastroFamiliaDesktop() {
       case 3:
         return formData.telefone.trim() && formData.email.trim() && formData.password.length >= 6 && formData.password === formData.confirmPassword;
       case 4:
-        return formData.endereco.trim() && formData.bairro.trim() && formData.tipoMoradia;
+        return (formData.cep && formData.endereco && formData.bairro && formData.tipoMoradia) || (formData.endereco.trim() && formData.bairro.trim() && formData.tipoMoradia);
       default:
         return true;
     }
@@ -323,19 +329,19 @@ export default function CadastroFamiliaDesktop() {
         </div>
       </nav>
 
-      <div className="fam-reg-main-grid">
+      <div className="fam-reg-main-grid" style={{ marginTop: '3rem', maxWidth: '1280px', marginInline: 'auto' }}>
         <aside className="fam-reg-sidebar">
-          <div className="fam-reg-steps-card">
-            <h2 className="fam-reg-steps-title">CADASTRO DE FAMÍLIA</h2>
+          <div className="fam-reg-steps-card" style={{ padding: '2rem' }}>
+            <h2 className="fam-reg-steps-title" style={{ fontSize: '1rem', marginBottom: '1.5rem' }}>CADASTRO DE FAMÍLIA</h2>
             <div className="fam-reg-steps-list">
               {steps.map((s, i) => (
                 <div key={s.id} className={`fam-reg-step-item ${step === s.id ? 'fam-reg-active' : step > s.id ? 'fam-reg-completed' : ''}`}>
                   <div className="fam-reg-step-icon-box">
-                    {step > s.id ? <CheckCircle2 size={20} /> : s.icon}
+                    {step > s.id ? <CheckCircle2 size={22} /> : s.icon}
                   </div>
                   <div className="fam-reg-step-info">
-                    <span className="fam-reg-step-number">PASSO 0{s.id}</span>
-                    <span className="fam-reg-step-label">{s.title}</span>
+                    <span className="fam-reg-step-number" style={{ fontSize: '0.75rem' }}>PASSO 0{s.id}</span>
+                    <span className="fam-reg-step-label" style={{ fontSize: '1rem' }}>{s.title}</span>
                   </div>
                   {i < steps.length - 1 && <div className="fam-reg-step-line" />}
                 </div>
@@ -345,15 +351,15 @@ export default function CadastroFamiliaDesktop() {
         </aside>
 
         <main className="fam-reg-content-area">
-          <div className="fam-reg-form-card animate-slide-up">
-            <div className="fam-reg-form-header">
+          <div className="fam-reg-form-card animate-slide-up" style={{ padding: '2.5rem' }}>
+            <div className="fam-reg-form-header" style={{ marginBottom: '2rem' }}>
               <div className="header-top">
-                <span className="step-badge">{steps.find(s => s.id === step)?.title}</span>
+                <span className="step-badge" style={{ fontSize: '0.85rem', padding: '0.35rem 1rem' }}>{steps.find(s => s.id === step)?.title}</span>
                 <div className="fam-reg-progress-bar-bg">
                   <div className="fam-reg-progress-bar-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
                 </div>
               </div>
-              <h1 className="fam-reg-form-title">
+              <h1 className="fam-reg-form-title" style={{ fontSize: '2rem', marginTop: '1rem', marginBottom: '0.5rem' }}>
                 {step === 1 && <>Dados do <span className="fam-reg-text-highlight">responsável</span></>}
                 {step === 2 && <>Seus <span className="fam-reg-text-highlight">documentos</span></>}
                 {step === 3 && <>Informações de <span className="fam-reg-text-highlight">contato</span></>}
@@ -361,7 +367,7 @@ export default function CadastroFamiliaDesktop() {
                 {step === 5 && <>Composição <span className="fam-reg-text-highlight">familiar</span></>}
                 {step === 6 && <>Suas <span className="fam-reg-text-highlight">necessidades</span></>}
               </h1>
-              <p className="fam-reg-form-description">
+              <p className="fam-reg-form-description" style={{ fontSize: '1.1rem' }}>
                 {step === 1 && "Vamos começar com os dados básicos do responsável pela família."}
                 {step === 2 && "Agora precisamos dos documentos para validação das informações."}
                 {step === 3 && "Como podemos entrar em contato com vocês quando necessário?"}
@@ -572,40 +578,10 @@ export default function CadastroFamiliaDesktop() {
               {step === 4 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
-                    <label className="field-label">Endereço Completo <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="input-with-icon">
-                      <Home className="field-icon" size={20} />
-                      <input 
-                        required 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="Rua, Número, Complemento"
-                        value={formData.endereco}
-                        onChange={(e) => updateFormData('endereco', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label className="field-label">Bairro <span style={{ color: '#ef4444' }}>*</span></label>
-                    <input 
-                      required 
-                      type="text" 
-                      className="form-input" 
-                      placeholder="Nome do bairro"
-                      value={formData.bairro}
-                      onChange={(e) => updateFormData('bairro', e.target.value)}
-                      style={{ paddingLeft: '1rem' }}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="field-label">Ponto de Referência</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      placeholder="Ex: Próximo ao mercado"
-                      value={formData.pontoReferencia}
-                      onChange={(e) => updateFormData('pontoReferencia', e.target.value)}
-                      style={{ paddingLeft: '1rem' }}
+                    <AddressInput 
+                      addressData={formData}
+                      setAddressData={setFormData}
+                      required={true}
                     />
                   </div>
                   <div className="form-group span-2">

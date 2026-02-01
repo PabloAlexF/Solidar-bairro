@@ -1161,3 +1161,239 @@
     font-size: 1.5rem;
   }
 }
+
+/* Modal Styles - Scoped to Admin Dashboard */
+.admin-container .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.admin-container .modal-content {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: 1rem;
+}
+
+.admin-container .modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-container .modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--admin-primary);
+  margin: 0;
+}
+
+.admin-container .modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--admin-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-container .modal-close:hover {
+  background: #f1f5f9;
+  color: var(--admin-danger);
+}
+
+.admin-container .modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.admin-container .detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.admin-container .detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-container .detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.admin-container .detail-item label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--admin-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-container .detail-item span {
+  font-size: 1rem;
+  color: var(--admin-primary);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.admin-container .modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: #f8fafc;
+}
+
+.admin-container .btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: var(--admin-secondary);
+  transition: all 0.2s;
+}
+
+.admin-container .btn-secondary:hover {
+  background: #f1f5f9;
+  color: var(--admin-primary);
+}
+
+.admin-container .btn-primary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  border: none;
+  background: var(--admin-accent);
+  color: white;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+}
+
+.admin-container .btn-primary:hover {
+  background: #4f46e5;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(99, 102, 241, 0.3);
+}
+
+.admin-container .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 6px rgba(99, 102, 241, 0.2);
+}
+
+/* Toast Notification */
+.toast {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-md);
+  color: white;
+  font-weight: 600;
+  z-index: 1100;
+  animation: slideInRight 0.3s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.toast-success {
+  background: var(--admin-success);
+}
+
+.toast-error {
+  background: var(--admin-danger);
+}
+
+.toast-warning {
+  background: var(--admin-warning);
+}
+
+.toast-info {
+  background: var(--admin-accent);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-content {
+    max-width: 100%;
+    margin: 0.5rem;
+    max-height: 95vh;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+  }
+  
+  .btn-secondary {
+    width: 100%;
+  }
+  
+  .toast {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+  }
+}

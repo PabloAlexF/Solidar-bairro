@@ -19,8 +19,13 @@ class FamiliaService {
 
     // Hash da senha se fornecida
     let hashedPassword = null;
-    if (data.senha) {
-      hashedPassword = await authService.hashPassword(data.senha);
+    if (data.senha || data.password) {
+      const senha = data.senha || data.password;
+      console.log('Senha fornecida:', senha);
+      hashedPassword = await authService.hashPassword(senha);
+      console.log('Senha hasheada:', hashedPassword ? 'OK' : 'FALHOU');
+    } else {
+      console.log('Nenhuma senha fornecida');
     }
 
     // Calcular total de membros da família
@@ -84,6 +89,11 @@ class FamiliaService {
       criadoEm: new Date(),
       atualizadoEm: new Date()
     };
+
+    // Adicionar senha apenas se existir
+    if (hashedPassword) {
+      familiaData.senha = hashedPassword;
+    }
 
     // Salvar no Firestore
     const docRef = await this.db.collection(this.collection).add(familiaData);

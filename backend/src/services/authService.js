@@ -12,49 +12,49 @@ class AuthService {
 
   async login(email, password) {
     try {
-      console.log('AuthService login:', { email, password: '***' });
+      console.log('=== LOGIN DEBUG ===');
+      console.log('Email:', email);
+      console.log('Password:', password);
       
-      // Buscar dados do usuário no Firestore
       const userData = await this.getUserDataByEmail(email);
-      console.log('User data found:', userData ? 'Yes' : 'No');
+      console.log('User found:', !!userData);
       
       if (!userData) {
         throw new Error('Usuário não encontrado');
       }
 
-      // Verificar senha
+      console.log('User type:', userData.tipo);
+      console.log('Has senha field:', !!userData.senha);
+      console.log('Has password field:', !!userData.password);
+
       let isValidPassword = false;
       if (userData.senha) {
-        // Tentar comparar com hash
-        try {
-          isValidPassword = await bcrypt.compare(password, userData.senha);
-        } catch (error) {
-          // Se falhar, comparar diretamente (senha não hasheada)
-          isValidPassword = userData.senha === password;
-        }
+        console.log('Testing with bcrypt...');
+        isValidPassword = await bcrypt.compare(password, userData.senha);
+        console.log('Bcrypt result:', isValidPassword);
       } else if (userData.password) {
+        console.log('Testing direct comparison...');
         isValidPassword = userData.password === password;
+        console.log('Direct comparison result:', isValidPassword);
+      } else {
+        console.log('No password field found!');
       }
 
       if (!isValidPassword) {
+        console.log('=== LOGIN FAILED ===');
         throw new Error('Senha incorreta');
       }
 
-      // Usuários registrados podem fazer login imediatamente (exceto admin)
-      // A aprovação é automática no cadastro
-
-      // Gerar tokens JWT
+      console.log('=== LOGIN SUCCESS ===');
       const payload = {
         id: userData.uid,
         email: userData.email,
         type: userData.tipo,
         role: userData.tipo === 'admin' ? 'admin' : 'user',
-        nome: userData.nome || userData.nomeEstabelecimento || userData.nomeEntidade
+        nome: userData.nome || userData.nomeCompleto || userData.nomeEstabelecimento || userData.nomeEntidade
       };
 
       const { accessToken, refreshToken } = jwtUtils.generateTokens(payload);
-
-      // Remover senha dos dados
       const { senha, password: pwd, ...userWithoutPassword } = userData;
       
       return {

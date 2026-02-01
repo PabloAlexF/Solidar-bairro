@@ -49,6 +49,20 @@ class FamiliaController {
     }
   }
 
+  async markAsAnalyzed(req, res) {
+    try {
+      const updateData = {
+        status: 'analyzed',
+        analyzedAt: new Date(),
+        analyzedBy: 'admin'
+      };
+      const familia = await familiaService.updateFamilia(req.params.id, updateData);
+      res.json({ success: true, data: familia, message: 'Família marcada como analisada' });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
   async deleteFamilia(req, res) {
     try {
       await familiaService.deleteFamilia(req.params.id);

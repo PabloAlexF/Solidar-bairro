@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Dashboard Mobile - Contraste</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        
+        .test-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            background: #8b5cf6;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .modal-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-title h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0 0 4px 0;
+        }
+        
+        .modal-title p {
+            font-size: 14px;
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        
+        .detail-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 16px 0;
+        }
+        
+        .detail-item {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 12px;
+        }
+        
+        .detail-item label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .detail-item p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: #0f172a;
+            line-height: 1.4;
+        }
+        
+        .purpose-text {
+            background: #fefce8;
+            padding: 16px;
+            border-radius: 8px;
+            font-style: italic;
+            color: #92400e;
+            font-size: 14px;
+            line-height: 1.5;
+            border-left: 3px solid #eab308;
+            margin: 16px 0;
+        }
+        
+        .checklist-section {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 12px;
+        }
+        
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #d1d5db;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .checklist-item span {
+            font-size: 14px;
+            font-weight: 500;
+            color: #0f172a;
+            line-height: 1.4;
+        }
+        
+        .test-info {
+            background: #e0f2fe;
+            padding: 16px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0284c7;
+        }
+        
+        .test-info h3 {
+            margin: 0 0 8px 0;
+            color: #0c4a6e;
+            font-size: 16px;
+        }
+        
+        .test-info p {
+            margin: 0;
+            color: #0369a1;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h3>Teste de Contraste - Modal Mobile</h3>
+        <p>Verificando se as cores atendem aos padrões de acessibilidade WCAG 2.1 AA (contraste mínimo 4.5:1)</p>
+    </div>
+    
+    <div class="test-container">
+        <div class="modal-header">
+            <div class="modal-icon">
+                ❤️
+            </div>
+            <div class="modal-title">
+                <h2>Instituto Solidário</h2>
+                <p>Verificação Institucional</p>
+            </div>
+        </div>
+        
+        <div class="modal-body">
+            <div class="detail-section">
+                <h3>Informações Principais</h3>
+                
+                <div class="detail-item">
+                    <label>Razão Social</label>
+                    <p>Instituto Solidário de Assistência Social</p>
+                </div>
+                
+                <div class="detail-item">
+                    <label>CNPJ</label>
+                    <p>12.345.678/0001-90</p>
+                </div>
+                
+                <div class="detail-item">
+                    <label>E-mail</label>
+                    <p>contato@institutosolidario.org.br</p>
+                </div>
+                
+                <div class="detail-item">
+                    <label>Telefone</label>
+                    <p>(11) 98765-4321</p>
+                </div>
+            </div>
+            
+            <div class="purpose-text">
+                "Nossa missão é promover a inclusão social através de programas educacionais e assistenciais para comunidades em situação de vulnerabilidade."
+            </div>
+            
+            <div class="checklist-section">
+                <h3>Checklist de Análise</h3>
+                
+                <div class="checklist-item">
+                    <div class="checkbox">✓</div>
+                    <span>Documentação Legal Validada</span>
+                </div>
+                
+                <div class="checklist-item">
+                    <div class="checkbox">✓</div>
+                    <span>Sede Física Verificada</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px; padding: 20px; background: white; border-radius: 8px;">
+        <h3 style="color: #059669; margin-top: 0;">✅ Melhorias Aplicadas:</h3>
+        <ul style="color: #374151; line-height: 1.6;">
+            <li><strong>Labels:</strong> Cor alterada de #64748b para #475569 (melhor contraste)</li>
+            <li><strong>Texto principal:</strong> Cor alterada de #1e293b para #0f172a (contraste máximo)</li>
+            <li><strong>Checklist:</strong> Cor alterada de #374151 para #0f172a (contraste máximo)</li>
+            <li><strong>Texto de propósito:</strong> Cor alterada de #a16207 para #92400e (melhor contraste)</li>
+        </ul>
+        
+        <h3 style="color: #0284c7; margin-bottom: 8px;">📊 Ratios de Contraste:</h3>
+        <ul style="color: #374151; line-height: 1.6;">
+            <li><strong>Labels (#475569 em #f8fafc):</strong> ~5.8:1 ✅</li>
+            <li><strong>Texto principal (#0f172a em #f8fafc):</strong> ~16.8:1 ✅</li>
+            <li><strong>Texto propósito (#92400e em #fefce8):</strong> ~7.2:1 ✅</li>
+        </ul>
+    </div>
+</body>
+</html>

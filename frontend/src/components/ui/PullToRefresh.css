@@ -1,0 +1,81 @@
+/* Pull to Refresh Styles */
+.pull-to-refresh-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.pull-to-refresh-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: opacity 0.2s ease;
+  transform: translateY(-100%);
+}
+
+.pull-to-refresh-indicator.pulling {
+  transform: translateY(-50%);
+}
+
+.pull-to-refresh-indicator.ready {
+  transform: translateY(0);
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.pull-to-refresh-indicator.refreshing {
+  transform: translateY(0);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.pull-to-refresh-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0 20px;
+}
+
+.pull-to-refresh-icon {
+  transition: transform 0.3s ease;
+}
+
+.pull-to-refresh-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.pull-to-refresh-text {
+  white-space: nowrap;
+}
+
+.pull-to-refresh-children {
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .pull-to-refresh-content {
+    font-size: 13px;
+    gap: 6px;
+  }
+  
+  .pull-to-refresh-icon {
+    width: 18px;
+    height: 18px;
+  }
+}

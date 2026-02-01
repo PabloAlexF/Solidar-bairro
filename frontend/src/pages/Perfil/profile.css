@@ -679,18 +679,14 @@
 
 /* Settings Modal Specifics */
 .profile-container .settings-body {
-  padding: 18px 24px;
+  padding: 24px;
   overflow-y: auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-content: start;
+  display: block;
 }
 
 .profile-container .settings-section {
-  margin-bottom: 0;
-  flex: 1 1 calc(50% - 6px);
-  min-width: 280px;
+  margin-bottom: 24px;
+  width: 100%;
 }
 
 .profile-container .settings-section h4 {

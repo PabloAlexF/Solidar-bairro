@@ -16,6 +16,9 @@ import { SkeletonListItem } from '../../components/ui/Skeleton';
 import EmptyState from '../../components/ui/EmptyState';
 import Badge from '../../components/ui/Badge';
 import Avatar from '../../components/ui/Avatar';
+import MobileModal from '../../components/ui/modals/MobileModal';
+import BottomSheet from '../../components/ui/BottomSheet';
+import PullToRefresh from '../../components/ui/PullToRefresh';
 
 // Real API Service
 const API_BASE_URL = 'http://localhost:3001/api';
@@ -63,6 +66,35 @@ const formatAddress = (address) => {
   return "N/A";
 };
 
+const getStatusLabel = (status) => {
+  const statusMap = {
+    'pending': 'Aguardando',
+    'analyzed': 'Analisado',
+    'active': 'Ativo',
+    'ativo': 'Ativo',
+    'approved': 'Aprovado',
+    'rejected': 'Rejeitado',
+    'inactive': 'Inativo'
+  };
+  return statusMap[status] || status;
+};
+
+const getStatusClass = (status) => {
+  const statusClasses = {
+    'pending': 'status-warning',
+    'analyzed': 'status-success',
+    'active': 'status-success',
+    'ativo': 'status-success',
+    'approved': 'status-success',
+    'rejected': 'status-error',
+    'inactive': 'status-error',
+    'inativo': 'status-error'
+  };
+  const result = statusClasses[status] || 'status-default';
+  console.log(`Status: ${status} → Class: ${result}`);
+  return result;
+};
+
 export default function DashboardMobile() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [ongs, setOngs] = useState([]);
@@ -95,9 +127,6 @@ export default function DashboardMobile() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [successAction, setSuccessAction] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
-  const [pullStartY, setPullStartY] = useState(0);
-  const [pullMoveY, setPullMoveY] = useState(0);
-  const [isPulling, setIsPulling] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     status: 'all',
@@ -230,7 +259,7 @@ export default function DashboardMobile() {
       else if (type === 'citizens') endpoint = '/cidadaos';
       else endpoint = '/familias';
 
-      await apiService.request(`${endpoint}/${id}`, 'PATCH', { status });
+      await apiService.request(`${endpoint}/${id}`, 'PUT', { status });
       
       if (type === 'ongs') fetchOngs();
       else if (type === 'commerces') fetchCommerces();
@@ -338,40 +367,6 @@ export default function DashboardMobile() {
     setShowFilters(false);
   };
 
-  // Pull to Refresh Handlers
-  const handleTouchStart = (e) => {
-    if (window.scrollY === 0) {
-      setPullStartY(e.touches[0].clientY);
-      setIsPulling(true);
-    }
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isPulling) return;
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - pullStartY;
-    
-    if (diff > 0 && window.scrollY === 0) {
-      // Add resistance to the pull
-      setPullMoveY(Math.min(diff * 0.4, 100));
-    } else {
-      setPullMoveY(0);
-      setIsPulling(false);
-    }
-  };
-
-  const handleTouchEnd = async () => {
-    if (!isPulling) return;
-    setIsPulling(false);
-    
-    if (pullMoveY > 50) {
-      setPullMoveY(0);
-      await fetchData();
-    } else {
-      setPullMoveY(0);
-    }
-  };
-
   const distributionData = [
     { name: 'ONGs', value: stats.totalOngs, color: '#8b5cf6' },
     { name: 'Comércios', value: stats.totalCommerces, color: '#3b82f6' },
@@ -474,12 +469,7 @@ export default function DashboardMobile() {
         </button>
       </aside>
 
-      <main 
-        className="adm-admin-main"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+      <main className="adm-admin-main">
         <header className="adm-mobile-header">
           <button className="adm-menu-toggle" onClick={() => setMobileMenuOpen(true)}>
             <Menu size={24} />
@@ -498,24 +488,15 @@ export default function DashboardMobile() {
           </div>
         </header>
 
-        <div 
-          className="adm-pull-indicator"
-          style={{ 
-            height: `${pullMoveY}px`,
-            opacity: pullMoveY > 0 ? Math.min(pullMoveY / 40, 1) : 0
-          }}
-        >
-          <RefreshCw className={`adm-pull-icon ${pullMoveY > 50 ? 'active' : ''}`} size={24} />
-        </div>
-
-        <div className="adm-content-area">
-          <div className="adm-search-bar">
-            <Search size={18} />
-            <input type="text" placeholder="Pesquisar registros..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-            <button className={`adm-filter-trigger ${filters.status !== 'all' || filters.date !== 'all' || filters.bairro ? 'active' : ''}`} onClick={() => setShowFilters(true)}>
-              <Filter size={20} />
-            </button>
-          </div>
+        <PullToRefresh onRefresh={fetchData}>
+          <div className="adm-content-area">
+            <div className="adm-search-bar">
+              <Search size={18} />
+              <input type="text" placeholder="Pesquisar registros..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <button className={`adm-filter-trigger ${filters.status !== 'all' || filters.date !== 'all' || filters.bairro ? 'active' : ''}`} onClick={() => setShowFilters(true)}>
+                <Filter size={20} />
+              </button>
+            </div>
 
           {activeTab === "dashboard" && (
             <div className="adm-dashboard-content">
@@ -540,6 +521,7 @@ export default function DashboardMobile() {
                   <div className="adm-stat-info">
                     <span className="adm-stat-label">ONGs</span>
                     <span className="adm-stat-value">{stats.totalOngs}</span>
+                    <span className="adm-stat-analyzed">{stats.totalOngs - stats.pendingOngs} analisadas</span>
                   </div>
                 </div>
                 <div className="adm-stat-card" style={{ color: 'var(--adm-commerce-color)' }}>
@@ -549,6 +531,27 @@ export default function DashboardMobile() {
                   <div className="adm-stat-info">
                     <span className="adm-stat-label">Comércios</span>
                     <span className="adm-stat-value">{stats.totalCommerces}</span>
+                    <span className="adm-stat-analyzed">{stats.totalCommerces - stats.pendingCommerces} analisados</span>
+                  </div>
+                </div>
+                <div className="adm-stat-card" style={{ color: 'var(--adm-family-color)' }}>
+                  <div className="adm-stat-icon" style={{ background: 'rgba(249, 115, 22, 0.1)' }}>
+                    <Users size={24} />
+                  </div>
+                  <div className="adm-stat-info">
+                    <span className="adm-stat-label">Famílias</span>
+                    <span className="adm-stat-value">{stats.totalFamilies}</span>
+                    <span className="adm-stat-analyzed">{stats.totalFamilies - stats.pendingFamilies} analisadas</span>
+                  </div>
+                </div>
+                <div className="adm-stat-card" style={{ color: 'var(--adm-citizen-color)' }}>
+                  <div className="adm-stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)' }}>
+                    <UserCircle size={24} />
+                  </div>
+                  <div className="adm-stat-info">
+                    <span className="adm-stat-label">Cidadãos</span>
+                    <span className="adm-stat-value">{stats.totalCitizens}</span>
+                    <span className="adm-stat-analyzed">{stats.totalCitizens - stats.pendingCitizens} analisados</span>
                   </div>
                 </div>
               </div>
@@ -630,6 +633,34 @@ export default function DashboardMobile() {
                           </button>
                         </div>
                       ))}
+                      {profiles.filter(p => p.status === 'pending').map((family) => (
+                        <div key={family.id} className="adm-pending-item" onClick={() => setSelectedProfile(family)}>
+                          <div className="adm-pending-icon adm-family" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Users size={18} />
+                          </div>
+                          <div className="adm-pending-info">
+                            <span className="adm-pending-name">{family.nomeCompleto || family.full_name}</span>
+                            <span className="adm-pending-type">Família • Pendente</span>
+                          </div>
+                          <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedProfile(family); }}>
+                            Analisar
+                          </button>
+                        </div>
+                      ))}
+                      {citizens.filter(c => c.status === 'pending').map((citizen) => (
+                        <div key={citizen.uid || citizen.id} className="adm-pending-item" onClick={() => setSelectedProfile(citizen)}>
+                          <div className="adm-pending-icon adm-citizen" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <UserCircle size={18} />
+                          </div>
+                          <div className="adm-pending-info">
+                            <span className="adm-pending-name">{citizen.nomeCompleto || citizen.full_name}</span>
+                            <span className="adm-pending-type">Cidadão • Pendente</span>
+                          </div>
+                          <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedProfile(citizen); }}>
+                            Analisar
+                          </button>
+                        </div>
+                      ))}
                     </>
                   )}
                 </div>
@@ -660,8 +691,18 @@ export default function DashboardMobile() {
                           <span className="adm-item-name">{ong.nome_fantasia}</span>
                           <span className="adm-item-email">{ong.email}</span>
                         </div>
-                        <div className="adm-item-actions">
-                          <Badge variant={ong.status}>{ong.status === "pending" ? "Análise" : "OK"}</Badge>
+                        <div 
+                          className={`adm-item-actions ${getStatusClass(ong.status)}`}
+                          style={{
+                            backgroundColor: ong.status === 'active' || ong.status === 'ativo' || ong.status === 'analyzed' ? 'rgba(34, 197, 94, 0.1)' :
+                                           ong.status === 'pending' ? 'rgba(245, 158, 11, 0.1)' :
+                                           'rgba(148, 163, 184, 0.1)',
+                            border: `1px solid ${ong.status === 'active' || ong.status === 'ativo' || ong.status === 'analyzed' ? 'rgba(34, 197, 94, 0.2)' :
+                                                ong.status === 'pending' ? 'rgba(245, 158, 11, 0.2)' :
+                                                'rgba(148, 163, 184, 0.2)'}`
+                          }}
+                        >
+                          <Badge variant={ong.status}>{getStatusLabel(ong.status)}</Badge>
                           {ong.status === "pending" && (
                             <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedOng(ong); }}>
                               Analisar
@@ -686,8 +727,18 @@ export default function DashboardMobile() {
                           <span className="adm-item-name">{commerce.nome_fantasia}</span>
                           <span className="adm-item-email">{commerce.email}</span>
                         </div>
-                        <div className="adm-item-actions">
-                          <Badge variant={commerce.status}>{commerce.status === "pending" ? "Análise" : "OK"}</Badge>
+                        <div 
+                          className={`adm-item-actions ${getStatusClass(commerce.status)}`}
+                          style={{
+                            backgroundColor: commerce.status === 'active' || commerce.status === 'ativo' || commerce.status === 'analyzed' ? 'rgba(34, 197, 94, 0.1)' :
+                                           commerce.status === 'pending' ? 'rgba(245, 158, 11, 0.1)' :
+                                           'rgba(148, 163, 184, 0.1)',
+                            border: `1px solid ${commerce.status === 'active' || commerce.status === 'ativo' || commerce.status === 'analyzed' ? 'rgba(34, 197, 94, 0.2)' :
+                                                commerce.status === 'pending' ? 'rgba(245, 158, 11, 0.2)' :
+                                                'rgba(148, 163, 184, 0.2)'}`
+                          }}
+                        >
+                          <Badge variant={commerce.status}>{getStatusLabel(commerce.status)}</Badge>
                           {commerce.status === "pending" && (
                             <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedCommerce(commerce); }}>
                               Analisar
@@ -712,8 +763,18 @@ export default function DashboardMobile() {
                           <span className="adm-item-name">{profile.nomeCompleto || profile.full_name}</span>
                           <span className="adm-item-email">{profile.email}</span>
                         </div>
-                        <div className="adm-item-actions">
-                          <Badge variant={profile.status}>{profile.status === "pending" ? "Análise" : "OK"}</Badge>
+                        <div 
+                          className={`adm-item-actions ${getStatusClass(profile.status)}`}
+                          style={{
+                            backgroundColor: profile.status === 'active' || profile.status === 'ativo' || profile.status === 'analyzed' ? 'rgba(34, 197, 94, 0.1)' :
+                                           profile.status === 'pending' ? 'rgba(245, 158, 11, 0.1)' :
+                                           'rgba(148, 163, 184, 0.1)',
+                            border: `1px solid ${profile.status === 'active' || profile.status === 'ativo' || profile.status === 'analyzed' ? 'rgba(34, 197, 94, 0.2)' :
+                                                profile.status === 'pending' ? 'rgba(245, 158, 11, 0.2)' :
+                                                'rgba(148, 163, 184, 0.2)'}`
+                          }}
+                        >
+                          <Badge variant={profile.status}>{getStatusLabel(profile.status)}</Badge>
                           {profile.status === "pending" && (
                             <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedProfile(profile); }}>
                               Analisar
@@ -738,8 +799,18 @@ export default function DashboardMobile() {
                           <span className="adm-item-name">{citizen.nomeCompleto || citizen.full_name}</span>
                           <span className="adm-item-email">{citizen.email}</span>
                         </div>
-                        <div className="adm-item-actions">
-                          <Badge variant={citizen.status}>{citizen.status === "pending" ? "Análise" : "OK"}</Badge>
+                        <div 
+                          className={`adm-item-actions ${getStatusClass(citizen.status)}`}
+                          style={{
+                            backgroundColor: citizen.status === 'active' || citizen.status === 'ativo' || citizen.status === 'analyzed' ? 'rgba(34, 197, 94, 0.1)' :
+                                           citizen.status === 'pending' ? 'rgba(245, 158, 11, 0.1)' :
+                                           'rgba(148, 163, 184, 0.1)',
+                            border: `1px solid ${citizen.status === 'active' || citizen.status === 'ativo' || citizen.status === 'analyzed' ? 'rgba(34, 197, 94, 0.2)' :
+                                                citizen.status === 'pending' ? 'rgba(245, 158, 11, 0.2)' :
+                                                'rgba(148, 163, 184, 0.2)'}`
+                          }}
+                        >
+                          <Badge variant={citizen.status}>{getStatusLabel(citizen.status)}</Badge>
                           {citizen.status === "pending" && (
                             <button className="adm-quick-analyze-badge" onClick={(e) => { e.stopPropagation(); setSelectedProfile(citizen); }}>
                               Analisar
@@ -756,178 +827,48 @@ export default function DashboardMobile() {
               )}
             </div>
           )}
-        </div>
+          </div>
+        </PullToRefresh>
       </main>
 
-      {/* Modals - Same as desktop but with mobile styles */}
-      {selectedOng && (
-        <div className="adm-modal-overlay" onClick={closeModals}>
-          <div className="adm-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="adm-modal-header adm-ong" style={{ background: 'var(--adm-ong-color)' }}>
-              <div className="adm-modal-title-area">
-                <h2>{selectedOng.nome_fantasia}</h2>
-                <p>Verificação Institucional</p>
-              </div>
-              <button className="adm-modal-close" onClick={closeModals}>
-                <X size={24} />
-              </button>
-            </div>
-            <div className="adm-modal-body">
-              <div className="adm-detail-section">
-                <h3>Dados Institucionais</h3>
-                <div className="adm-detail-grid">
-                  <div className="adm-detail-item"><label>Razão Social</label><p>{selectedOng.razao_social || "Não informado"}</p></div>
-                  <div className="adm-detail-item"><label>CNPJ</label><p>{selectedOng.cnpj}</p></div>
-                  <div className="adm-detail-item"><label>E-mail</label><p>{selectedOng.email}</p></div>
-                  <div className="adm-detail-item"><label>Telefone</label><p>{selectedOng.telefone}</p></div>
-                  <div className="adm-detail-item"><label>Website</label><p>{selectedOng.website || "N/A"}</p></div>
-                  <div className="adm-detail-item"><label>Sede</label><p>{formatAddress(selectedOng.sede)}</p></div>
-                  <div className="adm-detail-item"><label>Áreas de Cobertura</label><p>{selectedOng.areas_cobertura?.join(", ") || "N/A"}</p></div>
-                  <div className="adm-detail-item"><label>Causas</label><p>{selectedOng.causas?.join(", ") || "N/A"}</p></div>
-                </div>
-              </div>
-              <div className="adm-checklist-section">
-                <h3>Checklist de Análise</h3>
-                <div className="adm-checklist-items">
-                  <div className={`adm-checklist-item ${evaluationChecklist.check1 ? 'adm-checked' : ''}`} onClick={() => setEvaluationChecklist(p => ({ ...p, check1: !p.check1 }))}>
-                    <div className="adm-checkbox" /><span>Documentação Legal Validada</span>
-                  </div>
-                  <div className={`adm-checklist-item ${evaluationChecklist.check2 ? 'adm-checked' : ''}`} onClick={() => setEvaluationChecklist(p => ({ ...p, check2: !p.check2 }))}>
-                    <div className="adm-checkbox" /><span>Sede Física Verificada</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="adm-modal-footer">
-              <button className="adm-btn-secondary" onClick={closeModals}>Cancelar</button>
-              <button className="adm-btn-primary adm-ong" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2} onClick={() => handleUpdateStatus(selectedOng.id, "analyzed", "ongs", selectedOng.nome_fantasia)}>Concluir Análise</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Mobile Modals */}
+      <MobileModal
+        isOpen={!!selectedOng}
+        onClose={closeModals}
+        item={selectedOng}
+        type="ong"
+        onConfirm={(item, type) => handleUpdateStatus(item.id, "analyzed", "ongs", item.nome_fantasia)}
+        evaluationChecklist={evaluationChecklist}
+        setEvaluationChecklist={setEvaluationChecklist}
+        loading={loading}
+      />
 
-      {/* Commerce Modal */}
-      {selectedCommerce && (
-        <div className="adm-modal-overlay" onClick={closeModals}>
-          <div className="adm-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="adm-modal-header adm-commerce" style={{ background: 'var(--adm-commerce-color)' }}>
-              <div className="adm-modal-title-area">
-                <h2>{selectedCommerce.nome_fantasia}</h2>
-                <p>Análise de Parceria</p>
-              </div>
-              <button className="adm-modal-close" onClick={closeModals}>
-                <X size={24} />
-              </button>
-            </div>
-            <div className="adm-modal-body">
-              <div className="adm-detail-section">
-                <h3>Dados do Estabelecimento</h3>
-                <div className="adm-detail-grid">
-                  <div className="adm-detail-item"><label>Razão Social</label><p>{selectedCommerce.razao_social || "Não informado"}</p></div>
-                  <div className="adm-detail-item"><label>CNPJ</label><p>{selectedCommerce.cnpj}</p></div>
-                  <div className="adm-detail-item"><label>Segmento</label><p>{selectedCommerce.segmento || "Não informado"}</p></div>
-                  <div className="adm-detail-item"><label>Responsável</label><p>{selectedCommerce.responsavel_legal || "Não informado"}</p></div>
-                  <div className="adm-detail-item"><label>E-mail</label><p>{selectedCommerce.email}</p></div>
-                  <div className="adm-detail-item"><label>Telefone</label><p>{selectedCommerce.telefone}</p></div>
-                  <div className="adm-detail-item"><label>Endereço</label><p>{formatAddress(selectedCommerce.endereco)}</p></div>
-                  <div className="adm-detail-item"><label>Funcionamento</label><p>{selectedCommerce.horario_funcionamento || "Não informado"}</p></div>
-                </div>
-              </div>
-              <div className="adm-detail-section">
-                <h3>Contribuições Pretendidas</h3>
-                <ul style={{ paddingLeft: '1.25rem', color: 'var(--adm-primary)', fontWeight: 600 }}>
-                  {selectedCommerce.contribuicoes?.map((c, i) => <li key={i}>{c}</li>)}
-                </ul>
-              </div>
-              <div className="adm-checklist-section">
-                <h3>Checklist de Parceria</h3>
-                <div className="adm-checklist-items">
-                  <div className={`adm-checklist-item ${evaluationChecklist.check1 ? 'adm-checked' : ''}`} onClick={() => setEvaluationChecklist(p => ({ ...p, check1: !p.check1 }))}>
-                    <div className="adm-checkbox" /><span>CNPJ Ativo na Receita</span>
-                  </div>
-                  <div className={`adm-checklist-item ${evaluationChecklist.check2 ? 'adm-checked' : ''}`} onClick={() => setEvaluationChecklist(p => ({ ...p, check2: !p.check2 }))}>
-                    <div className="adm-checkbox" /><span>Compromisso Social Assinado</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="adm-modal-footer">
-              <button className="adm-btn-secondary" onClick={closeModals}>Cancelar</button>
-              <button className="adm-btn-primary adm-commerce" disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2} onClick={() => handleUpdateStatus(selectedCommerce.id, "analyzed", "commerces", selectedCommerce.nome_fantasia)}>Concluir Análise</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileModal
+        isOpen={!!selectedCommerce}
+        onClose={closeModals}
+        item={selectedCommerce}
+        type="commerce"
+        onConfirm={(item, type) => handleUpdateStatus(item.id, "analyzed", "commerces", item.nome_fantasia)}
+        evaluationChecklist={evaluationChecklist}
+        setEvaluationChecklist={setEvaluationChecklist}
+        loading={loading}
+      />
 
-      {/* Profile Modal (Beneficiary/Volunteer) */}
-      {selectedProfile && (
-        <div className="adm-modal-overlay" onClick={closeModals}>
-          <div className="adm-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="adm-modal-header" style={{ background: selectedProfile.role === 'family' ? 'var(--adm-family-color)' : 'var(--adm-citizen-color)' }}>
-              <div className="adm-modal-title-area">
-                <h2>{selectedProfile.nomeCompleto || selectedProfile.full_name}</h2>
-                <p>{selectedProfile.role === 'family' ? 'Cadastro de Família' : 'Cadastro de Cidadão'}</p>
-              </div>
-              <button className="adm-modal-close" onClick={closeModals}>
-                <X size={24} />
-              </button>
-            </div>
-            <div className="adm-modal-body">
-              <div className="adm-detail-section">
-                <h3>Informações Pessoais</h3>
-                <div className="adm-detail-grid">
-                  <div className="adm-detail-item"><label>CPF</label><p>{selectedProfile.cpf}</p></div>
-                  <div className="adm-detail-item"><label>E-mail</label><p>{selectedProfile.email}</p></div>
-                  <div className="adm-detail-item"><label>Telefone</label><p>{selectedProfile.telefone || selectedProfile.phone}</p></div>
-                  <div className="adm-detail-item"><label>Endereço</label><p>{formatAddress(selectedProfile.endereco)}</p></div>
-                  
-                  {selectedProfile.role === 'family' ? (
-                    <>
-                      <div className="adm-detail-item"><label>Renda Familiar</label><p>{selectedProfile.rendaFamiliar || "Não informado"}</p></div>
-                      <div className="adm-detail-item"><label>Composição</label><p>{selectedProfile.adultos} adultos, {selectedProfile.criancas} crianças</p></div>
-                      <div className="adm-detail-item"><label>Necessidades</label><p>{selectedProfile.necessidades?.join(", ") || "N/A"}</p></div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="adm-detail-item"><label>Profissão</label><p>{selectedProfile.profissao || "Não informado"}</p></div>
-                      <div className="adm-detail-item"><label>Disponibilidade</label><p>{selectedProfile.disponibilidade?.join(", ") || "N/A"}</p></div>
-                      <div className="adm-detail-item"><label>Interesses</label><p>{selectedProfile.interesses?.join(", ") || "N/A"}</p></div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {selectedProfile.proposito && (
-                <div className="adm-detail-section">
-                  <h3>Propósito</h3>
-                  <p style={{ fontStyle: 'italic', color: 'var(--adm-secondary)' }}>"{selectedProfile.proposito}"</p>
-                </div>
-              )}
-
-              <div className="adm-checklist-section">
-                <h3>Verificação de Perfil</h3>
-                <div className="adm-checklist-items">
-                  <div className={`adm-checklist-item ${evaluationChecklist.check1 ? 'adm-checked' : ''}`} onClick={() => setEvaluationChecklist(p => ({ ...p, check1: !p.check1 }))}>
-                    <div className="adm-checkbox" /><span>Identidade Confirmada (CPF)</span>
-                  </div>
-                  <div className={`adm-checklist-item ${evaluationChecklist.check2 ? 'adm-checked' : ''}`} onClick={() => setEvaluationChecklist(p => ({ ...p, check2: !p.check2 }))}>
-                    <div className="adm-checkbox" /><span>Comprovante de Residência OK</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="adm-modal-footer">
-              <button className="adm-btn-secondary" onClick={closeModals}>Cancelar</button>
-              <button className="adm-btn-primary" 
-                style={{ background: selectedProfile.role === 'family' ? 'var(--adm-family-color)' : 'var(--adm-citizen-color)' }}
-                disabled={!evaluationChecklist.check1 || !evaluationChecklist.check2} 
-                onClick={() => handleUpdateStatus(selectedProfile.uid, "analyzed", selectedProfile.role === 'family' ? "families" : "citizens", selectedProfile.nomeCompleto || selectedProfile.full_name)}>
-                Concluir Análise
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileModal
+        isOpen={!!selectedProfile}
+        onClose={closeModals}
+        item={selectedProfile}
+        type={selectedProfile?.role === 'family' ? 'family' : 'citizen'}
+        onConfirm={(item, type) => {
+          const entityType = type === 'family' ? 'families' : 'citizens';
+          const itemId = item.uid || item.id;
+          const itemName = item.nomeCompleto || item.full_name;
+          handleUpdateStatus(itemId, "analyzed", entityType, itemName);
+        }}
+        evaluationChecklist={evaluationChecklist}
+        setEvaluationChecklist={setEvaluationChecklist}
+        loading={loading}
+      />
       
       {/* Success Modal */}
       {successAction && (
@@ -946,66 +887,61 @@ export default function DashboardMobile() {
       )}
 
       {/* Filter Bottom Sheet */}
-      <div className={`adm-filter-sheet-overlay ${showFilters ? 'open' : ''}`} onClick={() => setShowFilters(false)}>
-        <div className="adm-filter-sheet" onClick={e => e.stopPropagation()}>
-          <div className="adm-filter-header">
-            <h3>Filtrar Resultados</h3>
-            <button className="adm-filter-close" onClick={() => setShowFilters(false)}>
-              <X size={20} />
+      <BottomSheet
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        title="Filtrar Resultados"
+        onApply={() => setShowFilters(false)}
+        onClear={clearFilters}
+      >
+        <div className="filter-group">
+          <label>Status</label>
+          <div className="filter-options">
+            <button 
+              className={`filter-chip ${filters.status === 'all' ? 'active' : ''}`} 
+              onClick={() => setFilters({...filters, status: 'all'})}
+            >
+              Todos
+            </button>
+            <button 
+              className={`filter-chip ${filters.status === 'pending' ? 'active' : ''}`} 
+              onClick={() => setFilters({...filters, status: 'pending'})}
+            >
+              Pendentes
+            </button>
+            <button 
+              className={`filter-chip ${filters.status === 'analyzed' ? 'active' : ''}`} 
+              onClick={() => setFilters({...filters, status: 'analyzed'})}
+            >
+              Analisados
             </button>
           </div>
-          <div className="adm-filter-body">
-            {/* Status */}
-            <div className="adm-filter-group">
-              <label>Status</label>
-              <div className="adm-filter-options">
-                <button 
-                  className={`adm-filter-chip ${filters.status === 'all' ? 'active' : ''}`} 
-                  onClick={() => setFilters({...filters, status: 'all'})}
-                >Todos</button>
-                <button 
-                  className={`adm-filter-chip ${filters.status === 'pending' ? 'active' : ''}`} 
-                  onClick={() => setFilters({...filters, status: 'pending'})}
-                >Pendentes</button>
-                <button 
-                  className={`adm-filter-chip ${filters.status === 'analyzed' ? 'active' : ''}`} 
-                  onClick={() => setFilters({...filters, status: 'analyzed'})}
-                >Analisados</button>
-              </div>
-            </div>
-            
-            {/* Date */}
-            <div className="adm-filter-group">
-              <label>Data de Cadastro</label>
-              <select 
-                value={filters.date} 
-                onChange={(e) => setFilters({...filters, date: e.target.value})}
-                className="adm-filter-select"
-              >
-                <option value="all">Todo o período</option>
-                <option value="7days">Últimos 7 dias</option>
-                <option value="30days">Últimos 30 dias</option>
-              </select>
-            </div>
-
-            {/* Bairro */}
-            <div className="adm-filter-group">
-              <label>Bairro</label>
-              <input 
-                type="text" 
-                placeholder="Ex: Centro" 
-                value={filters.bairro}
-                onChange={(e) => setFilters({...filters, bairro: e.target.value})}
-                className="adm-filter-input"
-              />
-            </div>
-          </div>
-          <div className="adm-modal-footer">
-            <button className="adm-btn-secondary" onClick={() => { setFilters({ status: 'all', date: 'all', bairro: '' }); setShowFilters(false); }}>Limpar</button>
-            <button className="adm-btn-primary" onClick={() => setShowFilters(false)}>Aplicar Filtros</button>
-          </div>
         </div>
-      </div>
+        
+        <div className="filter-group">
+          <label>Data de Cadastro</label>
+          <select 
+            value={filters.date} 
+            onChange={(e) => setFilters({...filters, date: e.target.value})}
+            className="filter-select"
+          >
+            <option value="all">Todo o período</option>
+            <option value="7days">Últimos 7 dias</option>
+            <option value="30days">Últimos 30 dias</option>
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label>Bairro</label>
+          <input 
+            type="text" 
+            placeholder="Ex: Centro" 
+            value={filters.bairro}
+            onChange={(e) => setFilters({...filters, bairro: e.target.value})}
+            className="filter-input"
+          />
+        </div>
+      </BottomSheet>
 
       <Toast 
         show={toast.show} 

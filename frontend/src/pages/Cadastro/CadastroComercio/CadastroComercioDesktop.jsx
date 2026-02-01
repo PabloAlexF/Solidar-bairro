@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Toast from '../../../components/ui/Toast';
+import AddressInput from '../../../components/ui/AddressInput';
 import './CadastroComercio.css';
 
 export default function CadastroComercioDesktop() {
@@ -30,6 +31,12 @@ export default function CadastroComercioDesktop() {
       estado: '',
       cep: ''
     },
+    cep: '',
+    numero: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    referencia: '',
     categoria: '',
     horarioFuncionamento: '',
     senha: '',
@@ -352,36 +359,23 @@ export default function CadastroComercioDesktop() {
 
               {step === 4 && (
                 <div className="comercio-form-grid">
-                  <div className="comercio-form-group">
-                    <label className="comercio-field-label">Rua</label>
-                    <div className="comercio-input-with-icon">
-                      <MapPin className="comercio-field-icon" size={20} />
-                      <input required type="text" className="comercio-form-input" placeholder="Nome da rua" />
-                    </div>
-                  </div>
-                  <div className="comercio-form-group">
-                    <label className="comercio-field-label">Número</label>
-                    <input required type="text" className="comercio-form-input" placeholder="Número" />
-                  </div>
-                  <div className="comercio-form-group">
-                    <label className="comercio-field-label">Bairro</label>
-                    <input required type="text" className="comercio-form-input" placeholder="Bairro" />
-                  </div>
-                  <div className="comercio-form-group">
-                    <label className="comercio-field-label">Cidade</label>
-                    <input required type="text" className="comercio-form-input" placeholder="Cidade" />
-                  </div>
-                  <div className="comercio-form-group">
-                    <label className="comercio-field-label">Estado</label>
-                    <input required type="text" className="comercio-form-input" placeholder="Estado" />
-                  </div>
-                  <div className="comercio-form-group">
-                    <label className="comercio-field-label">CEP</label>
-                    <input required type="text" className="comercio-form-input" placeholder="00000-000" />
+                  <div className="comercio-form-group comercio-span-2">
+                    <AddressInput 
+                      addressData={formData}
+                      setAddressData={setFormData}
+                      required={true}
+                    />
                   </div>
                   <div className="comercio-form-group comercio-span-2">
                     <label className="comercio-field-label">Horário de Funcionamento</label>
-                    <input required type="text" className="comercio-form-input" placeholder="Ex: Seg a Sex das 08h às 18h" />
+                    <input 
+                      required 
+                      type="text" 
+                      className="comercio-form-input" 
+                      placeholder="Ex: Seg a Sex das 08h às 18h"
+                      value={formData.horarioFuncionamento}
+                      onChange={(e) => setFormData(prev => ({ ...prev, horarioFuncionamento: e.target.value }))}
+                    />
                   </div>
                 </div>
               )}

@@ -12,15 +12,35 @@ class ComercioService {
   async createComercio(data) {
     console.log('Dados recebidos para comércio:', data);
 
-    const comercio = new Comercio(data);
+    // Normalizar dados antes de criar o modelo
+    const normalizedData = { ...data };
+    if (!normalizedData.nomeComercio && normalizedData.nome) {
+      normalizedData.nomeComercio = normalizedData.nome;
+      console.log('Normalizando nomeComercio:', normalizedData.nomeComercio);
+    }
+    if (!normalizedData.nomeComercio && normalizedData.nomeEstabelecimento) {
+      normalizedData.nomeComercio = normalizedData.nomeEstabelecimento;
+      console.log('Normalizando nomeComercio:', normalizedData.nomeComercio);
+    }
+    if (!normalizedData.categoria && normalizedData.tipoComercio) {
+      normalizedData.categoria = normalizedData.tipoComercio;
+    }
+    if (!normalizedData.descricao && normalizedData.descricaoAtividade) {
+      normalizedData.descricao = normalizedData.descricaoAtividade;
+    }
+
+    console.log('Dados normalizados:', { nomeComercio: normalizedData.nomeComercio, categoria: normalizedData.categoria });
+
+    const comercio = new Comercio(normalizedData);
     const errors = comercio.validate();
 
     if (errors.length > 0) {
+      console.log('Erros de validação:', errors);
       throw new Error(`Dados inválidos: ${errors.join(', ')}`);
     }
 
     // Hash da senha
-    const hashedPassword = await authService.hashPassword(data.senha);
+    const hashedPassword = await authService.hashPassword(data.senha || data.password);
 
     // Converter para objeto simples sem Firebase Auth
     const comercioData = {

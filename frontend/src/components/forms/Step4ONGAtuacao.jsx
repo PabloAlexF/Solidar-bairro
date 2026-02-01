@@ -1,23 +1,22 @@
 import React from 'react';
-import { Home, Building2, Compass, Sun, Sunrise, Warehouse, Map, CheckCircle2 } from 'lucide-react';
+import { Building2, Compass, Sun, Sunrise, Warehouse, Map, CheckCircle2 } from 'lucide-react';
+import AddressInput from '../ui/AddressInput';
 
 export default function Step4ONGAtuacao({ formData, updateFormData, selectedAreas, setSelectedAreas }) {
   return (
     <div className="fam-reg-form-grid">
       <div className="fam-reg-input-group fam-reg-input-group-full">
-        <label className="fam-reg-input-label">Sede da ONG <span style={{ color: '#ef4444' }}>*</span></label>
-        <div className="fam-reg-input-wrapper">
-          <Home className="fam-reg-input-icon" size={20} />
-          <input
-            required
-            type="text"
-            className="fam-reg-form-input"
-            placeholder="Endereço completo da sede"
-            value={formData.sede}
-            onChange={(e) => updateFormData('sede', e.target.value)}
-          />
-        </div>
+        <h3 style={{ marginBottom: '1rem', color: '#374151' }}>Local</h3>
+        <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>Onde você atua?</p>
+        <p style={{ marginBottom: '1.5rem', color: '#6b7280', fontSize: '0.9rem' }}>Informe seu endereço ou região onde prefere realizar as ações.</p>
+        
+        <AddressInput 
+          addressData={formData}
+          setAddressData={updateFormData}
+          required={true}
+        />
       </div>
+      
       <div className="fam-reg-input-group fam-reg-input-group-full">
         <label className="fam-reg-input-label">Áreas de Cobertura (Selecione os bairros onde atuam)</label>
         <div className="fam-reg-coverage-grid">

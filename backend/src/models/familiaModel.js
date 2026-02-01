@@ -62,23 +62,63 @@ class Familia {
 
   validate() {
     const errors = [];
-    
-    // Validações obrigatórias apenas para campos essenciais
-    if (!this.nomeCompleto?.trim()) errors.push('Nome do responsável é obrigatório');
-    if (!this.rendaFamiliar?.trim()) errors.push('Renda familiar é obrigatória');
-    
-    // Validações opcionais para outros campos
-    // if (!this.dataNascimento) errors.push('Data de nascimento é obrigatória');
-    // if (!this.estadoCivil?.trim()) errors.push('Estado civil é obrigatório');
-    // if (!this.profissao?.trim()) errors.push('Profissão é obrigatória');
-    // if (!this.cpf?.trim()) errors.push('CPF é obrigatório');
-    // if (!this.rg?.trim()) errors.push('RG é obrigatório');
-    // if (!this.telefone?.trim()) errors.push('Telefone é obrigatório');
-    // if (!this.horarioContato?.trim()) errors.push('Horário de contato é obrigatório');
-    // if (!this.endereco?.endereco?.trim() && !this.endereco?.logradouro?.trim()) errors.push('Endereço é obrigatório');
-    // if (!this.endereco?.bairro?.trim()) errors.push('Bairro é obrigatório');
-    // if (!this.endereco?.tipoMoradia?.trim()) errors.push('Tipo de moradia é obrigatório');
-    
+
+    // Validações obrigatórias para famílias (mais flexíveis)
+    if (!this.nomeCompleto?.trim()) {
+      errors.push('Nome do responsável é obrigatório');
+    } else if (!ValidationUtils.validarNomeCompleto(this.nomeCompleto)) {
+      errors.push('Nome deve conter pelo menos nome e sobrenome (mínimo 2 caracteres cada)');
+    }
+
+    if (!this.rendaFamiliar?.trim()) {
+      errors.push('Renda familiar é obrigatória');
+    }
+
+    // CPF opcional mas se informado deve ser válido
+    if (this.cpf?.trim() && !ValidationUtils.validarCPF(this.cpf)) {
+      errors.push('CPF inválido (se informado)');
+    }
+
+    // RG opcional mas se informado deve ter validação básica
+    if (this.rg?.trim() && !ValidationUtils.validarRG(this.rg)) {
+      errors.push('RG deve ter pelo menos 7 dígitos (se informado)');
+    }
+
+    // E-mail opcional mas se informado deve ser válido
+    if (this.email?.trim() && !ValidationUtils.validarEmail(this.email)) {
+      errors.push('E-mail deve ter um formato válido (se informado)');
+    }
+
+    // Telefone opcional mas se informado deve ser válido
+    if (this.telefone?.trim() && !ValidationUtils.validarTelefone(this.telefone)) {
+      errors.push('Telefone deve ter 10 ou 11 dígitos (se informado)');
+    }
+
+    // Validação de endereço obrigatória
+    if (!ValidationUtils.validarEndereco(this.endereco)) {
+      errors.push('Endereço deve ter pelo menos 10 caracteres');
+    }
+
+    // Validação de bairro obrigatório
+    if (!this.endereco?.bairro?.trim()) {
+      errors.push('Bairro é obrigatório');
+    }
+
+    // Validação de tipo de moradia obrigatório
+    if (!this.endereco?.tipoMoradia?.trim()) {
+      errors.push('Tipo de moradia é obrigatório');
+    }
+
+    // Validação de composição familiar
+    const totalMembros = (this.composicao?.criancas || 0) +
+                        (this.composicao?.jovens || 0) +
+                        (this.composicao?.adultos || 0) +
+                        (this.composicao?.idosos || 0);
+
+    if (totalMembros === 0) {
+      errors.push('Deve haver pelo menos 1 membro na família');
+    }
+
     return errors;
   }
 }

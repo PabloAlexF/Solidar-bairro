@@ -47,6 +47,20 @@ class ONGController {
       res.status(400).json({ success: false, error: error.message });
     }
   }
+
+  async markAsAnalyzed(req, res) {
+    try {
+      const updateData = {
+        status: 'analyzed',
+        analyzedAt: new Date(),
+        analyzedBy: 'admin'
+      };
+      const ong = await ongService.updateONG(req.params.uid, updateData);
+      res.json({ success: true, data: ong, message: 'ONG marcada como analisada' });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new ONGController();

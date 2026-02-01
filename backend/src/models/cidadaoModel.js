@@ -8,14 +8,7 @@ class Cidadao {
     this.cpf = data.cpf;
     this.rg = data.rg;
     this.endereco = data.endereco;
-    this.disponibilidade = data.disponibilidade || [];
-    this.interesses = data.interesses || [];
-    this.proposito = data.proposito || '';
-    this.senha = data.senha;
-    this.ajudasConcluidas = data.ajudasConcluidas || 0;
-    this.pontos = data.pontos || 0;
-    this.pedidosCriados = data.pedidosCriados || 0;
-    this.fotoPerfil = data.fotoPerfil || null;
+    this.senha = data.senha || data.password;
     this.tipo = 'cidadao';
     this.ativo = true;
     this.criadoEm = new Date();
@@ -24,20 +17,25 @@ class Cidadao {
 
   validate() {
     const errors = [];
-    
-    if (!this.nome?.trim()) errors.push('Nome é obrigatório');
-    if (!this.email?.trim()) errors.push('Email é obrigatório');
-    if (!this.telefone?.trim()) errors.push('Telefone é obrigatório');
-    if (!this.dataNascimento) errors.push('Data de nascimento é obrigatória');
-    if (!this.ocupacao?.trim()) errors.push('Ocupação é obrigatória');
-    if (!this.cpf?.trim()) errors.push('CPF é obrigatório');
-    if (!this.rg?.trim()) errors.push('RG é obrigatório');
-    
-    // Validação simplificada de endereço
-    if (!this.endereco) {
-      errors.push('Endereço é obrigatório');
+
+    if (!this.nome?.trim()) {
+      errors.push('Nome é obrigatório');
     }
-    
+
+    if (!this.email?.trim()) {
+      errors.push('E-mail é obrigatório');
+    }
+
+    if (!this.telefone?.trim()) {
+      errors.push('Telefone é obrigatório');
+    }
+
+    if (!this.senha?.trim()) {
+      errors.push('Senha é obrigatória');
+    } else if (this.senha.length < 6) {
+      errors.push('Senha deve ter pelo menos 6 caracteres');
+    }
+
     return errors;
   }
 }

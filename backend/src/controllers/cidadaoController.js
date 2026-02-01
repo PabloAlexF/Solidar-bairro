@@ -53,6 +53,20 @@ class CidadaoController {
     }
   }
 
+  async markAsAnalyzed(req, res) {
+    try {
+      const updateData = {
+        status: 'analyzed',
+        analyzedAt: new Date(),
+        analyzedBy: 'admin'
+      };
+      const cidadao = await cidadaoService.updateCidadao(req.params.uid, updateData);
+      res.json({ success: true, data: cidadao, message: 'Cidadão marcado como analisado' });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
   async getAjudasConcluidas(req, res) {
     try {
       const { uid } = req.params;

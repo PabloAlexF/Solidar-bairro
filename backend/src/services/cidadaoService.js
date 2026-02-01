@@ -12,7 +12,13 @@ class CidadaoService {
   async createCidadao(data) {
     console.log('Dados recebidos para cidadão:', data);
 
-    const cidadao = new Cidadao(data);
+    // Normalizar dados
+    const normalizedData = { ...data };
+    if (!normalizedData.senha && normalizedData.password) {
+      normalizedData.senha = normalizedData.password;
+    }
+
+    const cidadao = new Cidadao(normalizedData);
     const errors = cidadao.validate();
 
     if (errors.length > 0) {
@@ -20,7 +26,7 @@ class CidadaoService {
     }
 
     // Hash da senha
-    const hashedPassword = await authService.hashPassword(cidadao.senha);
+    const hashedPassword = await authService.hashPassword(data.senha || data.password);
 
     // Converter para objeto simples sem Firebase Auth
     const cidadaoData = {

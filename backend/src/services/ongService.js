@@ -20,7 +20,7 @@ class ONGService {
     }
 
     // Hash da senha
-    const hashedPassword = await authService.hashPassword(data.senha);
+    const hashedPassword = await authService.hashPassword(data.senha || data.password);
 
     // Converter para objeto simples sem Firebase Auth
     const ongData = {

@@ -31,24 +31,29 @@
 .badge-default {
   background-color: #f1f5f9;
   color: #64748b;
+  border: 1px solid #e2e8f0;
 }
 
 .badge-success {
   background-color: #dcfce7;
   color: #15803d;
+  border: 1px solid #bbf7d0;
 }
 
 .badge-warning {
   background-color: #fef3c7;
-  color: #92400e;
+  color: #a16207;
+  border: 1px solid #fde68a;
 }
 
 .badge-error {
   background-color: #fee2e2;
-  color: #b91c1c;
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }
 
 .badge-info {
-  background-color: #e0f2fe;
-  color: #0369a1;
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
 }

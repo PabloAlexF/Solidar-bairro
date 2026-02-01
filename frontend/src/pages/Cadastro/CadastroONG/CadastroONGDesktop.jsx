@@ -33,6 +33,13 @@ export default function CadastroONGDesktop() {
     email: '',
     website: '',
     sede: '',
+    cep: '',
+    endereco: '',
+    numero: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    referencia: '',
     numVoluntarios: '',
     colaboradoresFixos: '',
     causas: []

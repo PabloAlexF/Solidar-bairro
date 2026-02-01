@@ -11,6 +11,7 @@ import createGlobe from 'cobe';
 import GlobeFeatureSection from './GlobeFeatureSection';
 import ApiService from '../../services/apiService';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
+import Footer from '../../components/layout/Footer';
 import {
   Heart,
   HandHelping,
@@ -1087,33 +1088,7 @@ export default function DesktopLandingPage() {
 
       <GlobeFeatureSection />
 
-      {/* Footer */}
-      <footer id="about" className="landing-footer">
-        <div className="section-container">
-          <div className="footer-main">
-            <div className="footer-brand">
-              <div className="logo-wrapper">
-                <Heart className="heart-icon" fill="#0d9488" size={32} />
-                <span className="logo-name">SolidarBrasil</span>
-              </div>
-              <p className="footer-tagline">Plataforma de solidariedade comunitária que conecta pessoas que precisam de ajuda com aquelas que podem ajudar.</p>
-            </div>
-            <div className="footer-info-grid">
-              <div className="footer-column">
-                <h4 className="column-title">Nossa Missão</h4>
-                <p className="column-text">Conectar vizinhos e fortalecer os laços da comunidade através de uma rede de apoio mútuo, promovendo solidariedade e segurança local.</p>
-              </div>
-              <div className="footer-column">
-                <h4 className="column-title">Tecnologia</h4>
-                <p className="column-text">React.js • Node.js • Firebase • Geolocalização em tempo real • Design responsivo mobile-first</p>
-              </div>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <p className="copyright">&copy; {new Date().getFullYear()} SolidarBrasil. Conectando comunidades, transformando vidas. 💚</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

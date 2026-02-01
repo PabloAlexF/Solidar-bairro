@@ -313,6 +313,37 @@ export default function AdminDashboard() {
     fetchData();
   };
 
+  const handleConfirmAnalysis = async (item, type) => {
+    try {
+      setLoading(true);
+      
+      let endpoint = '';
+      if (type === 'ong') endpoint = `/ongs/${item.id}/analyze`;
+      else if (type === 'commerce') endpoint = `/comercios/${item.id}/analyze`;
+      else if (type === 'family') endpoint = `/familias/${item.id}/analyze`;
+      else if (type === 'citizen') endpoint = `/cidadaos/${item.id}/analyze`;
+
+      // Chamar API específica para marcar como analisado
+      await apiService.request(endpoint, {
+        method: 'PATCH'
+      });
+
+      showToast('Análise confirmada com sucesso!', 'success');
+      
+      // Fechar modal e atualizar dados
+      setSelectedOng(null);
+      setSelectedCommerce(null);
+      setSelectedProfile(null);
+      
+      await fetchData();
+    } catch (error) {
+      console.error('Erro ao confirmar análise:', error);
+      showToast('Erro ao confirmar análise', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Calculate stats dynamically based on filtered data
   const displayStats = useMemo(() => {
     const pOngs = processedOngs || [];
@@ -324,13 +355,17 @@ export default function AdminDashboard() {
 
     return {
       totalOngs: pOngs.length,
-      pendingOngs: pOngs.filter(o => o.status === 'pending').length,
+      pendingOngs: pOngs.filter(o => !o.status || o.status === 'pending' || o.status === 'active' || o.status === 'ativo').length,
+      analyzedOngs: pOngs.filter(o => o.status === 'analyzed').length,
       totalCommerces: pCommerces.length,
-      pendingCommerces: pCommerces.filter(c => c.status === 'pending').length,
+      pendingCommerces: pCommerces.filter(c => !c.status || c.status === 'pending' || c.status === 'active' || c.status === 'ativo').length,
+      analyzedCommerces: pCommerces.filter(c => c.status === 'analyzed').length,
       totalFamilies: pFamilies.length,
-      pendingFamilies: pFamilies.filter(f => f.status === 'pending').length,
+      pendingFamilies: pFamilies.filter(f => !f.status || f.status === 'pending' || f.status === 'active' || f.status === 'ativo').length,
+      analyzedFamilies: pFamilies.filter(f => f.status === 'analyzed').length,
       totalCitizens: pCitizens.length,
-      pendingCitizens: pCitizens.filter(c => c.status === 'pending').length,
+      pendingCitizens: pCitizens.filter(c => !c.status || c.status === 'pending' || c.status === 'active' || c.status === 'ativo').length,
+      analyzedCitizens: pCitizens.filter(c => c.status === 'analyzed').length,
     };
   }, [processedOngs, processedCommerces, processedProfiles]);
 
@@ -362,6 +397,7 @@ export default function AdminDashboard() {
     const s = status || 'pending';
     const config = {
       verified: { className: 'status-badge verified', label: 'Verificado', icon: CheckCircle },
+      analyzed: { className: 'status-badge analyzed', label: 'Analisado', icon: CheckCircle },
       pending: { className: 'status-badge pending', label: 'Pendente', icon: Clock },
       rejected: { className: 'status-badge rejected', label: 'Rejeitado', icon: XCircle },
     };
@@ -608,21 +644,21 @@ export default function AdminDashboard() {
                     <div className="activity-icon success"><CheckCircle size={18} /></div>
                     <div className="activity-content">
                       <div className="activity-header">
-                        <div className="activity-number">{(displayStats.totalOngs - displayStats.pendingOngs) + (displayStats.totalCommerces - displayStats.pendingCommerces) + (displayStats.totalFamilies - displayStats.pendingFamilies) + (displayStats.totalCitizens - displayStats.pendingCitizens)}</div>
-                        <div className="activity-trend percentage">{Math.round(((displayStats.totalOngs - displayStats.pendingOngs) + (displayStats.totalCommerces - displayStats.pendingCommerces) + (displayStats.totalFamilies - displayStats.pendingFamilies) + (displayStats.totalCitizens - displayStats.pendingCitizens)) / Math.max(1, displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens) * 100)}%</div>
+                        <div className="activity-number">{displayStats.analyzedOngs + displayStats.analyzedCommerces + displayStats.analyzedFamilies + displayStats.analyzedCitizens}</div>
+                        <div className="activity-trend percentage">{Math.round((displayStats.analyzedOngs + displayStats.analyzedCommerces + displayStats.analyzedFamilies + displayStats.analyzedCitizens) / Math.max(1, displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens) * 100)}%</div>
                       </div>
-                      <div className="activity-label">Analisados</div>
-                      <div className="activity-subtitle">Taxa de análise</div>
+                      <div className="activity-label">Analisados pelo Admin</div>
+                      <div className="activity-subtitle">Confirmados manualmente</div>
                     </div>
                   </div>
                 </div>
                 <div className="activity-progress">
                   <div className="progress-header">
-                    <span>Taxa de Processamento</span>
-                    <span className="progress-percentage">{Math.round(((displayStats.totalOngs - displayStats.pendingOngs) + (displayStats.totalCommerces - displayStats.pendingCommerces) + (displayStats.totalFamilies - displayStats.pendingFamilies) + (displayStats.totalCitizens - displayStats.pendingCitizens)) / Math.max(1, displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens) * 100)}%</span>
+                    <span>Taxa de Análise</span>
+                    <span className="progress-percentage">{Math.round((displayStats.analyzedOngs + displayStats.analyzedCommerces + displayStats.analyzedFamilies + displayStats.analyzedCitizens) / Math.max(1, displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens) * 100)}%</span>
                   </div>
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${Math.round(((displayStats.totalOngs - displayStats.pendingOngs) + (displayStats.totalCommerces - displayStats.pendingCommerces) + (displayStats.totalFamilies - displayStats.pendingFamilies) + (displayStats.totalCitizens - displayStats.pendingCitizens)) / Math.max(1, displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens) * 100)}%` }}></div>
+                    <div className="progress-fill" style={{ width: `${Math.round((displayStats.analyzedOngs + displayStats.analyzedCommerces + displayStats.analyzedFamilies + displayStats.analyzedCitizens) / Math.max(1, displayStats.totalOngs + displayStats.totalCommerces + displayStats.totalFamilies + displayStats.totalCitizens) * 100)}%` }}></div>
                   </div>
                 </div>
               </div>
@@ -915,6 +951,197 @@ export default function AdminDashboard() {
         </>
         )}
       </main>
+
+      {/* Modals */}
+      {selectedOng && (
+        <div className="modal-overlay" onClick={() => setSelectedOng(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Detalhes da ONG</h2>
+              <button onClick={() => setSelectedOng(null)} className="modal-close">
+                <XCircle size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <label>Nome/Razão Social:</label>
+                  <span>{selectedOng.razaoSocial || selectedOng.nome || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>CNPJ:</label>
+                  <span>{selectedOng.cnpj || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Email:</label>
+                  <span>{selectedOng.email || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Telefone:</label>
+                  <span>{selectedOng.telefone || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Status:</label>
+                  <span>{getStatusBadge(selectedOng.status)}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Data de Cadastro:</label>
+                  <span>{new Date(selectedOng.createdAt || selectedOng.created_at || Date.now()).toLocaleDateString('pt-BR')}</span>
+                </div>
+                {selectedOng.endereco && (
+                  <div className="detail-item full-width">
+                    <label>Endereço:</label>
+                    <span>{selectedOng.endereco}</span>
+                  </div>
+                )}
+                {selectedOng.descricao && (
+                  <div className="detail-item full-width">
+                    <label>Descrição:</label>
+                    <span>{selectedOng.descricao}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setSelectedOng(null)} className="btn-secondary">Fechar</button>
+              {selectedOng.status !== 'analyzed' && (
+                <button 
+                  onClick={() => handleConfirmAnalysis(selectedOng, 'ong')} 
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  <CheckCircle size={16} /> Confirmar Análise
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedCommerce && (
+        <div className="modal-overlay" onClick={() => setSelectedCommerce(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Detalhes do Comércio</h2>
+              <button onClick={() => setSelectedCommerce(null)} className="modal-close">
+                <XCircle size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <label>Nome do Estabelecimento:</label>
+                  <span>{selectedCommerce.nomeEstabelecimento || selectedCommerce.nome || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>CNPJ:</label>
+                  <span>{selectedCommerce.cnpj || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Email:</label>
+                  <span>{selectedCommerce.email || selectedCommerce.contato?.email || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Telefone:</label>
+                  <span>{selectedCommerce.telefone || selectedCommerce.contato?.telefone || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Status:</label>
+                  <span>{getStatusBadge(selectedCommerce.status)}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Data de Cadastro:</label>
+                  <span>{new Date(selectedCommerce.createdAt || selectedCommerce.created_at || Date.now()).toLocaleDateString('pt-BR')}</span>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setSelectedCommerce(null)} className="btn-secondary">Fechar</button>
+              {selectedCommerce.status !== 'analyzed' && (
+                <button 
+                  onClick={() => handleConfirmAnalysis(selectedCommerce, 'commerce')} 
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  <CheckCircle size={16} /> Confirmar Análise
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedProfile && (
+        <div className="modal-overlay" onClick={() => setSelectedProfile(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Detalhes {selectedProfile._type === 'family' ? 'da Família' : 'do Cidadão'}</h2>
+              <button onClick={() => setSelectedProfile(null)} className="modal-close">
+                <XCircle size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <label>Nome:</label>
+                  <span>{selectedProfile.nome || selectedProfile.nomeCompleto || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>CPF:</label>
+                  <span>{selectedProfile.cpf || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Email:</label>
+                  <span>{selectedProfile.email || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Telefone:</label>
+                  <span>{selectedProfile.telefone || 'N/A'}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Status:</label>
+                  <span>{getStatusBadge(selectedProfile.status)}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Data de Cadastro:</label>
+                  <span>{new Date(selectedProfile.createdAt || selectedProfile.created_at || Date.now()).toLocaleDateString('pt-BR')}</span>
+                </div>
+                {selectedProfile._type === 'family' && selectedProfile.rendaFamiliar && (
+                  <div className="detail-item">
+                    <label>Renda Familiar:</label>
+                    <span>{selectedProfile.rendaFamiliar}</span>
+                  </div>
+                )}
+                {selectedProfile._type === 'family' && selectedProfile.necessidades && (
+                  <div className="detail-item full-width">
+                    <label>Necessidades:</label>
+                    <span>{selectedProfile.necessidades.join(', ')}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button onClick={() => setSelectedProfile(null)} className="btn-secondary">Fechar</button>
+              {selectedProfile.status !== 'analyzed' && (
+                <button 
+                  onClick={() => handleConfirmAnalysis(selectedProfile, selectedProfile._type === 'family' ? 'family' : 'citizen')} 
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  <CheckCircle size={16} /> Confirmar Análise
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`toast toast-${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

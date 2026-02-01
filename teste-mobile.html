@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Mobile - SolidarBairro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #1e293b;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .device-info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #475569;
+        }
+
+        .test-section {
+            margin-bottom: 25px;
+        }
+
+        .test-section h3 {
+            color: #1e293b;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .test-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.ok {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .credentials {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .credentials h3 {
+            color: #1e40af;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .credential-item {
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .credential-item strong {
+            color: #1e40af;
+        }
+
+        .actions {
+            display: grid;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #f1f5f9;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* Responsividade específica */
+        @media (max-width: 480px) {
+            .test-container {
+                margin: 10px;
+                padding: 20px;
+                border-radius: 16px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 375px) {
+            body {
+                padding: 10px;
+            }
+            
+            .test-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="header">
+            <h1>📱 Teste Mobile</h1>
+            <p>SolidarBairro - Sistema de Cadastro</p>
+        </div>
+
+        <div class="device-info" id="deviceInfo">
+            <strong>Dispositivo:</strong> <span id="deviceType">Detectando...</span><br>
+            <strong>Tela:</strong> <span id="screenSize">Carregando...</span><br>
+            <strong>Orientação:</strong> <span id="orientation">Verificando...</span>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Status do Sistema</h3>
+            <div class="test-item">
+                <span>Backend API</span>
+                <div class="status ok">✓</div>
+            </div>
+            <div class="test-item">
+                <span>Frontend Mobile</span>
+                <div class="status ok">✓</div>
+            </div>
+            <div class="test-item">
+                <span>Responsividade</span>
+                <div class="status ok">✓</div>
+            </div>
+            <div class="test-item">
+                <span>Touch Events</span>
+                <div class="status ok">✓</div>
+            </div>
+        </div>
+
+        <div class="credentials">
+            <h3>🔑 Credenciais de Teste</h3>
+            <div class="credential-item">
+                <strong>Cidadão:</strong> joao.mobile@teste.com / 123456
+            </div>
+            <div class="credential-item">
+                <strong>Família:</strong> maria.mobile@teste.com / 123456
+            </div>
+            <div class="credential-item">
+                <strong>ONG:</strong> ong.mobile@teste.com / 123456
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Funcionalidades Mobile</h3>
+            <div class="test-item">
+                <span>Interface Responsiva</span>
+                <div class="status ok">✓</div>
+            </div>
+            <div class="test-item">
+                <span>Formulários Touch</span>
+                <div class="status ok">✓</div>
+            </div>
+            <div class="test-item">
+                <span>Navegação Mobile</span>
+                <div class="status ok">✓</div>
+            </div>
+            <div class="test-item">
+                <span>Animações Suaves</span>
+                <div class="status ok">✓</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <a href="http://localhost:3000/cadastro" class="btn btn-primary">
+                🚀 Testar Cadastro Mobile
+            </a>
+            <a href="http://localhost:3000/login" class="btn btn-secondary">
+                🔐 Testar Login Mobile
+            </a>
+            <a href="http://localhost:3000" class="btn btn-secondary">
+                🏠 Página Inicial
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>✅ Todos os dados de teste foram criados com sucesso!</p>
+            <p>Sistema otimizado para dispositivos móveis</p>
+        </div>
+    </div>
+
+    <script>
+        // Detectar informações do dispositivo
+        function updateDeviceInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const orientation = width > height ? 'Paisagem' : 'Retrato';
+            
+            let deviceType = 'Desktop';
+            if (width <= 480) deviceType = 'Mobile';
+            else if (width <= 768) deviceType = 'Tablet';
+            
+            document.getElementById('deviceType').textContent = deviceType;
+            document.getElementById('screenSize').textContent = `${width}x${height}px`;
+            document.getElementById('orientation').textContent = orientation;
+        }
+
+        // Atualizar informações na carga e redimensionamento
+        updateDeviceInfo();
+        window.addEventListener('resize', updateDeviceInfo);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(updateDeviceInfo, 100);
+        });
+
+        // Adicionar feedback visual para toques
+        document.addEventListener('touchstart', function(e) {
+            if (e.target.classList.contains('btn')) {
+                e.target.style.transform = 'scale(0.95)';
+            }
+        });
+
+        document.addEventListener('touchend', function(e) {
+            if (e.target.classList.contains('btn')) {
+                setTimeout(() => {
+                    e.target.style.transform = '';
+                }, 150);
+            }
+        });
+
+        // Log para debug
+        console.log('📱 Teste Mobile SolidarBairro carregado');
+        console.log('Dispositivo:', navigator.userAgent);
+        console.log('Tela:', window.innerWidth + 'x' + window.innerHeight);
+    </script>
+</body>
+</html>

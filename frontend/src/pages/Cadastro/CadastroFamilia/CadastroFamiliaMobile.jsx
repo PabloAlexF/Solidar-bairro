@@ -464,7 +464,7 @@ export default function CadastroFamiliaMobile() {
               </p>
             </div>
 
-            <form onSubmit={(e) => e.preventDefault()} className="fam-mob-form">
+            <form onSubmit={step === totalSteps ? handleSubmit : (e) => e.preventDefault()} className="fam-mob-form">
               <div className="fam-mob-form-body">
                 {step === 1 && (
                   <div className="fam-mob-form-grid">
@@ -876,7 +876,7 @@ export default function CadastroFamiliaMobile() {
                 <div style={{ flex: 1 }}></div>
                 
                 {step < totalSteps ? (
-                  <button type="submit" className="fam-mob-btn-next">
+                  <button type="button" onClick={handleNextStep} className="fam-mob-btn-next">
                     Próximo
                     <ChevronRight size={20} />
                   </button>

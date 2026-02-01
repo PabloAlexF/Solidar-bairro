@@ -32,20 +32,18 @@ const exemplosDados = {
     cidade: 'Lagoa Santa'
   },
   ong: {
-    nomeEntidade: 'Instituto Solidário',
+    nome: 'Instituto Solidário',
     cnpj: '98.765.432/0001-10',
-    razaoSocial: 'Instituto Solidário de Lagoa Santa',
-    areaTrabalho: 'Assistência Social',
-    descricaoAtuacao: 'Apoio a famílias em vulnerabilidade',
-    responsavelNome: 'Maria Santos',
-    responsavelCpf: '987.654.321-00',
-    telefone: '(31) 2222-2222',
     email: 'instituto@email.com',
-    senha: '123456',
-    endereco: 'Rua da Solidariedade, 789',
-    bairro: 'Vila Nova',
-    cidade: 'Lagoa Santa',
-    cep: '33400-100'
+    telefone: '(31) 2222-2222',
+    endereco: 'Rua da Solidariedade, 789, Vila Nova, Lagoa Santa',
+    areasAtuacao: ['Assistência Social'],
+    descricao: 'Apoio a famílias em vulnerabilidade social',
+    responsavel: {
+      nome: 'Maria Santos',
+      cpf: '987.654.321-00'
+    },
+    senha: '123456'
   },
   familia: {
     nome: 'Família Santos',

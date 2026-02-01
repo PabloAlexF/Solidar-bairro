@@ -409,6 +409,14 @@ export default function MobileLandingPage() {
                 <p className="footer-tagline">
                   Transformando vizinhanças através da colaboração local.
                 </p>
+                <div className="footer-contact">
+                  <p style={{fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem'}}>
+                    📧 <a href="mailto:solidarbrasil@gmail.com" style={{color: '#0d9488', textDecoration: 'none'}}>solidarbrasil@gmail.com</a>
+                  </p>
+                  <p style={{fontSize: '0.8rem', color: '#94a3b8', marginBottom: '1rem'}}>
+                    📱 <a href="tel:+5531925383871" style={{color: '#0d9488', textDecoration: 'none'}}>(31) 9253-8371</a>
+                  </p>
+                </div>
                 <div className="footer-social-group">
                   <a href="#" className="social-btn"><Instagram size={18} /></a>
                   <a href="#" className="social-btn"><Twitter size={18} /></a>

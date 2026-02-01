@@ -12,19 +12,24 @@ const Badge = ({
     if (!v) return 'badge-default';
     const lowerV = v.toString().toLowerCase();
     
-    // Success states
-    if (['analyzed', 'verified', 'ativo', 'ok', 'success', 'active'].includes(lowerV)) {
+    // Success states (Verde)
+    if (['analyzed', 'verified', 'ativo', 'active', 'approved', 'success'].includes(lowerV)) {
       return 'badge-success';
     }
     
-    // Warning/Pending states
-    if (['pending', 'warning', 'analise', 'análise'].includes(lowerV)) {
+    // Warning/Pending states (Amarelo)
+    if (['pending', 'warning', 'analise', 'análise', 'aguardando'].includes(lowerV)) {
       return 'badge-warning';
     }
     
-    // Error states
-    if (['rejected', 'error', 'danger', 'inactive'].includes(lowerV)) {
+    // Error states (Vermelho)
+    if (['rejected', 'error', 'danger', 'inactive', 'inativo', 'rejeitado'].includes(lowerV)) {
       return 'badge-error';
+    }
+    
+    // Info states (Azul)
+    if (['info', 'information'].includes(lowerV)) {
+      return 'badge-info';
     }
     
     return 'badge-default';

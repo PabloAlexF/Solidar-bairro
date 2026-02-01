@@ -17,10 +17,24 @@ const adminRoutes = require('./routes/adminRoutes');
 const statsRoutes = require('./routes/statsRoutes');
 const painelSocialRoutes = require('./routes/painelSocialRoutes');
 const botRoutes = require('./routes/botRoutes');
+const addressRoutes = require('./routes/addressRoutes');
+const cacheService = require('./services/cacheService');
+const logger = require('./services/loggerService');
+const { generalLimiter } = require('./middleware/rateLimiting');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Initialize cache service
+async function initializeServices() {
+  try {
+    await cacheService.connect();
+    logger.info('Services initialized successfully');
+  } catch (error) {
+    logger.error('Failed to initialize services:', error);
+  }
+}
 
 // CORS configurado para desenvolvimento
 const corsOptions = {
@@ -81,8 +95,13 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/painel-social', painelSocialRoutes);
 app.use('/api/bot', botRoutes);
+app.use('/api/address', addressRoutes);
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK' });
+  res.json({ 
+    status: 'OK',
+    cache: cacheService.isConnected ? 'Connected' : 'Disconnected',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Debug route to list all registered routes
@@ -125,8 +144,22 @@ app.use('*', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  await cacheService.disconnect();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  await cacheService.disconnect();
+  process.exit(0);
+});
+
+app.listen(PORT, async () => {
   console.log(`🚀 Servidor: http://localhost:${PORT}`);
+  await initializeServices();
 });
 
 module.exports = app;

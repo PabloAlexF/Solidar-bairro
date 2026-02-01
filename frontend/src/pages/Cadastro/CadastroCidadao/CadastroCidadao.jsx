@@ -12,6 +12,7 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import Toast from '../../../components/ui/Toast';
+import AddressInput from '../../../components/ui/AddressInput';
 import ApiService from '../../../services/apiService';
 import './CadastroCidadao.css';
 import '../../../styles/components/PasswordField.css';
@@ -33,6 +34,12 @@ export default function CadastroCidadao() {
     password: '',
     confirmPassword: '',
     endereco: '',
+    cep: '',
+    numero: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    referencia: '',
     disponibilidade: [],
     interesses: [],
     proposito: ''
@@ -54,7 +61,7 @@ export default function CadastroCidadao() {
                formData.password.length >= 6 &&
                formData.password === formData.confirmPassword;
       case 4:
-        return formData.endereco.trim() !== '';
+        return (formData.cep && formData.endereco && formData.bairro) || formData.endereco.trim() !== '';
       case 5:
         return formData.interesses.length > 0;
       default:
@@ -195,12 +202,12 @@ export default function CadastroCidadao() {
   };
 
   const steps = [
-    { id: 1, title: "Perfil", icon: <User size={20} /> },
-    { id: 2, title: "Identidade", icon: <Fingerprint size={20} /> },
-    { id: 3, title: "Contato", icon: <Phone size={20} /> },
-    { id: 4, title: "Local", icon: <MapPin size={20} /> },
-    { id: 5, title: "Interesses", icon: <Target size={20} /> },
-    { id: 6, title: "Impacto", icon: <Sparkles size={20} /> },
+    { id: 1, title: "Perfil", icon: <User size={22} /> },
+    { id: 2, title: "Identidade", icon: <Fingerprint size={22} /> },
+    { id: 3, title: "Contato", icon: <Phone size={22} /> },
+    { id: 4, title: "Local", icon: <MapPin size={22} /> },
+    { id: 5, title: "Interesses", icon: <Target size={22} /> },
+    { id: 6, title: "Impacto", icon: <Sparkles size={22} /> },
   ];
 
   const availabilityOptions = [
@@ -299,19 +306,19 @@ export default function CadastroCidadao() {
         </div>
       </nav>
 
-      <div className="cidadao-main-layout">
+      <div className="cidadao-main-layout" style={{ marginTop: '3rem', maxWidth: '1280px', marginInline: 'auto' }}>
         <aside className="sidebar-stepper">
-          <div className="stepper-card">
-            <h2 className="stepper-title">CADASTRO DE VOLUNTÁRIO</h2>
+          <div className="stepper-card" style={{ padding: '2rem' }}>
+            <h2 className="stepper-title" style={{ fontSize: '1rem', marginBottom: '1.5rem' }}>CADASTRO DE VOLUNTÁRIO</h2>
             <div className="stepper-list">
               {steps.map((s, i) => (
                 <div key={s.id} className={`stepper-item ${step === s.id ? 'active' : step > s.id ? 'completed' : ''}`}>
                   <div className="stepper-icon">
-                    {step > s.id ? <CheckCircle2 size={20} /> : s.icon}
+                    {step > s.id ? <CheckCircle2 size={22} /> : s.icon}
                   </div>
                   <div className="stepper-info">
-                    <span className="stepper-step-num">PASSO 0{s.id}</span>
-                    <span className="stepper-step-name">{s.title}</span>
+                    <span className="stepper-step-num" style={{ fontSize: '0.75rem' }}>PASSO 0{s.id}</span>
+                    <span className="stepper-step-name" style={{ fontSize: '1rem' }}>{s.title}</span>
                   </div>
                   {i < steps.length - 1 && <div className="stepper-line" />}
                 </div>
@@ -321,15 +328,15 @@ export default function CadastroCidadao() {
         </aside>
 
         <main className="form-main">
-          <div className="form-container-card animate-slide-up">
-            <div className="form-header-section">
+          <div className="form-container-card animate-slide-up" style={{ padding: '2.5rem' }}>
+            <div className="form-header-section" style={{ marginBottom: '2rem' }}>
               <div className="header-top">
-                <span className="step-badge">{steps.find(s => s.id === step)?.title}</span>
+                <span className="step-badge" style={{ fontSize: '0.85rem', padding: '0.35rem 1rem' }}>{steps.find(s => s.id === step)?.title}</span>
                 <div className="progress-bar-container">
                   <div className="progress-bar-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
                 </div>
               </div>
-              <h1 className="form-main-title">
+              <h1 className="form-main-title" style={{ fontSize: '2rem', marginTop: '1rem', marginBottom: '0.5rem' }}>
                 {step === 1 && <>Qual o seu <span className="text-highlight">perfil</span>?</>}
                 {step === 2 && <>Sua <span className="text-highlight">identidade</span></>}
                 {step === 3 && <>Canais de <span className="text-highlight">contato</span></>}
@@ -337,7 +344,7 @@ export default function CadastroCidadao() {
                 {step === 5 && <>Seus <span className="text-highlight">interesses</span></>}
                 {step === 6 && <>Seu <span className="text-highlight">propósito</span></>}
               </h1>
-              <p className="form-subtitle">
+              <p className="form-subtitle" style={{ fontSize: '1.1rem' }}>
                 {step === 1 && "Conte-nos quem você é para começarmos sua jornada voluntária."}
                 {step === 2 && "A segurança é prioridade. Validamos todos os voluntários da nossa rede."}
                 {step === 3 && "Como podemos falar com você sobre oportunidades de ajuda?"}
@@ -483,18 +490,11 @@ export default function CadastroCidadao() {
               {step === 4 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
-                    <label className="field-label">Endereço de Referência <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="input-with-icon">
-                      <Home className="field-icon" size={20} />
-                      <input 
-                        required 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="Rua, Bairro, Cidade"
-                        value={formData.endereco}
-                        onChange={(e) => updateFormData('endereco', e.target.value)}
-                      />
-                    </div>
+                    <AddressInput 
+                      addressData={formData}
+                      setAddressData={setFormData}
+                      required={true}
+                    />
                   </div>
                   <div className="form-group span-2">
                     <label className="field-label">Disponibilidade</label>
@@ -572,15 +572,33 @@ export default function CadastroCidadao() {
                 ) : (
                   <div />
                 )}
-                
+
                 <div className="nav-actions" style={{ display: 'flex', gap: '1rem' }}>
                   {step === 1 && <Link to="/" className="btn-cancel">Cancelar</Link>}
-                  
+
                   {step < totalSteps ? (
-                    <button type="button" onClick={handleNextStep} className="btn-next">
-                      <span>Avançar</span>
-                      <ChevronRight size={20} />
-                    </button>
+                    <>
+                      {!validateStep(step) && (
+                        <div className="validation-message" style={{
+                          fontSize: '0.85rem',
+                          color: '#ef4444',
+                          marginRight: '1rem',
+                          alignSelf: 'center',
+                          fontWeight: '500'
+                        }}>
+                          Preencha todos os campos obrigatórios para continuar
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleNextStep}
+                        className={`btn-next ${!validateStep(step) ? 'btn-disabled' : ''}`}
+                        disabled={!validateStep(step)}
+                      >
+                        <span>Avançar</span>
+                        <ChevronRight size={20} />
+                      </button>
+                    </>
                   ) : (
                     <button type="submit" className="btn-finish" disabled={isLoading}>
                       <span>{isLoading ? 'Cadastrando...' : 'Confirmar Compromisso'}</span>

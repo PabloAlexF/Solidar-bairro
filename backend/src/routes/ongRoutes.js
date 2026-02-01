@@ -7,5 +7,6 @@ router.post('/', ongController.createONG);
 router.get('/', ongController.getONGs);
 router.get('/:uid', ongController.getONGById);
 router.put('/:uid', ongController.updateONG);
+router.patch('/:uid/analyze', ongController.markAsAnalyzed);
 
 module.exports = router;
