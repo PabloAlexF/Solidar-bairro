@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Geolocalização Real</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .header {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #0d9488;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #0f766e;
+            transform: translateY(-1px);
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0d9488;
+        }
+        .success { background: #dcfce7; border-color: #16a34a; }
+        .error { background: #fee2e2; border-color: #dc2626; }
+        .loading { background: #fef3c7; border-color: #d97706; }
+        .info { background: #dbeafe; border-color: #2563eb; }
+        .location-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .location-item {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #0d9488;
+        }
+        .location-item strong {
+            display: block;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📍 Teste de Geolocalização Real</h1>
+        <p>Teste a detecção automática da sua localização</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Detecção de Localização</h2>
+        <p>Clique no botão abaixo para detectar sua localização real. O navegador pedirá permissão.</p>
+        
+        <button onclick="detectarLocalizacao()" id="detectBtn">
+            🌍 Detectar Minha Localização
+        </button>
+        
+        <button onclick="testarFiltros()" id="testBtn" disabled>
+            🔍 Testar Filtros com Minha Localização
+        </button>
+        
+        <div id="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Como Funciona</h2>
+        <div class="info result">
+            <strong>🎯 Objetivo:</strong> Mostrar apenas a cidade/bairro onde você realmente está
+            <br><br>
+            <strong>📋 Opções de Filtro:</strong>
+            <ul>
+                <li><strong>Todo o Brasil</strong> - Sempre disponível</li>
+                <li><strong>Minha Cidade</strong> - Só aparece se detectar sua localização</li>
+                <li><strong>Meu Bairro</strong> - Só aparece se detectar seu bairro</li>
+            </ul>
+            <br>
+            <strong>🔒 Privacidade:</strong> Sua localização não é salva, apenas usada para filtrar pedidos próximos.
+        </div>
+    </div>
+
+    <script>
+        let userLocation = null;
+
+        // Função de geolocalização (copiada do projeto)
+        const getCurrentLocation = () => {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject(new Error('Geolocalização não suportada'));
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        try {
+                            const { latitude, longitude } = position.coords;
+                            const location = await reverseGeocode(latitude, longitude);
+                            resolve(location);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    },
+                    (error) => {
+                        let errorMsg = 'Erro ao obter localização';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMsg = 'Permissão negada pelo usuário';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMsg = 'Localização indisponível';
+                                break;
+                            case error.TIMEOUT:
+                                errorMsg = 'Timeout na detecção';
+                                break;
+                        }
+                        reject(new Error(errorMsg));
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000 // 5 minutes
+                    }
+                );
+            });
+        };
+
+        // Geocodificação reversa
+        const reverseGeocode = async (lat, lon) => {
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=pt-BR`
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Erro na API de geocodificação');
+                }
+                
+                const data = await response.json();
+                
+                return {
+                    city: data.address?.city || data.address?.town || data.address?.village || 'Cidade não identificada',
+                    state: data.address?.state || 'Estado não identificado',
+                    neighborhood: data.address?.suburb || data.address?.neighbourhood || data.address?.quarter || null,
+                    country: data.address?.country || 'Brasil',
+                    coordinates: { lat, lon },
+                    fullAddress: data.display_name
+                };
+            } catch (error) {
+                console.warn('Erro na geocodificação reversa:', error);
+                throw new Error('Não foi possível identificar a localização');
+            }
+        };
+
+        async function detectarLocalizacao() {
+            const resultDiv = document.getElementById('result');
+            const detectBtn = document.getElementById('detectBtn');
+            const testBtn = document.getElementById('testBtn');
+            
+            detectBtn.disabled = true;
+            detectBtn.textContent = '🔄 Detectando...';
+            
+            resultDiv.innerHTML = '<div class="loading result">🔄 Detectando sua localização... Permita o acesso quando solicitado.</div>';
+            
+            try {
+                userLocation = await getCurrentLocation();
+                
+                let html = '<div class="success result">';
+                html += '<strong>✅ Localização detectada com sucesso!</strong>';
+                html += '<div class="location-info">';
+                html += `<div class="location-item"><strong>🏙️ Cidade:</strong> ${userLocation.city}</div>`;
+                html += `<div class="location-item"><strong>🗺️ Estado:</strong> ${userLocation.state}</div>`;
+                if (userLocation.neighborhood) {
+                    html += `<div class="location-item"><strong>🏘️ Bairro:</strong> ${userLocation.neighborhood}</div>`;
+                }
+                html += `<div class="location-item"><strong>🌍 País:</strong> ${userLocation.country}</div>`;
+                html += `<div class="location-item"><strong>📍 Coordenadas:</strong> ${userLocation.coordinates.lat.toFixed(4)}, ${userLocation.coordinates.lon.toFixed(4)}</div>`;
+                html += '</div>';
+                html += `<div style="margin-top: 15px; font-size: 14px; color: #6b7280;"><strong>Endereço completo:</strong> ${userLocation.fullAddress}</div>`;
+                html += '</div>';
+                
+                resultDiv.innerHTML = html;
+                
+                detectBtn.textContent = '✅ Localização Detectada';
+                testBtn.disabled = false;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error result"><strong>❌ Erro:</strong> ${error.message}<br><br><strong>💡 Dicas:</strong><ul><li>Permita o acesso à localização quando solicitado</li><li>Verifique se está usando HTTPS ou localhost</li><li>Tente recarregar a página</li></ul></div>`;
+                
+                detectBtn.disabled = false;
+                detectBtn.textContent = '🌍 Tentar Novamente';
+            }
+        }
+
+        async function testarFiltros() {
+            if (!userLocation) {
+                alert('Detecte sua localização primeiro!');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="loading result">🔄 Testando filtros com sua localização...</div>';
+            
+            try {
+                // Testar filtros com a localização real
+                const tests = [
+                    { name: 'Todo o Brasil', params: '' },
+                    { name: `Minha Cidade (${userLocation.city})`, params: `city=${encodeURIComponent(userLocation.city)}` }
+                ];
+                
+                if (userLocation.neighborhood) {
+                    tests.push({ 
+                        name: `Meu Bairro (${userLocation.neighborhood})`, 
+                        params: `neighborhood=${encodeURIComponent(userLocation.neighborhood)}` 
+                    });
+                }
+                
+                let html = '<div class="success result"><strong>🧪 Resultados dos Testes de Filtro:</strong><br><br>';
+                
+                for (const test of tests) {
+                    try {
+                        const url = `http://localhost:3001/api/pedidos${test.params ? '?' + test.params : ''}`;
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        
+                        const count = data.success ? data.data.length : 0;
+                        html += `<div style="margin: 10px 0; padding: 10px; background: #f1f5f9; border-radius: 6px;">`;
+                        html += `<strong>${test.name}:</strong> ${count} pedidos encontrados`;
+                        html += `</div>`;
+                    } catch (error) {
+                        html += `<div style="margin: 10px 0; padding: 10px; background: #fee2e2; border-radius: 6px;">`;
+                        html += `<strong>${test.name}:</strong> ❌ Erro - ${error.message}`;
+                        html += `</div>`;
+                    }
+                }
+                
+                html += '<br><strong>✅ Agora você pode usar esses filtros na página "Quero Ajudar"!</strong>';
+                html += '</div>';
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error result">❌ Erro ao testar filtros: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

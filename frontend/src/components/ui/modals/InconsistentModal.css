@@ -78,3 +78,57 @@
   gap: 8px;
   width: 100%;
 }
+.specific-issues-list {
+  margin-top: 1rem;
+  space-y: 0.75rem;
+}
+
+.issue-item {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.issue-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.issue-type {
+  font-weight: 600;
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.issue-message {
+  color: #374151;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.issue-suggestions {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.issue-suggestions strong {
+  color: #1e293b;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.issue-suggestions ul {
+  margin: 0;
+  padding-left: 1rem;
+  color: #64748b;
+}
+
+.issue-suggestions li {
+  margin-bottom: 0.25rem;
+}

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Filtros - Quero Ajudar</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .header {
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .test-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .filter-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .filter-group label {
+            font-weight: 600;
+            color: #374151;
+        }
+        select, button {
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        button {
+            background: #0d9488;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #0f766e;
+            transform: translateY(-1px);
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            border-left: 4px solid #0d9488;
+        }
+        .pedido-card {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #0d9488;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .pedido-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .pedido-category {
+            background: #0d9488;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .pedido-urgency {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .urgency-critico { background: #fee2e2; color: #dc2626; }
+        .urgency-urgente { background: #fed7aa; color: #ea580c; }
+        .urgency-moderada { background: #fef3c7; color: #d97706; }
+        .urgency-tranquilo { background: #dcfce7; color: #16a34a; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+        .error {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Teste de Filtros - Quero Ajudar</h1>
+        <p>Teste os filtros da página "Quero Ajudar" em tempo real</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Filtros</h2>
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label for="category">Categoria:</label>
+                <select id="category">
+                    <option value="">Todas</option>
+                    <option value="Alimentos">Alimentos</option>
+                    <option value="Roupas">Roupas</option>
+                    <option value="Medicamentos">Medicamentos</option>
+                    <option value="Móveis">Móveis</option>
+                    <option value="Serviços">Serviços</option>
+                    <option value="Outros">Outros</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="urgency">Urgência:</label>
+                <select id="urgency">
+                    <option value="">Todas</option>
+                    <option value="critico">Crítico</option>
+                    <option value="urgente">Urgente</option>
+                    <option value="moderada">Moderada</option>
+                    <option value="tranquilo">Tranquilo</option>
+                    <option value="recorrente">Recorrente</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="city">Cidade:</label>
+                <select id="city">
+                    <option value="">Todas</option>
+                    <option value="São Paulo">São Paulo</option>
+                    <option value="Rio de Janeiro">Rio de Janeiro</option>
+                    <option value="Belo Horizonte">Belo Horizonte</option>
+                    <option value="Curitiba">Curitiba</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="state">Estado:</label>
+                <select id="state">
+                    <option value="">Todos</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PR">Paraná</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="onlyNew">Apenas Novos:</label>
+                <select id="onlyNew">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>&nbsp;</label>
+                <button onclick="aplicarFiltros()">🔍 Aplicar Filtros</button>
+            </div>
+        </div>
+        
+        <div class="filter-controls">
+            <button onclick="limparFiltros()" style="background: #6b7280;">🗑️ Limpar Filtros</button>
+            <button onclick="testarTodosFiltros()" style="background: #7c3aed;">🧪 Testar Todos</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Resultados</h2>
+        <div id="results" class="results">
+            <div class="loading">Clique em "Aplicar Filtros" para ver os resultados</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api';
+        
+        async function aplicarFiltros() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">🔄 Carregando pedidos...</div>';
+            
+            try {
+                // Construir URL com filtros
+                const params = new URLSearchParams();
+                
+                const category = document.getElementById('category').value;
+                const urgency = document.getElementById('urgency').value;
+                const city = document.getElementById('city').value;
+                const state = document.getElementById('state').value;
+                const onlyNew = document.getElementById('onlyNew').value;
+                
+                if (category) params.append('category', category);
+                if (urgency) params.append('urgency', urgency);
+                if (city) params.append('city', city);
+                if (state) params.append('state', state);
+                if (onlyNew === 'true') params.append('onlyNew', 'true');
+                
+                // Adicionar localização do usuário para ordenação
+                params.append('userCity', 'São Paulo');
+                params.append('userState', 'SP');
+                
+                const url = `${API_BASE}/pedidos?${params.toString()}`;
+                console.log('URL da requisição:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    mostrarResultados(data.data, {
+                        category: category || 'Todas',
+                        urgency: urgency || 'Todas',
+                        city: city || 'Todas',
+                        state: state || 'Todos',
+                        onlyNew: onlyNew === 'true'
+                    });
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">❌ Erro: ${data.error || 'Erro desconhecido'}</div>`;
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                resultsDiv.innerHTML = `<div class="error">❌ Erro de conexão: ${error.message}</div>`;
+            }
+        }
+        
+        function mostrarResultados(pedidos, filtros) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = `
+                <div class="success">
+                    ✅ Encontrados ${pedidos.length} pedidos
+                </div>
+                <div style="margin: 15px 0; padding: 10px; background: #e0f2fe; border-radius: 6px;">
+                    <strong>Filtros aplicados:</strong>
+                    Categoria: ${filtros.category} | 
+                    Urgência: ${filtros.urgency} | 
+                    Cidade: ${filtros.city} | 
+                    Estado: ${filtros.state} | 
+                    Apenas Novos: ${filtros.onlyNew ? 'Sim' : 'Não'}
+                </div>
+            `;
+            
+            if (pedidos.length === 0) {
+                html += '<div style="text-align: center; padding: 20px; color: #6b7280;">Nenhum pedido encontrado com esses filtros</div>';
+            } else {
+                pedidos.forEach(pedido => {
+                    const createdAt = new Date(pedido.createdAt?.seconds ? pedido.createdAt.seconds * 1000 : pedido.createdAt);
+                    const isNew = (new Date() - createdAt) < (24 * 60 * 60 * 1000);
+                    
+                    html += `
+                        <div class="pedido-card">
+                            <div class="pedido-header">
+                                <div>
+                                    <span class="pedido-category">${pedido.category}</span>
+                                    <span class="pedido-urgency urgency-${pedido.urgency}">${pedido.urgency.toUpperCase()}</span>
+                                    ${isNew ? '<span style="background: #fbbf24; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;">NOVO</span>' : ''}
+                                </div>
+                                <div style="font-size: 12px; color: #6b7280;">
+                                    ${createdAt.toLocaleDateString('pt-BR')} ${createdAt.toLocaleTimeString('pt-BR')}
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <strong>👤 ${pedido.usuario?.nome || 'Usuário'}</strong>
+                            </div>
+                            <div style="margin-bottom: 8px; color: #6b7280;">
+                                📍 ${pedido.neighborhood || 'N/A'}, ${pedido.city || 'N/A'} - ${pedido.state || 'N/A'}
+                            </div>
+                            <div style="color: #374151;">
+                                ${pedido.description?.substring(0, 150)}${pedido.description?.length > 150 ? '...' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        function limparFiltros() {
+            document.getElementById('category').value = '';
+            document.getElementById('urgency').value = '';
+            document.getElementById('city').value = '';
+            document.getElementById('state').value = '';
+            document.getElementById('onlyNew').value = 'false';
+            
+            document.getElementById('results').innerHTML = '<div class="loading">Filtros limpos. Clique em "Aplicar Filtros" para ver todos os pedidos</div>';
+        }
+        
+        async function testarTodosFiltros() {
+            const testes = [
+                { nome: 'Todos os pedidos', filtros: {} },
+                { nome: 'Apenas Alimentos', filtros: { category: 'Alimentos' } },
+                { nome: 'Apenas Urgentes', filtros: { urgency: 'urgente' } },
+                { nome: 'São Paulo', filtros: { city: 'São Paulo' } },
+                { nome: 'Estado SP', filtros: { state: 'SP' } },
+                { nome: 'Apenas Novos', filtros: { onlyNew: 'true' } },
+                { nome: 'Alimentos + Crítico', filtros: { category: 'Alimentos', urgency: 'critico' } }
+            ];
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">🧪 Executando todos os testes...</div>';
+            
+            let html = '<div class="success">🧪 Resultados dos Testes Automáticos</div>';
+            
+            for (const teste of testes) {
+                try {
+                    const params = new URLSearchParams(teste.filtros);
+                    params.append('userCity', 'São Paulo');
+                    params.append('userState', 'SP');
+                    
+                    const response = await fetch(`${API_BASE}/pedidos?${params.toString()}`);
+                    const data = await response.json();
+                    
+                    const count = data.success ? data.data.length : 0;
+                    html += `
+                        <div style="padding: 10px; margin: 5px 0; background: white; border-radius: 6px; border-left: 4px solid #0d9488;">
+                            <strong>${teste.nome}:</strong> ${count} pedidos encontrados
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                                Filtros: ${JSON.stringify(teste.filtros)}
+                            </div>
+                        </div>
+                    `;
+                } catch (error) {
+                    html += `
+                        <div style="padding: 10px; margin: 5px 0; background: #fee2e2; border-radius: 6px; border-left: 4px solid #dc2626;">
+                            <strong>${teste.nome}:</strong> ❌ Erro - ${error.message}
+                        </div>
+                    `;
+                }
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Carregar todos os pedidos ao iniciar
+        window.onload = function() {
+            aplicarFiltros();
+        };
+    </script>
+</body>
+</html>

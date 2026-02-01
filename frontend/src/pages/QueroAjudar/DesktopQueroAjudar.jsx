@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useSpring, animated, useTrail } from 'react-spring';
+import { useSpring, animated } from 'react-spring';
 import { useInView } from 'react-intersection-observer';
 import toast, { Toaster } from 'react-hot-toast';
 import Skeleton from 'react-loading-skeleton';
@@ -1098,6 +1098,7 @@ function FiltersModal({
   onlyNew,
   setOnlyNew,
   userLocation,
+  setUserLocation,
   onClear
 }) {
   const modalRef = useRef(null);
@@ -1175,22 +1176,45 @@ function FiltersModal({
               {userLocation && (
                 <>
                   <button 
-                    className={`filter-chip-v4 ${selectedLocation === 'meu_estado' ? 'active' : ''}`}
-                    onClick={() => setSelectedLocation('meu_estado')}
-                    role="radio"
-                    aria-checked={selectedLocation === 'meu_estado'}
-                  >
-                    {userLocation.state}
-                  </button>
-                  <button 
                     className={`filter-chip-v4 ${selectedLocation === 'minha_cidade' ? 'active' : ''}`}
                     onClick={() => setSelectedLocation('minha_cidade')}
                     role="radio"
                     aria-checked={selectedLocation === 'minha_cidade'}
                   >
-                    {userLocation.city}
+                    Minha Cidade ({userLocation.city})
                   </button>
+                  {userLocation.neighborhood && (
+                    <button 
+                      className={`filter-chip-v4 ${selectedLocation === 'meu_bairro' ? 'active' : ''}`}
+                      onClick={() => setSelectedLocation('meu_bairro')}
+                      role="radio"
+                      aria-checked={selectedLocation === 'meu_bairro'}
+                    >
+                      Meu Bairro ({userLocation.neighborhood})
+                    </button>
+                  )}
                 </>
+              )}
+              {!userLocation && (
+                <button 
+                  className="filter-chip-v4" 
+                  onClick={async () => {
+                    try {
+                      console.log('Tentando obter localização manualmente...');
+                      const location = await getCurrentLocation();
+                      console.log('Localização manual obtida:', location);
+                      if (typeof setUserLocation === 'function') {
+                        setUserLocation(location);
+                      }
+                    } catch (error) {
+                      console.error('Erro na localização manual:', error);
+                      alert('Erro: ' + error.message);
+                    }
+                  }}
+                  style={{ opacity: 0.7 }}
+                >
+                  📍 Detectar Localização
+                </button>
               )}
             </div>
           </fieldset>
@@ -1368,12 +1392,46 @@ export default function QueroAjudarPage() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const [cardsRef, cardsInView] = useInView({ threshold: 0.1, triggerOnce: true });
-
   useEffect(() => {
     const loadPedidos = async () => {
       try {
-        const response = await ApiService.getPedidos();
+        setLoadingPedidos(true);
+        
+        // Simular delay mínimo para mostrar o skeleton
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Preparar filtros para a API
+        const apiFilters = {};
+        
+        // Filtro de categoria
+        if (selectedCat !== 'Todas') {
+          apiFilters.category = selectedCat;
+        }
+        
+        // Filtro de urgência
+        if (selectedUrgency) {
+          apiFilters.urgency = selectedUrgency;
+        }
+        
+        // Filtros de localização
+        if (selectedLocation === 'minha_cidade' && userLocation) {
+          apiFilters.city = userLocation.city;
+        } else if (selectedLocation === 'meu_bairro' && userLocation) {
+          apiFilters.neighborhood = userLocation.neighborhood;
+        }
+        
+        // Localização do usuário para ordenação por proximidade
+        if (userLocation) {
+          apiFilters.userCity = userLocation.city;
+          apiFilters.userState = userLocation.state;
+        }
+        
+        // Filtro "apenas novos"
+        if (onlyNew) {
+          apiFilters.onlyNew = true;
+        }
+        
+        const response = await ApiService.getPedidos(apiFilters);
         if (response.success && response.data) {
           // Mapear dados do backend para o formato esperado pelo frontend
           const mappedPedidos = response.data.map(pedido => {
@@ -1409,16 +1467,37 @@ export default function QueroAjudarPage() {
               createdAt = new Date();
             }
 
+            // Extrair dados de localização
+            let city = pedido.city || 'Não informado';
+            let state = pedido.state || 'Não informado';
+            let neighborhood = pedido.neighborhood || 'Não informado';
+            
+            // Se não tem dados diretos, extrair da location string
+            if ((!city || city === 'Não informado') && pedido.location) {
+              const parts = pedido.location.split(',');
+              if (parts.length >= 2) {
+                neighborhood = parts[0]?.trim() || neighborhood;
+                const secondPart = parts[1].trim();
+                if (secondPart.includes('-')) {
+                  const cityState = secondPart.split('-');
+                  city = cityState[0]?.trim() || city;
+                  state = cityState[1]?.trim() || state;
+                } else {
+                  city = secondPart || city;
+                }
+              }
+            }
+
             return {
               id: pedido.id,
               userId: pedido.userId,
               userName: pedido.usuario?.nome || 'Usuário',
-              city: pedido.city || 'Não informado',
-              state: pedido.state || 'Não informado',
-              neighborhood: pedido.neighborhood || 'Não informado',
+              city,
+              state,
+              neighborhood,
               urgency: pedido.urgency || 'moderada',
               category: pedido.category || 'Outros',
-              title: pedido.category || 'Pedido de ajuda', // Usar categoria como título se não houver título específico
+              title: pedido.category || 'Pedido de ajuda',
               description: pedido.description || 'Descrição não disponível',
               isNew,
               createdAt,
@@ -1443,26 +1522,46 @@ export default function QueroAjudarPage() {
     // Get real user location
     const loadLocation = async () => {
       try {
+        console.log('Tentando obter localização...');
         const location = await getCurrentLocation();
+        console.log('Localização obtida:', location);
         setUserLocation(location);
       } catch (error) {
         console.warn('Erro ao obter localização:', error);
-        // Fallback para São Paulo
-        setUserLocation({ city: 'São Paulo', state: 'SP' });
+        setUserLocation(null);
       } finally {
         setLocationLoading(false);
       }
     };
 
+    // Sempre carregar pedidos
     loadPedidos();
-    loadLocation();
-  }, []);
+  }, [selectedCat, selectedUrgency, selectedLocation, onlyNew, userLocation]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // UseEffect separado para carregar localização na inicialização
+  useEffect(() => {
+    const loadInitialLocation = async () => {
+      try {
+        console.log('Carregando localização inicial...');
+        const location = await getCurrentLocation();
+        console.log('Localização inicial obtida:', location);
+        setUserLocation(location);
+      } catch (error) {
+        console.warn('Erro ao obter localização inicial:', error);
+        setUserLocation(null);
+      } finally {
+        setLocationLoading(false);
+      }
+    };
+
+    loadInitialLocation();
+  }, []); // Executar apenas uma vez na inicialização
 
   useEffect(() => {
     const loadNotifications = () => {
@@ -1504,36 +1603,15 @@ export default function QueroAjudarPage() {
   }, [showUserMenu, showNotifications]);
 
   const filteredOrders = useMemo(() => {
-    const filtered = pedidos.filter((order) => {
-      const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
-      const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
-      
-      let locationMatch = true;
-      if (selectedLocation === 'meu_estado' && userLocation) {
-        locationMatch = order.state === userLocation.state;
-      } else if (selectedLocation === 'minha_cidade' && userLocation) {
-        locationMatch = order.city === userLocation.city && order.state === userLocation.state;
-      }
-      
-      const newMatch = !onlyNew || order.isNew;
-      
-      return catMatch && urgMatch && locationMatch && newMatch;
-    });
-    
-    return filtered;
-  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, onlyNew, userLocation]);
+    // Como os filtros agora são aplicados no backend, apenas retornamos os pedidos
+    return pedidos;
+  }, [pedidos]);
 
   useEffect(() => {
     if (!loadingPedidos) {
       setLiveMessage(`${filteredOrders.length} pedidos encontrados`);
     }
   }, [filteredOrders.length, loadingPedidos]);
-
-  const trail = useTrail(filteredOrders.length, {
-    opacity: cardsInView ? 1 : 0,
-    transform: cardsInView ? 'translateY(0px)' : 'translateY(30px)',
-    config: { tension: 280, friction: 60 }
-  });
 
   const hasActiveFilters = selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil' || onlyNew;
 
@@ -1558,25 +1636,11 @@ export default function QueroAjudarPage() {
     }
 
     try {
-      // Primeiro registrar interesse (opcional, não bloqueia o fluxo)
-      try {
-        const interesseData = {
-          pedidoId: orderToHelp.id,
-          tipo: 'ajuda',
-          mensagem: 'Interesse em ajudar através da plataforma'
-        };
-        await ApiService.createInteresse(interesseData);
-      } catch (err) {
-        console.warn('Erro ao registrar interesse (não bloqueante):', err);
-      }
-
       // Depois criar conversa
       const conversationData = {
-        participants: [currentUserId, orderToHelp.userId], // Inclui ambos os participantes
-        pedidoId: orderToHelp.id,
-        type: 'ajuda',
-        title: `Ajuda: ${orderToHelp.title || orderToHelp.category}`,
-        initialMessage: `Olá! Vi seu pedido de ${orderToHelp.category} e gostaria de ajudar. Podemos conversar?`
+        userId: currentUserId,
+        targetUserId: orderToHelp.userId,
+        pedidoId: orderToHelp.id
       };
 
       console.log('Criando conversa com dados:', {
@@ -1699,7 +1763,7 @@ export default function QueroAjudarPage() {
             <div className="logo-icon">
               <Heart fill="white" size={24} />
             </div>
-            <span className="logo-text">Solidar<span className="logo-accent">Bairro</span></span>
+            <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
           </div>
 
           <div className="nav-menu">
@@ -2114,7 +2178,9 @@ export default function QueroAjudarPage() {
               )}
               {selectedLocation !== 'brasil' && (
                 <span className="filter-tag-v4">
-                  {selectedLocation === 'meu_estado' ? userLocation?.state : userLocation?.city}
+                  {selectedLocation === 'minha_cidade' ? `Minha Cidade (${userLocation?.city})` : 
+                   selectedLocation === 'meu_bairro' ? `Meu Bairro (${userLocation?.neighborhood})` : 
+                   selectedLocation}
                   <button 
                     onClick={() => setSelectedLocation('brasil')}
                     aria-label="Remover filtro de localização"
@@ -2132,21 +2198,81 @@ export default function QueroAjudarPage() {
           <section 
             id="orders-list" 
             className="orders-grid-v4" 
-            ref={cardsRef}
             aria-label="Lista de pedidos de ajuda"
             aria-busy={loadingPedidos}
           >
             {loadingPedidos ? (
-              [...Array(6)].map((_, i) => (
-                <div key={i} className="order-card-v4 skeleton" aria-hidden="true">
-                  <Skeleton height={180} />
-                  <div style={{ padding: '20px' }}>
-                    <Skeleton height={24} width="60%" />
-                    <Skeleton count={2} style={{ marginTop: 12 }} />
-                    <Skeleton height={40} style={{ marginTop: 16 }} />
+              <>
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 0 40px' }}>
+                  <div style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto 24px' }}>
+                    <motion.div
+                      style={{
+                        position: 'absolute',
+                        inset: '-20px',
+                        borderRadius: '50%',
+                        border: '2px solid #0d9488',
+                        opacity: 0.3
+                      }}
+                      animate={{ scale: [0.8, 1.2], opacity: [0.5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                    />
+                    <motion.div
+                      style={{
+                        position: 'absolute',
+                        inset: '-10px',
+                        borderRadius: '50%',
+                        border: '2px solid #0d9488',
+                        opacity: 0.5
+                      }}
+                      animate={{ scale: [0.9, 1.1], opacity: [0.8, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+                    />
+                    <div style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      background: 'white', 
+                      borderRadius: '50%', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      boxShadow: '0 8px 24px rgba(13, 148, 136, 0.2)',
+                      position: 'relative',
+                      zIndex: 1
+                    }}>
+                      <Search size={32} color="#0d9488" />
+                    </div>
                   </div>
+                  <h3 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e293b', marginBottom: '8px' }}>
+                    Buscando pedidos próximos a você
+                  </h3>
+                  <p style={{ fontSize: '1.1rem', color: '#64748b' }}>
+                    Aguarde enquanto carregamos as oportunidades de ajuda...
+                  </p>
                 </div>
-              ))
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="order-card-v4" style={{ height: '100%', minHeight: '300px', pointerEvents: 'none' }}>
+                    <div style={{ padding: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <Skeleton width={80} height={24} borderRadius={12} />
+                        <Skeleton width={60} height={16} />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                        <Skeleton circle width={48} height={48} />
+                        <div>
+                          <Skeleton width={120} height={18} style={{ marginBottom: '4px' }} />
+                          <Skeleton width={180} height={14} />
+                        </div>
+                      </div>
+                      <Skeleton width="80%" height={24} style={{ marginBottom: '12px' }} />
+                      <Skeleton count={2} style={{ marginBottom: '24px' }} />
+                      <div style={{ display: 'flex', gap: '12px', marginTop: 'auto' }}>
+                        <Skeleton height={42} borderRadius={12} containerClassName="flex-1" />
+                        <Skeleton height={42} borderRadius={12} containerClassName="flex-1" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
             ) : filteredOrders.length === 0 ? (
               <div className="empty-state-v4" role="status">
                 <Search size={48} aria-hidden="true" />
@@ -2155,19 +2281,20 @@ export default function QueroAjudarPage() {
                 <button onClick={clearFilters}>Limpar Filtros</button>
               </div>
             ) : (
-              trail.map((style, index) => {
-                const order = filteredOrders[index];
-                if (!order) return null;
-                return (
-                  <animated.div key={order.id} style={style}>
-                    <OrderCard
-                      order={order}
-                      onViewDetails={handleViewDetails}
-                      onHelp={handleHelpClick}
-                    />
-                  </animated.div>
-                );
-              })
+              filteredOrders.map((order, index) => (
+                <motion.div
+                  key={order.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
+                >
+                  <OrderCard
+                    order={order}
+                    onViewDetails={handleViewDetails}
+                    onHelp={handleHelpClick}
+                  />
+                </motion.div>
+              ))
             )}
           </section>
         </div>
@@ -2185,6 +2312,7 @@ export default function QueroAjudarPage() {
         onlyNew={onlyNew}
         setOnlyNew={setOnlyNew}
         userLocation={userLocation}
+        setUserLocation={setUserLocation}
         onClear={clearFilters}
       />
 

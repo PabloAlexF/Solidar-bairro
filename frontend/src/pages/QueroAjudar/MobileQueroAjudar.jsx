@@ -63,6 +63,9 @@ export const MobileQueroAjudar = () => {
       setLoadingPedidos(true);
       setError(null);
       
+      // Simular delay mínimo para mostrar o skeleton
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       // Verificar se a API está disponível
       const response = await ApiService.getPedidos();
       
@@ -539,16 +542,76 @@ export const MobileQueroAjudar = () => {
       <div style={{ padding: '16px' }} ref={ref}>
         <AnimatePresence mode='popLayout'>
           {loadingPedidos ? (
-            [...Array(3)].map((_, i) => (
-              <div key={i} style={{ background: 'white', borderRadius: '16px', padding: '16px', marginBottom: '16px' }}>
-                <Skeleton height={20} width="60%" style={{ marginBottom: '12px' }} />
-                <Skeleton height={60} style={{ marginBottom: '12px' }} />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <Skeleton height={30} width={80} />
-                  <Skeleton height={30} width={80} />
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              key="loading-skeleton"
+            >
+              <div style={{ textAlign: 'center', padding: '24px 0 32px' }}>
+                <div style={{ position: 'relative', width: '64px', height: '64px', margin: '0 auto 16px' }}>
+                  <motion.div
+                    style={{
+                      position: 'absolute',
+                      inset: '-8px',
+                      borderRadius: '50%',
+                      border: '2px solid #3b82f6',
+                      opacity: 0.5
+                    }}
+                    animate={{ scale: [1, 1.4], opacity: [0.5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+                  />
+                  <div style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    background: 'white', 
+                    borderRadius: '50%', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.2)',
+                    position: 'relative',
+                    zIndex: 1
+                  }}>
+                    <Search size={28} color="#3b82f6" />
+                  </div>
                 </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#1e293b', marginBottom: '4px' }}>
+                  Buscando pedidos próximos...
+                </h3>
+                <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
+                  Encontrando quem precisa de ajuda
+                </p>
               </div>
-            ))
+
+              {[1, 2, 3].map((i) => (
+                <div key={i} style={{
+                  background: 'white',
+                  borderRadius: '20px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                  border: '1px solid #f1f5f9',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                      <Skeleton circle width={32} height={32} />
+                      <div>
+                        <Skeleton width={100} height={14} style={{ marginBottom: '4px' }} />
+                        <Skeleton width={60} height={10} />
+                      </div>
+                    </div>
+                    <Skeleton width={50} height={20} borderRadius={10} />
+                  </div>
+                  <Skeleton width="60%" height={20} style={{ marginBottom: '8px' }} />
+                  <Skeleton count={2} height={14} style={{ marginBottom: '16px' }} />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <Skeleton height={40} borderRadius={12} containerClassName="flex-1" />
+                    <Skeleton height={40} borderRadius={12} containerClassName="flex-1" />
+                  </div>
+                </div>
+              ))}
+            </motion.div>
           ) : filteredOrders.length === 0 ? (
              <motion.div 
                initial={{ opacity: 0, y: 20 }} 
@@ -568,7 +631,7 @@ export const MobileQueroAjudar = () => {
                </button>
              </motion.div>
           ) : (
-            filteredOrders.map((order) => {
+            filteredOrders.map((order, index) => {
               const urg = URGENCY_OPTIONS.find(u => u.id === order.urgency);
               const catMeta = CATEGORY_METADATA[order.category] || { color: '#64748b' };
               
@@ -576,10 +639,10 @@ export const MobileQueroAjudar = () => {
                 <motion.div
                   key={order.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
                   style={{
                     background: 'white',
                     borderRadius: '20px',

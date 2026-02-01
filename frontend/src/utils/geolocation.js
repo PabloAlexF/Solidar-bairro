@@ -44,6 +44,7 @@ const reverseGeocode = async (lat, lon) => {
     return {
       city: data.address?.city || data.address?.town || data.address?.village || 'Cidade não identificada',
       state: data.address?.state || 'Estado não identificado',
+      neighborhood: data.address?.suburb || data.address?.neighbourhood || data.address?.quarter || null,
       country: data.address?.country || 'Brasil',
       coordinates: { lat, lon }
     };

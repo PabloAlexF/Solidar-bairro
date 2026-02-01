@@ -182,10 +182,250 @@ function AnimatedBackground() {
   );
 }
 
+// Sistema de análise inteligente completo
+const SmartValidator = {
+  // Análise de categoria vs descrição
+  analyzeCategoryMatch(category, description) {
+    const descLower = description.toLowerCase();
+    const patterns = {
+      'Alimentos': {
+        required: ['fome', 'comida', 'alimentar', 'cesta', 'família', 'criança'],
+        forbidden: ['remédio', 'medicamento', 'doença', 'conta', 'aluguel'],
+        context: ['desempregado', 'dificuldade', 'filhos', 'mãe', 'pai']
+      },
+      'Medicamentos': {
+        required: ['remédio', 'medicamento', 'doença', 'saúde', 'tratamento', 'médico'],
+        forbidden: ['fome', 'comida', 'alimento', 'conta', 'aluguel'],
+        context: ['hospital', 'receita', 'dor', 'urgente', 'grave']
+      },
+      'Contas': {
+        required: ['conta', 'pagar', 'vencimento', 'luz', 'água', 'aluguel'],
+        forbidden: ['fome', 'remédio', 'doença'],
+        context: ['corte', 'despejo', 'atrasado', 'venceu']
+      },
+      'Emprego': {
+        required: ['trabalho', 'emprego', 'desempregado', 'vaga', 'currículo'],
+        forbidden: ['fome', 'remédio', 'conta'],
+        context: ['experiência', 'qualificação', 'renda']
+      },
+      'Roupas': {
+        required: ['roupa', 'vestir', 'agasalho', 'frio', 'inverno'],
+        forbidden: ['remédio', 'conta', 'emprego'],
+        context: ['criança', 'tamanho', 'família']
+      },
+      'Móveis': {
+        required: ['móvel', 'casa', 'cama', 'mesa', 'cadeira', 'geladeira'],
+        forbidden: ['remédio', 'conta', 'emprego'],
+        context: ['mudança', 'família', 'dormir']
+      }
+    };
+
+    const pattern = patterns[category];
+    if (!pattern) return { score: 50, issues: [] };
+
+    const requiredMatches = pattern.required.filter(word => descLower.includes(word)).length;
+    const forbiddenMatches = pattern.forbidden.filter(word => descLower.includes(word));
+    const contextMatches = pattern.context.filter(word => descLower.includes(word)).length;
+
+    let score = (requiredMatches / pattern.required.length) * 70 + (contextMatches / pattern.context.length) * 30;
+    const issues = [];
+
+    if (requiredMatches === 0) {
+      issues.push({
+        type: 'Categoria Incompatível',
+        severity: 'high',
+        message: `Sua descrição não menciona elementos típicos de ${category.toLowerCase()}`,
+        suggestion: `Inclua palavras como: ${pattern.required.slice(0, 3).join(', ')}`
+      });
+      score = Math.max(score - 40, 10);
+    }
+
+    if (forbiddenMatches.length > 0) {
+      issues.push({
+        type: 'Categoria Conflitante',
+        severity: 'high',
+        message: `Sua descrição menciona "${forbiddenMatches[0]}" que não condiz com ${category}`,
+        suggestion: `Verifique se escolheu a categoria correta`
+      });
+      score = Math.max(score - 30, 5);
+    }
+
+    return { score: Math.round(score), issues };
+  },
+
+  // Análise de urgência vs descrição
+  analyzeUrgencyMatch(urgency, description) {
+    const descLower = description.toLowerCase();
+    const urgencyPatterns = {
+      'critico': {
+        required: ['urgente', 'emergência', 'risco', 'grave', 'imediato', 'hospital'],
+        timeWords: ['hoje', 'agora', 'imediatamente'],
+        context: ['vida', 'morte', 'perigo', 'crítico']
+      },
+      'urgente': {
+        required: ['urgente', 'rápido', 'logo', 'breve'],
+        timeWords: ['24h', 'hoje', 'amanhã', 'essa semana'],
+        context: ['preciso', 'necessário', 'importante']
+      },
+      'moderada': {
+        required: ['dias', 'semana', 'breve', 'possível'],
+        timeWords: ['alguns dias', 'próxima semana', 'em breve'],
+        context: ['ajuda', 'apoio', 'colaboração']
+      },
+      'tranquilo': {
+        required: ['quando possível', 'sem pressa', 'tempo'],
+        timeWords: ['mês', 'futuro', 'oportunidade'],
+        context: ['agradeço', 'grato', 'abençoe']
+      }
+    };
+
+    const pattern = urgencyPatterns[urgency];
+    if (!pattern) return { score: 70, issues: [] };
+
+    const requiredMatches = pattern.required.filter(word => descLower.includes(word)).length;
+    const timeMatches = pattern.timeWords.filter(word => descLower.includes(word)).length;
+    const contextMatches = pattern.context.filter(word => descLower.includes(word)).length;
+
+    let score = 50;
+    const issues = [];
+
+    if (urgency === 'critico' && requiredMatches === 0 && timeMatches === 0) {
+      issues.push({
+        type: 'Urgência Exagerada',
+        severity: 'medium',
+        message: 'Urgência CRÍTICA deve indicar risco imediato à vida ou saúde',
+        suggestion: 'Use "urgente" se não há risco imediato, ou explique o perigo'
+      });
+      score = 20;
+    } else if (urgency === 'tranquilo' && (descLower.includes('urgente') || descLower.includes('rápido'))) {
+      issues.push({
+        type: 'Urgência Contraditória',
+        severity: 'medium',
+        message: 'Você marcou como "tranquilo" mas o texto indica urgência',
+        suggestion: 'Revise o nível de urgência ou a descrição'
+      });
+      score = 30;
+    } else {
+      score = 60 + (requiredMatches * 15) + (timeMatches * 15) + (contextMatches * 10);
+    }
+
+    return { score: Math.min(Math.round(score), 100), issues };
+  },
+
+  // Análise de qualidade da descrição
+  analyzeDescriptionQuality(description, category) {
+    const issues = [];
+    let score = 50;
+
+    // Tamanho
+    if (description.length < 50) {
+      issues.push({
+        type: 'Descrição Muito Curta',
+        severity: 'high',
+        message: 'Descrição muito breve pode não transmitir sua necessidade',
+        suggestion: 'Explique sua situação com mais detalhes (mínimo 50 caracteres)'
+      });
+      score -= 30;
+    } else if (description.length > 400) {
+      score += 10;
+    }
+
+    // Contexto familiar
+    const familyWords = ['família', 'filhos', 'criança', 'bebê', 'esposa', 'marido', 'mãe', 'pai'];
+    const hasFamilyContext = familyWords.some(word => description.toLowerCase().includes(word));
+    if (hasFamilyContext) score += 15;
+
+    // Situação específica
+    const situationWords = ['desempregado', 'doente', 'dificuldade', 'problema', 'necessidade'];
+    const hasSituation = situationWords.some(word => description.toLowerCase().includes(word));
+    if (!hasSituation) {
+      issues.push({
+        type: 'Falta Contexto',
+        severity: 'medium',
+        message: 'Não fica claro qual sua situação atual',
+        suggestion: 'Explique brevemente sua situação (ex: desemprego, doença, etc.)'
+      });
+      score -= 15;
+    }
+
+    // Gratidão/educação
+    const politeWords = ['por favor', 'agradeço', 'obrigado', 'deus abençoe', 'grato'];
+    const isPolite = politeWords.some(word => description.toLowerCase().includes(word));
+    if (isPolite) score += 10;
+
+    return { score: Math.max(Math.min(Math.round(score), 100), 10), issues };
+  },
+
+  // Análise completa
+  performCompleteAnalysis(formData) {
+    const categoryAnalysis = this.analyzeCategoryMatch(formData.category, formData.description);
+    const urgencyAnalysis = this.analyzeUrgencyMatch(formData.urgency, formData.description);
+    const qualityAnalysis = this.analyzeDescriptionQuality(formData.description, formData.category);
+
+    const allIssues = [...categoryAnalysis.issues, ...urgencyAnalysis.issues, ...qualityAnalysis.issues];
+    const avgScore = Math.round((categoryAnalysis.score + urgencyAnalysis.score + qualityAnalysis.score) / 3);
+    
+    const canPublish = allIssues.filter(i => i.severity === 'high').length === 0 && avgScore >= 40;
+    
+    return {
+      canPublish,
+      confidence: avgScore,
+      riskScore: Math.max(100 - avgScore, 10),
+      analysis: this.generateAnalysisText(avgScore, allIssues.length, canPublish),
+      specificIssues: allIssues.map(issue => ({
+        type: issue.type,
+        field: this.getFieldFromIssueType(issue.type),
+        message: issue.message,
+        suggestions: [issue.suggestion]
+      })),
+      scores: {
+        category: categoryAnalysis.score,
+        urgency: urgencyAnalysis.score,
+        quality: qualityAnalysis.score
+      }
+    };
+  },
+
+  generateAnalysisText(score, issueCount, canPublish) {
+    if (canPublish) {
+      return score >= 80 ? 
+        'Excelente! Seu pedido está muito bem estruturado e tem alta chance de receber ajuda.' :
+        'Bom! Seu pedido atende aos critérios básicos e pode ser publicado.';
+    }
+    
+    if (issueCount === 0) {
+      return 'Seu pedido precisa de pequenos ajustes para melhorar sua eficácia.';
+    }
+    
+    return issueCount === 1 ? 
+      'Encontramos 1 problema que pode afetar a eficácia do seu pedido.' :
+      `Encontramos ${issueCount} problemas que podem afetar a eficácia do seu pedido.`;
+  },
+
+  getFieldFromIssueType(type) {
+    if (type.includes('Categoria')) return 'Categoria';
+    if (type.includes('Urgência')) return 'Urgência';
+    if (type.includes('Descrição')) return 'Descrição';
+    return 'Geral';
+  }
+};
+
+const validateRequiredFields = (formData) => {
+  const errors = [];
+  
+  if (!formData.category) errors.push({ field: 'category', message: 'Selecione uma categoria' });
+  if (!formData.description || formData.description.length < 20) {
+    errors.push({ field: 'description', message: 'Descrição deve ter pelo menos 20 caracteres' });
+  }
+  if (!formData.urgency) errors.push({ field: 'urgency', message: 'Selecione o nível de urgência' });
+  
+  return errors;
+};
+
 const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePublish }) => {
   if (!isOpen || !validationResult) return null;
 
-  const { canPublish, analysis, confidence, riskScore, suggestions } = validationResult;
+  const { canPublish, analysis, confidence, riskScore, suggestions, specificIssues } = validationResult;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-lg p-4">
@@ -229,32 +469,51 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
           </motion.p>
         </div>
         
-        {/* Analysis */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mb-8 relative z-10"
-        >
-          <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
-            <p className="text-slate-700 leading-relaxed mb-4 text-sm">{analysis}</p>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                <span className="text-xs font-bold text-slate-600">Confiança: {confidence}%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${
-                  riskScore > 70 ? 'bg-red-500' : riskScore > 40 ? 'bg-orange-500' : 'bg-green-500'
-                }`} />
-                <span className="text-xs font-bold text-slate-600">Risco: {riskScore}%</span>
+        {/* Detailed Analysis */}
+        {validationResult.scores && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-8 relative z-10"
+          >
+            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+              <h3 className="font-black text-slate-900 text-sm mb-4">Análise Detalhada</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                    validationResult.scores.category >= 70 ? 'bg-green-100 text-green-600' :
+                    validationResult.scores.category >= 40 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
+                  }`}>
+                    {validationResult.scores.category}%
+                  </div>
+                  <p className="text-xs font-bold text-slate-600">Categoria</p>
+                </div>
+                <div className="text-center">
+                  <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                    validationResult.scores.urgency >= 70 ? 'bg-green-100 text-green-600' :
+                    validationResult.scores.urgency >= 40 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
+                  }`}>
+                    {validationResult.scores.urgency}%
+                  </div>
+                  <p className="text-xs font-bold text-slate-600">Urgência</p>
+                </div>
+                <div className="text-center">
+                  <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                    validationResult.scores.quality >= 70 ? 'bg-green-100 text-green-600' :
+                    validationResult.scores.quality >= 40 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
+                  }`}>
+                    {validationResult.scores.quality}%
+                  </div>
+                  <p className="text-xs font-bold text-slate-600">Qualidade</p>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
-        {/* Suggestions */}
-        {suggestions && suggestions.length > 0 && (
+        {/* Specific Issues */}
+        {specificIssues && specificIssues.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -264,10 +523,10 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
             <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
               <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle size={18} className="text-red-600" />
-                <h3 className="font-black text-slate-900 text-sm">Problemas Identificados</h3>
+                <h3 className="font-black text-slate-900 text-sm">Problemas Específicos Encontrados</h3>
               </div>
               <div className="space-y-4">
-                {suggestions.map((suggestion, index) => (
+                {specificIssues.map((issue, index) => (
                   <motion.div 
                     key={index}
                     initial={{ opacity: 0, x: -10 }}
@@ -280,11 +539,15 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
                         <AlertTriangle size={12} strokeWidth={3} />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-slate-800 font-medium mb-2">{suggestion.message}</p>
-                        {suggestion.evidence && (
-                          <p className="text-xs text-slate-600 bg-slate-50 rounded-lg p-2 border">
-                            <strong>Evidência:</strong> {suggestion.evidence}
-                          </p>
+                        <p className="text-sm text-slate-800 font-bold mb-1">{issue.type}: {issue.field}</p>
+                        <p className="text-sm text-slate-700 mb-2">{issue.message}</p>
+                        {issue.suggestions && issue.suggestions.length > 0 && (
+                          <div className="text-xs text-slate-600 bg-slate-50 rounded-lg p-2 border">
+                            <strong>Sugestões:</strong>
+                            <ul className="mt-1 list-disc list-inside">
+                              {issue.suggestions.map((sug, i) => <li key={i}>{sug}</li>)}
+                            </ul>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -358,7 +621,7 @@ const AnalyzingModal = ({ stages, analysisStage }) => (
   </div>
 );
 
-const SuccessModal = ({ urgencyColor, urgencyLabel, urgencyIcon: UrgencyIcon, reason, onClose }) => (
+const SuccessModal = ({ urgencyColor, urgencyLabel, urgencyIcon: UrgencyIcon, reason, onClose, analysisResult }) => (
   <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-md">
     <motion.div 
       initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -368,8 +631,25 @@ const SuccessModal = ({ urgencyColor, urgencyLabel, urgencyIcon: UrgencyIcon, re
       <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8">
         <Check size={48} strokeWidth={3} />
       </div>
-      <h2 className="text-4xl font-black text-slate-900 mb-4">Sucesso!</h2>
+      <h2 className="text-4xl font-black text-slate-900 mb-4">Pedido Publicado!</h2>
       <p className="text-xl text-slate-500 mb-8">{reason}</p>
+      
+      {/* Success Analysis */}
+      {analysisResult && (
+        <div className="mb-8 p-6 bg-green-50 rounded-2xl border border-green-100">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center">
+              <Check size={16} />
+            </div>
+            <span className="font-bold text-green-800">Qualidade: {analysisResult.confidence}%</span>
+          </div>
+          <p className="text-sm text-green-700">
+            {analysisResult.confidence >= 80 ? 'Excelente estruturação!' :
+             analysisResult.confidence >= 60 ? 'Boa estruturação!' : 'Pedido aprovado!'}
+          </p>
+        </div>
+      )}
+      
       <div className="flex items-center justify-center gap-3 mb-12 p-4 bg-slate-50 rounded-2xl border border-slate-100">
         <div style={{ color: urgencyColor }} className="flex items-center gap-2 font-black uppercase tracking-widest text-sm">
           {UrgencyIcon && <UrgencyIcon size={20} />}
@@ -380,7 +660,7 @@ const SuccessModal = ({ urgencyColor, urgencyLabel, urgencyIcon: UrgencyIcon, re
         onClick={onClose}
         className="w-full py-5 bg-slate-900 text-white rounded-full font-black text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
       >
-        Voltar para o Início
+        Ver no Mapa da Comunidade
       </button>
     </motion.div>
   </div>
@@ -586,6 +866,25 @@ export default function PDAForm() {
   }, []);
 
   const handlePublish = useCallback(async () => {
+    // Validar campos obrigatórios primeiro
+    const requiredFieldsErrors = validateRequiredFields(formData);
+    if (requiredFieldsErrors.length > 0) {
+      setValidationResult({
+        canPublish: false,
+        analysis: 'Campos obrigatórios não foram preenchidos adequadamente.',
+        confidence: 0,
+        riskScore: 100,
+        specificIssues: requiredFieldsErrors.map(error => ({
+          type: 'Campo Obrigatório',
+          field: error.field === 'category' ? 'Categoria' : error.field === 'description' ? 'Descrição' : 'Urgência',
+          message: error.message,
+          suggestions: ['Preencha este campo antes de continuar']
+        }))
+      });
+      setShowValidationModal(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setIsAnalyzing(true);
     setAnalysisStage(0);
@@ -597,14 +896,23 @@ export default function PDAForm() {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
       
-      // Get AI validation result
-      const result = await AIAssistant.validateRequest(formData);
+      // Usar o sistema de análise inteligente
+      const analysisResult = SmartValidator.performCompleteAnalysis(formData);
       
       setIsAnalyzing(false);
       
+      // Se não pode publicar, mostrar modal com problemas
+      if (!analysisResult.canPublish) {
+        setValidationResult(analysisResult);
+        setShowValidationModal(true);
+        return;
+      }
+      
+      // Get AI validation result (fallback)
+      const result = await AIAssistant.validateRequest(formData);
+      
       // Check if validation passed
       if (!result.canPublish) {
-        // Show validation modal with issues
         setValidationResult(result);
         setShowValidationModal(true);
         return;
@@ -641,6 +949,10 @@ export default function PDAForm() {
         StatsManager.registerPedidoCriado(user.uid || user.id, pedidoData);
       }
       
+      // Manter resultado da análise para o modal de sucesso
+      const finalAnalysis = SmartValidator.performCompleteAnalysis(formData);
+      setValidationResult(finalAnalysis);
+      
       // Show success
       setIsPublished(true);
       
@@ -648,19 +960,18 @@ export default function PDAForm() {
       console.error('❌ Erro ao publicar pedido:', error);
       setIsAnalyzing(false);
       // Show error in validation modal
-      setValidationResult({
-        canPublish: false,
-        analysis: `Erro ao salvar pedido: ${error.message}`,
-        confidence: 0,
-        riskScore: 100,
-        suggestions: [{
-          type: 'error',
-          message: error.message.includes('token') ? 'Você precisa estar logado para publicar um pedido' : 'Erro de conexão com o servidor',
-          action: 'Tentar novamente',
-          priority: 'high'
-        }],
-        validations: {}
-      });
+        setValidationResult({
+          canPublish: false,
+          analysis: `Erro de conexão: ${error.message}`,
+          confidence: 0,
+          riskScore: 100,
+          specificIssues: [{
+            type: 'Erro do Sistema',
+            field: 'Conexão',
+            message: error.message.includes('token') ? 'Você precisa estar logado para publicar um pedido' : 'Erro de conexão com o servidor',
+            suggestions: ['Verifique sua conexão', 'Tente novamente em alguns instantes']
+          }]
+        });
       setShowValidationModal(true);
     } finally {
       setIsSubmitting(false);
@@ -668,26 +979,35 @@ export default function PDAForm() {
   }, [formData, stages.length]);
 
   const handleRetryValidation = () => {
-    // Store the validation result before clearing it
     const currentValidationResult = validationResult;
     
     setShowValidationModal(false);
     setValidationResult(null);
     
-    // Navigate to the step with the main problem based on suggestion type
-    if (currentValidationResult?.suggestions?.length > 0) {
+    // Navigate based on specific issues
+    if (currentValidationResult?.specificIssues?.length > 0) {
+      const mainProblem = currentValidationResult.specificIssues[0];
+      
+      if (mainProblem.field === 'category' || mainProblem.type.includes('Categoria')) {
+        setStep(1);
+      } else if (mainProblem.field === 'Descrição' || mainProblem.field === 'description') {
+        setStep(3);
+      } else if (mainProblem.field.includes('Urgência') || mainProblem.type.includes('Urgência')) {
+        setStep(4);
+      } else {
+        setStep(3); // Default to description
+      }
+    } else if (currentValidationResult?.suggestions?.length > 0) {
       const mainProblem = currentValidationResult.suggestions[0];
       
-      // Navigate based on suggestion type
-      if (mainProblem.type === 'description' || mainProblem.action === 'Melhorar descrição' || mainProblem.action === 'Expandir descrição') {
-        setStep(2); // Description step
-      } else if (mainProblem.type === 'category' || mainProblem.action === 'Alterar categoria') {
-        setStep(1); // Category step
-      } else if (mainProblem.type === 'urgency' || mainProblem.action === 'Revisar urgência') {
-        setStep(3); // Urgency step
+      if (mainProblem.type === 'description' || mainProblem.action === 'Melhorar descrição') {
+        setStep(3);
+      } else if (mainProblem.type === 'category') {
+        setStep(1);
+      } else if (mainProblem.type === 'urgency') {
+        setStep(4);
       } else {
-        // Fallback to description for general issues
-        setStep(2);
+        setStep(3);
       }
     }
   };
@@ -871,9 +1191,14 @@ export default function PDAForm() {
     switch (step) {
       case 1: return formData.category !== '';
       case 2: return true; // Items are optional but recommended
-      case 3: return formData.description.length >= 10;
+      case 3: return formData.description.length >= 20; // Aumentado para 20 caracteres mínimos
       case 4: return formData.urgency !== '';
       case 5: return formData.visibility.length > 0;
+      case 6: {
+        // Validação final antes de publicar
+        const errors = validateRequiredFields(formData);
+        return errors.length === 0;
+      }
       default: return true;
     }
   }, [step, formData]);
@@ -1364,7 +1689,8 @@ export default function PDAForm() {
           urgencyColor={selectedUrgency?.color || '#f97316'}
           urgencyLabel={selectedUrgency?.label || 'PUBLICADO'}
           urgencyIcon={selectedUrgency?.icon}
-          reason="Seu pedido foi enviado com sucesso e pessoas próximas serão notificadas."
+          reason="Seu pedido foi analisado e aprovado! Pessoas próximas serão notificadas."
+          analysisResult={validationResult}
           onClose={() => window.location.href = '/'}
         />
       )}

@@ -189,8 +189,50 @@ const ApiService = {
     });
   },
 
-  async getPedidos() {
-    return this.request('/pedidos');
+  async getPedidos(filters = {}) {
+    const params = new URLSearchParams();
+    
+    // Filtros de categoria
+    if (filters.category && filters.category !== 'Todas') {
+      params.append('category', filters.category);
+    }
+    
+    // Filtros de urgência
+    if (filters.urgency) {
+      params.append('urgency', filters.urgency);
+    }
+    
+    // Filtros de localização
+    if (filters.city) {
+      params.append('city', filters.city);
+    }
+    if (filters.state) {
+      params.append('state', filters.state);
+    }
+    if (filters.neighborhood) {
+      params.append('neighborhood', filters.neighborhood);
+    }
+    
+    // Localização do usuário para ordenação por proximidade
+    if (filters.userCity) {
+      params.append('userCity', filters.userCity);
+    }
+    if (filters.userState) {
+      params.append('userState', filters.userState);
+    }
+    
+    // Filtro de tempo
+    if (filters.timeframe) {
+      params.append('timeframe', filters.timeframe);
+    }
+    
+    // Filtro "apenas novos"
+    if (filters.onlyNew) {
+      params.append('onlyNew', 'true');
+    }
+    
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/pedidos${query}`);
   },
 
   async post(endpoint, data) {
