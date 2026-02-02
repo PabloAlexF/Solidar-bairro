@@ -72,7 +72,18 @@ const authLimiter = rateLimit({
   message: 'Muitas tentativas de login, tente novamente mais tarde'
 });
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "https://viacep.com.br/*", "https://nominatim.openstreetmap.org", "https://api.openstreetmap.org"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn-uicons.flaticon.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https://cdn-uicons.flaticon.com"],
+    },
+  },
+}));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use('/api/', limiter);

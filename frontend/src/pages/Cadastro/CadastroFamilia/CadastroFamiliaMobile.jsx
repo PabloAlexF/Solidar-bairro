@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
 import './CadastroFamiliaMobile.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
 
 const FamilyCounter = ({ item, count, onUpdate }) => (
   <div className="fam-mob-family-card-input">
@@ -64,7 +65,7 @@ export default function CadastroFamiliaMobile() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(true);
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
-  const [addressData, setAddressData] = useState({ endereco: '', bairro: '', referencia: '' });
+  const [addressData, setAddressData] = useState({ endereco: '', bairro: '', referencia: '', cep: '', numero: '', cidade: '', estado: '' });
   const [isLocating, setIsLocating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
@@ -100,6 +101,7 @@ export default function CadastroFamiliaMobile() {
   });
   
   const totalSteps = 6;
+  const { loadingCep, formatCEP, searchCEP } = useCEP();
   
   const steps = [
     { id: 1, title: "Responsável", icon: <User size={20} /> },
@@ -168,6 +170,26 @@ export default function CadastroFamiliaMobile() {
       return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
     } else {
       return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+  };
+
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        setAddressData(prev => ({ ...prev, endereco: '', bairro: '', cidade: '', estado: '' }));
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setAddressData(prev => ({
+          ...prev,
+          endereco: logradouro || '',
+          bairro: bairro || '',
+          cidade: localidade || '',
+          estado: uf || '',
+        }));
+      }
     }
   };
 
@@ -704,22 +726,41 @@ export default function CadastroFamiliaMobile() {
 
                 {step === 4 && (
                   <div className="fam-mob-form-grid">
-                    <MapLocationButton 
-                      isLocating={isLocating} 
-                      onClick={handleMapLocation} 
+                    <MapLocationButton
+                      isLocating={isLocating}
+                      onClick={handleMapLocation}
                     />
-                    
+
+                    <div className="fam-mob-input-group">
+                      <label className="fam-mob-input-label">CEP <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="fam-mob-input-wrapper">
+                        <Home className="fam-mob-input-icon" />
+                        <input
+                          type="text"
+                          className="fam-mob-form-input"
+                          placeholder="00000-000"
+                          value={addressData.cep}
+                          onChange={(e) => setAddressData(prev => ({ ...prev, cep: formatCEP(e.target.value) }))}
+                          onBlur={handleCepBlur}
+                          maxLength={9}
+                          disabled={loadingCep}
+                        />
+                        {loadingCep && <div className="fam-mob-spinner" />}
+                      </div>
+                    </div>
+
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Endereço <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="fam-mob-input-wrapper">
                         <Home className="fam-mob-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-mob-form-input" 
+                        <input
+                          type="text"
+                          className="fam-mob-form-input"
                           placeholder="Rua, Avenida, etc."
                           value={addressData.endereco}
                           onChange={(e) => setAddressData(prev => ({ ...prev, endereco: e.target.value }))}
-                          required 
+                          disabled={loadingCep}
+                          required
                         />
                       </div>
                     </div>

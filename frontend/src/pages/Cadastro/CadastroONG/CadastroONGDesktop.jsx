@@ -23,6 +23,7 @@ export default function CadastroONGDesktop() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState([]);
+  const [isFetchingCep, setIsFetchingCep] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const [formData, setFormData] = useState({
     cnpj: '',

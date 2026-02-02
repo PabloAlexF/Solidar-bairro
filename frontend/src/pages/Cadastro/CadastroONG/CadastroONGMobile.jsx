@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
 import './CadastroONGMobile.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
 
 export default function CadastroONGMobile() {
   const [step, setStep] = useState(1);
@@ -26,6 +27,7 @@ export default function CadastroONGMobile() {
     website: '',
     causas: []
   });
+  const { searchCEP, formatCEP } = useCEP();
 
   const totalSteps = 3;
 
@@ -51,6 +53,32 @@ export default function CadastroONGMobile() {
         value = value.replace(/(\d{5})(\d)/, '$1-$2');
       }
       setFormData(prev => ({ ...prev, telefone: value }));
+    }
+  };
+
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        setFormData(prev => ({
+          ...prev,
+          endereco: '',
+          bairro: '',
+          cidade: '',
+          estado: ''
+        }));
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setFormData(prev => ({
+          ...prev,
+          endereco: logradouro || '',
+          bairro: bairro || '',
+          cidade: localidade || '',
+          estado: uf || ''
+        }));
+      }
     }
   };
 

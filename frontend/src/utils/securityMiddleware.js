@@ -3,18 +3,23 @@ export class SecurityMiddleware {
   
   // Configurar Content Security Policy
   static setupCSP() {
+    // Skip CSP setup in development to avoid conflicts
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+
     const csp = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Necessário para React
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https:",
-      "connect-src 'self' http://localhost:3001 https://nominatim.openstreetmap.org https://api.openstreetmap.org",
+      "connect-src 'self' http://localhost:3001 https://nominatim.openstreetmap.org https://api.openstreetmap.org https://viacep.com.br/*",
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'"
     ].join('; ');
-    
+
     const meta = document.createElement('meta');
     meta.httpEquiv = 'Content-Security-Policy';
     meta.content = csp;

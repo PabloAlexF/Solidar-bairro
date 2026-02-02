@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Building2, Mail, Phone, MapPin, Lock, ArrowRight, Loader2, ArrowLeft, Globe, FileText, Camera } from 'lucide-react';
 import Toast from '../../../components/ui/Toast';
+import { useCEP } from './useCEP';
 
 const CadastroONG = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
@@ -12,6 +13,7 @@ const CadastroONG = ({ onBack }) => {
     senha: '', confirmarSenha: '', website: '', causas: '',
     cep: '', endereco: '', numero: '', bairro: '', cidade: '', uf: ''
   });
+  const { searchCEP } = useCEP();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,15 +34,14 @@ const CadastroONG = ({ onBack }) => {
   };
 
   const handleCepBlur = async (e) => {
-    const cep = e.target.value.replace(/\D/g, '');
-    if (cep.length === 8) {
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await response.json();
-        if (!data.erro) {
-          setFormData(prev => ({ ...prev, endereco: data.logradouro, bairro: data.bairro, cidade: data.localidade, uf: data.uf }));
-        }
-      } catch (error) { console.error("Erro CEP"); }
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        setToast({ show: true, message: result.error, type: 'error' });
+      } else {
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setFormData(prev => ({ ...prev, endereco: logradouro, bairro, cidade: localidade, uf }));
+      }
     }
   };
 

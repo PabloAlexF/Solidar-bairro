@@ -9,6 +9,7 @@ import {
 import { Link } from 'react-router-dom';
 import ApiService from '../../../services/apiService';
 import './CadastroComercioMobile.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
 
 export default function CadastroComercioMobile() {
   const [step, setStep] = useState(1);
@@ -27,12 +28,18 @@ export default function CadastroComercioMobile() {
     cnpj: '',
     telefone: '',
     email: '',
+    cep: '',
     endereco: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    numero: '',
     horarioFuncionamento: '',
     contribuicoes: [],
     observacoes: ''
   });
   const totalSteps = 6;
+  const { formatCEP, searchCEP } = useCEP();
 
   useEffect(() => {
     if (isSubmitted) {
@@ -50,6 +57,32 @@ export default function CadastroComercioMobile() {
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        setFormData(prev => ({
+          ...prev,
+          endereco: '',
+          bairro: '',
+          cidade: '',
+          estado: ''
+        }));
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setFormData(prev => ({
+          ...prev,
+          endereco: logradouro || '',
+          bairro: bairro || '',
+          cidade: localidade || '',
+          estado: uf || ''
+        }));
+      }
+    }
   };
 
   const handleCheckboxChange = (field, value, checked) => {
@@ -435,12 +468,47 @@ export default function CadastroComercioMobile() {
 
             {step === 4 && (
               <div className="cmr-prm-form-grid">
+                <div className="cmr-prm-form-group">
+                  <label className="cmr-prm-field-label">CEP</label>
+                  <div className="cmr-prm-input-with-icon">
+                    <MapPin className="cmr-prm-field-icon" size={20} />
+                    <input required type="text" className="cmr-prm-form-input" placeholder="00000-000" value={formData.cep} onChange={(e) => updateFormData('cep', formatCEP(e.target.value))} onBlur={handleCepBlur} maxLength={9} />
+                  </div>
+                </div>
+                <div className="cmr-prm-form-group">
+                  <label className="cmr-prm-field-label">Número</label>
+                  <input type="text" className="cmr-prm-form-input" placeholder="123" value={formData.numero} onChange={(e) => updateFormData('numero', e.target.value)} />
+                </div>
                 <div className="cmr-prm-form-group cmr-prm-span-2">
                   <label className="cmr-prm-field-label">Endereço da Loja</label>
                   <div className="cmr-prm-input-with-icon">
                     <MapPin className="cmr-prm-field-icon" size={20} />
-                    <input required type="text" className="cmr-prm-form-input" placeholder="Rua, Número, Bairro" value={formData.endereco} onChange={(e) => updateFormData('endereco', e.target.value)} />
+                    <input required type="text" className="cmr-prm-form-input" placeholder="Rua, Avenida, etc." value={formData.endereco} onChange={(e) => updateFormData('endereco', e.target.value)} />
                   </div>
+                </div>
+                <div className="cmr-prm-form-group">
+                  <label className="cmr-prm-field-label">Bairro</label>
+                  <input type="text" className="cmr-prm-form-input" placeholder="Nome do bairro" value={formData.bairro} onChange={(e) => updateFormData('bairro', e.target.value)} />
+                </div>
+                <div className="cmr-prm-form-group">
+                  <label className="cmr-prm-field-label">Cidade</label>
+                  <input type="text" className="cmr-prm-form-input" placeholder="Nome da cidade" value={formData.cidade} onChange={(e) => updateFormData('cidade', e.target.value)} />
+                </div>
+                <div className="cmr-prm-form-group">
+                  <label className="cmr-prm-field-label">Estado</label>
+                  <select className="cmr-prm-form-input" value={formData.estado} onChange={(e) => updateFormData('estado', e.target.value)}>
+                    <option value="">Selecione</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="PR">Paraná</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="BA">Bahia</option>
+                    <option value="GO">Goiás</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="CE">Ceará</option>
+                  </select>
                 </div>
                 <div className="cmr-prm-form-group cmr-prm-span-2">
                   <label className="cmr-prm-field-label">Horário de Funcionamento</label>

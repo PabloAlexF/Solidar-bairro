@@ -8,8 +8,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Toast from '../../../components/ui/Toast';
-import AddressInput from '../../../components/ui/AddressInput';
 import './CadastroComercio.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
 
 export default function CadastroComercioDesktop() {
   const [step, setStep] = useState(1);
@@ -23,15 +23,8 @@ export default function CadastroComercioDesktop() {
     cnpj: '',
     email: '',
     telefone: '',
-    endereco: {
-      rua: '',
-      numero: '',
-      bairro: '',
-      cidade: '',
-      estado: '',
-      cep: ''
-    },
     cep: '',
+    endereco: '',
     numero: '',
     bairro: '',
     cidade: '',
@@ -43,6 +36,7 @@ export default function CadastroComercioDesktop() {
     confirmPassword: ''
   });
   const totalSteps = 6;
+  const { loadingCep, formatCEP, searchCEP } = useCEP();
 
   const showToast = (message, type = 'info') => {
     setToast({ show: true, message, type });
@@ -60,6 +54,26 @@ export default function CadastroComercioDesktop() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitted(true);
+  };
+
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        setFormData(prev => ({ ...prev, endereco: '', bairro: '', cidade: '', estado: '' }));
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setFormData(prev => ({
+          ...prev,
+          endereco: logradouro || '',
+          bairro: bairro || '',
+          cidade: localidade || '',
+          estado: uf || '',
+        }));
+      }
+    }
   };
 
   const steps = [
@@ -359,11 +373,90 @@ export default function CadastroComercioDesktop() {
 
               {step === 4 && (
                 <div className="comercio-form-grid">
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">CEP <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="comercio-input-with-icon">
+                      <MapPin className="comercio-field-icon" size={20} />
+                      <input
+                        required
+                        type="text"
+                        className="comercio-form-input"
+                        placeholder="00000-000"
+                        value={formData.cep}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cep: formatCEP(e.target.value) }))}
+                        onBlur={handleCepBlur}
+                        maxLength={9}
+                      />
+                      {loadingCep && <div className="spinner" />}
+                    </div>
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Endereço (Rua, Av.) <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="comercio-form-input"
+                      placeholder="Sua rua ou avenida"
+                      value={formData.endereco}
+                      onChange={(e) => setFormData(prev => ({ ...prev, endereco: e.target.value }))}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Número <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="comercio-form-input"
+                      placeholder="Nº"
+                      value={formData.numero}
+                      onChange={(e) => setFormData(prev => ({ ...prev, numero: e.target.value }))}
+                    />
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Bairro <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="comercio-form-input"
+                      placeholder="Seu bairro"
+                      value={formData.bairro}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bairro: e.target.value }))}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Cidade <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="comercio-form-input"
+                      placeholder="Sua cidade"
+                      value={formData.cidade}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="comercio-form-group">
+                    <label className="comercio-field-label">Estado <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="comercio-form-input"
+                      placeholder="UF"
+                      value={formData.estado}
+                      onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                      disabled={loadingCep}
+                    />
+                  </div>
                   <div className="comercio-form-group comercio-span-2">
-                    <AddressInput 
-                      addressData={formData}
-                      setAddressData={setFormData}
-                      required={true}
+                    <label className="comercio-field-label">Complemento / Referência</label>
+                    <input
+                      type="text"
+                      className="comercio-form-input"
+                      placeholder="Apto, bloco, etc."
+                      value={formData.referencia}
+                      onChange={(e) => setFormData(prev => ({ ...prev, referencia: e.target.value }))}
                     />
                   </div>
                   <div className="comercio-form-group comercio-span-2">

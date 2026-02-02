@@ -10,11 +10,11 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import Toast from '../../../components/ui/Toast';
-import AddressInput from '../../../components/ui/AddressInput';
 import ApiService from '../../../services/apiService';
 import './CadastroFamiliaDesktop.css';
 import '../../../styles/components/PasswordField.css';
 import '../../../styles/components/Toast.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
 
 export default function CadastroFamiliaDesktop() {
   const [step, setStep] = useState(1);
@@ -58,6 +58,7 @@ export default function CadastroFamiliaDesktop() {
   });
 
   const totalSteps = 6;
+  const { loadingCep, formatCEP, searchCEP } = useCEP();
   
   const steps = [
     { id: 1, title: "Responsável", icon: <User size={22} /> },
@@ -96,7 +97,13 @@ export default function CadastroFamiliaDesktop() {
       case 3:
         return formData.telefone.trim() && formData.email.trim() && formData.password.length >= 6 && formData.password === formData.confirmPassword;
       case 4:
-        return (formData.cep && formData.endereco && formData.bairro && formData.tipoMoradia) || (formData.endereco.trim() && formData.bairro.trim() && formData.tipoMoradia);
+        return formData.cep.replace(/\D/g, '').length === 8 &&
+               formData.endereco.trim() !== '' &&
+               formData.numero.trim() !== '' &&
+               formData.bairro.trim() !== '' &&
+               formData.cidade.trim() !== '' &&
+               formData.estado.trim() !== '' &&
+               formData.tipoMoradia !== '';
       default:
         return true;
     }
@@ -171,6 +178,26 @@ export default function CadastroFamiliaDesktop() {
       updateFormData('telefone', formatPhone(value));
     }
   };
+
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        updateFormData('endereco', '');
+        updateFormData('bairro', '');
+        updateFormData('cidade', '');
+        updateFormData('estado', '');
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        updateFormData('endereco', logradouro || '');
+        updateFormData('bairro', bairro || '');
+        updateFormData('cidade', localidade || '');
+        updateFormData('estado', uf || '');
+      }
+    }
+  };
   
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -182,26 +209,18 @@ export default function CadastroFamiliaDesktop() {
         setCurrentNeed(value);
         setTempDetail(needDetails[value] || '');
         setShowNeedModal(true);
-        setFormData(prev => ({
-          ...prev,
-          [field]: [...prev[field], value]
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [field]: prev[field].filter(item => item !== value)
-        }));
-        const newDetails = { ...needDetails };
-        delete newDetails[value];
-        setNeedDetails(newDetails);
       }
-    } else {
       setFormData(prev => ({
         ...prev,
         [field]: checked 
           ? [...prev[field], value]
           : prev[field].filter(item => item !== value)
       }));
+      if (!checked) {
+        const newDetails = { ...needDetails };
+        delete newDetails[value];
+        setNeedDetails(newDetails);
+      }
     }
   };
   
@@ -577,11 +596,88 @@ export default function CadastroFamiliaDesktop() {
 
               {step === 4 && (
                 <div className="form-grid">
+                  <div className="form-group">
+                    <label className="field-label">CEP <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <MapPin className="field-icon" size={20} />
+                      <input
+                        required
+                        type="text"
+                        className="form-input"
+                        placeholder="00000-000"
+                        value={formData.cep}
+                        onChange={(e) => updateFormData('cep', formatCEP(e.target.value))}
+                        onBlur={handleCepBlur}
+                        maxLength={9}
+                      />
+                      {loadingCep && <div className="spinner" />}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Endereço (Rua, Av.) <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="form-input"
+                      placeholder="Sua rua ou avenida"
+                      value={formData.endereco}
+                      onChange={(e) => updateFormData('endereco', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Número <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="form-input"
+                      placeholder="Nº"
+                      value={formData.numero}
+                      onChange={(e) => updateFormData('numero', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Bairro <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="form-input"
+                      placeholder="Seu bairro"
+                      value={formData.bairro}
+                      onChange={(e) => updateFormData('bairro', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Cidade <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      className="form-input"
+                      placeholder="Sua cidade"
+                      value={formData.cidade}
+                      onChange={(e) => updateFormData('cidade', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Estado <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="form-input"
+                      placeholder="UF"
+                      value={formData.estado}
+                      onChange={(e) => updateFormData('estado', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
                   <div className="form-group span-2">
-                    <AddressInput 
-                      addressData={formData}
-                      setAddressData={setFormData}
-                      required={true}
+                    <label className="field-label">Complemento / Ponto de Referência</label>
+                    <input
+                      type="text"
+                      placeholder="Apto, bloco, próximo a..."
+                      value={formData.referencia}
+                      onChange={(e) => updateFormData('referencia', e.target.value)}
                     />
                   </div>
                   <div className="form-group span-2">
@@ -604,7 +700,6 @@ export default function CadastroFamiliaDesktop() {
                   </div>
                 </div>
               )}
-
               {step === 5 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
