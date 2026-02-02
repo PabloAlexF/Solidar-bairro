@@ -428,13 +428,13 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
   const { canPublish, analysis, confidence, riskScore, suggestions, specificIssues } = validationResult;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-lg p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-lg p-4 overflow-y-auto">
       <motion.div 
         initial={{ scale: 0.8, opacity: 0, y: 50 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.8, opacity: 0, y: 50 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-white/20"
+        className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 w-full max-w-4xl md:max-w-7xl shadow-2xl border border-white/20 relative"
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -443,7 +443,7 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
         </div>
         
         {/* Header */}
-        <div className="text-center mb-8 relative z-10">
+        <div className="text-center mb-4 relative z-10">
           <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
             canPublish 
               ? 'bg-green-50 border-2 border-green-200' 
@@ -475,9 +475,9 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="mb-8 relative z-10"
+            className="mb-4 relative z-10"
           >
-            <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
               <h3 className="font-black text-slate-900 text-sm mb-4">Análise Detalhada</h3>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
@@ -518,21 +518,21 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="mb-8 relative z-10"
+            className="mb-4 relative z-10"
           >
-            <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
+            <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
               <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle size={18} className="text-red-600" />
                 <h3 className="font-black text-slate-900 text-sm">Problemas Específicos Encontrados</h3>
               </div>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {specificIssues.map((issue, index) => (
                   <motion.div 
                     key={index}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.7 + (index * 0.1) }}
-                    className="bg-white rounded-xl p-4 border border-red-200"
+                    className="bg-white rounded-xl p-4 border border-red-200 h-full"
                   >
                     <div className="flex items-start gap-3">
                       <div className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">

@@ -166,10 +166,15 @@ const markAsResolved = async (req, res) => {
   try {
     const userId = req.user?.uid || req.user?.id;
     if (!userId) {
-      return res.status(401).json({ error: 'Usuário não autenticado' });
+      return res.status(401).json({ 
+        success: false,
+        error: 'Usuário não autenticado' 
+      });
     }
 
+    console.log('Tentando resolver item:', req.params.id, 'por usuário:', userId);
     const item = await achadosPerdidosService.markAsResolved(req.params.id, userId);
+    
     res.json({
       success: true,
       message: 'Item marcado como resolvido',
@@ -177,18 +182,15 @@ const markAsResolved = async (req, res) => {
     });
   } catch (error) {
     console.error('Erro ao resolver item:', error);
+    
     if (error.message === 'Item não encontrado') {
       return res.status(404).json({
         success: false,
         error: error.message
       });
     }
-    if (error.message === 'Não autorizado a resolver este item') {
-      return res.status(403).json({
-        success: false,
-        error: error.message
-      });
-    }
+    
+    // Remove the specific authorization check since we changed the service
     res.status(500).json({
       success: false,
       error: 'Erro interno do servidor'

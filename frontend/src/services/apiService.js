@@ -17,8 +17,8 @@ const ApiService = {
       throw new Error('Endpoint contém caracteres suspeitos');
     }
     
-    // Pular validação de dados para endpoints de autenticação
-    if (endpoint.includes('/auth/') || endpoint.includes('/login') || endpoint.includes('/cidadaos') || endpoint.includes('/comercios') || endpoint.includes('/ongs') || endpoint.includes('/familias')) {
+    // Pular validação de dados para endpoints de autenticação e principais
+    if (endpoint.includes('/auth/') || endpoint.includes('/login') || endpoint.includes('/cidadaos') || endpoint.includes('/comercios') || endpoint.includes('/ongs') || endpoint.includes('/familias') || endpoint.includes('/pedidos') || endpoint.includes('/chat/') || endpoint.includes('/conversas') || endpoint.includes('/conversations') || endpoint.includes('/chats') || endpoint.includes('/admin/')) {
       return true;
     }
     
@@ -494,6 +494,14 @@ const ApiService = {
     return this.request(`/cidadaos/${userId}/ajudas-concluidas`);
   },
 
+  async getUserStats(userId) {
+    return this.request(`/users/${userId}/stats`);
+  },
+
+  async getMyStats() {
+    return this.request('/users/me/stats');
+  },
+
   async getNeighborhoodStats() {
     return this.request('/stats/neighborhood');
   },
@@ -564,6 +572,25 @@ const ApiService = {
 
   async getPainelOngs(bairro) {
     return this.request(`/painel-social/ongs?bairro=${encodeURIComponent(bairro)}`);
+  },
+
+  // Admin endpoints para limpeza do banco
+  async clearAllConversations() {
+    return this.request('/admin/clear-conversations', {
+      method: 'DELETE'
+    });
+  },
+
+  async clearAllPedidos() {
+    return this.request('/admin/clear-pedidos', {
+      method: 'DELETE'
+    });
+  },
+
+  async clearAllMessages() {
+    return this.request('/admin/clear-messages', {
+      method: 'DELETE'
+    });
   }
 };
 

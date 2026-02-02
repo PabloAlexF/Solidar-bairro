@@ -17,10 +17,18 @@ class AchadosPerdidosModel {
 
   async findAll(filters = {}) {
     try {
-      // Buscar todos os itens ativos primeiro
-      const snapshot = await this.collection
-        .where('status', '==', 'active')
-        .get();
+      // Buscar itens ativos e resolvidos
+      let query = this.collection;
+      
+      // Se não especificar status, buscar apenas ativos
+      if (!filters.includeResolved) {
+        query = query.where('status', '==', 'active');
+      } else {
+        // Buscar ativos e resolvidos
+        query = query.where('status', 'in', ['active', 'resolved']);
+      }
+      
+      const snapshot = await query.get();
       
       let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
@@ -74,7 +82,7 @@ class AchadosPerdidosModel {
     try {
       const snapshot = await this.collection
         .where('user_id', '==', userId)
-        .where('status', '==', 'active')
+        .where('status', 'in', ['active', 'resolved'])
         .get();
       
       let items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));

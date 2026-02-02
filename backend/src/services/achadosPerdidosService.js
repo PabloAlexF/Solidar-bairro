@@ -115,11 +115,13 @@ class AchadosPerdidosService {
       throw new Error('Item não encontrado');
     }
 
-    if (item.user_id !== userId) {
-      throw new Error('Não autorizado a resolver este item');
+    // Allow both the item owner and authenticated users to resolve items
+    // This enables collaborative resolution in chat contexts
+    if (!userId) {
+      throw new Error('Usuário não autenticado');
     }
 
-    return await achadosPerdidosModel.update(id, { status: 'resolved' });
+    return await achadosPerdidosModel.update(id, { status: 'resolved', resolved: true });
   }
 }
 

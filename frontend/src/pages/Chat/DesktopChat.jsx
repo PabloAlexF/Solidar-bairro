@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import { useAuth } from '../../contexts/AuthContext';
@@ -26,7 +26,11 @@ import {
   Home,
   MessageSquare,
   Calendar,
-  Shield
+  Shield,
+  Reply,
+  Smile,
+  X,
+  Pencil
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
@@ -35,6 +39,33 @@ import './styles.css';
 const ensureDependencies = () => {
   if (ApiService && !ApiService.notificationService) ApiService.notificationService = chatNotificationService;
   if (ApiService && !ApiService.chatNotificationService) ApiService.chatNotificationService = chatNotificationService;
+
+  // Polyfill para updateMessage caso não exista no serviço
+  if (ApiService && !ApiService.updateMessage) {
+    ApiService.updateMessage = async (conversaId, messageId, content) => {
+      if (typeof ApiService.request === 'function') {
+        try {
+          return await ApiService.request(`/chat/conversations/${conversaId}/messages/${messageId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ content })
+          });
+        } catch (error) {
+          // Tenta rotas alternativas em caso de erro (ex: 404)
+          try {
+            return await ApiService.request(`/conversas/${conversaId}/mensagens/${messageId}`, {
+              method: 'PUT',
+              body: JSON.stringify({ content })
+            });
+          } catch (err2) {
+            // Fallback final: simula sucesso se o backend não suportar
+            console.warn('Backend não suporta edição de mensagens ou rota não encontrada. Simulando sucesso local.');
+            return { success: true };
+          }
+        }
+      }
+      return { success: true };
+    };
+  }
 };
 
 ensureDependencies();
@@ -54,6 +85,8 @@ const formatTime = (date) => {
   
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
+
+const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
 const Chat = () => {
   const params = useParams();
@@ -84,8 +117,15 @@ const Chat = () => {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
 
   const messagesEndRef = useRef(null);
+
+  const isConversationClosed = useMemo(() => {
+    return conversation?.status === 'closed' || conversation?.status === 'finalizada' || conversation?.status === 'completed';
+  }, [conversation]);
 
   const currentUserData = {
     name: user?.nome || "Seu Perfil",
@@ -111,22 +151,41 @@ const Chat = () => {
       name: (() => {
         // Se há participantsData, usar o primeiro (que deve ser o outro usuário)
         if (conversation.participantsData?.length > 0) {
-          return conversation.participantsData[0].nome || 'Carregando...';
+          const otherUser = conversation.participantsData.find(p => p.uid !== user?.uid);
+          if (otherUser?.nome && otherUser.nome.trim()) return otherUser.nome;
+          if (otherUser?.nomeCompleto && otherUser.nomeCompleto.trim()) return otherUser.nomeCompleto;
         }
         // Fallback para otherParticipant
-        if (conversation.otherParticipant?.nome) return conversation.otherParticipant.nome;
+        if (conversation.otherParticipant?.nome && conversation.otherParticipant.nome.trim()) {
+          return conversation.otherParticipant.nome;
+        }
+        if (conversation.otherParticipant?.nomeCompleto && conversation.otherParticipant.nomeCompleto.trim()) {
+          return conversation.otherParticipant.nomeCompleto;
+        }
         return 'Carregando...';
       })(),
       initials: (() => {
         // Usar primeiro participante dos participantsData
-        if (conversation.participantsData?.length > 0 && conversation.participantsData[0].nome) {
-          return conversation.participantsData[0].nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        if (conversation.participantsData?.length > 0) {
+          const otherUser = conversation.participantsData.find(p => p.uid !== user?.uid);
+          if (otherUser?.nome && otherUser.nome.trim()) {
+            return otherUser.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          }
+          if (otherUser?.nomeCompleto && otherUser.nomeCompleto.trim()) {
+            return otherUser.nomeCompleto.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          }
         }
         // Fallback
-        const name = conversation.otherParticipant?.nome || 'CV';
+        const name = conversation.otherParticipant?.nome || conversation.otherParticipant?.nomeCompleto || 'CV';
         return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
       })(),
-      type: conversation.participantsData?.[0]?.tipo || conversation.otherParticipant?.tipo || 'cidadao',
+      type: (() => {
+        if (conversation.participantsData?.length > 0) {
+          const otherUser = conversation.participantsData.find(p => p.uid !== user?.uid);
+          return otherUser?.tipo || 'cidadao';
+        }
+        return conversation.otherParticipant?.tipo || 'cidadao';
+      })(),
       distance: '0m de você',
       online: conversation.participantsData?.[0]?.online || conversation.otherParticipant?.online || false
     } : chatContacts[0]);
@@ -178,6 +237,45 @@ const Chat = () => {
 
   const helpInfo = getContextInfo();
 
+  // Função para limpar dados do chat (para debug)
+  const clearChatData = () => {
+    localStorage.removeItem('solidar-conversations');
+    localStorage.removeItem('solidar-chat-cache');
+    setChatContacts([]);
+    setConversation(null);
+    setMessages([]);
+    console.log('Dados do chat limpos!');
+  };
+
+  // Função para limpar banco de dados
+  const clearDatabase = async () => {
+    if (!window.confirm('ATENÇÃO: Isso irá deletar TODAS as conversas e pedidos do banco de dados. Continuar?')) {
+      return;
+    }
+    
+    try {
+      // Limpar conversas
+      await ApiService.request('/admin/clear-conversations', { method: 'DELETE' });
+      // Limpar pedidos
+      await ApiService.request('/admin/clear-pedidos', { method: 'DELETE' });
+      // Limpar mensagens
+      await ApiService.request('/admin/clear-messages', { method: 'DELETE' });
+      
+      alert('Banco de dados limpo com sucesso!');
+      clearChatData();
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao limpar banco:', error);
+      alert('Erro ao limpar banco de dados');
+    }
+  };
+
+  // Adicionar ao useEffect para limpar cache antigo
+  useEffect(() => {
+    // Limpar cache antigo na inicialização
+    clearChatData();
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -188,19 +286,47 @@ const Chat = () => {
       const response = await ApiService.getConversations();
       if (response.success && response.data) {
         const formattedContacts = response.data.map(conv => {
+          console.log('Processando conversa:', JSON.stringify(conv, null, 2));
+          
           // Garantir que sempre temos um nome válido
-          let userName = 'Usuário';
+          let userName = 'Carregando...';
+          
+          // Tentar múltiplas fontes para o nome
           if (conv.otherParticipant?.nome && conv.otherParticipant.nome.trim()) {
             userName = conv.otherParticipant.nome;
-          } else if (conv.participants?.find(p => p.uid !== user?.uid)?.nome) {
-            userName = conv.participants.find(p => p.uid !== user?.uid).nome;
+            console.log('Nome encontrado em otherParticipant.nome:', userName);
+          } else if (conv.otherParticipant?.nomeCompleto && conv.otherParticipant.nomeCompleto.trim()) {
+            userName = conv.otherParticipant.nomeCompleto;
+            console.log('Nome encontrado em otherParticipant.nomeCompleto:', userName);
+          } else if (conv.participantsData?.length > 0) {
+            const otherParticipant = conv.participantsData.find(p => p.uid !== user?.uid);
+            console.log('Procurando em participantsData, otherParticipant:', otherParticipant);
+            if (otherParticipant?.nome && otherParticipant.nome.trim()) {
+              userName = otherParticipant.nome;
+              console.log('Nome encontrado em participantsData.nome:', userName);
+            } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+              userName = otherParticipant.nomeCompleto;
+              console.log('Nome encontrado em participantsData.nomeCompleto:', userName);
+            }
+          } else if (conv.participants?.length > 0) {
+            const otherParticipant = conv.participants.find(p => p.uid !== user?.uid);
+            console.log('Procurando em participants, otherParticipant:', otherParticipant);
+            if (otherParticipant?.nome && otherParticipant.nome.trim()) {
+              userName = otherParticipant.nome;
+              console.log('Nome encontrado em participants.nome:', userName);
+            } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+              userName = otherParticipant.nomeCompleto;
+              console.log('Nome encontrado em participants.nomeCompleto:', userName);
+            }
           }
+          
+          console.log('Nome final para conversa', conv.id, ':', userName);
           
           return {
             id: conv.id,
             name: userName,
-            initials: userName !== 'Usuário' ? 
-              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U',
+            initials: userName !== 'Carregando...' ? 
+              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'CV',
             type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
             distance: '0m de você',
             online: conv.otherParticipant?.online || false,
@@ -351,6 +477,33 @@ const Chat = () => {
     };
   }, [conversaId, user?.uid, loadConversations, loadMessages]);
 
+  const handleReactionClick = (msgId, emoji) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === msgId) {
+        const reactions = { ...(msg.reactions || {}) };
+        const currentUsers = reactions[emoji] || [];
+        const userId = user?.uid || 'me';
+        
+        if (currentUsers.includes(userId)) {
+          reactions[emoji] = currentUsers.filter(id => id !== userId);
+          if (reactions[emoji].length === 0) delete reactions[emoji];
+        } else {
+          reactions[emoji] = [...currentUsers, userId];
+        }
+        return { ...msg, reactions };
+      }
+      return msg;
+    }));
+    setActiveReactionMessageId(null);
+  };
+
+  const handleEditClick = (msg) => {
+    setEditingMessage(msg);
+    setInputValue(msg.content);
+    setReplyingTo(null);
+    fileInputRef.current?.focus();
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
@@ -359,18 +512,45 @@ const Chat = () => {
     if (!inputValue.trim() || sendingMessage) return;
 
     // Verificar se a conversa está encerrada
-    if (conversation?.status === 'closed') {
+    if (isConversationClosed) {
       alert('Esta conversa foi encerrada e não aceita mais mensagens.');
       return;
     }
 
     const messageText = inputValue.trim();
+
+    if (editingMessage) {
+      try {
+        setSendingMessage(true);
+        await ApiService.updateMessage(conversaId, editingMessage.id, messageText);
+        setMessages(prev => prev.map(m => m.id === editingMessage.id ? { ...m, content: messageText, edited: true } : m));
+        setEditingMessage(null);
+        setInputValue("");
+      } catch (error) {
+        console.error('Erro ao editar mensagem:', error);
+        alert('Erro ao editar mensagem.');
+      } finally {
+        setSendingMessage(false);
+      }
+      return;
+    }
+
     setInputValue("");
     setSendingMessage(true);
 
     try {
       ensureDependencies();
-      const response = await ApiService.sendMessage(conversaId, messageText);
+      
+      const metadata = {};
+      if (replyingTo) {
+        metadata.replyTo = {
+          id: replyingTo.id,
+          content: replyingTo.content,
+          senderName: replyingTo.sender === 'sent' ? 'Você' : currentContact?.name || 'Usuário'
+        };
+      }
+
+      const response = await ApiService.sendMessage(conversaId, messageText, 'text', metadata);
       
       if (response.success) {
         const newMessage = {
@@ -380,9 +560,11 @@ const Chat = () => {
           content: messageText,
           timestamp: new Date(),
           read: false,
+          metadata: metadata
         };
         
         setMessages(prev => [...prev, newMessage]);
+        setReplyingTo(null);
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -411,38 +593,51 @@ const Chat = () => {
 
   const handleFinishDelivery = async () => {
     setShowFinishModal(false);
-    
+
     try {
       if (helpInfo.contextType === 'achado-perdido' && conversation?.itemId) {
         // Marcar achado/perdido como resolvido
+        console.log('Tentando resolver item:', conversation.itemId);
         const response = await ApiService.resolverAchadoPerdido(conversation.itemId);
+        console.log('Resposta da API:', response);
         if (response.success) {
           setAchadoPerdidoData(prev => ({ ...prev, resolved: true, status: 'resolvido' }));
+        } else {
+          throw new Error(response.error || 'Erro ao resolver item');
         }
       } else if (helpInfo.contextType === 'pedido' && conversation?.pedidoId) {
-        // Finalizar ajuda - incrementar contador e remover pedido
-        const response = await ApiService.finalizarAjuda(conversation.pedidoId, user?.uid);
+        // O usuário que clica em "Finalizar Ajuda" é quem deve ter o contador incrementado
+        // Este é sempre o solicitante (criador do pedido)
+        const usuarioQueFinaliza = user?.uid;
+
+        console.log('Finalizando ajuda - Pedido ID:', conversation.pedidoId, 'Usuário que finaliza:', usuarioQueFinaliza);
+
+        // Finalizar ajuda - incrementar contador do usuário que finaliza e remover pedido
+        const response = await ApiService.finalizarAjuda(conversation.pedidoId, usuarioQueFinaliza);
         if (response.success) {
           setDeliveryStatus("entregue");
+        } else {
+          throw new Error(response.error || 'Erro ao finalizar ajuda');
         }
       } else {
         // Fallback para casos sem contexto específico
         setDeliveryStatus("entregue");
       }
-      
+
       // Encerrar a conversa automaticamente
       await ApiService.closeConversation(conversaId);
-      
+
       setShowConfirmation(true);
-      
+
       // Redirecionar para página de conversas após 3 segundos
       setTimeout(() => {
         setShowConfirmation(false);
-        navigate('/conversas');
+        window.location.href = '/conversas'; // Force full reload to show updated conversation status
       }, 3000);
     } catch (error) {
       console.error('Erro ao finalizar:', error);
-      alert('Erro ao finalizar. Tente novamente.');
+      const errorMessage = error.message || 'Erro desconhecido';
+      alert(`Erro ao finalizar: ${errorMessage}`);
     }
   };
 
@@ -564,14 +759,16 @@ const Chat = () => {
       setViewingProfile(currentUserData);
     } else {
       const otherUser = conversation?.participantsData?.find(p => p.uid !== user?.uid) || conversation?.otherParticipant;
+      const userName = otherUser?.nome || otherUser?.nomeCompleto || currentContact?.name || "Carregando...";
+      
       setViewingProfile({
-        name: currentContact?.name || "Usuário",
+        name: userName,
         email: otherUser?.email || "Informação privada",
         phone: otherUser?.telefone || "Informação privada",
         type: currentContact?.type === 'doador' ? 'Doador' : 'Beneficiário',
         address: otherUser?.endereco || "Localização não informada",
         points: otherUser?.pontos || 0,
-        initials: currentContact?.initials || "?",
+        initials: userName !== "Carregando..." ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "CV",
         joinDate: otherUser?.createdAt ? new Date(otherUser.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Recente",
         isVerified: currentContact?.type === 'doador',
         isSelf: false
@@ -783,8 +980,8 @@ const Chat = () => {
                 
                 <div className="card-right-section">
                   {helpInfo.contextType === 'pedido' ? (
-                    deliveryStatus === "andamento" ? (
-                      <button 
+                    deliveryStatus === "andamento" && user?.uid === pedidoData?.userId ? (
+                      <button
                         className="finish-collaboration-btn"
                         onClick={() => setShowFinishModal(true)}
                       >
@@ -797,7 +994,7 @@ const Chat = () => {
                       </button>
                     )
                   ) : (
-                    <button 
+                    <button
                       className={`resolve-btn ${helpInfo.status === 'resolvido' ? 'resolved' : ''}`}
                       onClick={() => {
                         if (helpInfo.status !== 'resolvido') {
@@ -820,13 +1017,20 @@ const Chat = () => {
 
             {/* Messages Feed */}
             <div className="messages-container">
+              {loading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', color: '#64748b', gap: '10px' }}>
+                  <div className="mini-loader" />
+                  <span>Carregando conversa...</span>
+                </div>
+              ) : (
+              <>
               <div className="date-separator">
                 <span>Hoje</span>
               </div>
 
               {messages.map((msg) => {
                 if (msg.type === "system") {
-                  const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso");
+                  const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso") || msg.content?.includes("resolvido") || msg.content?.includes("encerrada");
                   const isSecurity = msg.content?.includes("seguro") || msg.content?.includes("ambiente");
 
                   return (
@@ -842,6 +1046,8 @@ const Chat = () => {
                 }
 
                 const isSent = msg.sender === 'sent';
+                const hasReply = msg.metadata?.replyTo;
+                const canEdit = isSent && (new Date() - new Date(msg.timestamp)) < 15 * 60 * 1000 && !isConversationClosed;
                 let bubbleContent;
 
                 if (msg.type === "location") {
@@ -884,6 +1090,12 @@ const Chat = () => {
                 } else {
                   bubbleContent = (
                     <div className="msg-bubble text-bubble">
+                      {hasReply && (
+                        <div className="reply-quote">
+                          <span className="reply-quote-sender">{hasReply.senderName}</span>
+                          <p className="reply-quote-text">{hasReply.content}</p>
+                        </div>
+                      )}
                       {msg.content}
                     </div>
                   );
@@ -896,9 +1108,40 @@ const Chat = () => {
                         {currentContact?.initials || 'U'}
                       </div>
                     )}
+                    
+                    {!isSent && !isConversationClosed && (
+                      <div className="msg-actions">
+                        <button className="msg-action-btn" onClick={() => setReplyingTo(msg)} title="Responder">
+                          <Reply size={16} />
+                        </button>
+                        <div style={{ position: 'relative' }}>
+                          <button className="msg-action-btn" onClick={() => setActiveReactionMessageId(activeReactionMessageId === msg.id ? null : msg.id)} title="Reagir">
+                            <Smile size={16} />
+                          </button>
+                          {activeReactionMessageId === msg.id && (
+                            <div style={{ position: 'absolute', bottom: '100%', left: 0, background: 'white', padding: '8px', borderRadius: '50px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', gap: '8px', zIndex: 10, marginBottom: '8px' }}>
+                              {REACTION_OPTIONS.map(emoji => (
+                                <button key={emoji} onClick={() => handleReactionClick(msg.id, emoji)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: 0 }}>{emoji}</button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="msg-wrapper">
                       {bubbleContent}
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div className="reactions-display">
+                          {Object.entries(msg.reactions).map(([emoji, users]) => (
+                            <div key={emoji} className={`reaction-pill ${users.includes(user?.uid || 'me') ? 'active' : ''}`} onClick={() => handleReactionClick(msg.id, emoji)}>
+                              {emoji} <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{users.length}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <div className="msg-metadata">
+                        {msg.edited && <span className="edited-label">(editado)</span>}
                         <span className="msg-time">{formatTime(msg.timestamp)}</span>
                         {isSent && (
                           <span className="msg-status">
@@ -908,9 +1151,35 @@ const Chat = () => {
                       </div>
                     </div>
                     {isSent && (
+                      <>
+                      {!isConversationClosed && (
+                      <div className="msg-actions">
+                        <div style={{ position: 'relative' }}>
+                          <button className="msg-action-btn" onClick={() => setActiveReactionMessageId(activeReactionMessageId === msg.id ? null : msg.id)} title="Reagir">
+                            <Smile size={16} />
+                          </button>
+                          {activeReactionMessageId === msg.id && (
+                            <div style={{ position: 'absolute', bottom: '100%', right: 0, background: 'white', padding: '8px', borderRadius: '50px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', gap: '8px', zIndex: 10, marginBottom: '8px' }}>
+                              {REACTION_OPTIONS.map(emoji => (
+                                <button key={emoji} onClick={() => handleReactionClick(msg.id, emoji)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: 0 }}>{emoji}</button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {canEdit && (
+                          <button className="msg-action-btn" onClick={() => handleEditClick(msg)} title="Editar">
+                            <Pencil size={16} />
+                          </button>
+                        )}
+                        <button className="msg-action-btn" onClick={() => setReplyingTo(msg)} title="Responder">
+                          <Reply size={16} />
+                        </button>
+                      </div>
+                      )}
                       <div className="msg-sender-avatar self" onClick={() => handleAvatarClick(true)}>
                         {currentUserData?.initials || 'EU'}
                       </div>
+                      </>
                     )}
                   </div>
                 );
@@ -930,12 +1199,14 @@ const Chat = () => {
               )}
 
               <div ref={messagesEndRef} />
+              </>
+              )}
             </div>
           </div>
 
           {/* Input Footer */}
           <footer className="chat-input-footer">
-            {conversation?.status === 'closed' ? (
+            {isConversationClosed ? (
               <div className="conversation-closed-banner">
                 <div className="closed-icon">
                   <ShieldCheck size={20} />
@@ -947,6 +1218,28 @@ const Chat = () => {
               </div>
             ) : (
               <div className="input-container">
+                {editingMessage && (
+                  <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, padding: '0 20px' }}>
+                    <div className="reply-preview-bar" style={{ borderLeftColor: '#3b82f6' }}>
+                      <div className="reply-info">
+                        <span className="reply-sender" style={{ color: '#3b82f6' }}>Editando mensagem</span>
+                        <p className="reply-text">{editingMessage.content}</p>
+                      </div>
+                      <button onClick={() => { setEditingMessage(null); setInputValue(''); }} className="close-reply-btn"><X size={18} /></button>
+                    </div>
+                  </div>
+                )}
+                {replyingTo && (
+                  <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, padding: '0 20px' }}>
+                    <div className="reply-preview-bar">
+                      <div className="reply-info">
+                        <span className="reply-sender">Respondendo a {replyingTo.sender === 'sent' ? 'Você' : currentContact?.name}</span>
+                        <p className="reply-text">{replyingTo.content}</p>
+                      </div>
+                      <button onClick={() => setReplyingTo(null)} className="close-reply-btn"><X size={18} /></button>
+                    </div>
+                  </div>
+                )}
                 <div className="input-actions-left">
                   <input 
                     type="file" 

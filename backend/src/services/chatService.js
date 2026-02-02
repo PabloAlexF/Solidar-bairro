@@ -124,7 +124,8 @@ class ChatService {
           id: cidadaoDoc.id,
           nome: cidadaoData.nome,
           tipo: 'cidadao',
-          bairro: cidadaoData.endereco?.bairro
+          bairro: cidadaoData.endereco?.bairro,
+          isOnline: true // Temporário: considerar todos online
         };
       }
 
@@ -138,7 +139,8 @@ class ChatService {
           id: comercioDoc.id,
           nome: comercioData.nomeFantasia || comercioData.razaoSocial,
           tipo: 'comercio',
-          bairro: comercioData.endereco?.bairro
+          bairro: comercioData.endereco?.bairro,
+          isOnline: true // Temporário: considerar todos online
         };
       }
 
@@ -152,7 +154,8 @@ class ChatService {
           id: ongDoc.id,
           nome: ongData.nome,
           tipo: 'ong',
-          bairro: ongData.endereco?.bairro
+          bairro: ongData.endereco?.bairro,
+          isOnline: true // Temporário: considerar todos online
         };
       }
 
@@ -278,12 +281,20 @@ class ChatService {
         closedBy: userId
       });
 
+      // Determinar mensagem baseada no contexto
+      let messageContent = '✅ Conversa encerrada.';
+      if (conversation.pedidoId) {
+        messageContent = '✅ Ajuda concluída com sucesso! Conversa encerrada.';
+      } else if (conversation.itemId) {
+        messageContent = '✅ Item resolvido! Conversa encerrada.';
+      }
+
       // Enviar mensagem de sistema informando o encerramento
       await chatModel.createMessage({
         conversationId,
         senderId: 'system',
         type: 'system',
-        content: '✅ Conversa encerrada automaticamente após finalização da ajuda.'
+        content: messageContent
       });
 
       return { success: true, message: 'Conversa encerrada com sucesso' };

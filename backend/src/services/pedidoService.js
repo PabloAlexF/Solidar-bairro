@@ -138,20 +138,20 @@ class PedidoService {
     if (!pedidoId?.trim()) {
       throw new Error('ID do pedido é obrigatório');
     }
-    
+
     if (!ajudanteId?.trim()) {
       throw new Error('ID do ajudante é obrigatório');
     }
-    
+
     const existingPedido = await pedidoModel.findById(pedidoId);
     if (!existingPedido) {
       throw new Error('Pedido não encontrado');
     }
-    
+
     const { db } = require('../config/firebase');
     const cidadaoRef = db.collection('cidadaos').doc(ajudanteId);
     const cidadaoDoc = await cidadaoRef.get();
-    
+
     if (cidadaoDoc.exists) {
       const currentAjudas = cidadaoDoc.data().ajudasConcluidas || 0;
       const currentPontos = cidadaoDoc.data().pontos || 0;
@@ -161,7 +161,19 @@ class PedidoService {
         atualizadoEm: new Date()
       });
     }
-    
+
+    // Fechar a conversa relacionada ao pedido
+    const chatService = require('./chatService');
+    try {
+      const conversation = await chatService.findConversationByPedido(pedidoId, [existingPedido.userId, ajudanteId]);
+      if (conversation) {
+        await chatService.closeConversation(conversation.id, ajudanteId);
+      }
+    } catch (error) {
+      console.warn('Erro ao fechar conversa:', error.message);
+      // Não falhar a finalização da ajuda por causa da conversa
+    }
+
     return await pedidoModel.delete(pedidoId);
   }
 

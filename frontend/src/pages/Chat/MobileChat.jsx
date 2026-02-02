@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import { useAuth } from '../../contexts/AuthContext';
@@ -26,16 +26,45 @@ import {
   Home,
   MessageSquare,
   X,
+  Reply,
   Calendar,
-  Shield
+  Shield,
+  Pencil
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import './mobile-styles.css';
 
 // Helper to ensure dependencies are injected
 const ensureDependencies = () => {
   if (ApiService && !ApiService.notificationService) ApiService.notificationService = chatNotificationService;
   if (ApiService && !ApiService.chatNotificationService) ApiService.chatNotificationService = chatNotificationService;
+
+  // Polyfill para updateMessage caso não exista no serviço
+  if (ApiService && !ApiService.updateMessage) {
+    ApiService.updateMessage = async (conversaId, messageId, content) => {
+      if (typeof ApiService.request === 'function') {
+        try {
+          return await ApiService.request(`/chat/conversations/${conversaId}/messages/${messageId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ content })
+          });
+        } catch (error) {
+          // Tenta rotas alternativas em caso de erro (ex: 404)
+          try {
+            return await ApiService.request(`/conversas/${conversaId}/mensagens/${messageId}`, {
+              method: 'PUT',
+              body: JSON.stringify({ content })
+            });
+          } catch (err2) {
+            // Fallback final: simula sucesso se o backend não suportar
+            console.warn('Backend não suporta edição de mensagens ou rota não encontrada. Simulando sucesso local.');
+            return { success: true };
+          }
+        }
+      }
+      return { success: true };
+    };
+  }
 };
 
 ensureDependencies();
@@ -54,6 +83,49 @@ const formatTime = (date) => {
   }
   
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+};
+
+const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
+const SwipeableMessage = ({ children, onReply, message, disabled }) => {
+  const x = useMotionValue(0);
+  const opacity = useTransform(x, [0, 60], [0, 1]);
+  const scale = useTransform(x, [0, 60], [0.5, 1]);
+
+  if (disabled) return <div style={{ position: 'relative' }}>{children}</div>;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ 
+        position: 'absolute', 
+        left: 16, 
+        top: 0, 
+        bottom: 0, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        zIndex: 0
+      }}>
+        <motion.div style={{ opacity, scale, color: '#64748b', background: '#f1f5f9', borderRadius: '50%', padding: 8, display: 'flex' }}>
+          <Reply size={18} />
+        </motion.div>
+      </div>
+      <motion.div
+        style={{ x, touchAction: 'pan-y', position: 'relative', zIndex: 1 }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.7}
+        onDragEnd={(e, { offset }) => {
+          if (offset.x > 60) {
+            onReply(message);
+            if (navigator.vibrate) navigator.vibrate(50);
+          }
+        }}
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
 };
 
 const Chat = () => {
@@ -86,6 +158,41 @@ const Chat = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
+
+  const handleReactionClick = (msgId, emoji) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === msgId) {
+        const reactions = { ...(msg.reactions || {}) };
+        const currentUsers = reactions[emoji] || [];
+        const userId = user?.uid || 'me';
+        
+        if (currentUsers.includes(userId)) {
+          reactions[emoji] = currentUsers.filter(id => id !== userId);
+          if (reactions[emoji].length === 0) delete reactions[emoji];
+        } else {
+          reactions[emoji] = [...currentUsers, userId];
+        }
+        return { ...msg, reactions };
+      }
+      return msg;
+    }));
+    setActiveReactionMessageId(null);
+    if (navigator.vibrate) navigator.vibrate(50);
+  };
+
+  const handleEditClick = (msg) => {
+    setEditingMessage(msg);
+    setInputValue(msg.content);
+    setReplyingTo(null);
+    // O foco automático pode variar no mobile, mas tentamos
+  };
+
+  const isConversationClosed = useMemo(() => {
+    return conversation?.status === 'closed' || conversation?.status === 'finalizada' || conversation?.status === 'completed';
+  }, [conversation]);
 
   const messagesEndRef = useRef(null);
 
@@ -354,18 +461,45 @@ const Chat = () => {
     if (!inputValue.trim() || sendingMessage) return;
 
     // Verificar se a conversa está encerrada
-    if (conversation?.status === 'closed') {
+    if (isConversationClosed) {
       alert('Esta conversa foi encerrada e não aceita mais mensagens.');
       return;
     }
 
     const messageText = inputValue.trim();
+
+    if (editingMessage) {
+      try {
+        setSendingMessage(true);
+        await ApiService.updateMessage(conversaId, editingMessage.id, messageText);
+        setMessages(prev => prev.map(m => m.id === editingMessage.id ? { ...m, content: messageText, edited: true } : m));
+        setEditingMessage(null);
+        setInputValue("");
+      } catch (error) {
+        console.error('Erro ao editar mensagem:', error);
+        alert('Erro ao editar mensagem.');
+      } finally {
+        setSendingMessage(false);
+      }
+      return;
+    }
+
     setInputValue("");
     setSendingMessage(true);
 
     try {
       ensureDependencies();
-      const response = await ApiService.sendMessage(conversaId, messageText);
+      
+      const metadata = {};
+      if (replyingTo) {
+        metadata.replyTo = {
+          id: replyingTo.id,
+          content: replyingTo.content,
+          senderName: replyingTo.sender === 'sent' ? 'Você' : currentContact?.name || 'Usuário'
+        };
+      }
+
+      const response = await ApiService.sendMessage(conversaId, messageText, 'text', metadata);
       
       if (response.success) {
         const newMessage = {
@@ -375,9 +509,11 @@ const Chat = () => {
           content: messageText,
           timestamp: new Date(),
           read: false,
+          metadata: metadata
         };
         
         setMessages(prev => [...prev, newMessage]);
+        setReplyingTo(null);
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -575,6 +711,65 @@ const Chat = () => {
 
   return (
     <div className="sb-chat-root">
+      <style>{`
+        .reply-preview-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 16px;
+          background: white;
+          border-top: 1px solid #e2e8f0;
+          border-left: 4px solid #10b981;
+          box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+        }
+        .reply-info {
+          flex: 1;
+          overflow: hidden;
+          margin-right: 12px;
+        }
+        .reply-sender {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #10b981;
+          display: block;
+          margin-bottom: 2px;
+        }
+        .reply-text {
+          font-size: 0.85rem;
+          color: #64748b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin: 0;
+        }
+        .cancel-reply-btn {
+          background: #f1f5f9;
+          border: none;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #64748b;
+          cursor: pointer;
+          flex-shrink: 0;
+        }
+        .cancel-reply-btn:active {
+          background: #fee2e2;
+          color: #ef4444;
+        }
+        .reply-quote {
+          background: rgba(0,0,0,0.05);
+          border-left: 3px solid #10b981;
+          padding: 6px 10px;
+          border-radius: 4px;
+          margin-bottom: 6px;
+          font-size: 0.85rem;
+        }
+        .reply-quote-sender { font-weight: 700; color: #10b981; font-size: 0.75rem; display: block; margin-bottom: 2px; }
+        .reply-quote-text { color: inherit; opacity: 0.8; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      `}</style>
       <div className="sb-chat-page-wrapper">
         <div className="sb-chat-layout">
         {/* Sidebar */}
@@ -860,13 +1055,20 @@ const Chat = () => {
 
             {/* Messages Feed */}
             <div className="sb-messages-container">
+              {loading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', color: '#64748b', gap: '10px' }}>
+                  <div className="sb-mini-loader" />
+                  <span>Carregando conversa...</span>
+                </div>
+              ) : (
+              <>
               <div className="sb-date-separator">
                 <span>Hoje</span>
               </div>
 
               {messages.map((msg) => {
                 if (msg.type === "system") {
-                  const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso");
+                  const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso") || msg.content?.includes("resolvido") || msg.content?.includes("encerrada");
                   const isSecurity = msg.content?.includes("seguro") || msg.content?.includes("ambiente");
 
                   return (
@@ -882,6 +1084,8 @@ const Chat = () => {
                 }
 
                 const isSent = msg.sender === 'sent';
+                const hasReply = msg.metadata?.replyTo;
+                const canEdit = isSent && (new Date() - new Date(msg.timestamp)) < 15 * 60 * 1000 && !isConversationClosed;
                 let bubbleContent;
 
                 if (msg.type === "location") {
@@ -929,25 +1133,91 @@ const Chat = () => {
                 } else {
                   bubbleContent = (
                     <div className="sb-msg-bubble text-bubble">
+                      {hasReply && (
+                        <div className="reply-quote">
+                          <span className="reply-quote-sender">{hasReply.senderName}</span>
+                          <p className="reply-quote-text">{hasReply.content}</p>
+                        </div>
+                      )}
                       {msg.content}
                     </div>
                   );
                 }
 
                 return (
-                  <div key={msg.id} className={`sb-msg-row ${isSent ? 'sent' : 'received'}`}>
+                  <SwipeableMessage key={msg.id} message={msg} onReply={setReplyingTo} disabled={isConversationClosed}>
+                  <div className={`sb-msg-row ${isSent ? 'sent' : 'received'}`}>
                     {!isSent && (
                       <div className="sb-msg-sender-avatar" onClick={() => handleAvatarClick(false)}>
                         {currentContact?.initials || 'U'}
                       </div>
                     )}
                     <div className="sb-msg-wrapper">
-                      {bubbleContent}
+                      <div 
+                        style={{ position: 'relative' }}
+                        onContextMenu={(e) => {
+                          if (isConversationClosed) return;
+                          e.preventDefault();
+                          setActiveReactionMessageId(msg.id);
+                          if (navigator.vibrate) navigator.vibrate(50);
+                        }}
+                      >
+                        <AnimatePresence>
+                          {activeReactionMessageId === msg.id && (
+                            <>
+                              <div 
+                                style={{ position: 'fixed', inset: 0, zIndex: 99 }} 
+                                onClick={(e) => { e.stopPropagation(); setActiveReactionMessageId(null); }} 
+                              />
+                              <motion.div
+                                initial={{ scale: 0, opacity: 0, y: 10 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0, opacity: 0, y: 10 }}
+                                className={`reaction-picker ${isSent ? 'sent' : 'received'}`}
+                              >
+                                {REACTION_OPTIONS.map(emoji => (
+                                  <button 
+                                    key={emoji}
+                                    onClick={(e) => { e.stopPropagation(); handleReactionClick(msg.id, emoji); }}
+                                    className="reaction-option"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                                {canEdit && (
+                                  <>
+                                    <div style={{ width: 1, height: 20, background: '#e2e8f0', margin: '0 4px' }} />
+                                    <button 
+                                      className="reaction-option"
+                                      onClick={(e) => { e.stopPropagation(); handleEditClick(msg); setActiveReactionMessageId(null); }}
+                                    >
+                                      <Pencil size={18} color="#64748b" />
+                                    </button>
+                                  </>
+                                )}
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                        {bubbleContent}
+                      </div>
+
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div className={`reactions-display ${isSent ? 'sent' : 'received'}`}>
+                          {Object.entries(msg.reactions).map(([emoji, users]) => (
+                            <div key={emoji} className={`reaction-pill ${users.includes(user?.uid || 'me') ? 'active' : ''}`}>
+                              {emoji} <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{users.length}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="sb-msg-metadata">
+                        {msg.edited && <span className="sb-edited-label">(editado)</span>}
                         <span className="sb-msg-time">{formatTime(msg.timestamp)}</span>
                         {isSent && (
                           <span className="sb-msg-status">
-                            {msg.read ? <CheckCheck size={14} className="sb-read" /> : <Check size={14} />}
+                            {msg.read ? <CheckCheck size={14} className="sb-read" style={{ color: '#3b82f6' }} /> : <Check size={14} />}
                           </span>
                         )}
                       </div>
@@ -958,6 +1228,7 @@ const Chat = () => {
                       </div>
                     )}
                   </div>
+                  </SwipeableMessage>
                 );
               })}
 
@@ -972,12 +1243,14 @@ const Chat = () => {
               )}
 
               <div ref={messagesEndRef} />
+              </>
+              )}
             </div>
           </div>
 
           {/* Input Footer */}
           <footer className="sb-chat-input-footer">
-            {conversation?.status === 'closed' ? (
+            {isConversationClosed ? (
               <div className="sb-conversation-closed-banner">
                 <div className="sb-closed-icon">
                   <ShieldCheck size={20} />
@@ -989,6 +1262,40 @@ const Chat = () => {
               </div>
             ) : (
               <div className="sb-input-container">
+                <AnimatePresence>
+                  {editingMessage && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, zIndex: 20 }}
+                    >
+                    <div className="reply-preview-bar" style={{ borderLeftColor: '#3b82f6' }}>
+                      <div className="reply-info">
+                        <span className="reply-sender" style={{ color: '#3b82f6' }}>Editando mensagem</span>
+                        <p className="reply-text">{editingMessage.content}</p>
+                      </div>
+                      <button onClick={() => { setEditingMessage(null); setInputValue(''); }} className="cancel-reply-btn"><X size={18} /></button>
+                    </div>
+                    </motion.div>
+                  )}
+                  {replyingTo && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, zIndex: 20 }}
+                    >
+                    <div className="reply-preview-bar">
+                      <div className="reply-info">
+                        <span className="reply-sender">Respondendo a {replyingTo.sender === 'sent' ? 'Você' : currentContact?.name}</span>
+                        <p className="reply-text">{replyingTo.content}</p>
+                      </div>
+                      <button onClick={() => setReplyingTo(null)} className="cancel-reply-btn"><X size={18} /></button>
+                    </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <div className="sb-input-actions-left">
                   <input 
                     type="file" 

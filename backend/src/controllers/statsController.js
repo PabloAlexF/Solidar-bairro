@@ -6,38 +6,50 @@ class StatsController {
     try {
       const { db } = require('../config/firebase');
       const userBairro = req.user?.endereco?.bairro || 'Centro';
-      
+
       // Buscar todos os pedidos e filtrar por bairro e data
       const pedidosSnapshot = await db.collection('pedidos').get();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const endDate = new Date(today);
       endDate.setDate(endDate.getDate() + 1);
-      
+
       let pedidosHoje = 0;
-      let doacoesConcluidas = 0;
-      
+
       pedidosSnapshot.docs.forEach(doc => {
         const pedido = doc.data();
         const createdAt = pedido.createdAt?.toDate ? pedido.createdAt.toDate() : new Date(pedido.createdAt);
-        const updatedAt = pedido.updatedAt?.toDate ? pedido.updatedAt.toDate() : new Date(pedido.updatedAt);
-        
+
         // Contar pedidos de hoje no bairro
         if (pedido.neighborhood === userBairro && createdAt >= today && createdAt < endDate) {
           pedidosHoje++;
         }
-        
-        // Contar doações concluídas hoje no bairro
-        if (pedido.neighborhood === userBairro && pedido.status === 'concluido' && updatedAt >= today && updatedAt < endDate) {
-          doacoesConcluidas++;
-        }
       });
-      
-      // Contar usuários do bairro
-      const cidadaosSnapshot = await db.collection('cidadaos')
-        .where('endereco.bairro', '==', userBairro)
-        .get();
-      
+
+      // Contar doações concluídas: somar ajudasConcluidas de todos os usuários (global)
+      let doacoesConcluidas = 0;
+      const cidadaosSnapshot = await db.collection('cidadaos').get();
+
+      cidadaosSnapshot.docs.forEach(doc => {
+        const user = doc.data();
+        doacoesConcluidas += user.ajudasConcluidas || 0;
+      });
+
+      // Também contar de comércios e ONGs
+      const comercioSnapshot = await db.collection('comercios').get();
+
+      comercioSnapshot.docs.forEach(doc => {
+        const user = doc.data();
+        doacoesConcluidas += user.ajudasConcluidas || 0;
+      });
+
+      const ongSnapshot = await db.collection('ongs').get();
+
+      ongSnapshot.docs.forEach(doc => {
+        const user = doc.data();
+        doacoesConcluidas += user.ajudasConcluidas || 0;
+      });
+
       res.json({
         success: true,
         data: {

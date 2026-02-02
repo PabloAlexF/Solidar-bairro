@@ -120,6 +120,15 @@ export class SecurityMiddleware {
       console.error(`[${context}] Erro detalhado:`, error);
     }
     
+    // Para erros de autorização específicos, manter a mensagem original
+    if (error.message && (error.message.includes('autorizado') || error.message.includes('autenticado'))) {
+      return {
+        message: error.message,
+        code: 'AuthorizationError',
+        timestamp: new Date().toISOString()
+      };
+    }
+    
     // Mensagens genéricas para produção
     const userFriendlyMessages = {
       'NetworkError': 'Erro de conexão. Verifique sua internet.',
@@ -132,7 +141,7 @@ export class SecurityMiddleware {
     };
     
     const errorType = error.name || 'ServerError';
-    const userMessage = userFriendlyMessages[errorType] || 'Ocorreu um erro inesperado.';
+    const userMessage = userFriendlyMessages[errorType] || error.message || 'Ocorreu um erro inesperado.';
     
     return {
       message: userMessage,

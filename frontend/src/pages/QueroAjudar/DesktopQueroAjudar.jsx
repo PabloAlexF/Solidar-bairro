@@ -11,7 +11,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Tooltip } from 'react-tooltip';
 import { motion } from 'framer-motion';
 import ApiService from '../../services/apiService';
-import { getCurrentLocation } from '../../utils/geolocation';
+import { getCurrentLocation, getLocationWithFallback } from '../../utils/geolocation';
 import {
   Bell,
   LogOut,
@@ -60,6 +60,7 @@ import {
   Car
 } from 'lucide-react';
 import './styles-v4.css';
+import marca from '../../assets/images/marca.png';
 
 const CATEGORY_METADATA = {
   'Alimentos': { color: '#f97316', icon: <ShoppingCart size={18} aria-hidden="true" />, label: 'Alimentos' },
@@ -1201,14 +1202,14 @@ function FiltersModal({
                   onClick={async () => {
                     try {
                       console.log('Tentando obter localização manualmente...');
-                      const location = await getCurrentLocation();
+                      const location = await getLocationWithFallback();
                       console.log('Localização manual obtida:', location);
                       if (typeof setUserLocation === 'function') {
                         setUserLocation(location);
                       }
                     } catch (error) {
                       console.error('Erro na localização manual:', error);
-                      alert('Erro: ' + error.message);
+                      toast.error('Não foi possível obter sua localização. Usando São Paulo como padrão.');
                     }
                   }}
                   style={{ opacity: 0.7 }}
@@ -1549,11 +1550,12 @@ export default function QueroAjudarPage() {
     const loadInitialLocation = async () => {
       try {
         console.log('Carregando localização inicial...');
-        const location = await getCurrentLocation();
+        const location = await getLocationWithFallback();
         console.log('Localização inicial obtida:', location);
         setUserLocation(location);
       } catch (error) {
         console.warn('Erro ao obter localização inicial:', error);
+        // Fallback já é tratado pela função getLocationWithFallback
         setUserLocation(null);
       } finally {
         setLocationLoading(false);
@@ -1638,9 +1640,9 @@ export default function QueroAjudarPage() {
     try {
       // Depois criar conversa
       const conversationData = {
-        userId: currentUserId,
-        targetUserId: orderToHelp.userId,
-        pedidoId: orderToHelp.id
+        participants: [currentUserId, orderToHelp.userId],
+        pedidoId: orderToHelp.id,
+        type: 'help_request'
       };
 
       console.log('Criando conversa com dados:', {
@@ -1760,8 +1762,8 @@ export default function QueroAjudarPage() {
       <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="section-container nav-container">
           <div className="logo-wrapper" onClick={() => navigate('/')}>
-            <div className="logo-icon">
-              <Heart fill="white" size={24} />
+            <div className="logo-icon" style={{ width: '48px', height: '48px', position: 'relative', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
             </div>
             <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
           </div>
