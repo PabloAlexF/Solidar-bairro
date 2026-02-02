@@ -21,6 +21,7 @@ export default function CadastroFamiliaDesktop() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [currentNeed, setCurrentNeed] = useState(null);
@@ -109,22 +110,47 @@ export default function CadastroFamiliaDesktop() {
     }
   };
 
-  const handleNextStep = () => {
-    if (step === 3) {
-      if (formData.password.length < 6) {
-        showToast('A senha deve ter pelo menos 6 caracteres', 'error');
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        showToast('As senhas não coincidem', 'error');
-        return;
-      }
+  const getStepValidationErrors = (stepNumber) => {
+    const newErrors = {};
+    switch (stepNumber) {
+      case 1:
+        if (!formData.nomeCompleto.trim()) newErrors.nomeCompleto = true;
+        if (!formData.dataNascimento) newErrors.dataNascimento = true;
+        if (!formData.estadoCivil) newErrors.estadoCivil = true;
+        if (!formData.profissao.trim()) newErrors.profissao = true;
+        break;
+      case 2:
+        if (!formData.cpf.trim()) newErrors.cpf = true;
+        if (!formData.rg.trim()) newErrors.rg = true;
+        if (!formData.rendaFamiliar) newErrors.rendaFamiliar = true;
+        break;
+      case 3:
+        if (!formData.telefone.trim()) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        if (formData.password.length < 6) newErrors.password = true;
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = true;
+        break;
+      case 4:
+        if (formData.cep.replace(/\D/g, '').length !== 8) newErrors.cep = true;
+        if (formData.endereco.trim() === '') newErrors.endereco = true;
+        if (formData.numero.trim() === '') newErrors.numero = true;
+        if (formData.bairro.trim() === '') newErrors.bairro = true;
+        if (formData.cidade.trim() === '') newErrors.cidade = true;
+        if (formData.estado.trim() === '') newErrors.estado = true;
+        if (formData.tipoMoradia === '') newErrors.tipoMoradia = true;
+        break;
     }
-    
-    if (validateStep(step)) {
+    return newErrors;
+  };
+
+  const handleNextStep = () => {
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -201,6 +227,13 @@ export default function CadastroFamiliaDesktop() {
   
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCheckboxChange = (field, value, checked) => {
@@ -408,6 +441,7 @@ export default function CadastroFamiliaDesktop() {
                         type="text" 
                         className="form-input" 
                         placeholder="Seu nome completo"
+                        style={errors.nomeCompleto ? { borderColor: '#ef4444' } : {}}
                         value={formData.nomeCompleto}
                         onChange={(e) => updateFormData('nomeCompleto', e.target.value)}
                       />
@@ -421,6 +455,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="date" 
                         className="form-input"
+                        style={errors.dataNascimento ? { borderColor: '#ef4444' } : {}}
                         value={formData.dataNascimento}
                         onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                       />
@@ -431,9 +466,9 @@ export default function CadastroFamiliaDesktop() {
                     <select 
                       required 
                       className="form-input" 
+                      style={{ paddingLeft: '1rem', ...(errors.estadoCivil && { borderColor: '#ef4444' }) }}
                       value={formData.estadoCivil}
                       onChange={(e) => updateFormData('estadoCivil', e.target.value)}
-                      style={{ paddingLeft: '1rem' }}
                     >
                       <option value="">Selecione</option>
                       <option value="solteiro">Solteiro(a)</option>
@@ -448,10 +483,10 @@ export default function CadastroFamiliaDesktop() {
                       required 
                       type="text" 
                       className="form-input" 
+                      style={{ paddingLeft: '1rem', ...(errors.profissao && { borderColor: '#ef4444' }) }}
                       placeholder="Ex: Diarista, Vendedor, Desempregado, etc."
                       value={formData.profissao}
                       onChange={(e) => updateFormData('profissao', e.target.value)}
-                      style={{ paddingLeft: '1rem' }}
                     />
                   </div>
                 </div>
@@ -467,6 +502,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="text" 
                         className="form-input" 
+                        style={errors.cpf ? { borderColor: '#ef4444' } : {}}
                         placeholder="000.000.000-00"
                         value={formData.cpf}
                         onChange={handleCPFChange}
@@ -482,6 +518,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="text" 
                         className="form-input" 
+                        style={errors.rg ? { borderColor: '#ef4444' } : {}}
                         placeholder="00.000.000-0"
                         value={formData.rg}
                         onChange={handleRGChange}
@@ -507,6 +544,7 @@ export default function CadastroFamiliaDesktop() {
                       <select 
                         required 
                         className="form-input"
+                        style={errors.rendaFamiliar ? { borderColor: '#ef4444' } : {}}
                         value={formData.rendaFamiliar}
                         onChange={(e) => updateFormData('rendaFamiliar', e.target.value)}
                       >
@@ -541,6 +579,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="tel" 
                         className="form-input" 
+                        style={errors.telefone ? { borderColor: '#ef4444' } : {}}
                         placeholder="(00) 00000-0000"
                         value={formData.telefone}
                         onChange={handlePhoneChange}
@@ -556,6 +595,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="email" 
                         className="form-input" 
+                        style={errors.email ? { borderColor: '#ef4444' } : {}}
                         placeholder="seu@email.com"
                         value={formData.email}
                         onChange={(e) => updateFormData('email', e.target.value)}
@@ -568,12 +608,14 @@ export default function CadastroFamiliaDesktop() {
                     value={formData.password}
                     onChange={(e) => updateFormData('password', e.target.value)}
                     required
+                    error={errors.password}
                   />
                   <PasswordField 
                     label="Confirmar Senha"
                     placeholder="Digite a senha novamente"
                     value={formData.confirmPassword}
                     onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                    error={errors.confirmPassword}
                     required
                   />
                   <div className="form-group span-2">
@@ -604,6 +646,7 @@ export default function CadastroFamiliaDesktop() {
                         required
                         type="text"
                         className="form-input"
+                        style={errors.cep ? { borderColor: '#ef4444' } : {}}
                         placeholder="00000-000"
                         value={formData.cep}
                         onChange={(e) => updateFormData('cep', formatCEP(e.target.value))}
@@ -619,6 +662,7 @@ export default function CadastroFamiliaDesktop() {
                       required
                       type="text"
                       className="form-input"
+                      style={errors.endereco ? { borderColor: '#ef4444' } : {}}
                       placeholder="Sua rua ou avenida"
                       value={formData.endereco}
                       onChange={(e) => updateFormData('endereco', e.target.value)}
@@ -631,6 +675,7 @@ export default function CadastroFamiliaDesktop() {
                       required
                       type="text"
                       className="form-input"
+                      style={errors.numero ? { borderColor: '#ef4444' } : {}}
                       placeholder="Nº"
                       value={formData.numero}
                       onChange={(e) => updateFormData('numero', e.target.value)}
@@ -642,6 +687,7 @@ export default function CadastroFamiliaDesktop() {
                       required
                       type="text"
                       className="form-input"
+                      style={errors.bairro ? { borderColor: '#ef4444' } : {}}
                       placeholder="Seu bairro"
                       value={formData.bairro}
                       onChange={(e) => updateFormData('bairro', e.target.value)}
@@ -653,6 +699,7 @@ export default function CadastroFamiliaDesktop() {
                     <input
                       required
                       className="form-input"
+                      style={errors.cidade ? { borderColor: '#ef4444' } : {}}
                       placeholder="Sua cidade"
                       value={formData.cidade}
                       onChange={(e) => updateFormData('cidade', e.target.value)}
@@ -665,6 +712,7 @@ export default function CadastroFamiliaDesktop() {
                       required
                       type="text"
                       className="form-input"
+                      style={errors.estado ? { borderColor: '#ef4444' } : {}}
                       placeholder="UF"
                       value={formData.estado}
                       onChange={(e) => updateFormData('estado', e.target.value)}
@@ -684,10 +732,10 @@ export default function CadastroFamiliaDesktop() {
                     <label className="field-label">Tipo de Moradia <span style={{ color: '#ef4444' }}>*</span></label>
                     <select 
                       required 
-                      className="form-input"
+                      className="form-input" 
+                      style={{ paddingLeft: '1rem', ...(errors.tipoMoradia && { borderColor: '#ef4444' }) }}
                       value={formData.tipoMoradia}
                       onChange={(e) => updateFormData('tipoMoradia', e.target.value)}
-                      style={{ paddingLeft: '1rem' }}
                     >
                       <option value="">Selecione</option>
                       <option value="casa-propria">Casa própria</option>
@@ -704,7 +752,7 @@ export default function CadastroFamiliaDesktop() {
                 <div className="form-grid">
                   <div className="form-group span-2">
                     <label className="field-label">Quantas pessoas moram na casa?</label>
-                    <div className="selectable-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '1rem' }}>
+                    <div className="selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
                       {familyTypes.map((item) => (
                         <div key={item.key} className="family-counter-card">
                           <div className="family-card-header">
@@ -740,7 +788,7 @@ export default function CadastroFamiliaDesktop() {
                 <div className="form-grid">
                   <div className="form-group span-2">
                     <label className="field-label">Quais são suas principais necessidades?</label>
-                    <div className="selectable-grid">
+                    <div className="selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
                       {necessidadesOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
                           <input 

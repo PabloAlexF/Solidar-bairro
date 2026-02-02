@@ -23,6 +23,7 @@ export default function CadastroCidadao() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     nome: '',
     dataNascimento: '',
@@ -75,36 +76,49 @@ export default function CadastroCidadao() {
     }
   };
 
+  const getStepValidationErrors = (stepNumber) => {
+    const newErrors = {};
+    switch (stepNumber) {
+      case 1:
+        if (!formData.nome.trim()) newErrors.nome = true;
+        if (!formData.dataNascimento) newErrors.dataNascimento = true;
+        if (!formData.ocupacao.trim()) newErrors.ocupacao = true;
+        break;
+      case 2:
+        if (formData.cpf.replace(/\D/g, '').length < 11) newErrors.cpf = true;
+        if (formData.rg.replace(/\D/g, '').length < 7) newErrors.rg = true;
+        break;
+      case 3:
+        if (formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        if (formData.password.length < 6) newErrors.password = true;
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = true;
+        break;
+      case 4:
+        if (formData.cep.replace(/\D/g, '').length !== 8) newErrors.cep = true;
+        if (formData.endereco.trim() === '') newErrors.endereco = true;
+        if (formData.numero.trim() === '') newErrors.numero = true;
+        if (formData.bairro.trim() === '') newErrors.bairro = true;
+        if (formData.cidade.trim() === '') newErrors.cidade = true;
+        if (formData.estado.trim() === '') newErrors.estado = true;
+        break;
+      case 5:
+        if (formData.interesses.length === 0) newErrors.interesses = true;
+        break;
+      default:
+        break;
+    }
+    return newErrors;
+  };
+
   const handleNextStep = () => {
-    if (validateStep(step)) {
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      // Show specific error messages
-      switch (step) {
-        case 1:
-          if (!formData.nome.trim()) showToast('Por favor, informe seu nome completo.', 'error');
-          else if (!formData.dataNascimento) showToast('Por favor, informe sua data de nascimento.', 'error');
-          else if (!formData.ocupacao.trim()) showToast('Por favor, informe sua ocupação ou habilidade.', 'error');
-          break;
-        case 2:
-          if (formData.cpf.replace(/\D/g, '').length < 11) showToast('Por favor, informe um CPF válido.', 'error');
-          else if (formData.rg.replace(/\D/g, '').length < 7) showToast('Por favor, informe um RG válido.', 'error');
-          break;
-        case 3:
-          if (formData.telefone.replace(/\D/g, '').length < 10) showToast('Por favor, informe um telefone válido.', 'error');
-          else if (!formData.email.trim()) showToast('Por favor, informe um e-mail válido.', 'error');
-          else if (formData.password.length < 6) showToast('A senha deve ter pelo menos 6 caracteres.', 'error');
-          else if (formData.password !== formData.confirmPassword) showToast('As senhas não coincidem.', 'error');
-          break;
-        case 4:
-          showToast('Por favor, preencha o endereço completo.', 'error');
-          break;
-        case 5:
-          if (formData.interesses.length === 0) showToast('Por favor, selecione pelo menos um interesse.', 'error');
-          break;
-        default:
-          showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
-      }
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -115,6 +129,13 @@ export default function CadastroCidadao() {
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCheckboxChange = (field, value, checked) => {
@@ -392,8 +413,9 @@ export default function CadastroCidadao() {
                       <input 
                         required 
                         type="text" 
-                        className="form-input" 
+                        className="form-input"
                         placeholder="Seu nome completo"
+                        style={errors.nome ? { borderColor: '#ef4444' } : {}}
                         value={formData.nome}
                         onChange={(e) => updateFormData('nome', e.target.value)}
                       />
@@ -407,6 +429,7 @@ export default function CadastroCidadao() {
                         required 
                         type="date" 
                         className="form-input"
+                        style={errors.dataNascimento ? { borderColor: '#ef4444' } : {}}
                         value={formData.dataNascimento}
                         onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                       />
@@ -417,8 +440,9 @@ export default function CadastroCidadao() {
                     <input 
                       required 
                       type="text" 
-                      className="form-input" 
+                      className="form-input"
                       placeholder="Ex: Professor, Médico, etc."
+                      style={errors.ocupacao ? { borderColor: '#ef4444' } : {}}
                       value={formData.ocupacao}
                       onChange={(e) => updateFormData('ocupacao', e.target.value)}
                     />
@@ -435,7 +459,8 @@ export default function CadastroCidadao() {
                       <input 
                         required 
                         type="text" 
-                        className="form-input" 
+                        className="form-input"
+                        style={errors.cpf ? { borderColor: '#ef4444' } : {}}
                         placeholder="000.000.000-00"
                         value={formData.cpf}
                         onChange={handleCPFChange}
@@ -448,7 +473,8 @@ export default function CadastroCidadao() {
                     <input 
                       required 
                       type="text" 
-                      className="form-input" 
+                      className="form-input"
+                      style={errors.rg ? { borderColor: '#ef4444' } : {}}
                       placeholder="00.000.000-0 ou 000.000.000-00"
                       value={formData.rg}
                       onChange={handleRGChange}
@@ -476,7 +502,8 @@ export default function CadastroCidadao() {
                       <input 
                         required 
                         type="tel" 
-                        className="form-input" 
+                        className="form-input"
+                        style={errors.telefone ? { borderColor: '#ef4444' } : {}}
                         placeholder="(00) 00000-0000"
                         value={formData.telefone}
                         onChange={handlePhoneChange}
@@ -491,7 +518,8 @@ export default function CadastroCidadao() {
                       <input 
                         required 
                         type="email" 
-                        className="form-input" 
+                        className="form-input"
+                        style={errors.email ? { borderColor: '#ef4444' } : {}}
                         placeholder="seu@email.com"
                         value={formData.email}
                         onChange={(e) => updateFormData('email', e.target.value)}
@@ -504,12 +532,14 @@ export default function CadastroCidadao() {
                     value={formData.password}
                     onChange={(e) => updateFormData('password', e.target.value)}
                     required
+                    error={errors.password}
                   />
                   <PasswordField 
                     label="Confirmar Senha"
                     placeholder="Digite a senha novamente"
                     value={formData.confirmPassword}
                     onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                    error={errors.confirmPassword}
                     required
                   />
                 </div>
@@ -525,6 +555,7 @@ export default function CadastroCidadao() {
                         required
                         type="text"
                         className="form-input"
+                        style={errors.cep ? { borderColor: '#ef4444' } : {}}
                         placeholder="00000-000"
                         value={formData.cep}
                         onChange={(e) => updateFormData('cep', formatCEP(e.target.value))}
@@ -540,6 +571,7 @@ export default function CadastroCidadao() {
                       required
                       type="text"
                       className="form-input"
+                      style={errors.endereco ? { borderColor: '#ef4444' } : {}}
                       placeholder="Sua rua ou avenida"
                       value={formData.endereco}
                       onChange={(e) => updateFormData('endereco', e.target.value)}
@@ -552,6 +584,7 @@ export default function CadastroCidadao() {
                       required
                       type="text"
                       className="form-input"
+                      style={errors.numero ? { borderColor: '#ef4444' } : {}}
                       placeholder="Nº"
                       value={formData.numero}
                       onChange={(e) => updateFormData('numero', e.target.value)}
@@ -563,6 +596,7 @@ export default function CadastroCidadao() {
                       required
                       type="text"
                       className="form-input"
+                      style={errors.bairro ? { borderColor: '#ef4444' } : {}}
                       placeholder="Seu bairro"
                       value={formData.bairro}
                       onChange={(e) => updateFormData('bairro', e.target.value)}
@@ -575,6 +609,7 @@ export default function CadastroCidadao() {
                       required
                       type="text"
                       className="form-input"
+                      style={errors.cidade ? { borderColor: '#ef4444' } : {}}
                       placeholder="Sua cidade"
                       value={formData.cidade}
                       onChange={(e) => updateFormData('cidade', e.target.value)}
@@ -587,6 +622,7 @@ export default function CadastroCidadao() {
                       required
                       type="text"
                       className="form-input"
+                      style={errors.estado ? { borderColor: '#ef4444' } : {}}
                       placeholder="UF"
                       value={formData.estado}
                       onChange={(e) => updateFormData('estado', e.target.value)}
@@ -605,7 +641,7 @@ export default function CadastroCidadao() {
                   </div>
                   <div className="form-group span-2">
                     <label className="field-label">Disponibilidade</label>
-                    <div className="selectable-grid" id="availability-grid">
+                    <div className="selectable-grid" id="availability-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
                       {availabilityOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
                           <input 
@@ -629,8 +665,8 @@ export default function CadastroCidadao() {
               {step === 5 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
-                    <label className="field-label">Como você quer ajudar? <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="selectable-grid">
+                    <label className="field-label" style={errors.interesses ? { color: '#ef4444' } : {}}>Como você quer ajudar? <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem', ...(errors.interesses && { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' }) }}>
                       {helpOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
                           <input 

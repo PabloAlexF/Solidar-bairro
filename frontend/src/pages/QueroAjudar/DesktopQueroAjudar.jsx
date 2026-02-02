@@ -1763,7 +1763,7 @@ export default function QueroAjudarPage() {
         <div className="section-container nav-container">
           <div className="logo-wrapper" onClick={() => navigate('/')}>
             <div className="logo-icon" style={{ width: '48px', height: '48px', position: 'relative', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+              <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }} />
             </div>
             <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
           </div>

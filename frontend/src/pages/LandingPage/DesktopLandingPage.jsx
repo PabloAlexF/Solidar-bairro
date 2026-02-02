@@ -37,6 +37,8 @@ import {
   Shield
 } from 'lucide-react';
 
+import marca from '../../assets/images/marca.png';
+
 import './styles.css';
 
 const ActionCard = ({
@@ -391,8 +393,8 @@ export default function DesktopLandingPage() {
       <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className={`section-container nav-container`}>
           <div className="logo-wrapper" onClick={() => navigateToTop('/')}>
-            <div className="logo-icon">
-              <Heart fill="white" size={24} />
+            <div className="logo-icon" style={{ width: '48px', height: '48px', position: 'relative', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }} />
             </div>
             <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
           </div>

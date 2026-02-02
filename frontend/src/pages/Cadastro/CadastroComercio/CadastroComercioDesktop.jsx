@@ -477,7 +477,7 @@ export default function CadastroComercioDesktop() {
                 <div className="comercio-form-grid">
                   <div className="comercio-form-group comercio-span-2">
                     <label className="comercio-field-label">Como deseja contribuir?</label>
-                    <div className="comercio-selectable-grid">
+                    <div className="comercio-selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                       {contributionOptions.map((opt) => (
                         <label key={opt.title} className="comercio-selectable-item">
                           <input type="checkbox" />

@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
+import marca from '../../assets/images/marca.png';
 import {
   Heart,
   HandHelping,
@@ -170,9 +171,11 @@ export default function MobileLandingPage() {
     <div className="mobile-landing-exclusive">
       <header className="mobile-hero">
         <div className="mobile-header-top">
-          <div className="logo-small">
-            <Heart fill="var(--sb-teal)" size={20} />
-            <span>Solidar<b>Brasil</b></span>
+          <div className="logo-wrapper" onClick={() => navigate('/')}>
+            <div className="logo-icon" style={{ width: '48px', height: '48px', position: 'relative', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+            </div>
+            <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
           </div>
           <div className="header-actions">
             {isAdmin && (

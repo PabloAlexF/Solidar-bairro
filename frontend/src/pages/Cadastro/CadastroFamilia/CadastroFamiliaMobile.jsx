@@ -69,6 +69,7 @@ export default function CadastroFamiliaMobile() {
   const [isLocating, setIsLocating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [currentNeed, setCurrentNeed] = useState(null);
@@ -137,11 +138,36 @@ export default function CadastroFamiliaMobile() {
     }
   };
 
+  const getStepValidationErrors = (stepNumber) => {
+    const newErrors = {};
+    switch (stepNumber) {
+      case 1:
+        if (!formData.nomeCompleto.trim()) newErrors.nomeCompleto = true;
+        if (!formData.dataNascimento) newErrors.dataNascimento = true;
+        if (!formData.estadoCivil) newErrors.estadoCivil = true;
+        if (!formData.profissao.trim()) newErrors.profissao = true;
+        break;
+      case 2:
+        if (!formData.cpf.trim()) newErrors.cpf = true;
+        if (!formData.rg.trim()) newErrors.rg = true;
+        if (!formData.rendaFamiliar) newErrors.rendaFamiliar = true;
+        break;
+      case 3:
+        if (!formData.telefone.trim()) newErrors.telefone = true;
+        if (!formData.horarioContato) newErrors.horarioContato = true;
+        break;
+    }
+    return newErrors;
+  };
+
   const handleNextStep = () => {
-    if (validateStep(step)) {
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -223,6 +249,13 @@ export default function CadastroFamiliaMobile() {
   
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCheckboxChange = (field, value, checked) => {
@@ -496,7 +529,8 @@ export default function CadastroFamiliaMobile() {
                         <User className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.nomeCompleto ? { borderColor: '#ef4444' } : {}}
                           placeholder="Digite seu nome completo"
                           value={formData.nomeCompleto}
                           onChange={(e) => updateFormData('nomeCompleto', e.target.value)}
@@ -512,6 +546,7 @@ export default function CadastroFamiliaMobile() {
                         <input 
                           type="date" 
                           className="fam-mob-form-input"
+                          style={errors.dataNascimento ? { borderColor: '#ef4444' } : {}}
                           value={formData.dataNascimento}
                           onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                           required 
@@ -521,7 +556,7 @@ export default function CadastroFamiliaMobile() {
                     
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Estado Civil <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-mob-radio-grid">
+                      <div className="fam-mob-radio-grid" style={errors.estadoCivil ? { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' } : {}}>
                         {['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)'].map((estado) => (
                           <label key={estado} className="fam-mob-radio-label">
                             <input 
@@ -544,7 +579,8 @@ export default function CadastroFamiliaMobile() {
                         <User className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.profissao ? { borderColor: '#ef4444' } : {}}
                           placeholder="Qual sua profissão?"
                           value={formData.profissao}
                           onChange={(e) => updateFormData('profissao', e.target.value)}
@@ -563,7 +599,8 @@ export default function CadastroFamiliaMobile() {
                         <IdCard className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.cpf ? { borderColor: '#ef4444' } : {}}
                           placeholder="000.000.000-00"
                           value={formData.cpf}
                           onChange={handleCPFChange}
@@ -579,7 +616,8 @@ export default function CadastroFamiliaMobile() {
                         <Fingerprint className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.rg ? { borderColor: '#ef4444' } : {}}
                           placeholder="00.000.000-0 ou 000.000.000-00"
                           value={formData.rg}
                           onChange={handleRGChange}
@@ -605,7 +643,7 @@ export default function CadastroFamiliaMobile() {
                     
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Renda Familiar Mensal <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-mob-card-radio-grid">
+                      <div className="fam-mob-card-radio-grid" style={errors.rendaFamiliar ? { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' } : {}}>
                         {[
                           { label: 'Até R$ 500', value: 'ate_500', icon: <DollarSign size={20} />, desc: 'Renda baixa' },
                           { label: 'R$ 501 - R$ 1.000', value: '501_1000', icon: <DollarSign size={20} />, desc: 'Renda moderada' },
@@ -648,7 +686,8 @@ export default function CadastroFamiliaMobile() {
                         <Phone className="fam-mob-input-icon" />
                         <input 
                           type="tel" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.telefone ? { borderColor: '#ef4444' } : {}}
                           placeholder="(00) 00000-0000"
                           value={formData.telefone}
                           onChange={handlePhoneChange}
@@ -689,7 +728,7 @@ export default function CadastroFamiliaMobile() {
                     
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Melhor horário para contato <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-mob-radio-grid">
+                      <div className="fam-mob-radio-grid" style={errors.horarioContato ? { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' } : {}}>
                         {['Manhã', 'Tarde', 'Noite', 'Qualquer'].map((horario) => (
                           <label key={horario} className="fam-mob-radio-label">
                             <input 
@@ -710,12 +749,14 @@ export default function CadastroFamiliaMobile() {
                       label="Senha de Acesso"
                       placeholder="Crie uma senha segura"
                       required
+                      error={errors.senha}
                       value={formData.senha}
                       onChange={(e) => updateFormData('senha', e.target.value)}
                     />
                     
                     <PasswordField 
                       label="Confirmar Senha"
+                      error={errors.confirmarSenha}
                       placeholder="Digite a senha novamente"
                       required
                       value={formData.confirmarSenha}
@@ -738,6 +779,7 @@ export default function CadastroFamiliaMobile() {
                         <input
                           type="text"
                           className="fam-mob-form-input"
+                          style={errors.cep ? { borderColor: '#ef4444' } : {}}
                           placeholder="00000-000"
                           value={addressData.cep}
                           onChange={(e) => setAddressData(prev => ({ ...prev, cep: formatCEP(e.target.value) }))}
@@ -756,6 +798,7 @@ export default function CadastroFamiliaMobile() {
                         <input
                           type="text"
                           className="fam-mob-form-input"
+                          style={errors.endereco ? { borderColor: '#ef4444' } : {}}
                           placeholder="Rua, Avenida, etc."
                           value={addressData.endereco}
                           onChange={(e) => setAddressData(prev => ({ ...prev, endereco: e.target.value }))}
@@ -771,7 +814,8 @@ export default function CadastroFamiliaMobile() {
                         <MapPin className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.bairro ? { borderColor: '#ef4444' } : {}}
                           placeholder="Nome do bairro"
                           value={addressData.bairro}
                           onChange={(e) => setAddressData(prev => ({ ...prev, bairro: e.target.value }))}
@@ -796,7 +840,7 @@ export default function CadastroFamiliaMobile() {
                     
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Tipo de Moradia <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-mob-card-radio-grid">
+                      <div className="fam-mob-card-radio-grid" style={errors.tipoMoradia ? { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' } : {}}>
                         {[
                           { label: 'Casa Própria', icon: <Home size={20} /> },
                           { label: 'Casa Alugada', icon: <Home size={20} /> },
@@ -864,7 +908,7 @@ export default function CadastroFamiliaMobile() {
                       Principais Necessidades
                     </h3>
                     
-                    <div className="fam-mob-needs-grid">
+                    <div className="fam-mob-needs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                       {[
                         'Alimentação', 'Roupas', 'Medicamentos', 'Material Escolar',
                         'Móveis', 'Eletrodomésticos', 'Consultas Médicas', 'Cursos Profissionalizantes'

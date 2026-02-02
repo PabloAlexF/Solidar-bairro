@@ -19,6 +19,7 @@ export default function CadastroComercioMobile() {
   const [showAlert, setShowAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     nomeFantasia: '',
     segmento: '',
@@ -57,6 +58,13 @@ export default function CadastroComercioMobile() {
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCepBlur = async (e) => {
@@ -96,35 +104,49 @@ export default function CadastroComercioMobile() {
 
   const validateStep = (stepNumber) => {
     switch (stepNumber) {
-      case 1:
-        if (!formData.nomeFantasia.trim() || !formData.segmento || !formData.responsavel.trim()) return false;
-        if (!formData.senha || formData.senha.length < 6) {
-          showToast('A senha deve ter no mínimo 6 caracteres', 'error');
-          return false;
-        }
-        if (formData.senha !== formData.confirmarSenha) {
-          showToast('As senhas não coincidem', 'error');
-          return false;
-        }
-        return true;
-      case 2:
-        return formData.cnpj.replace(/\D/g, '').length === 14;
-      case 3:
-        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim();
-      case 4:
-        return formData.endereco.trim() && formData.horarioFuncionamento.trim();
-      case 5:
-        return formData.contribuicoes.length > 0;
-      default:
-        return true;
+      case 1: {
+        const newErrors = {};
+        if (!formData.nomeFantasia.trim()) newErrors.nomeFantasia = true;
+        if (!formData.segmento) newErrors.segmento = true;
+        if (!formData.responsavel.trim()) newErrors.responsavel = true;
+        if (!formData.senha || formData.senha.length < 6) newErrors.senha = true;
+        if (formData.senha !== formData.confirmarSenha) newErrors.confirmarSenha = true;
+        return newErrors;
+      }
+      case 2: {
+        const newErrors = {};
+        if (formData.cnpj.replace(/\D/g, '').length !== 14) newErrors.cnpj = true;
+        return newErrors;
+      }
+      case 3: {
+        const newErrors = {};
+        if (formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        return newErrors;
+      }
+      case 4: {
+        const newErrors = {};
+        if (!formData.endereco.trim()) newErrors.endereco = true;
+        if (!formData.horarioFuncionamento.trim()) newErrors.horarioFuncionamento = true;
+        return newErrors;
+      }
+      case 5: {
+        const newErrors = {};
+        if (formData.contribuicoes.length === 0) newErrors.contribuicoes = true;
+        return newErrors;
+      }
     }
+    return {};
   };
 
   const handleNextStep = () => {
-    if (validateStep(step)) {
+    const validationErrors = validateStep(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      showToast('Por favor, preencha todos os campos obrigatórios', 'error');
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -366,12 +388,12 @@ export default function CadastroComercioMobile() {
                   <label className="cmr-prm-field-label">Nome Fantasia do Comércio</label>
                   <div className="cmr-prm-input-with-icon">
                     <Store className="cmr-prm-field-icon" size={20} />
-                    <input required type="text" className="cmr-prm-form-input" placeholder="Ex: Padaria do Bairro" value={formData.nomeFantasia} onChange={(e) => updateFormData('nomeFantasia', e.target.value)} />
+                    <input required type="text" className="cmr-prm-form-input" placeholder="Ex: Padaria do Bairro" value={formData.nomeFantasia} onChange={(e) => updateFormData('nomeFantasia', e.target.value)} style={errors.nomeFantasia ? { borderColor: '#ef4444' } : {}} />
                   </div>
                 </div>
                 <div className="cmr-prm-form-group">
                   <label className="cmr-prm-field-label">Segmento</label>
-                  <select required className="cmr-prm-form-input" value={formData.segmento} onChange={(e) => updateFormData('segmento', e.target.value)}>
+                  <select required className="cmr-prm-form-input" value={formData.segmento} onChange={(e) => updateFormData('segmento', e.target.value)} style={errors.segmento ? { borderColor: '#ef4444' } : {}}>
                     <option value="">Selecione</option>
                     <option value="alimentacao">Alimentação</option>
                     <option value="vestuario">Vestuário</option>
@@ -381,7 +403,7 @@ export default function CadastroComercioMobile() {
                 </div>
                 <div className="cmr-prm-form-group">
                   <label className="cmr-prm-field-label">Responsável Legal</label>
-                  <input required type="text" className="cmr-prm-form-input" placeholder="Nome completo" value={formData.responsavel} onChange={(e) => updateFormData('responsavel', e.target.value)} />
+                  <input required type="text" className="cmr-prm-form-input" placeholder="Nome completo" value={formData.responsavel} onChange={(e) => updateFormData('responsavel', e.target.value)} style={errors.responsavel ? { borderColor: '#ef4444' } : {}} />
                 </div>
                 <div className="cmr-prm-form-group">
                   <label className="cmr-prm-field-label">Senha de Acesso</label>
@@ -392,6 +414,7 @@ export default function CadastroComercioMobile() {
                       type={showPassword ? "text" : "password"}
                       className="cmr-prm-form-input"
                       placeholder="••••••••"
+                      style={errors.senha ? { borderColor: '#ef4444' } : {}}
                       value={formData.senha}
                       onChange={(e) => updateFormData('senha', e.target.value)}
                     />
@@ -413,6 +436,7 @@ export default function CadastroComercioMobile() {
                       type={showConfirmPassword ? "text" : "password"}
                       className="cmr-prm-form-input"
                       placeholder="••••••••"
+                      style={errors.confirmarSenha ? { borderColor: '#ef4444' } : {}}
                       value={formData.confirmarSenha}
                       onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
                     />
@@ -434,7 +458,7 @@ export default function CadastroComercioMobile() {
                   <label className="cmr-prm-field-label">CNPJ</label>
                   <div className="cmr-prm-input-with-icon">
                     <CreditCard className="cmr-prm-field-icon" size={20} />
-                    <input required type="text" className="cmr-prm-form-input" placeholder="00.000.000/0000-00" value={formData.cnpj} onChange={(e) => updateFormData('cnpj', e.target.value)} />
+                    <input required type="text" className="cmr-prm-form-input" placeholder="00.000.000/0000-00" value={formData.cnpj} onChange={(e) => updateFormData('cnpj', e.target.value)} style={errors.cnpj ? { borderColor: '#ef4444' } : {}} />
                   </div>
                 </div>
                 <div className="cmr-prm-form-info-box cmr-prm-span-2" style={{ background: '#082f49' }}>
@@ -453,14 +477,14 @@ export default function CadastroComercioMobile() {
                   <label className="cmr-prm-field-label">Telefone de Contato</label>
                   <div className="cmr-prm-input-with-icon">
                     <Phone className="cmr-prm-field-icon" size={20} />
-                    <input required type="tel" className="cmr-prm-form-input" placeholder="(00) 0000-0000" value={formData.telefone} onChange={(e) => updateFormData('telefone', e.target.value)} />
+                    <input required type="tel" className="cmr-prm-form-input" placeholder="(00) 0000-0000" value={formData.telefone} onChange={(e) => updateFormData('telefone', e.target.value)} style={errors.telefone ? { borderColor: '#ef4444' } : {}} />
                   </div>
                 </div>
                 <div className="cmr-prm-form-group">
                   <label className="cmr-prm-field-label">E-mail Comercial</label>
                   <div className="cmr-prm-input-with-icon">
                     <Mail className="cmr-prm-field-icon" size={20} />
-                    <input required type="email" className="cmr-prm-form-input" placeholder="loja@exemplo.com" value={formData.email} onChange={(e) => updateFormData('email', e.target.value)} />
+                    <input required type="email" className="cmr-prm-form-input" placeholder="loja@exemplo.com" value={formData.email} onChange={(e) => updateFormData('email', e.target.value)} style={errors.email ? { borderColor: '#ef4444' } : {}} />
                   </div>
                 </div>
               </div>
@@ -472,31 +496,31 @@ export default function CadastroComercioMobile() {
                   <label className="cmr-prm-field-label">CEP</label>
                   <div className="cmr-prm-input-with-icon">
                     <MapPin className="cmr-prm-field-icon" size={20} />
-                    <input required type="text" className="cmr-prm-form-input" placeholder="00000-000" value={formData.cep} onChange={(e) => updateFormData('cep', formatCEP(e.target.value))} onBlur={handleCepBlur} maxLength={9} />
+                    <input required type="text" className="cmr-prm-form-input" placeholder="00000-000" value={formData.cep} onChange={(e) => updateFormData('cep', formatCEP(e.target.value))} onBlur={handleCepBlur} maxLength={9} style={errors.cep ? { borderColor: '#ef4444' } : {}} />
                   </div>
                 </div>
                 <div className="cmr-prm-form-group">
                   <label className="cmr-prm-field-label">Número</label>
-                  <input type="text" className="cmr-prm-form-input" placeholder="123" value={formData.numero} onChange={(e) => updateFormData('numero', e.target.value)} />
+                  <input type="text" className="cmr-prm-form-input" placeholder="123" value={formData.numero} onChange={(e) => updateFormData('numero', e.target.value)} style={errors.numero ? { borderColor: '#ef4444' } : {}} />
                 </div>
                 <div className="cmr-prm-form-group cmr-prm-span-2">
                   <label className="cmr-prm-field-label">Endereço da Loja</label>
                   <div className="cmr-prm-input-with-icon">
                     <MapPin className="cmr-prm-field-icon" size={20} />
-                    <input required type="text" className="cmr-prm-form-input" placeholder="Rua, Avenida, etc." value={formData.endereco} onChange={(e) => updateFormData('endereco', e.target.value)} />
+                    <input required type="text" className="cmr-prm-form-input" placeholder="Rua, Avenida, etc." value={formData.endereco} onChange={(e) => updateFormData('endereco', e.target.value)} style={errors.endereco ? { borderColor: '#ef4444' } : {}} />
                   </div>
                 </div>
                 <div className="cmr-prm-form-group">
                   <label className="cmr-prm-field-label">Bairro</label>
-                  <input type="text" className="cmr-prm-form-input" placeholder="Nome do bairro" value={formData.bairro} onChange={(e) => updateFormData('bairro', e.target.value)} />
+                  <input type="text" className="cmr-prm-form-input" placeholder="Nome do bairro" value={formData.bairro} onChange={(e) => updateFormData('bairro', e.target.value)} style={errors.bairro ? { borderColor: '#ef4444' } : {}} />
                 </div>
                 <div className="cmr-prm-form-group">
                   <label className="cmr-prm-field-label">Cidade</label>
-                  <input type="text" className="cmr-prm-form-input" placeholder="Nome da cidade" value={formData.cidade} onChange={(e) => updateFormData('cidade', e.target.value)} />
+                  <input type="text" className="cmr-prm-form-input" placeholder="Nome da cidade" value={formData.cidade} onChange={(e) => updateFormData('cidade', e.target.value)} style={errors.cidade ? { borderColor: '#ef4444' } : {}} />
                 </div>
                 <div className="cmr-prm-form-group">
                   <label className="cmr-prm-field-label">Estado</label>
-                  <select className="cmr-prm-form-input" value={formData.estado} onChange={(e) => updateFormData('estado', e.target.value)}>
+                  <select className="cmr-prm-form-input" value={formData.estado} onChange={(e) => updateFormData('estado', e.target.value)} style={errors.estado ? { borderColor: '#ef4444' } : {}}>
                     <option value="">Selecione</option>
                     <option value="SP">São Paulo</option>
                     <option value="RJ">Rio de Janeiro</option>
@@ -512,7 +536,7 @@ export default function CadastroComercioMobile() {
                 </div>
                 <div className="cmr-prm-form-group cmr-prm-span-2">
                   <label className="cmr-prm-field-label">Horário de Funcionamento</label>
-                  <input required type="text" className="cmr-prm-form-input" placeholder="Ex: Seg a Sex das 08h às 18h" value={formData.horarioFuncionamento} onChange={(e) => updateFormData('horarioFuncionamento', e.target.value)} />
+                  <input required type="text" className="cmr-prm-form-input" placeholder="Ex: Seg a Sex das 08h às 18h" value={formData.horarioFuncionamento} onChange={(e) => updateFormData('horarioFuncionamento', e.target.value)} style={errors.horarioFuncionamento ? { borderColor: '#ef4444' } : {}} />
                 </div>
               </div>
             )}
@@ -520,8 +544,8 @@ export default function CadastroComercioMobile() {
             {step === 5 && (
               <div className="cmr-prm-form-grid">
                 <div className="cmr-prm-form-group cmr-prm-span-2">
-                  <label className="cmr-prm-field-label">Como deseja contribuir?</label>
-                  <div className="cmr-prm-selectable-grid">
+                  <label className="cmr-prm-field-label" style={errors.contribuicoes ? { color: '#ef4444' } : {}}>Como deseja contribuir?</label>
+                  <div className="cmr-prm-selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem', ...(errors.contribuicoes && { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' }) }}>
                     {contributionOptions.map((opt) => (
                       <label key={opt.title} className="cmr-prm-selectable-item">
                         <input type="checkbox" checked={formData.contribuicoes.includes(opt.title)} onChange={(e) => handleCheckboxChange('contribuicoes', opt.title, e.target.checked)} />

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { Heart, Bell, User, LogOut, Settings, Globe, ArrowLeft } from 'lucide-react';
-import logo from '../../assets/images/marca.png';
+import marca from '../../assets/images/marca.png';
 import chatNotificationService from '../../services/chatNotificationService';
 import ApiService from '../../services/apiService';
 import apiService from '../../services/apiService';
@@ -187,8 +187,8 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
         )}
 
         <div className="logo-wrapper" onClick={() => navigate('/')}>
-          <div className="logo-icon">
-            <img src={logo} alt="SolidarBrasil" style={{ width: '48px', height: '48px' }} />
+          <div className="logo-icon" style={{ width: '48px', height: '48px', position: 'relative', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }} />
           </div>
           <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
         </div>

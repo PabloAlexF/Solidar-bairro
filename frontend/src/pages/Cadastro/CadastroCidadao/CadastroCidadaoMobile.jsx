@@ -23,6 +23,7 @@ export default function CadastroCidadaoMobile() {
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     nome: '',
     dataNascimento: '',
@@ -75,36 +76,49 @@ export default function CadastroCidadaoMobile() {
     }
   };
 
+  const getStepValidationErrors = (stepNumber) => {
+    const newErrors = {};
+    switch (stepNumber) {
+      case 1:
+        if (!formData.nome.trim()) newErrors.nome = true;
+        if (!formData.dataNascimento) newErrors.dataNascimento = true;
+        if (!formData.ocupacao.trim()) newErrors.ocupacao = true;
+        break;
+      case 2:
+        if (formData.cpf.replace(/\D/g, '').length < 11) newErrors.cpf = true;
+        if (formData.rg.replace(/\D/g, '').length < 7) newErrors.rg = true;
+        break;
+      case 3:
+        if (formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        if (formData.password.length < 6) newErrors.password = true;
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = true;
+        break;
+      case 4:
+        if (formData.cep.replace(/\D/g, '').length !== 8) newErrors.cep = true;
+        if (formData.endereco.trim() === '') newErrors.endereco = true;
+        if (formData.numero.trim() === '') newErrors.numero = true;
+        if (formData.bairro.trim() === '') newErrors.bairro = true;
+        if (formData.cidade.trim() === '') newErrors.cidade = true;
+        if (formData.estado.trim() === '') newErrors.estado = true;
+        break;
+      case 5:
+        if (formData.interesses.length === 0) newErrors.interesses = true;
+        break;
+      default:
+        break;
+    }
+    return newErrors;
+  };
+
   const handleNextStep = () => {
-    if (validateStep(step)) {
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      // Show specific error messages
-      switch (step) {
-        case 1:
-          if (!formData.nome.trim()) showToast('Por favor, informe seu nome completo.', 'error');
-          else if (!formData.dataNascimento) showToast('Por favor, informe sua data de nascimento.', 'error');
-          else if (!formData.ocupacao.trim()) showToast('Por favor, informe sua ocupação ou habilidade.', 'error');
-          break;
-        case 2:
-          if (formData.cpf.replace(/\D/g, '').length < 11) showToast('Por favor, informe um CPF válido.', 'error');
-          else if (formData.rg.replace(/\D/g, '').length < 7) showToast('Por favor, informe um RG válido.', 'error');
-          break;
-        case 3:
-          if (formData.telefone.replace(/\D/g, '').length < 10) showToast('Por favor, informe um telefone válido.', 'error');
-          else if (!formData.email.trim()) showToast('Por favor, informe um e-mail válido.', 'error');
-          else if (formData.password.length < 6) showToast('A senha deve ter pelo menos 6 caracteres.', 'error');
-          else if (formData.password !== formData.confirmPassword) showToast('As senhas não coincidem.', 'error');
-          break;
-        case 4:
-          showToast('Por favor, preencha o endereço completo.', 'error');
-          break;
-        case 5:
-          if (formData.interesses.length === 0) showToast('Por favor, selecione pelo menos um interesse.', 'error');
-          break;
-        default:
-          showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
-      }
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -115,6 +129,13 @@ export default function CadastroCidadaoMobile() {
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCheckboxChange = (field, value, checked) => {
@@ -313,7 +334,8 @@ export default function CadastroCidadaoMobile() {
                         required 
                         type="text" 
                         className="mobile-vlt-input" 
-                        placeholder="Seu nome completo"
+                        placeholder="Seu nome completo" 
+                        style={errors.nome ? { borderColor: '#ef4444' } : {}}
                         value={formData.nome}
                         onChange={(e) => updateFormData('nome', e.target.value)}
                       />
@@ -327,6 +349,7 @@ export default function CadastroCidadaoMobile() {
                         required 
                         type="date" 
                         className="mobile-vlt-input"
+                        style={errors.dataNascimento ? { borderColor: '#ef4444' } : {}}
                         value={formData.dataNascimento}
                         onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                       />
@@ -338,7 +361,7 @@ export default function CadastroCidadaoMobile() {
                       required 
                       type="text" 
                       className="mobile-vlt-input" 
-                      style={{ paddingLeft: '1rem' }}
+                      style={{ paddingLeft: '1rem', ...(errors.ocupacao && { borderColor: '#ef4444' }) }}
                       placeholder="Ex: Professor, Médico, etc."
                       value={formData.ocupacao}
                       onChange={(e) => updateFormData('ocupacao', e.target.value)}
@@ -357,7 +380,8 @@ export default function CadastroCidadaoMobile() {
                         required 
                         type="text" 
                         className="mobile-vlt-input" 
-                        placeholder="000.000.000-00"
+                        placeholder="000.000.000-00" 
+                        style={errors.cpf ? { borderColor: '#ef4444' } : {}}
                         value={formData.cpf}
                         onChange={handleCPFChange}
                         maxLength={14}
@@ -370,7 +394,7 @@ export default function CadastroCidadaoMobile() {
                       required 
                       type="text" 
                       className="mobile-vlt-input" 
-                      style={{ paddingLeft: '1rem' }}
+                      style={{ paddingLeft: '1rem', ...(errors.rg && { borderColor: '#ef4444' }) }}
                       placeholder="00.000.000-0 ou 000.000.000-00"
                       value={formData.rg}
                       onChange={handleRGChange}
@@ -399,7 +423,8 @@ export default function CadastroCidadaoMobile() {
                         required 
                         type="tel" 
                         className="mobile-vlt-input" 
-                        placeholder="(00) 00000-0000"
+                        placeholder="(00) 00000-0000" 
+                        style={errors.telefone ? { borderColor: '#ef4444' } : {}}
                         value={formData.telefone}
                         onChange={handlePhoneChange}
                         maxLength={15}
@@ -414,7 +439,8 @@ export default function CadastroCidadaoMobile() {
                         required 
                         type="email" 
                         className="mobile-vlt-input" 
-                        placeholder="seu@email.com"
+                        placeholder="seu@email.com" 
+                        style={errors.email ? { borderColor: '#ef4444' } : {}}
                         value={formData.email}
                         onChange={(e) => updateFormData('email', e.target.value)}
                       />
@@ -425,6 +451,7 @@ export default function CadastroCidadaoMobile() {
                     placeholder="Crie uma senha segura"
                     value={formData.password}
                     onChange={(e) => updateFormData('password', e.target.value)}
+                    error={errors.password}
                     required
                   />
                   <PasswordField 
@@ -432,6 +459,7 @@ export default function CadastroCidadaoMobile() {
                     placeholder="Digite a senha novamente"
                     value={formData.confirmPassword}
                     onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                    error={errors.confirmPassword}
                     required
                   />
                 </div>
@@ -447,7 +475,8 @@ export default function CadastroCidadaoMobile() {
                         required 
                         type="text" 
                         className="mobile-vlt-input" 
-                        placeholder="00000-000"
+                        placeholder="00000-000" 
+                        style={errors.cep ? { borderColor: '#ef4444' } : {}}
                         value={formData.cep}
                         onChange={(e) => updateFormData('cep', formatCEP(e.target.value))}
                         onBlur={handleCepBlur}
@@ -462,7 +491,7 @@ export default function CadastroCidadaoMobile() {
                       required
                       type="text"
                       className="mobile-vlt-input"
-                      style={{ paddingLeft: '1rem' }}
+                      style={{ paddingLeft: '1rem', ...(errors.endereco && { borderColor: '#ef4444' }) }}
                       placeholder="Sua rua ou avenida"
                       value={formData.endereco}
                       onChange={(e) => updateFormData('endereco', e.target.value)}
@@ -475,7 +504,7 @@ export default function CadastroCidadaoMobile() {
                       required
                       type="text"
                       className="mobile-vlt-input"
-                      style={{ paddingLeft: '1rem' }}
+                      style={{ paddingLeft: '1rem', ...(errors.numero && { borderColor: '#ef4444' }) }}
                       placeholder="Nº"
                       value={formData.numero}
                       onChange={(e) => updateFormData('numero', e.target.value)}
@@ -487,7 +516,7 @@ export default function CadastroCidadaoMobile() {
                       required
                       type="text"
                       className="mobile-vlt-input"
-                      style={{ paddingLeft: '1rem' }}
+                      style={{ paddingLeft: '1rem', ...(errors.bairro && { borderColor: '#ef4444' }) }}
                       placeholder="Seu bairro"
                       value={formData.bairro}
                       onChange={(e) => updateFormData('bairro', e.target.value)}
@@ -500,7 +529,7 @@ export default function CadastroCidadaoMobile() {
                       required
                       type="text"
                       className="mobile-vlt-input"
-                      style={{ paddingLeft: '1rem' }}
+                      style={{ paddingLeft: '1rem', ...(errors.cidade && { borderColor: '#ef4444' }) }}
                       placeholder="Sua cidade"
                       value={formData.cidade}
                       onChange={(e) => updateFormData('cidade', e.target.value)}
@@ -513,7 +542,7 @@ export default function CadastroCidadaoMobile() {
                       required
                       type="text"
                       className="mobile-vlt-input"
-                      style={{ paddingLeft: '1rem' }}
+                      style={{ paddingLeft: '1rem', ...(errors.estado && { borderColor: '#ef4444' }) }}
                       placeholder="UF"
                       value={formData.estado}
                       onChange={(e) => updateFormData('estado', e.target.value)}
@@ -533,7 +562,7 @@ export default function CadastroCidadaoMobile() {
                   </div>
                   <div className="mobile-vlt-span-2" style={{ marginTop: '1rem' }}>
                     <label className="mobile-vlt-label">Disponibilidade</label>
-                    <div className="mobile-vlt-selectable-grid">
+                    <div className="mobile-vlt-selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                       {availabilityOptions.map((opt) => (
                         <label key={opt.label} className="mobile-vlt-selectable-item">
                           <input 
@@ -557,8 +586,8 @@ export default function CadastroCidadaoMobile() {
               {step === 5 && (
                 <div className="mobile-vlt-form-grid">
                   <div className="mobile-vlt-span-2">
-                    <label className="mobile-vlt-label">Como você quer ajudar? <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="mobile-vlt-selectable-grid">
+                    <label className="mobile-vlt-label" style={errors.interesses ? { color: '#ef4444' } : {}}>Como você quer ajudar? <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="mobile-vlt-selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', ...(errors.interesses && { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' }) }}>
                       {helpOptions.map((opt) => (
                         <label key={opt.label} className="mobile-vlt-selectable-item">
                           <input 

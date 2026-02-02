@@ -16,6 +16,7 @@ export default function CadastroONGMobile() {
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     nomeFantasia: '',
     razaoSocial: '',
@@ -23,6 +24,7 @@ export default function CadastroONGMobile() {
     dataFundacao: '',
     telefone: '',
     email: '',
+    confirmarSenha: '',
     senha: '',
     website: '',
     causas: []
@@ -92,22 +94,38 @@ export default function CadastroONGMobile() {
 
   const validateStep = (stepNumber) => {
     switch (stepNumber) {
-      case 1:
-        return formData.nomeFantasia.trim() && formData.razaoSocial.trim();
-      case 2:
-        return formData.cnpj.replace(/\D/g, '').length === 14 && formData.dataFundacao;
-      case 3:
-        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim() && formData.senha.length >= 6;
-      default:
-        return true;
+      case 1: {
+        const newErrors = {};
+        if (!formData.nomeFantasia.trim()) newErrors.nomeFantasia = true;
+        if (!formData.razaoSocial.trim()) newErrors.razaoSocial = true;
+        return newErrors;
+      }
+      case 2: {
+        const newErrors = {};
+        if (formData.cnpj.replace(/\D/g, '').length !== 14) newErrors.cnpj = true;
+        if (!formData.dataFundacao) newErrors.dataFundacao = true;
+        return newErrors;
+      }
+      case 3: {
+        const newErrors = {};
+        if (formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        if (formData.senha.length < 6) newErrors.senha = true;
+        if (formData.senha !== formData.confirmarSenha) newErrors.confirmarSenha = true;
+        return newErrors;
+      }
     }
+    return {};
   };
 
   const handleNextStep = () => {
-    if (validateStep(step)) {
+    const validationErrors = validateStep(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      showToast('Por favor, preencha todos os campos obrigatórios', 'error');
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -128,6 +146,17 @@ export default function CadastroONGMobile() {
       showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
   };
 
@@ -305,10 +334,11 @@ export default function CadastroONGMobile() {
                   <input 
                     required 
                     type="text" 
-                    className="ong-mob-input" 
+                    className="ong-mob-input"
+                    style={errors.nomeFantasia ? { borderColor: '#ef4444' } : {}}
                     placeholder="Nome da organização"
                     value={formData.nomeFantasia}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nomeFantasia: e.target.value }))}
+                    onChange={(e) => updateFormData('nomeFantasia', e.target.value)}
                   />
                 </div>
               </div>
@@ -316,11 +346,12 @@ export default function CadastroONGMobile() {
                 <label className="ong-mob-input-label">Razão Social <span style={{ color: '#ef4444' }}>*</span></label>
                 <input 
                   required 
-                  type="text" 
-                  className="ong-mob-input" 
+                  type="text"
+                  className="ong-mob-input"
+                  style={errors.razaoSocial ? { borderColor: '#ef4444' } : {}}
                   placeholder="Razão social completa"
                   value={formData.razaoSocial}
-                  onChange={(e) => setFormData(prev => ({ ...prev, razaoSocial: e.target.value }))}
+                  onChange={(e) => updateFormData('razaoSocial', e.target.value)}
                 />
               </div>
             </>
@@ -335,7 +366,8 @@ export default function CadastroONGMobile() {
                   <input 
                     required 
                     type="text" 
-                    className="ong-mob-input" 
+                    className="ong-mob-input"
+                    style={errors.cnpj ? { borderColor: '#ef4444' } : {}}
                     placeholder="00.000.000/0000-00"
                     value={formData.cnpj}
                     onChange={handleCNPJChange}
@@ -351,8 +383,9 @@ export default function CadastroONGMobile() {
                     required 
                     type="date" 
                     className="ong-mob-input"
+                    style={errors.dataFundacao ? { borderColor: '#ef4444' } : {}}
                     value={formData.dataFundacao}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dataFundacao: e.target.value }))}
+                    onChange={(e) => updateFormData('dataFundacao', e.target.value)}
                   />
                 </div>
               </div>
@@ -368,7 +401,8 @@ export default function CadastroONGMobile() {
                   <input 
                     required 
                     type="tel" 
-                    className="ong-mob-input" 
+                    className="ong-mob-input"
+                    style={errors.telefone ? { borderColor: '#ef4444' } : {}}
                     placeholder="(00) 00000-0000"
                     value={formData.telefone}
                     onChange={handlePhoneChange}
@@ -383,19 +417,29 @@ export default function CadastroONGMobile() {
                   <input 
                     required 
                     type="email" 
-                    className="ong-mob-input" 
+                    className="ong-mob-input"
+                    style={errors.email ? { borderColor: '#ef4444' } : {}}
                     placeholder="contato@ong.org"
                     value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) => updateFormData('email', e.target.value)}
                   />
                 </div>
               </div>
               <PasswordField 
                 label="Senha de Acesso"
                 placeholder="Crie uma senha segura"
+                error={errors.senha}
                 required
                 value={formData.senha}
-                onChange={(e) => setFormData(prev => ({ ...prev, senha: e.target.value }))}
+                onChange={(e) => updateFormData('senha', e.target.value)}
+              />
+              <PasswordField
+                label="Confirmar Senha"
+                placeholder="Digite a senha novamente"
+                error={errors.confirmarSenha}
+                required
+                value={formData.confirmarSenha}
+                onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
               />
             </>
           )}

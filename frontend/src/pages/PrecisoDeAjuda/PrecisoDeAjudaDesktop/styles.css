@@ -803,3 +803,25 @@
 .fixed.inset-0[class*="z-"] {
   z-index: 9999 !important;
 }
+
+.pda-option-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 1rem !important;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: left;
+  border: none;
+  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+/* Ensure proper grid layout for the description step */
+@media (min-width: 1024px) {
+  .description-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}

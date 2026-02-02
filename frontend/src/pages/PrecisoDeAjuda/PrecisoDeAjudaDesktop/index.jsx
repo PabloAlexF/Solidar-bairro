@@ -569,13 +569,13 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
             <>
               <button 
                 onClick={onRetry}
-                className="flex-1 py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2 border-0"
               >
                 <RefreshCcw size={16} /> Revisar Pedido
               </button>
               <button 
                 onClick={onForcePublish}
-                className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2 border-0"
               >
                 <Rocket size={16} /> Publicar Mesmo Assim
               </button>
@@ -584,7 +584,7 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
           {canPublish && (
             <motion.button 
               onClick={onClose}
-              className="w-full py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2 border-0"
             >
               <CheckCircle2 size={16} /> Continuar
             </motion.button>
@@ -658,7 +658,7 @@ const SuccessModal = ({ urgencyColor, urgencyLabel, urgencyIcon: UrgencyIcon, re
       </div>
       <button 
         onClick={onClose}
-        className="w-full py-5 bg-slate-900 text-white rounded-full font-black text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+        className="w-full py-5 bg-slate-900 text-white rounded-full font-black text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 border-0"
       >
         Ver no Mapa da Comunidade
       </button>
@@ -698,33 +698,33 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
           stiffness: 400,
           duration: 0.3
         }}
-        className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-lg border border-slate-100/50 relative"
+        className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-lg relative border-0"
       >
         {/* Subtle background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-50/30 to-transparent rounded-3xl" />
 
         <div className="relative z-10">
           {/* Header */}
-          <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start justify-between mb-8">
             <div className="flex-1">
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-1">
+              <h3 className="text-2xl font-black text-slate-900 mb-2">
                 {item.label}
               </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Selecione os itens que você precisa
+              <p className="text-base text-slate-500 font-medium leading-relaxed">
+                Selecione as opções que se aplicam à sua necessidade
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors ml-4"
+              className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors ml-4 border-0"
             >
               <X size={20} />
             </button>
           </div>
 
           {/* Options Grid */}
-          <div className="mb-6">
-            <div className="grid grid-cols-2 gap-3">
+          <div className="mb-8">
+            <div className="grid grid-cols-2 gap-4">
               {item.options?.map((opt, index) => {
                 const isSelected = selectedOptions.includes(opt);
                 return (
@@ -734,31 +734,38 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => toggleOption(opt)}
-                    className={`group relative p-4 rounded-2xl text-sm font-medium transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    className={`group pda-option-btn ${
                       isSelected
-                        ? 'bg-white text-slate-900 shadow-sm'
-                        : 'bg-slate-50 text-slate-700 hover:bg-white'
+                        ? 'bg-white shadow-md ring-1 ring-inset'
+                        : 'bg-slate-50 text-slate-600 hover:bg-[var(--hover-bg)] hover:text-[var(--active-color)]'
                     }`}
-                    style={isSelected ? {
-                      '--tw-ring-color': categoryColor
-                    } : {}}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.98 }}
+                    style={{
+                      '--hover-bg': `${categoryColor}15`,
+                      '--active-color': categoryColor,
+                      ...(isSelected ? {
+                        backgroundColor: `${categoryColor}10`, // 10% opacity background
+                        '--tw-ring-color': categoryColor,
+                        color: categoryColor,
+                        boxShadow: `0 4px 12px ${categoryColor}25`
+                      } : {})
+                    }}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className={`truncate font-medium ${isSelected ? 'text-slate-900' : 'text-slate-700 group-hover:text-slate-900'}`}>
+                    <div className="flex items-center justify-between w-full">
+                      <span className="truncate flex-1">
                         {opt}
                       </span>
+                      <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 ml-2">
                       {isSelected && (
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ml-3"
+                          className="w-4 h-4 rounded-full flex items-center justify-center"
                           style={{ backgroundColor: categoryColor }}
                         >
-                          <Check size={10} className="text-white" />
+                          <Check size={12} className="text-white" strokeWidth={3} />
                         </motion.div>
                       )}
+                      </div>
                     </div>
                   </motion.button>
                 );
@@ -767,13 +774,16 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
           </div>
 
           {/* Details Input */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-slate-700 mb-3">
+          <div className="mb-8">
+            <label className="block text-sm font-bold text-slate-700 mb-3 ml-1">
               Observações adicionais
             </label>
             <textarea
-              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:border-transparent transition-all resize-none min-h-[80px] text-sm"
-              style={{ '--tw-ring-color': categoryColor }}
+              className="w-full p-4 bg-slate-50 border-0 rounded-2xl text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-0 transition-all resize-none min-h-[100px] text-sm font-medium shadow-inner"
+              style={{ 
+                '--tw-ring-color': categoryColor,
+                borderColor: details ? categoryColor : undefined
+              }}
               placeholder="Ex: Quantidade específica, preferências..."
               value={details}
               onChange={(e) => setDetails(e.target.value)}
@@ -781,24 +791,67 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-4 pt-2">
             <button
               onClick={onClose}
-              className="flex-1 py-3 px-4 text-slate-600 font-medium bg-slate-100 hover:bg-slate-200 rounded-2xl transition-colors"
+              className="flex-1 py-4 px-6 text-slate-600 font-bold bg-slate-100 hover:bg-slate-200 rounded-2xl transition-colors border-0"
             >
               Cancelar
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 py-3 px-4 text-white font-medium rounded-2xl transition-all hover:shadow-lg"
+              className="flex-[2] py-4 px-6 text-white font-bold rounded-2xl transition-all hover:shadow-lg border-0"
               style={{
                 backgroundColor: categoryColor,
-                boxShadow: `0 4px 12px ${categoryColor}25`
+                boxShadow: `0 8px 20px -4px ${categoryColor}40`
               }}
             >
-              Confirmar
+              Confirmar Seleção
             </button>
           </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const CategoryConfirmationModal = ({ category, onClose, onConfirm }) => {
+  if (!category) return null;
+  
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden"
+      >
+        <div className="absolute top-0 left-0 right-0 h-2" style={{ backgroundColor: category.color }} />
+        
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" style={{ backgroundColor: `${category.color}15` }}>
+          <category.icon size={40} color={category.color} />
+        </div>
+        
+        <h3 className="text-2xl font-black text-slate-900 mb-2">
+          Selecionar {category.label}?
+        </h3>
+        <p className="text-slate-500 mb-8">
+          Você escolheu a categoria <strong>{category.label}</strong>. Deseja prosseguir para a seleção de itens?
+        </p>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold transition-colors border-0"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-3 px-4 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 border-0"
+            style={{ backgroundColor: category.color, boxShadow: `0 8px 20px -4px ${category.color}50` }}
+          >
+            Sim, continuar
+          </button>
         </div>
       </motion.div>
     </div>
@@ -821,6 +874,7 @@ export default function PDAForm() {
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
   const [showItemModal, setShowItemModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
+  const [pendingCategory, setPendingCategory] = useState(null);
   
   const [isPublished, setIsPublished] = useState(false);
     
@@ -848,12 +902,16 @@ export default function PDAForm() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const handleCategorySelect = (id) => {
-    if (formData.category === id) {
+  const handleCategoryClick = (cat) => {
+    setPendingCategory(cat);
+  };
+
+  const confirmCategory = () => {
+    if (pendingCategory) {
+      updateData({ category: pendingCategory.id });
+      setPendingCategory(null);
       nextStep();
-      return;
     }
-    updateData({ category: id });
   };
   
   const prevStep = useCallback(() => {
@@ -1208,41 +1266,41 @@ export default function PDAForm() {
       case 1:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <div className="step-content">
-              <div className="step-header">
-                <h2>Qual tipo de ajuda você precisa?</h2>
-                <p>Escolha a categoria que melhor descreve sua necessidade.</p>
+            <div className="w-full max-w-[1600px] mx-auto px-6 py-4">
+              <div className="text-center mb-6">
+                <h2 className="text-4xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">Qual tipo de ajuda você precisa?</h2>
+                <p className="text-xl text-slate-500 font-medium">Escolha a categoria que melhor descreve sua necessidade.</p>
               </div>
-              <div className="categories-grid">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {CATEGORIES.map((cat, index) => (
                   <motion.button
                     key={cat.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    onClick={() => handleCategorySelect(cat.id)}
-                    className={`category-card ${formData.category === cat.id ? 'active' : ''}`}
-                    style={{ '--cat-color': cat.color }}
+                    onClick={() => handleCategoryClick(cat)}
+                    className={`relative flex flex-col items-center justify-center p-8 rounded-[32px] transition-all duration-300 bg-white group h-full min-h-[240px] border-0 ${
+                      formData.category === cat.id 
+                        ? 'shadow-2xl scale-105 ring-4 ring-offset-4 z-10' 
+                        : 'shadow-lg hover:shadow-xl hover:-translate-y-1 hover:bg-slate-50/80'
+                    }`}
+                    style={{ 
+                      '--cat-color': cat.color,
+                      '--tw-ring-color': cat.color
+                    }}
                   >
-                    <div className="relative">
-                      <cat.icon size={48} color={cat.color} strokeWidth={1.5} />
+                    <div className={`relative mb-6 p-6 rounded-3xl transition-colors shadow-sm ${formData.category === cat.id ? 'bg-white' : 'bg-slate-50 group-hover:bg-white'}`}>
+                      <cat.icon size={56} color={cat.color} strokeWidth={1.5} />
                     </div>
-                    <span className="category-label">{cat.label}</span>
+                    <span className={`text-xl font-bold transition-colors ${formData.category === cat.id ? 'text-slate-900' : 'text-slate-600 group-hover:text-slate-800'}`}>{cat.label}</span>
                     {formData.category === cat.id && (
                       <>
                         <motion.div 
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="absolute top-5 right-5 bg-green-500 text-white rounded-full p-2 shadow-lg z-10"
+                          className="absolute top-4 right-4 bg-green-500 text-white rounded-full p-2 shadow-lg"
                         >
-                          <Check size={20} strokeWidth={4} />
-                        </motion.div>
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="absolute bottom-6 left-1/2 -translate-x-1/2 py-3 px-6 bg-blue-600 text-white text-xs font-black uppercase tracking-wider rounded-full flex items-center gap-2 whitespace-nowrap shadow-xl"
-                        >
-                          Confirmar Categoria <ArrowRight size={14} />
+                          <Check size={24} strokeWidth={4} />
                         </motion.div>
                       </>
                     )}
@@ -1259,14 +1317,14 @@ export default function PDAForm() {
         
         return (
           <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <div className="step-content">
-              <div className="step-header">
-                <h2>O que você precisa exatamente?</h2>
-                <p>Selecione os itens e especifique os detalhes (Ficha Técnica).</p>
+            <div className="max-w-5xl mx-auto px-6 py-4">
+              <div className="text-center mb-6">
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">O que você precisa exatamente?</h2>
+                <p className="text-lg text-slate-500">Selecione os itens e especifique os detalhes.</p>
               </div>
 
               {currentSubcategories.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                   {currentSubcategories.map((sub) => {
                     const isSelected = formData.items.some(i => i.id === sub.id);
                     return (
@@ -1278,13 +1336,13 @@ export default function PDAForm() {
                           setCurrentItem(sub);
                           setShowItemModal(true);
                         }}
-                        className={`p-5 rounded-[24px] text-left transition-all duration-300 relative overflow-hidden group ${
+                        className={`p-8 rounded-[32px] text-left transition-all duration-300 relative overflow-hidden group border-0 ${
                           isSelected
-                            ? 'bg-gradient-to-br from-white to-slate-50/30'
-                            : 'bg-white'
+                            ? 'bg-white shadow-xl ring-2 ring-offset-2'
+                            : 'bg-white shadow-lg hover:shadow-2xl hover:-translate-y-1'
                         }`}
                         style={isSelected ? {
-                          boxShadow: `0 20px 40px -12px ${catColor}25, 0 8px 16px -8px rgba(0,0,0,0.04)`
+                          '--tw-ring-color': catColor
                         } : {}}
                       >
                         <div className={`absolute top-0 right-0 p-4 opacity-0 transition-opacity duration-300 ${isSelected ? 'opacity-100' : 'group-hover:opacity-100'}`}>
@@ -1294,15 +1352,15 @@ export default function PDAForm() {
                         </div>
 
                         <div className="flex justify-between items-start mb-2">
-                          <span className={`block text-lg font-black mb-1 ${isSelected ? '' : 'text-slate-700'}`} style={isSelected ? { color: catColor } : {}}>{sub.label}</span>
+                          <span className={`block text-xl font-black mb-2 ${isSelected ? '' : 'text-slate-700'}`} style={isSelected ? { color: catColor } : {}}>{sub.label}</span>
                         </div>
-                        <p className="text-sm font-medium text-slate-400 leading-relaxed pr-8">{sub.desc}</p>
+                        <p className="text-base font-medium text-slate-400 leading-relaxed pr-8">{sub.desc}</p>
                         <div className="mt-4 min-h-[28px] flex items-center">
                           {isSelected && (
                             <motion.div
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
-                              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50"
+                              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50"
                             >
                               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: catColor }} />
                               <span className="text-xs font-bold text-slate-600">
@@ -1316,30 +1374,71 @@ export default function PDAForm() {
                   })}
                 </div>
               ) : (
-                <div className="text-center p-8 bg-slate-50 rounded-2xl border border-slate-200 mb-8">
-                  <p className="text-slate-500">Não há itens específicos pré-definidos para esta categoria. Por favor, descreva detalhadamente na próxima etapa.</p>
+                <div className="text-center p-12 bg-white rounded-[32px] shadow-lg mb-12">
+                  <p className="text-lg text-slate-500">Não há itens específicos pré-definidos para esta categoria. Por favor, descreva detalhadamente na próxima etapa.</p>
                 </div>
               )}
 
               {formData.items.length > 0 && (
-                <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200">
-                  <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <ListChecks size={20} /> Itens Selecionados
+                <div className="bg-white rounded-[32px] p-8 shadow-lg">
+                  <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3">
+                    <ListChecks size={20} /> Itens Configurados
                   </h3>
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 gap-4">
                     {formData.items.map((item, idx) => (
-                      <div key={idx} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start">
-                        <div>
-                          <strong className="text-slate-900 block">{item.label}</strong>
-                          <p className="text-sm text-slate-600 mt-1">{item.selectedOptions.join(', ')}</p>
-                          {item.details && <p className="text-xs text-slate-500 mt-1 italic">"{item.details}"</p>}
+                      <div 
+                        key={idx} 
+                        className="relative p-6 rounded-2xl transition-all group border-0"
+                        style={{
+                          background: `linear-gradient(180deg, #ffffff 0%, ${catColor}05 100%)`,
+                          boxShadow: `0 8px 24px -6px ${catColor}15`
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold mb-3" style={{ backgroundColor: `${catColor}15`, color: catColor }}>
+                              <CheckCircle2 size={12} />
+                              Configurado • {item.selectedOptions.length} opções
+                            </div>
+                            
+                            <strong className="text-slate-900 block text-xl mb-2">{item.label}</strong>
+                            
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {item.selectedOptions.map((opt, i) => (
+                                <span key={i} className="text-sm font-medium text-slate-600 bg-white/80 px-2 py-1 rounded-md border border-slate-100">
+                                  {opt}
+                                </span>
+                              ))}
+                            </div>
+                            
+                            {item.details && (
+                              <div className="flex items-start gap-2 text-sm text-slate-500 bg-white/50 p-3 rounded-xl border border-slate-100/50">
+                                <Edit2 size={14} className="mt-0.5 opacity-50" />
+                                <span className="italic">"{item.details}"</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex flex-col gap-2 ml-4">
+                            <button 
+                              onClick={() => {
+                                setCurrentItem(SUBCATEGORIES[formData.category].find(sub => sub.id === item.id));
+                                setShowItemModal(true);
+                              }}
+                              className="p-2 rounded-xl bg-white border-0 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors shadow-sm"
+                              title="Editar"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button 
+                              onClick={() => updateData({ items: formData.items.filter(i => i.id !== item.id) })}
+                              className="p-2 rounded-xl bg-white border-0 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm"
+                              title="Remover"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </div>
-                        <button 
-                          onClick={() => updateData({ items: formData.items.filter(i => i.id !== item.id) })}
-                          className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -1352,79 +1451,82 @@ export default function PDAForm() {
       case 3:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <div className="step-content">
-              <div className="step-header">
-                <h2>Conte sua história</h2>
-                <p>Sua descrição ajuda as pessoas a entenderem como podem ser úteis.</p>
+            <div className="max-w-5xl mx-auto px-6 py-8">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">Conte sua história</h2>
+                <p className="text-lg text-slate-500">Sua descrição ajuda as pessoas a entenderem como podem ser úteis.</p>
               </div>
-              <div className="description-container">
-                <div className="pda-textarea-wrapper">
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="textarea-header !m-0">
-                      <Heart size={22} className="text-rose-500" />
-                      <span>Sua história importa</span>
-                    </div>
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${descriptionQuality.bg} ${descriptionQuality.color}`}>
-                      <div className={`w-2 h-2 rounded-full ${descriptionQuality.width === 'w-0' ? 'bg-slate-300' : 'bg-current'} animate-pulse`} />
-                      {descriptionQuality.label}
-                    </div>
-                  </div>
-                  
-                  <div className="relative group">
-                    <textarea
-                      placeholder="Exemplo: Sou mãe solteira de 3 filhos e estou desempregada há 2 meses. Preciso de cestas básicas para alimentar minha família. Meus filhos têm 5, 8 e 12 anos e estamos passando por dificuldades. Qualquer ajuda será muito bem-vinda e Deus abençoará quem puder nos ajudar neste momento difícil."
-                      value={formData.description}
-                      onChange={(e) => updateData({ description: e.target.value.slice(0, 500) })}
-                      className="description-textarea !min-h-[280px]"
-                    />
-                  </div>
-                  
-                  <div className="mt-4 flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-slate-500">
-                        {formData.description.length}/500
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <div 
-                            key={i}
-                            className={`w-1 h-1 rounded-full transition-all ${
-                              i < Math.ceil((formData.description.length / 500) * 5) 
-                                ? 'bg-blue-500' 
-                                : 'bg-slate-300'
-                            }`}
-                          />
-                        ))}
+              <div className="description-grid grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                  <div className="bg-white rounded-[32px] p-8 shadow-lg transition-shadow hover:shadow-xl border-0">
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="flex items-center gap-3 text-rose-500 font-extrabold text-xl">
+                        <Heart size={24} className="text-rose-500" />
+                        <span>Sua história importa</span>
+                      </div>
+                      <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${descriptionQuality.bg} ${descriptionQuality.color}`}>
+                        <div className={`w-2 h-2 rounded-full ${descriptionQuality.width === 'w-0' ? 'bg-slate-300' : 'bg-current'} animate-pulse`} />
+                        {descriptionQuality.label}
                       </div>
                     </div>
                     
-                    <div className="h-1 bg-slate-100 rounded-full overflow-hidden flex-1 mx-4">
-                      <div 
-                        className={`h-full transition-all duration-700 ease-out rounded-full ${
-                          formData.description.length === 0 ? 'bg-slate-300' :
-                          formData.description.length < 30 ? 'bg-rose-400' :
-                          formData.description.length < 100 ? 'bg-amber-400' :
-                          formData.description.length < 300 ? 'bg-emerald-400' : 'bg-blue-500'
-                        }`}
-                        style={{ width: `${Math.min((formData.description.length / 500) * 100, 100)}%` }}
+                    <div className="relative group mb-4">
+                      <textarea
+                        placeholder="Exemplo: Sou mãe solteira de 3 filhos e estou desempregada há 2 meses. Preciso de cestas básicas para alimentar minha família. Meus filhos têm 5, 8 e 12 anos e estamos passando por dificuldades. Qualquer ajuda será muito bem-vinda e Deus abençoará quem puder nos ajudar neste momento difícil."
+                        value={formData.description}
+                        onChange={(e) => updateData({ description: e.target.value.slice(0, 500) })}
+                        className="w-full p-0 border-0 text-lg leading-relaxed text-slate-700 placeholder:text-slate-300 focus:outline-none resize-none bg-transparent"
+                        style={{ height: '240px' }}
                       />
+                    </div>
+                    
+                    <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-slate-500">
+                          {formData.description.length}/500
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <div 
+                              key={i}
+                              className={`w-1 h-1 rounded-full transition-all ${
+                                i < Math.ceil((formData.description.length / 500) * 5) 
+                                  ? 'bg-blue-500' 
+                                  : 'bg-slate-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="h-1 bg-slate-100 rounded-full overflow-hidden flex-1 mx-4">
+                        <div 
+                          className={`h-full transition-all duration-700 ease-out rounded-full ${
+                            formData.description.length === 0 ? 'bg-slate-300' :
+                            formData.description.length < 30 ? 'bg-rose-400' :
+                            formData.description.length < 100 ? 'bg-amber-400' :
+                            formData.description.length < 300 ? 'bg-emerald-400' : 'bg-blue-500'
+                          }`}
+                          style={{ width: `${Math.min((formData.description.length / 500) * 100, 100)}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="tips-card">
-                  <div className="tips-header">
+                <div className="bg-white rounded-[32px] p-8 shadow-lg h-fit">
+                  <div className="flex items-center gap-3 mb-6">
                     <Lightbulb size={24} className="text-amber-500" />
-                    <span className="text-lg">Dicas para uma boa descrição</span>
+                    <span className="text-lg font-bold text-slate-800">Dicas importantes</span>
                   </div>
-                  <ul className="space-y-0">
+                  <ul className="space-y-4">
                     {dynamicTips.map((tip, i) => (
                       <motion.li 
                         key={i}
                         initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 + (i * 0.1) }}
-                        className="flex items-start gap-3 text-sm text-slate-600 leading-relaxed"
+                        className="flex items-start gap-3 text-base text-slate-600 leading-relaxed"
                       >
                         <div className="w-5 h-5 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                           <Check size={12} strokeWidth={3} />
@@ -1460,7 +1562,7 @@ export default function PDAForm() {
               <div className="flex justify-center items-center gap-3 mt-6">
                 <motion.button
                   onClick={toggleRecording}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border-0 ${
                     isRecording 
                       ? 'bg-red-500 text-white' 
                       : 'bg-white text-slate-600 hover:bg-slate-50 shadow-sm border border-slate-200'
@@ -1475,7 +1577,7 @@ export default function PDAForm() {
                 <motion.button
                   onClick={improveWithAI}
                   disabled={formData.description.length < 20 || isImproving}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border-0 ${
                     formData.description.length >= 20 && !isImproving
                       ? 'bg-white text-slate-600 hover:bg-slate-50 shadow-sm border border-slate-200' 
                       : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
@@ -1498,12 +1600,12 @@ export default function PDAForm() {
       case 4:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <div className="step-content">
-              <div className="step-header">
-                <h2>Qual a urgência?</h2>
-                <p>Isso ajuda a priorizar casos críticos.</p>
+            <div className="max-w-6xl mx-auto px-6 py-8">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">Qual a urgência?</h2>
+                <p className="text-lg text-slate-500">Isso ajuda a priorizar casos críticos.</p>
               </div>
-              <div className="urgency-grid">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {URGENCY_OPTIONS.map((opt, index) => (
                   <motion.button
                     key={opt.id}
@@ -1511,13 +1613,19 @@ export default function PDAForm() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                     onClick={() => updateData({ urgency: opt.id })}
-                    className={`urgency-card ${formData.urgency === opt.id ? 'active' : ''}`}
-                    style={{ '--urg-color': opt.color }}
+                    className={`relative flex flex-col items-center p-8 rounded-[32px] transition-all duration-300 bg-white border-0 text-center group ${
+                      formData.urgency === opt.id 
+                        ? 'shadow-2xl scale-105 ring-4 ring-offset-4' 
+                        : 'shadow-lg hover:shadow-2xl hover:-translate-y-2 hover:bg-slate-50/50'
+                    }`}
+                    style={{ '--urg-color': opt.color, '--tw-ring-color': opt.color }}
                   >
-                    <opt.icon size={40} color={opt.color} strokeWidth={2} />
-                    <div className="urgency-content text-left">
-                      <strong>{opt.label}</strong>
-                      <p className="text-sm opacity-70">{opt.desc}</p>
+                    <div className="mb-6 p-5 rounded-full bg-slate-50 group-hover:bg-white transition-colors shadow-sm">
+                      <opt.icon size={40} color={opt.color} strokeWidth={2} />
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <strong className="text-xl font-bold text-slate-800 mb-2">{opt.label}</strong>
+                      <p className="text-base text-slate-500">{opt.desc}</p>
                     </div>
                     {formData.urgency === opt.id && <Check size={24} className="ml-auto text-green-500" />}
                   </motion.button>
@@ -1530,13 +1638,13 @@ export default function PDAForm() {
       case 5:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <div className="step-content">
-              <div className="step-header">
-                <h2>Quem deve ver seu pedido?</h2>
-                <p>Defina o alcance para notificar pessoas próximas.</p>
+            <div className="max-w-5xl mx-auto px-6 py-8">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">Quem deve ver seu pedido?</h2>
+                <p className="text-lg text-slate-500">Defina o alcance para notificar pessoas próximas.</p>
               </div>
-              <div className="visibility-container">
-                <div className="visibility-options">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div className="grid grid-cols-1 gap-6 content-start">
                   {VISIBILITY_OPTIONS.map((opt, index) => {
                     const isActive = formData.visibility.includes(opt.id);
                     return (
@@ -1554,28 +1662,34 @@ export default function PDAForm() {
                             radius: newRadius
                           });
                         }}
-                        className={`visibility-card ${isActive ? 'active' : ''}`}
+                        className={`relative flex items-center gap-6 p-8 rounded-[32px] transition-all duration-300 bg-white border-0 text-left group ${
+                          isActive 
+                            ? 'shadow-xl ring-4 ring-offset-2' 
+                            : 'shadow-lg hover:shadow-2xl hover:-translate-y-1'
+                        }`}
                         style={{ '--vis-color': opt.color, '--vis-rgb': opt.rgb }}
                       >
-                        <div className="visibility-icon"><opt.icon size={24} /></div>
-                        <div className="visibility-content text-left">
-                          <strong>{opt.label}</strong>
-                          <p>{opt.desc}</p>
+                        <div className="p-4 rounded-2xl bg-slate-50 group-hover:bg-white transition-colors shadow-sm">
+                          <opt.icon size={28} color={opt.color} />
+                        </div>
+                        <div className="flex-1">
+                          <strong className="block text-xl font-bold text-slate-800 mb-1">{opt.label}</strong>
+                          <p className="text-slate-500">{opt.desc}</p>
                         </div>
                         {isActive && <Check size={24} className="ml-auto text-green-500" />}
                       </motion.button>
                     );
                   })}
                 </div>
-                <div className="map-section">
-                  <div className="map-placeholder">
-                    <div className="map-indicator">
+                <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden border-0 h-full min-h-[400px] flex flex-col">
+                  <div className="flex-1 bg-slate-100 relative flex items-center justify-center p-8">
+                    <div className="text-center">
                       <MapPin size={48} className="text-blue-500 animate-bounce" />
-                      <span className="font-black text-slate-800">{formData.locationString}</span>
-                      <p className="text-sm opacity-70 font-normal">Sua localização para encontrar ajuda próxima.</p>
+                      <span className="block mt-4 font-black text-slate-800 text-xl">{formData.locationString}</span>
+                      <p className="text-base text-slate-500 mt-2">Sua localização para encontrar ajuda próxima.</p>
                     </div>
                   </div>
-                  <div className="p-6 bg-blue-50/50 rounded-b-[24px]">
+                  <div className="p-8 bg-white border-t border-slate-100">
                     <p className="text-sm font-black text-blue-700 flex items-center gap-2">
                       <Globe size={16} /> Alcance selecionado: {formData.radius}km
                     </p>
@@ -1589,12 +1703,12 @@ export default function PDAForm() {
       case 6:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-            <div className="step-content">
-              <div className="step-header">
-                <h2>Confirmar pedido</h2>
-                <p>Revise os detalhes antes de publicar.</p>
+            <div className="max-w-4xl mx-auto px-6 py-8">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">Confirmar pedido</h2>
+                <p className="text-lg text-slate-500">Revise os detalhes antes de publicar.</p>
               </div>
-              <div className="confirmation-card">
+              <div className="bg-white rounded-[40px] shadow-2xl p-8 md:p-12 border-0 relative overflow-hidden">
                 <div className="flex justify-between items-start mb-12 gap-4 flex-wrap">
                   <div className="category-badge flex items-center gap-3" style={{ background: `${selectedCategory?.color}15`, color: selectedCategory?.color }}>
                     {selectedCategory && <selectedCategory.icon size={20} />}
@@ -1607,11 +1721,11 @@ export default function PDAForm() {
                 </div>
                 
                 {formData.items.length > 0 && (
-                  <div className="mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                  <div className="mb-8 bg-slate-50 p-8 rounded-3xl border-0">
                     <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Itens Solicitados</h4>
-                    <ul className="space-y-2">
+                    <ul className="space-y-3">
                       {formData.items.map((item, idx) => (
-                        <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
+                        <li key={idx} className="text-base text-slate-700 flex items-start gap-3">
                           <div className="w-1.5 h-1.5 bg-slate-400 rounded-full mt-2 flex-shrink-0" />
                           <span><strong>{item.label}:</strong> {item.selectedOptions.join(', ')} {item.details && `(${item.details})`}</span>
                         </li>
@@ -1620,12 +1734,12 @@ export default function PDAForm() {
                   </div>
                 )}
 
-                <div className="description-preview italic text-slate-700">
+                <div className="text-xl leading-relaxed italic text-slate-600 font-medium px-4 border-l-4 border-slate-200">
                   "{formData.description}"
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-                  <div className="p-8 rounded-[24px] bg-slate-50 border border-slate-100 flex items-center gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+                  <div className="p-8 rounded-[32px] bg-slate-50 border-0 flex items-center gap-6">
                     <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
                       <Eye size={28} />
                     </div>
@@ -1634,7 +1748,7 @@ export default function PDAForm() {
                       <p className="font-black text-slate-900 text-lg">{formData.radius}km de raio</p>
                     </div>
                   </div>
-                  <div className="p-8 rounded-[24px] bg-slate-50 border border-slate-100 flex items-center gap-6">
+                  <div className="p-8 rounded-[32px] bg-slate-50 border-0 flex items-center gap-6">
                     <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
                       <MapPin size={28} />
                     </div>
@@ -1684,6 +1798,12 @@ export default function PDAForm() {
         />
       )}
 
+      <CategoryConfirmationModal
+        category={pendingCategory}
+        onClose={() => setPendingCategory(null)}
+        onConfirm={confirmCategory}
+      />
+
       {isPublished && (
         <SuccessModal 
           urgencyColor={selectedUrgency?.color || '#f97316'}
@@ -1711,31 +1831,33 @@ export default function PDAForm() {
                 {renderStepContent()}
               </AnimatePresence>
 
-              {step > 1 && (
-                <div className="form-actions">
-                  <button onClick={prevStep} className="btn-back">
+              <div className="form-actions">
+                {step > 1 ? (
+                  <button onClick={prevStep} className="btn-back border-0">
                     <ChevronLeft size={20} /> Voltar
                   </button>
-                  
-                  {step < TOTAL_STEPS ? (
-                    <button 
-                      onClick={nextStep} 
-                      disabled={!isStepValid} 
-                      className="btn-next"
-                    >
-                      Continuar <ArrowRight size={20} />
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={handlePublish} 
-                      disabled={isSubmitting} 
-                      className="btn-publish"
-                    >
-                      {isSubmitting ? 'Publicando...' : 'Publicar Pedido'} <Rocket size={20} />
-                    </button>
-                  )}
-                </div>
-              )}
+                ) : (
+                  <div />
+                )}
+                
+                {step < TOTAL_STEPS && step !== 1 ? (
+                  <button 
+                    onClick={nextStep} 
+                    disabled={!isStepValid} 
+                    className="btn-next border-0"
+                  >
+                    {step === 1 ? 'Confirmar Categoria' : 'Continuar'} <ArrowRight size={20} />
+                  </button>
+                ) : step === TOTAL_STEPS ? (
+                  <button 
+                    onClick={handlePublish} 
+                    disabled={isSubmitting} 
+                    className="btn-publish border-0"
+                  >
+                    {isSubmitting ? 'Publicando...' : 'Publicar Pedido'} <Rocket size={20} />
+                  </button>
+                ) : null}
+              </div>
             </>
           )}
         </div>

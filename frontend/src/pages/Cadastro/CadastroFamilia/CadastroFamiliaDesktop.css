@@ -751,7 +751,11 @@
 
 @media (max-width: 640px) {
   .fam-reg-form-title {
-    font-size: 1.75rem;
+    font-size: 2.75rem;
+    line-height: 1.15;
+  }
+  .fam-reg-form-description {
+    font-size: 1.05rem;
   }
   
   .fam-reg-navbar {
