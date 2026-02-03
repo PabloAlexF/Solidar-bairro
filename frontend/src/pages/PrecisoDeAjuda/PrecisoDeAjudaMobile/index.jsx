@@ -2,10 +2,12 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnalyzingModal, InconsistentModal, SuccessModal } from '../modals';
+import { ValidationModal } from './AIComponents'; // Agora usará o novo componente
 import { MapaAlcance } from '../PrecisoDeAjudaDesktop/MapaAlcance';
 import AnimatedParticles from '../AnimatedParticles';
-import LandingHeader from '../../../components/layout/LandingHeader';
 import MobileHeader from '../../../components/layout/MobileHeader';
+import { validateRequest } from './AIAssistant';
+import { validateRequiredFields } from './SmartValidator'; // Mantido para validação básica
 import { useNotifications } from '../../../contexts/NotificationContext';
 import './styles.css';
 import { 
@@ -41,7 +43,8 @@ import {
   Mic,
   MicOff,
   Globe,
-  Rocket
+  Rocket,
+  Loader2
 } from 'lucide-react';
 import { SecurityUtils, geocodingRateLimiter } from '../../../utils/security';
 
@@ -246,10 +249,13 @@ export function PrecisoDeAjudaMobile() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStage, setAnalysisStage] = useState(0);
   const [isPublished, setIsPublished] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationResult, setValidationResult] = useState(null);
+  const [shakeReviewButton, setShakeReviewButton] = useState(false);
   const [isInconsistent, setIsInconsistent] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   
-  const stages = ['Verificando dados', 'Analisando urgência', 'Validando', 'Finalizando'];
+  const stages = ['Iniciando validação...', 'Comunicando com assistente IA...', 'Analisando seu pedido...', 'Finalizando...'];
 
   const [formData, setFormData] = useState({
     category: '',
@@ -462,20 +468,11 @@ export function PrecisoDeAjudaMobile() {
     }
   }, [step, formData, isDescriptionValid]);
 
-  const handlePublish = useCallback(async () => {
+  const publishRequest = useCallback(async () => {
+    // This function contains the actual API call logic
     setIsSubmitting(true);
-    setIsAnalyzing(true);
-    setAnalysisStage(0);
     
     try {
-      // Simulate analysis stages
-      for (let i = 0; i < stages.length; i++) {
-        setAnalysisStage(i);
-        await new Promise(resolve => setTimeout(resolve, 1200));
-      }
-      
-      setIsAnalyzing(false);
-      
       // Prepare data for API
       const pedidoData = {
         category: formData.category,
@@ -484,41 +481,21 @@ export function PrecisoDeAjudaMobile() {
         urgency: formData.urgency,
         visibility: formData.visibility,
         radius: formData.radius,
-        location: {
-          coordinates: formData.userLocation,
-          address: formData.locationString,
-          city: formData.city,
-          neighborhood: formData.neighborhood
-        },
+        location: formData.userLocation,
+        locationString: formData.locationString,
+        city: formData.city,
+        neighborhood: formData.neighborhood,
         isPublic: formData.isPublic
       };
       
-      // Import ApiService dynamically
       const { default: ApiService } = await import('../../../services/apiService');
-      
-      // Call API to create pedido
       const response = await ApiService.createPedido(pedidoData);
       
+      setIsAnalyzing(false);
       if (response.success) {
-        // Criar notificação para nova ajuda
-        try {
-          const { notificationManager } = await import('../../../utils/notifications');
-          await notificationManager.createHelpNotification({
-            userName: 'Alguém',
-            category: formData.category,
-            neighborhood: formData.neighborhood || 'Região próxima',
-            urgency: formData.urgency
-          });
-        } catch (notifError) {
-          console.warn('Erro ao criar notificação:', notifError);
-        }
-        
         addNotification({
           title: 'Pedido criado com sucesso!',
           message: `Seu pedido de "${formData.category}" foi publicado e já está visível para a comunidade.`
-        });
-        setAnalysis({ 
-          reason: 'Pedido criado com sucesso! Sua solicitação já está visível na rede Solidar.' 
         });
         setIsPublished(true);
       } else {
@@ -527,18 +504,73 @@ export function PrecisoDeAjudaMobile() {
     } catch (error) {
       console.error('Erro ao publicar pedido:', error);
       setIsAnalyzing(false);
-      
-      // Check if it's a validation error
-      if (error.message.includes('validação') || error.message.includes('inconsistent')) {
-        setIsInconsistent(true);
-      } else {
-        // Show generic error
-        alert('Erro ao publicar pedido: ' + error.message);
-      }
+      alert('Erro ao publicar pedido: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, stages.length]);
+  }, [formData, addNotification]);
+
+  const handlePublish = useCallback(async () => {
+    // 1. Validação básica de campos obrigatórios
+    const requiredFieldsErrors = validateRequiredFields(formData);
+    if (requiredFieldsErrors.length > 0) {
+      setValidationResult({
+        canPublish: false,
+        analysis: 'Campos obrigatórios não foram preenchidos.',
+        confidence: 0,
+        suggestions: requiredFieldsErrors.map(error => ({
+          type: 'error',
+          message: error.message,
+        })),
+        validations: {}
+      });
+      setShowValidationModal(true);
+      return;
+    }
+
+    // 2. Exibe o modal de "Analisando..." e chama o bot
+    setIsSubmitting(true);
+    setIsAnalyzing(true);
+
+    // Simula etapas da análise para feedback visual
+    for (let i = 0; i < stages.length; i++) {
+      setAnalysisStage(i);
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
+
+    // 3. Chama o bot de validação real
+    const analysisResult = await validateRequest(formData);
+    setValidationResult(analysisResult);
+    
+    // 4. Esconde o modal de "Analisando..." e exibe o resultado da validação
+    setIsAnalyzing(false);
+    setIsSubmitting(false);
+    setShowValidationModal(true);
+
+  }, [formData, stages]);
+
+  const handleReview = () => {
+    setShowValidationModal(false);
+    setValidationResult(null);
+    setStep(3); // Volta para a etapa da história para revisão
+  };
+
+  const handleAcceptAndPublish = () => {
+    // Se a validação falhou, o usuário está clicando em "Publicar Mesmo Assim".
+    // Acionamos a animação no botão "Revisar" e publicamos após um pequeno atraso.
+    if (validationResult && !validationResult.canPublish) {
+      setShakeReviewButton(true);
+      setTimeout(() => {
+        setShowValidationModal(false);
+        publishRequest();
+        setShakeReviewButton(false); // Reseta o estado da animação
+      }, 600); // Duração da animação
+    } else {
+      // Se a validação passou, publica imediatamente.
+      setShowValidationModal(false);
+      publishRequest();
+    }
+  };
 
   const selectedCategory = useMemo(() => CATEGORIES.find(c => c.id === formData.category), [formData.category]);
   const selectedUrgency = useMemo(() => URGENCY_OPTIONS.find(o => o.id === formData.urgency), [formData.urgency]);
@@ -546,6 +578,15 @@ export function PrecisoDeAjudaMobile() {
   const toggleArrayItem = useCallback((array, item) => {
     return array.includes(item) ? array.filter(i => i !== item) : [...array, item];
   }, []);
+
+  const descriptionQuality = useMemo(() => {
+    const len = formData.description.length;
+    if (len === 0) return { label: '', color: '#e5e7eb' };
+    if (len < 50) return { label: 'Fraca', color: '#ef4444' };
+    if (len < 150) return { label: 'Razoável', color: '#f59e0b' };
+    if (len < 250) return { label: 'Boa', color: '#3b82f6' };
+    return { label: 'Excelente', color: '#10b981' };
+  }, [formData.description]);
 
   const renderCategoryStep = () => (
     <motion.div className="pdam-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
@@ -655,7 +696,14 @@ export function PrecisoDeAjudaMobile() {
     <motion.div className="pdam-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
       <div className="pdam-step-header">
         <span className="pdam-step-badge pdam-story-badge">3 de 6</span>
-        <h2>Conte sua história</h2>
+        <h2>
+          Conte sua história
+          {descriptionQuality.label && (
+            <span className="pdam-quality-badge" style={{ backgroundColor: descriptionQuality.color }}>
+              {descriptionQuality.label}
+            </span>
+          )}
+        </h2>
         <p className="pdam-step-subtitle">A ajuda vem mais rápido quando as pessoas entendem o seu motivo.</p>
       </div>
       
@@ -695,8 +743,8 @@ export function PrecisoDeAjudaMobile() {
                   className="pdam-progress-fill-v4" 
                   style={{ 
                     width: `${(formData.description.length / 500) * 100}%`,
-                    background: formData.description.length > 450 ? '#ef4444' : '#f97316'
-                  }} 
+                    backgroundColor: descriptionQuality.color
+                  }}
                 />
               </div>
               <span>{formData.description.length}/500</span>
@@ -1153,6 +1201,16 @@ export function PrecisoDeAjudaMobile() {
           onClose={() => navigate('/')}
         />
       )}
+      {showValidationModal && (
+        <ValidationModal
+          isOpen={showValidationModal}
+          onClose={() => setShowValidationModal(false)}
+          validationResult={validationResult}
+          onReview={handleReview}
+          onAccept={handleAcceptAndPublish}
+          shakeReviewButton={shakeReviewButton}
+        />
+      )}
 
       <header className="pdam-header">
         <Heart size={20} fill="#f97316" color="#f97316" />
@@ -1210,7 +1268,16 @@ export function PrecisoDeAjudaMobile() {
             disabled={isSubmitting} 
             className="pdam-btn-publish"
           >
-            {isSubmitting ? 'Enviando...' : 'Publicar'} {!isSubmitting && <Check size={18} />}
+            {isSubmitting ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Analisando...
+              </>
+            ) : (
+              <>
+                Publicar <Check size={18} />
+              </>
+            )}
           </button>
         )}
       </footer>
