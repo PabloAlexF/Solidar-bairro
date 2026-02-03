@@ -397,7 +397,7 @@
 }
 
 /* MODERN MAIN CONTENT */
-.main-content {
+.panel-main-content {
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -1410,7 +1410,7 @@
 @media (max-width: 1200px) {
   .panel-body { grid-template-columns: 280px 1fr; }
   .sidebar { padding: 24px; }
-  .main-content { padding: 32px; }
+  .panel-main-content { padding: 32px; }
 }
 
 @media (max-width: 1024px) {

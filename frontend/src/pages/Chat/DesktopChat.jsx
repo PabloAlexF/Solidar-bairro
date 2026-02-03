@@ -410,8 +410,24 @@ const Chat = () => {
         }
         
         setConversation(convData);
+
+        // Fetch other participant data if name is not available or is "Usuario"
+        if (conversation.otherParticipant && (!conversation.otherParticipant.nome || conversation.otherParticipant.nome === 'Usuario')) {
+          try {
+            const otherUid = conversation.participants.find(p => p !== user?.uid);
+            if (otherUid) {
+              const userResponse = await ApiService.getUser(otherUid);
+              if (userResponse.success && userResponse.data) {
+                conversation.otherParticipant = { ...conversation.otherParticipant, ...userResponse.data };
+                setConversation({ ...conversation });
+              }
+            }
+          } catch (error) {
+            console.error('Erro ao buscar dados do outro participante:', error);
+          }
+        }
       }
-      
+
       if (messagesResponse.success && messagesResponse.data) {
         const formattedMessages = messagesResponse.data.map(msg => ({
           id: msg.id,

@@ -23,26 +23,15 @@ export const AuthProvider = ({ children }) => {
 
   const initializeAuth = async () => {
     try {
-      const savedToken = localStorage.getItem('solidar-token');
-      const savedUser = localStorage.getItem('solidar-user');
+      // Clear any cached authentication data to prevent auto-login
+      localStorage.removeItem('solidar-user');
+      localStorage.removeItem('solidar-token');
 
-      if (savedToken && savedUser) {
-        setToken(savedToken);
-        
-        // Parse and process user data
-        let userData = JSON.parse(savedUser);
-        if (userData && typeof userData.endereco === 'object') {
-          userData = {
-            ...userData,
-            endereco: formatAddress(userData.endereco)
-          };
-        }
-        
-        setUser(userData);
-      }
+      // Reset state
+      setUser(null);
+      setToken(null);
     } catch (error) {
       console.error('Erro ao inicializar auth:', error);
-      logout();
     } finally {
       setLoading(false);
     }
