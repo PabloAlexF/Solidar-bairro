@@ -43,7 +43,8 @@ import {
   Edit2,
   ListChecks,
   X,
-  Minus
+  Minus,
+  Quote
 } from 'lucide-react';
 import './styles.css';
 
@@ -423,19 +424,48 @@ const validateRequiredFields = (formData) => {
   return errors;
 };
 
+const Tooltip = ({ children, content, className = "" }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <div 
+      className={`relative ${className}`}
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      {children}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: 5, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 5, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 p-3 bg-slate-800/90 backdrop-blur-sm text-white text-xs font-medium rounded-xl shadow-xl z-50 text-center pointer-events-none border border-white/10"
+          >
+            {content}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-800/90" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePublish }) => {
   if (!isOpen || !validationResult) return null;
 
   const { canPublish, analysis, confidence, riskScore, suggestions, specificIssues } = validationResult;
+  const hasIssues = specificIssues && specificIssues.length > 0;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-lg p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-lg p-4">
       <motion.div 
         initial={{ scale: 0.8, opacity: 0, y: 50 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.8, opacity: 0, y: 50 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 w-full max-w-4xl md:max-w-7xl shadow-2xl border border-white/20 relative"
+        className="bg-white/95 backdrop-blur-sm rounded-[32px] p-8 w-full max-w-5xl shadow-2xl border border-white/20 relative max-h-[90vh] flex flex-col"
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -443,140 +473,163 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400 to-purple-500 rounded-full translate-y-12 -translate-x-12" />
         </div>
         
-        {/* Header */}
-        <div className="text-center mb-4 relative z-10">
-          <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center ${
-            canPublish 
-              ? 'bg-green-50 border-2 border-green-200' 
-              : 'bg-orange-50 border-2 border-orange-200'
-          }`}>
-            {canPublish ? <CheckCircle2 size={32} className="text-green-600" /> : <AlertTriangle size={32} className="text-orange-600" />}
-          </div>
-          <motion.h2 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-2xl font-black text-slate-900 mb-2"
-          >
-            {canPublish ? 'Pedido Aprovado!' : 'Pedido Requer Revisão'}
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-slate-500 text-sm"
-          >
-            {canPublish ? 'Tudo certo para publicação' : 'Algumas melhorias são necessárias'}
-          </motion.p>
-        </div>
-        
-        {/* Detailed Analysis */}
-        {validationResult.scores && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mb-4 relative z-10"
-          >
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <h3 className="font-black text-slate-900 text-sm mb-4">Análise Detalhada</h3>
-              <div className="flex flex-wrap gap-4">
-                <div className="text-center">
-                  <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                    validationResult.scores.category >= 70 ? 'bg-green-100 text-green-600' :
-                    validationResult.scores.category >= 40 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
-                  }`}>
-                    {validationResult.scores.category}%
-                  </div>
-                  <p className="text-xs font-bold text-slate-600">Categoria</p>
+        <div className="overflow-y-auto custom-scrollbar flex-1 pr-2">
+          <div className={`flex flex-col ${hasIssues ? 'lg:flex-row' : ''} gap-8 h-full`}>
+            
+            {/* Left Side: Header & Analysis */}
+            <div className={`flex-1 flex flex-col ${hasIssues ? 'justify-start' : 'justify-center items-center text-center'}`}>
+              
+              {/* Header */}
+              <div className={`mb-8 relative z-10 ${hasIssues ? 'text-left' : 'text-center'}`}>
+                <div className={`w-20 h-20 ${hasIssues ? 'mr-auto' : 'mx-auto'} mb-4 rounded-2xl flex items-center justify-center ${
+                  canPublish 
+                    ? 'bg-green-50 border-2 border-green-200' 
+                    : 'bg-orange-50 border-2 border-orange-200'
+                }`}>
+                  {canPublish ? <CheckCircle2 size={40} className="text-green-600" /> : <AlertTriangle size={40} className="text-orange-600" />}
                 </div>
-                <div className="text-center">
-                  <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                    validationResult.scores.urgency >= 70 ? 'bg-green-100 text-green-600' :
-                    validationResult.scores.urgency >= 40 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
-                  }`}>
-                    {validationResult.scores.urgency}%
-                  </div>
-                  <p className="text-xs font-bold text-slate-600">Urgência</p>
-                </div>
-                <div className="text-center">
-                  <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                    validationResult.scores.quality >= 70 ? 'bg-green-100 text-green-600' :
-                    validationResult.scores.quality >= 40 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'
-                  }`}>
-                    {validationResult.scores.quality}%
-                  </div>
-                  <p className="text-xs font-bold text-slate-600">Qualidade</p>
-                </div>
+                <motion.h2 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-3xl font-black text-slate-900 mb-2"
+                >
+                  {canPublish ? 'Pedido Aprovado!' : 'Pedido Requer Revisão'}
+                </motion.h2>
+                <motion.p 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-slate-500 text-lg"
+                >
+                  {canPublish ? 'Tudo certo para publicação' : 'Algumas melhorias são necessárias'}
+                </motion.p>
               </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Specific Issues */}
-        {specificIssues && specificIssues.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mb-4 relative z-10"
-          >
-            <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
-              <div className="flex items-center gap-2 mb-4">
-                <AlertTriangle size={18} className="text-red-600" />
-                <h3 className="font-black text-slate-900 text-sm">Problemas Específicos Encontrados</h3>
-              </div>
-              <div className="flex flex-wrap gap-4">
-                {specificIssues.map((issue, index) => (
-                  <motion.div 
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7 + (index * 0.1) }}
-                    className="bg-white rounded-xl p-4 border border-red-200 h-full"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <AlertTriangle size={12} strokeWidth={3} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-slate-800 font-bold mb-1">{issue.type}: {issue.field}</p>
-                        <p className="text-sm text-slate-700 mb-2">{issue.message}</p>
-                        {issue.suggestions && issue.suggestions.length > 0 && (
-                          <div className="text-xs text-slate-600 bg-slate-50 rounded-lg p-2 border">
-                            <strong>Sugestões:</strong>
-                            <ul className="mt-1 list-disc list-inside">
-                              {issue.suggestions.map((sug, i) => <li key={i}>{sug}</li>)}
-                            </ul>
+              
+              {/* Detailed Analysis */}
+              {validationResult.scores && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className={`relative z-10 w-full ${hasIssues ? '' : 'max-w-2xl'}`}
+                >
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 h-full">
+                    <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider mb-6 flex items-center gap-2">
+                      <Sparkles size={16} className="text-blue-500" />
+                      Análise Detalhada
+                    </h3>
+                    <div className="flex flex-row justify-between gap-4">
+                      {/* Score Item 1 */}
+                      <Tooltip className="flex-1" content="Avalia se a descrição corresponde à categoria selecionada.">
+                        <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-2 h-full cursor-help hover:bg-slate-50 transition-colors">
+                          <div className={`text-2xl font-black ${
+                            validationResult.scores.category >= 70 ? 'text-green-500' :
+                            validationResult.scores.category >= 40 ? 'text-yellow-500' : 'text-red-500'
+                          }`}>
+                            {validationResult.scores.category}%
                           </div>
-                        )}
-                      </div>
+                          <p className="text-xs font-bold text-slate-400 uppercase">Categoria</p>
+                        </div>
+                      </Tooltip>
+                      
+                      {/* Score Item 2 */}
+                      <Tooltip className="flex-1" content="Verifica se o nível de urgência condiz com o relato.">
+                        <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-2 h-full cursor-help hover:bg-slate-50 transition-colors">
+                          <div className={`text-2xl font-black ${
+                            validationResult.scores.urgency >= 70 ? 'text-green-500' :
+                            validationResult.scores.urgency >= 40 ? 'text-yellow-500' : 'text-red-500'
+                          }`}>
+                            {validationResult.scores.urgency}%
+                          </div>
+                          <p className="text-xs font-bold text-slate-400 uppercase">Urgência</p>
+                        </div>
+                      </Tooltip>
+
+                      {/* Score Item 3 */}
+                      <Tooltip className="flex-1" content="Analisa o detalhamento e clareza da descrição.">
+                        <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-2 h-full cursor-help hover:bg-slate-50 transition-colors">
+                          <div className={`text-2xl font-black ${
+                            validationResult.scores.quality >= 70 ? 'text-green-500' :
+                            validationResult.scores.quality >= 40 ? 'text-yellow-500' : 'text-red-500'
+                          }`}>
+                            {validationResult.scores.quality}%
+                          </div>
+                          <p className="text-xs font-bold text-slate-400 uppercase">Qualidade</p>
+                        </div>
+                      </Tooltip>
                     </div>
-                  </motion.div>
-                ))}
-              </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
-          </motion.div>
-        )}
+
+            {/* Specific Issues */}
+            {hasIssues && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+                className="flex-1 lg:max-w-md relative z-10"
+              >
+                <div className="bg-red-50 rounded-2xl p-6 border border-red-100 h-full flex flex-col">
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+                      <AlertTriangle size={18} />
+                    </div>
+                    <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider">Problemas Encontrados</h3>
+                  </div>
+                  <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-2 flex-1 max-h-[400px]">
+                    {specificIssues.map((issue, index) => (
+                      <motion.div 
+                        key={index}
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 + (index * 0.1) }}
+                        className="bg-white rounded-xl p-4 border border-red-200 shadow-sm"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-1">
+                            <X size={16} className="text-red-500" strokeWidth={3} />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-bold text-red-500 uppercase mb-1">{issue.field}</p>
+                            <p className="text-sm text-slate-800 font-bold mb-1 leading-tight">{issue.message}</p>
+                            {issue.suggestions && issue.suggestions.length > 0 && (
+                              <div className="mt-2 text-xs text-slate-600 bg-slate-50 rounded-lg p-2 border border-slate-100">
+                                <strong className="block mb-1 text-slate-400">Sugestão:</strong>
+                                {issue.suggestions[0]}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
 
         {/* Actions */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="flex gap-3 relative z-10"
+          className="mt-8 pt-6 border-t border-slate-100 flex gap-4 justify-end relative z-10"
         >
           {!canPublish && (
             <>
               <button 
                 onClick={onRetry}
-                className="flex-1 py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2 border-0"
+                className="py-3 px-6 bg-white hover:bg-slate-50 text-slate-600 rounded-2xl font-bold text-sm transition-all shadow-sm border border-slate-200 flex items-center justify-center gap-2"
               >
                 <RefreshCcw size={16} /> Revisar Pedido
               </button>
               <button 
                 onClick={onForcePublish}
-                className="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2 border-0"
+                className="py-3 px-6 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 border-0"
               >
                 <Rocket size={16} /> Publicar Mesmo Assim
               </button>
@@ -585,7 +638,7 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
           {canPublish && (
             <motion.button 
               onClick={onClose}
-              className="w-full py-3 px-4 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-semibold text-sm transition-all shadow-lg flex items-center justify-center gap-2 border-0"
+              className="w-full md:w-auto py-3 px-8 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 border-0"
             >
               <CheckCircle2 size={16} /> Continuar
             </motion.button>
@@ -1732,7 +1785,7 @@ export default function PDAForm() {
                                 borderColor: ['rgba(59, 130, 246, 0.3)', 'rgba(59, 130, 246, 0.6)', 'rgba(59, 130, 246, 0.3)']
                             }}
                             transition={{ duration: 3, repeat: Infinity }}
-                            className="absolute rounded-full border-2 border-dashed border-blue-400/50 bg-blue-500/5 backdrop-blur-[1px]"
+                            className="absolute rounded-full border-2 border-blue-400/30 bg-blue-500/5 backdrop-blur-[1px]"
                          />
                       </div>
 
@@ -1811,61 +1864,93 @@ export default function PDAForm() {
 
       case 6:
         return (
-          <motion.div className="form-step" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-            <div className="max-w-4xl mx-auto px-6 py-8">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">Confirmar pedido</h2>
+          <motion.div className="form-step confirmation-step" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+            <div className="w-full max-w-3xl mx-auto px-4">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-2">Confirmar pedido</h2>
                 <p className="text-lg text-slate-500">Revise os detalhes antes de publicar.</p>
               </div>
-              <div className="bg-white rounded-[40px] shadow-2xl p-8 md:p-12 border-0 relative overflow-hidden">
-                <div className="flex justify-between items-start mb-12 gap-4 flex-wrap">
-                  <div className="category-badge flex items-center gap-3" style={{ background: `${selectedCategory?.color}15`, color: selectedCategory?.color }}>
-                    {selectedCategory && <selectedCategory.icon size={20} />}
-                    <span className="text-sm font-black uppercase tracking-wider">{formData.category}</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-6 py-3 rounded-full border-2" style={{ borderColor: selectedUrgency?.color, color: selectedUrgency?.color }}>
-                    {selectedUrgency && <selectedUrgency.icon size={20} />}
-                    <span className="font-black text-sm uppercase tracking-tighter">{selectedUrgency?.label}</span>
-                  </div>
-                </div>
+              
+              <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100 relative transition-transform hover:-translate-y-1 duration-300">
+                {/* Top colored bar */}
+                <div className="h-2 w-full" style={{ background: `linear-gradient(90deg, ${selectedCategory?.color || '#3b82f6'}, ${selectedUrgency?.color || '#f97316'})` }}></div>
                 
-                {formData.items.length > 0 && (
-                  <div className="mb-8 bg-slate-50 p-8 rounded-3xl border-0">
-                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Itens Solicitados</h4>
-                    <ul className="space-y-3">
-                      {formData.items.map((item, idx) => (
-                        <li key={idx} className="text-base text-slate-700 flex items-start gap-3">
-                          <div className="w-1.5 h-1.5 bg-slate-400 rounded-full mt-2 flex-shrink-0" />
-                          <span><strong>{item.label}:</strong> {item.selectedOptions.join(', ')} {item.details && `(${item.details})`}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <div className="p-8 md:p-10">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8 pb-8 border-b border-slate-100">
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg text-white" style={{ backgroundColor: selectedCategory?.color || '#94a3b8' }}>
+                                {selectedCategory && <selectedCategory.icon size={32} />}
+                            </div>
+                            <div>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Categoria</p>
+                                <h3 className="text-2xl font-black text-slate-800 leading-none">{formData.category}</h3>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 px-5 py-2.5 rounded-xl bg-slate-50 border-2" style={{ borderColor: selectedUrgency?.color || '#cbd5e1' }}>
+                            {selectedUrgency && <selectedUrgency.icon size={20} style={{ color: selectedUrgency.color }} />}
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider opacity-60 leading-tight">Urgência</p>
+                                <p className="text-sm font-black uppercase tracking-tight leading-tight" style={{ color: selectedUrgency?.color }}>{selectedUrgency?.label}</p>
+                            </div>
+                        </div>
+                    </div>
 
-                <div className="text-xl leading-relaxed italic text-slate-600 font-medium px-4 border-l-4 border-slate-200">
-                  "{formData.description}"
-                </div>
+                    {/* Items */}
+                    {formData.items.length > 0 && (
+                        <div className="mb-8">
+                            <div className="flex items-center gap-2 mb-4 text-slate-400">
+                                <ListChecks size={18} />
+                                <span className="text-xs font-bold uppercase tracking-widest">Itens Solicitados</span>
+                            </div>
+                            <div className="bg-slate-50/80 rounded-2xl p-5 border border-slate-100 space-y-4">
+                                {formData.items.map((item, idx) => (
+                                    <div key={idx} className="flex gap-3">
+                                        <div className="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: selectedCategory?.color }}></div>
+                                        <div className="flex-1">
+                                            <p className="font-bold text-slate-800">{item.label}</p>
+                                            <p className="text-sm text-slate-600 mt-1">{item.selectedOptions.join(', ')}</p>
+                                            {item.details && <p className="text-sm text-slate-500 italic mt-1">"{item.details}"</p>}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-                <div className="flex flex-wrap gap-8 mt-12">
-                  <div className="p-8 rounded-[32px] bg-slate-50 border-0 flex items-center gap-6">
-                    <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
-                      <Eye size={28} />
+                    {/* Description */}
+                    <div className="mb-8">
+                        <div className="flex items-center gap-2 mb-4 text-slate-400">
+                            <Quote size={18} />
+                            <span className="text-xs font-bold uppercase tracking-widest">Relato</span>
+                        </div>
+                        <div className="relative pl-6 border-l-4 border-slate-200 py-1">
+                            <p className="text-lg text-slate-600 italic leading-relaxed">"{formData.description}"</p>
+                        </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-400 uppercase font-black tracking-widest">Alcance</p>
-                      <p className="font-black text-slate-900 text-lg">{formData.radius}km de raio</p>
+
+                    {/* Footer Info */}
+                    <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-100">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                                <Globe size={20} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase">Alcance</p>
+                                <p className="text-sm font-black text-slate-800">{formData.radius}km</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center">
+                                <MapPin size={20} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase">Localização</p>
+                                <p className="text-sm font-black text-slate-800 truncate max-w-[150px]">{formData.neighborhood || formData.city}</p>
+                            </div>
+                        </div>
                     </div>
-                  </div>
-                  <div className="p-8 rounded-[32px] bg-slate-50 border-0 flex items-center gap-6">
-                    <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
-                      <MapPin size={28} />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-400 uppercase font-black tracking-widest">Localização</p>
-                      <p className="font-black text-slate-900 text-lg truncate max-w-[180px]">{formData.neighborhood || formData.city || 'Sua Região'}</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1924,7 +2009,7 @@ export default function PDAForm() {
         />
       )}
 
-      <main className="pda-main-wrapper" style={{ paddingTop: '80px' }}>
+      <main className="pda-main-wrapper" style={{ paddingTop: '20px' }}>
         <div className="content-section" ref={formRef}>
           {!isPublished && (
             <>
