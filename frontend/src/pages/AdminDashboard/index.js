@@ -18,8 +18,8 @@ import {
   Filler,
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { 
-  LayoutDashboard, Building2, Users, 
+import {
+  LayoutDashboard, Building2, Users,
   ShieldCheck, LogOut, Search, Filter,
   Eye, CheckCircle, XCircle, Trash2,
   Key, Shield, Hash, Map, UserCircle,
@@ -28,7 +28,7 @@ import {
   Zap, Target, Sparkles, DollarSign,
   Home, Users2, ListChecks, RefreshCw,
   Download, ChevronDown, SlidersHorizontal,
-  MoreHorizontal, Calendar
+  MoreHorizontal, Calendar, ArrowLeft
 } from 'lucide-react';
 import './styles.css';
 
@@ -452,6 +452,10 @@ export default function AdminDashboard() {
         </nav>
 
         <div className="admin-sidebar-footer">
+          <button onClick={() => navigate('/')} className="admin-nav-btn" style={{ marginBottom: '0.5rem' }}>
+            <ArrowLeft size={20} />
+            <span>Voltar ao Site</span>
+          </button>
           <button onClick={handleLogout} className="admin-logout-btn">
             <LogOut size={20} />
             <span>Sair do Sistema</span>

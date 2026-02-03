@@ -23,15 +23,35 @@ export const AuthProvider = ({ children }) => {
 
   const initializeAuth = async () => {
     try {
-      // Clear any cached authentication data to prevent auto-login
-      localStorage.removeItem('solidar-user');
-      localStorage.removeItem('solidar-token');
+      // Check for existing valid authentication data
+      const storedUser = localStorage.getItem('solidar-user');
+      const storedToken = localStorage.getItem('solidar-token');
 
-      // Reset state
-      setUser(null);
-      setToken(null);
+      if (storedUser && storedToken) {
+        try {
+          // Validate token with backend if needed
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          setToken(storedToken);
+        } catch (error) {
+          // If parsing fails, clear invalid data
+          localStorage.removeItem('solidar-user');
+          localStorage.removeItem('solidar-token');
+          setUser(null);
+          setToken(null);
+        }
+      } else {
+        // No stored data, reset state
+        setUser(null);
+        setToken(null);
+      }
     } catch (error) {
       console.error('Erro ao inicializar auth:', error);
+      // Clear potentially corrupted data
+      localStorage.removeItem('solidar-user');
+      localStorage.removeItem('solidar-token');
+      setUser(null);
+      setToken(null);
     } finally {
       setLoading(false);
     }

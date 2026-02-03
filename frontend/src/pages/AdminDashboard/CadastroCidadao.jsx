@@ -52,12 +52,20 @@ const CadastroCidadao = ({ onBack }) => {
     }
   };
 
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { label: '', color: '#e2e8f0', width: '0%' };
+    const isValid = pass.length >= 6 && /[a-zA-Z]/.test(pass) && /\d/.test(pass);
+    if (!isValid) return { label: 'Fraca', color: '#ef4444', width: '33%' };
+    if (pass.length >= 8) return { label: 'Forte', color: '#10b981', width: '100%' };
+    return { label: 'Média', color: '#f59e0b', width: '66%' };
+  };
+
   const validate = () => {
     const newErrors = {};
     if (!formData.nome) newErrors.nome = 'Nome é obrigatório';
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
     if (!formData.cpf || formData.cpf.length < 11) newErrors.cpf = 'CPF inválido';
-    if (!formData.senha || formData.senha.length < 6) newErrors.senha = 'Mínimo 6 caracteres';
+    if (!formData.senha || formData.senha.length < 6 || !/[a-zA-Z]/.test(formData.senha) || !/\d/.test(formData.senha)) newErrors.senha = 'Mínimo 6 caracteres, letras e números';
     if (formData.senha !== formData.confirmarSenha) newErrors.confirmarSenha = 'Senhas não conferem';
     if (!formData.cep) newErrors.cep = 'CEP obrigatório';
     if (!formData.numero) newErrors.numero = 'Número obrigatório';
@@ -88,6 +96,8 @@ const CadastroCidadao = ({ onBack }) => {
       setLoading(false);
     }
   };
+
+  const strength = getPasswordStrength(formData.senha);
 
   return (
     <div className="cadastro-wrapper">
@@ -215,6 +225,14 @@ const CadastroCidadao = ({ onBack }) => {
               <Lock size={20} className="input-icon" />
               <input type="password" name="senha" className={`form-input ${errors.senha ? 'error' : ''}`} placeholder="••••••••" value={formData.senha} onChange={handleChange} />
             </div>
+            {formData.senha && (
+              <div style={{ marginTop: '6px' }}>
+                <div style={{ height: '4px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: strength.width, backgroundColor: strength.color, transition: 'all 0.3s ease' }} />
+                </div>
+                <span style={{ fontSize: '11px', color: strength.color, marginTop: '4px', display: 'block', textAlign: 'right', fontWeight: '600' }}>{strength.label}</span>
+              </div>
+            )}
             {errors.senha && <span className="error-message">{errors.senha}</span>}
           </div>
 

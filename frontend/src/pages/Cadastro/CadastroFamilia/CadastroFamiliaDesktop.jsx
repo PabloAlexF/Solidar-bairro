@@ -86,6 +86,23 @@ export default function CadastroFamiliaDesktop() {
     { label: "Transporte", icon: <Truck size={24} /> },
   ];
 
+  const isValidCPF = (cpf) => {
+    if (typeof cpf !== 'string') return false;
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
+    const cpfDigits = cpf.split('').map(el => +el);
+    const rest = (count) => (cpfDigits.slice(0, count - 12).reduce((soma, el, index) => soma + el * (count - index), 0) * 10) % 11 % 10;
+    return rest(10) === cpfDigits[9] && rest(11) === cpfDigits[10];
+  };
+
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { label: '', color: '#e2e8f0', width: '0%' };
+    const isValid = pass.length >= 6 && /[a-zA-Z]/.test(pass) && /\d/.test(pass);
+    if (!isValid) return { label: 'Fraca', color: '#ef4444', width: '33%' };
+    if (pass.length >= 8) return { label: 'Forte', color: '#10b981', width: '100%' };
+    return { label: 'Média', color: '#f59e0b', width: '66%' };
+  };
+
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
   
@@ -94,9 +111,9 @@ export default function CadastroFamiliaDesktop() {
       case 1:
         return formData.nomeCompleto.trim() && formData.dataNascimento && formData.estadoCivil && formData.profissao.trim();
       case 2:
-        return formData.cpf.trim() && formData.rg.trim() && formData.rendaFamiliar;
+        return isValidCPF(formData.cpf) && formData.rg.trim() && formData.rendaFamiliar;
       case 3:
-        return formData.telefone.trim() && formData.email.trim() && formData.password.length >= 6 && formData.password === formData.confirmPassword;
+        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim() && formData.password.length >= 6 && /[a-zA-Z]/.test(formData.password) && /\d/.test(formData.password) && formData.password === formData.confirmPassword;
       case 4:
         return formData.cep.replace(/\D/g, '').length === 8 &&
                formData.endereco.trim() !== '' &&
@@ -120,14 +137,14 @@ export default function CadastroFamiliaDesktop() {
         if (!formData.profissao.trim()) newErrors.profissao = true;
         break;
       case 2:
-        if (!formData.cpf.trim()) newErrors.cpf = true;
+        if (!isValidCPF(formData.cpf)) newErrors.cpf = true;
         if (!formData.rg.trim()) newErrors.rg = true;
         if (!formData.rendaFamiliar) newErrors.rendaFamiliar = true;
         break;
       case 3:
-        if (!formData.telefone.trim()) newErrors.telefone = true;
+        if (!formData.telefone.trim() || formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
         if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
-        if (formData.password.length < 6) newErrors.password = true;
+        if (formData.password.length < 6 || !/[a-zA-Z]/.test(formData.password) || !/\d/.test(formData.password)) newErrors.password = true;
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = true;
         break;
       case 4:
@@ -278,8 +295,8 @@ export default function CadastroFamiliaDesktop() {
       return;
     }
     
-    if (formData.password.length < 6) {
-      showToast('A senha deve ter pelo menos 6 caracteres', 'error');
+    if (formData.password.length < 6 || !/[a-zA-Z]/.test(formData.password) || !/\d/.test(formData.password)) {
+      showToast('A senha deve ter pelo menos 6 caracteres, letras e números', 'error');
       return;
     }
     
@@ -302,6 +319,8 @@ export default function CadastroFamiliaDesktop() {
       setIsLoading(false);
     }
   };
+
+  const strength = getPasswordStrength(formData.password);
 
   if (isSubmitted) {
     return (
@@ -610,6 +629,14 @@ export default function CadastroFamiliaDesktop() {
                     required
                     error={errors.password}
                   />
+                  {formData.password && (
+                    <div style={{ marginTop: '-10px', marginBottom: '15px', padding: '0 4px' }}>
+                      <div style={{ height: '4px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: strength.width, backgroundColor: strength.color, transition: 'all 0.3s ease' }} />
+                      </div>
+                      <span style={{ fontSize: '11px', color: strength.color, marginTop: '4px', display: 'block', textAlign: 'right', fontWeight: '600' }}>{strength.label}</span>
+                    </div>
+                  )}
                   <PasswordField 
                     label="Confirmar Senha"
                     placeholder="Digite a senha novamente"

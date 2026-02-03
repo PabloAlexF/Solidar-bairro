@@ -18,7 +18,7 @@ import PrecisoDeAjuda from '../pages/PrecisoDeAjuda';
 import AchadosEPerdidos from '../pages/AchadosEPerdidos';
 import Perfil from '../pages/Perfil';
 import Chat from '../pages/Chat';
-import PainelSocial from '../pages/PainelSocial/PainelSocial';
+import PainelSocial from '../pages/PainelSocial/PainelSocialWrapper';
 import DesignSystemDemo from '../pages/DesignSystemDemo';
 
 // Remaining pages (not yet refactored)

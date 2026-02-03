@@ -120,6 +120,23 @@ export default function CadastroFamiliaMobile() {
     { label: 'Idosos (60+)', icon: '👴', key: 'idosos' }
   ];
 
+  const isValidCPF = (cpf) => {
+    if (typeof cpf !== 'string') return false;
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
+    const cpfDigits = cpf.split('').map(el => +el);
+    const rest = (count) => (cpfDigits.slice(0, count - 12).reduce((soma, el, index) => soma + el * (count - index), 0) * 10) % 11 % 10;
+    return rest(10) === cpfDigits[9] && rest(11) === cpfDigits[10];
+  };
+
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { label: '', color: '#e2e8f0', width: '0%' };
+    const isValid = pass.length >= 6 && /[a-zA-Z]/.test(pass) && /\d/.test(pass);
+    if (!isValid) return { label: 'Fraca', color: '#ef4444', width: '33%' };
+    if (pass.length >= 8) return { label: 'Forte', color: '#10b981', width: '100%' };
+    return { label: 'Média', color: '#f59e0b', width: '66%' };
+  };
+
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
   
@@ -128,11 +145,11 @@ export default function CadastroFamiliaMobile() {
       case 1:
         return formData.nomeCompleto.trim() && formData.dataNascimento && formData.estadoCivil && formData.profissao.trim();
       case 2:
-        return formData.cpf.trim() && formData.rg.trim() && formData.rendaFamiliar;
+        return isValidCPF(formData.cpf) && formData.rg.trim() && formData.rendaFamiliar;
       case 3:
-        return formData.telefone.trim() && formData.horarioContato;
+        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim() && formData.senha && formData.senha.length >= 6 && /[a-zA-Z]/.test(formData.senha) && /\d/.test(formData.senha) && formData.senha === formData.confirmarSenha;
       case 4:
-        return (addressData.endereco.trim() || formData.endereco.trim()) && (addressData.bairro.trim() || formData.bairro.trim()) && formData.tipoMoradia;
+        return (addressData.endereco.trim() || formData.endereco.trim()) && (addressData.numero?.trim() || formData.numero?.trim()) && (addressData.bairro.trim() || formData.bairro.trim()) && formData.tipoMoradia;
       default:
         return true;
     }
@@ -148,13 +165,22 @@ export default function CadastroFamiliaMobile() {
         if (!formData.profissao.trim()) newErrors.profissao = true;
         break;
       case 2:
-        if (!formData.cpf.trim()) newErrors.cpf = true;
+        if (!isValidCPF(formData.cpf)) newErrors.cpf = true;
         if (!formData.rg.trim()) newErrors.rg = true;
         if (!formData.rendaFamiliar) newErrors.rendaFamiliar = true;
         break;
       case 3:
-        if (!formData.telefone.trim()) newErrors.telefone = true;
+        if (!formData.telefone.trim() || formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
         if (!formData.horarioContato) newErrors.horarioContato = true;
+        if (!formData.senha || formData.senha.length < 6 || !/[a-zA-Z]/.test(formData.senha) || !/\d/.test(formData.senha)) newErrors.senha = true;
+        if (formData.senha !== formData.confirmarSenha) newErrors.confirmarSenha = true;
+        break;
+      case 4:
+        if (!addressData.endereco && !formData.endereco) newErrors.endereco = true;
+        if (!addressData.numero && !formData.numero) newErrors.numero = true;
+        if (!addressData.bairro && !formData.bairro) newErrors.bairro = true;
+        if (!formData.tipoMoradia) newErrors.tipoMoradia = true;
         break;
     }
     return newErrors;
@@ -214,6 +240,7 @@ export default function CadastroFamiliaMobile() {
           bairro: bairro || '',
           cidade: localidade || '',
           estado: uf || '',
+          cep: result.data.cep || ''
         }));
       }
     }
@@ -303,12 +330,22 @@ export default function CadastroFamiliaMobile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (formData.senha !== formData.confirmarSenha) {
+      showToast('As senhas não coincidem', 'error');
+      setIsLoading(false);
+      return;
+    }
     
     try {
       const submitData = {
         ...formData,
         endereco: addressData.endereco || formData.endereco,
+        numero: addressData.numero || formData.numero,
         bairro: addressData.bairro || formData.bairro,
+        cidade: addressData.cidade || formData.cidade,
+        estado: addressData.estado || formData.estado,
+        cep: addressData.cep || formData.cep,
         pontoReferencia: addressData.referencia || formData.pontoReferencia,
         subQuestionAnswers: needDetails
       };
@@ -400,6 +437,8 @@ export default function CadastroFamiliaMobile() {
       { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
     );
   };
+
+  const strength = getPasswordStrength(formData.senha);
 
   if (isSubmitted) {
     return (
@@ -713,15 +752,17 @@ export default function CadastroFamiliaMobile() {
                     </div>
                     
                     <div className="fam-mob-input-group">
-                      <label className="fam-mob-input-label">E-mail (opcional)</label>
+                      <label className="fam-mob-input-label">E-mail <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="fam-mob-input-wrapper">
                         <Mail className="fam-mob-input-icon" />
                         <input 
                           type="email" 
                           className="fam-mob-form-input" 
                           placeholder="seu@email.com"
+                          style={errors.email ? { borderColor: '#ef4444' } : {}}
                           value={formData.email}
                           onChange={(e) => updateFormData('email', e.target.value)}
+                          required
                         />
                       </div>
                     </div>
@@ -753,6 +794,14 @@ export default function CadastroFamiliaMobile() {
                       value={formData.senha}
                       onChange={(e) => updateFormData('senha', e.target.value)}
                     />
+                    {formData.senha && (
+                      <div style={{ marginTop: '-10px', marginBottom: '15px', padding: '0 4px' }}>
+                        <div style={{ height: '4px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: strength.width, backgroundColor: strength.color, transition: 'all 0.3s ease' }} />
+                        </div>
+                        <span style={{ fontSize: '11px', color: strength.color, marginTop: '4px', display: 'block', textAlign: 'right', fontWeight: '600' }}>{strength.label}</span>
+                      </div>
+                    )}
                     
                     <PasswordField 
                       label="Confirmar Senha"
@@ -788,6 +837,26 @@ export default function CadastroFamiliaMobile() {
                           disabled={loadingCep}
                         />
                         {loadingCep && <div className="fam-mob-spinner" />}
+                      </div>
+                    </div>
+
+                    <div className="fam-mob-input-group">
+                      <label className="fam-mob-input-label">Número <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="fam-mob-input-wrapper">
+                        <MapPin className="fam-mob-input-icon" />
+                        <input
+                          type="text"
+                          className="fam-mob-form-input"
+                          style={errors.numero ? { borderColor: '#ef4444' } : {}}
+                          placeholder="Nº"
+                          value={addressData.numero || formData.numero || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setAddressData(prev => ({ ...prev, numero: val }));
+                            updateFormData('numero', val);
+                          }}
+                          required
+                        />
                       </div>
                     </div>
 
