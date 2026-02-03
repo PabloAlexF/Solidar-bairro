@@ -376,21 +376,15 @@ export default function DesktopLandingPage() {
   };
 
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
-  
+
   // Verificar se é administrador
-  const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
   const isAdmin = user?.role === 'admin' ||
                   user?.isAdmin ||
                   user?.tipo === 'admin' ||
-                  user?.email === 'admin@solidarbairro.com' ||
-                  storedUser?.role === 'admin' ||
-                  storedUser?.isAdmin ||
-                  storedUser?.tipo === 'admin' ||
-                  storedUser?.email === 'admin@solidarbairro.com';
+                  user?.email === 'admin@solidarbairro.com';
 
   console.log('=== ADMIN DEBUG ===');
   console.log('user:', user);
-  console.log('storedUser:', storedUser);
   console.log('isAdmin:', isAdmin);
   console.log('isAuthenticated():', isAuthenticated());
 

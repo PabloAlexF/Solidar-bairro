@@ -11,7 +11,7 @@ import './LandingHeader.css';
 
 const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastroButtons = false, showNavLinks = true }) => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   
   const {
     notifications,
@@ -31,17 +31,12 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
   });
 
   // Verificar se é administrador
-  const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
-  console.log('User data:', { user, storedUser }); // Debug
+  console.log('User data:', { user }); // Debug
 
   const isAdmin = user?.role === 'admin' ||
                   user?.isAdmin ||
                   user?.tipo === 'admin' ||
-                  user?.email === 'admin@solidarbairro.com' ||
-                  storedUser?.role === 'admin' ||
-                  storedUser?.isAdmin ||
-                  storedUser?.tipo === 'admin' ||
-                  storedUser?.email === 'admin@solidarbairro.com';
+                  user?.email === 'admin@solidarbairro.com';
 
   const showAdminButton = isAdmin;
 
@@ -217,26 +212,47 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
             </>
           )}
 
-          {showCadastroButtons ? (
-            <button
-              className="cadastro-login-btn"
-              onClick={() => navigate('/login')}
-              style={{
-                background: 'linear-gradient(135deg, #64748b, #475569)',
-                border: 'none',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
-              onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-            >
-              Entrar
-            </button>
-          ) : (isAuthenticated() || showPanelButtons) ? (
+          {!isAuthenticated() ? (
+            <div className="auth-buttons">
+              <button
+                className="login-btn"
+                onClick={() => navigate('/login')}
+                style={{
+                  background: 'linear-gradient(135deg, #64748b, #475569)',
+                  border: 'none',
+                  color: 'white',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  marginRight: '8px'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                Entrar
+              </button>
+              <button
+                className="register-btn"
+                onClick={() => navigate('/cadastro')}
+                style={{
+                  background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+                  border: 'none',
+                  color: 'white',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+              >
+                Cadastrar
+              </button>
+            </div>
+          ) : isAuthenticated() ? (
             <>
               {showAdminButton && (
                 <>
@@ -443,9 +459,15 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
 
                       <button
                         className="menu-item logout-btn"
-                        onClick={() => {
-                          localStorage.removeItem('solidar-user');
-                          window.location.reload();
+                        onClick={async () => {
+                          try {
+                            await logout();
+                            navigate('/');
+                          } catch (error) {
+                            console.error('Erro ao fazer logout:', error);
+                            // Mesmo com erro, redirecionar
+                            navigate('/');
+                          }
                         }}
                       >
                         🚪 Sair
