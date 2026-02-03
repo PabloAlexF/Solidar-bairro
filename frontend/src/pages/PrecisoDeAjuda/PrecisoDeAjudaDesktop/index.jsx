@@ -44,7 +44,8 @@ import {
   ListChecks,
   X,
   Minus,
-  Quote
+  Quote,
+  Save
 } from 'lucide-react';
 import './styles.css';
 
@@ -427,6 +428,35 @@ const validateRequiredFields = (formData) => {
 const Tooltip = ({ children, content, className = "" }) => {
   const [isVisible, setIsVisible] = useState(false);
 
+  useEffect(() => {
+    if (isVisible) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          // Som sutil de "pop"
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.08);
+          
+          gain.gain.setValueAtTime(0.05, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+          
+          osc.start();
+          osc.stop(ctx.currentTime + 0.08);
+        }
+      } catch (e) {
+        // Ignorar erros de áudio
+      }
+    }
+  }, [isVisible]);
+
   return (
     <div 
       className={`relative ${className}`}
@@ -441,10 +471,10 @@ const Tooltip = ({ children, content, className = "" }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 p-3 bg-slate-800/90 backdrop-blur-sm text-white text-xs font-medium rounded-xl shadow-xl z-50 text-center pointer-events-none border border-white/10"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 p-3 bg-slate-900 text-slate-50 text-xs font-medium rounded-xl shadow-2xl z-[10000] text-center pointer-events-none border border-slate-700 leading-relaxed"
           >
             {content}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-800/90" />
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -459,13 +489,13 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
   const hasIssues = specificIssues && specificIssues.length > 0;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-lg p-4">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/75 backdrop-blur-md p-4">
       <motion.div 
         initial={{ scale: 0.8, opacity: 0, y: 50 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.8, opacity: 0, y: 50 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-white/95 backdrop-blur-sm rounded-[32px] p-8 w-full max-w-5xl shadow-2xl border border-white/20 relative max-h-[90vh] flex flex-col"
+        className="bg-white rounded-[32px] p-8 w-full max-w-5xl shadow-2xl border border-slate-100 relative max-h-[90vh] flex flex-col"
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
@@ -512,7 +542,7 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className={`relative z-10 w-full ${hasIssues ? '' : 'max-w-2xl'}`}
+                  className={`relative z-20 w-full ${hasIssues ? '' : 'max-w-2xl'}`}
                 >
                   <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 h-full">
                     <h3 className="font-black text-slate-900 text-sm uppercase tracking-wider mb-6 flex items-center gap-2">
@@ -927,6 +957,7 @@ export default function PDAForm() {
   const [showItemModal, setShowItemModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [pendingCategory, setPendingCategory] = useState(null);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
   
   const [isPublished, setIsPublished] = useState(false);
     
@@ -945,6 +976,36 @@ export default function PDAForm() {
     state: '',
     neighborhood: ''
   });
+
+  // Load draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('solidar-pda-draft');
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed.formData) {
+          setFormData(prev => ({ ...prev, ...parsed.formData }));
+        }
+        if (parsed.step) {
+          setStep(parsed.step);
+        }
+      } catch (e) {
+        console.error('Erro ao carregar rascunho:', e);
+      }
+    }
+  }, []);
+
+  // Save draft on change
+  useEffect(() => {
+    if (!isPublished) {
+      const timeoutId = setTimeout(() => {
+        localStorage.setItem('solidar-pda-draft', JSON.stringify({ formData, step }));
+        setShowDraftSaved(true);
+        setTimeout(() => setShowDraftSaved(false), 2000);
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [formData, step, isPublished]);
 
   const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
   const [formRef, formInView] = useInView({ threshold: 0.1, triggerOnce: true });
@@ -1063,6 +1124,9 @@ export default function PDAForm() {
       const finalAnalysis = SmartValidator.performCompleteAnalysis(formData);
       setValidationResult(finalAnalysis);
       
+      // Limpar rascunho
+      localStorage.removeItem('solidar-pda-draft');
+
       // Show success
       setIsPublished(true);
       
@@ -1089,37 +1153,16 @@ export default function PDAForm() {
   }, [formData, stages.length]);
 
   const handleRetryValidation = () => {
-    const currentValidationResult = validationResult;
-    
     setShowValidationModal(false);
     setValidationResult(null);
     
-    // Navigate based on specific issues
-    if (currentValidationResult?.specificIssues?.length > 0) {
-      const mainProblem = currentValidationResult.specificIssues[0];
-      
-      if (mainProblem.field === 'category' || mainProblem.type.includes('Categoria')) {
-        setStep(1);
-      } else if (mainProblem.field === 'Descrição' || mainProblem.field === 'description') {
-        setStep(3);
-      } else if (mainProblem.field.includes('Urgência') || mainProblem.type.includes('Urgência')) {
-        setStep(4);
-      } else {
-        setStep(3); // Default to description
-      }
-    } else if (currentValidationResult?.suggestions?.length > 0) {
-      const mainProblem = currentValidationResult.suggestions[0];
-      
-      if (mainProblem.type === 'description' || mainProblem.action === 'Melhorar descrição') {
-        setStep(3);
-      } else if (mainProblem.type === 'category') {
-        setStep(1);
-      } else if (mainProblem.type === 'urgency') {
-        setStep(4);
-      } else {
-        setStep(3);
-      }
-    }
+    // Levar para o passo 2 (Itens) para revisão geral
+    setStep(2);
+
+    // Scroll to top to ensure visibility
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const handleForcePublish = async () => {
@@ -1154,6 +1197,7 @@ export default function PDAForm() {
         StatsManager.registerPedidoCriado(user.uid || user.id, pedidoData);
       }
       
+      localStorage.removeItem('solidar-pda-draft');
       setIsPublished(true);
     } catch (error) {
       console.error('❌ Erro ao forçar publicação:', error);
@@ -2008,6 +2052,22 @@ export default function PDAForm() {
           onClose={() => window.location.href = '/'}
         />
       )}
+
+      <AnimatePresence>
+        {showDraftSaved && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, x: 20 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: 20, x: 20 }}
+            className="fixed bottom-24 right-6 md:bottom-8 md:right-8 z-50 bg-white/90 backdrop-blur-md border border-slate-200 shadow-xl px-4 py-2.5 rounded-full flex items-center gap-2.5 pointer-events-none"
+          >
+            <div className="bg-emerald-100 p-1.5 rounded-full">
+              <Save size={14} className="text-emerald-600" />
+            </div>
+            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Rascunho salvo</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="pda-main-wrapper" style={{ paddingTop: '20px' }}>
         <div className="content-section" ref={formRef}>
