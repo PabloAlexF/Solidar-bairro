@@ -42,7 +42,8 @@ import {
   Trash2,
   Edit2,
   ListChecks,
-  X
+  X,
+  Minus
 } from 'lucide-react';
 import './styles.css';
 
@@ -479,7 +480,7 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
           >
             <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
               <h3 className="font-black text-slate-900 text-sm mb-4">Análise Detalhada</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="flex flex-wrap gap-4">
                 <div className="text-center">
                   <div className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center ${
                     validationResult.scores.category >= 70 ? 'bg-green-100 text-green-600' :
@@ -525,7 +526,7 @@ const ValidationModal = ({ isOpen, onClose, validationResult, onRetry, onForcePu
                 <AlertTriangle size={18} className="text-red-600" />
                 <h3 className="font-black text-slate-900 text-sm">Problemas Específicos Encontrados</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="flex flex-wrap gap-4">
                 {specificIssues.map((issue, index) => (
                   <motion.div 
                     key={index}
@@ -736,17 +737,15 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
                     onClick={() => toggleOption(opt)}
                     className={`group pda-option-btn ${
                       isSelected
-                        ? 'bg-white shadow-md ring-1 ring-inset'
+                        ? 'bg-[var(--hover-bg)] text-[var(--active-color)]'
                         : 'bg-slate-50 text-slate-600 hover:bg-[var(--hover-bg)] hover:text-[var(--active-color)]'
                     }`}
                     style={{
                       '--hover-bg': `${categoryColor}15`,
                       '--active-color': categoryColor,
                       ...(isSelected ? {
-                        backgroundColor: `${categoryColor}10`, // 10% opacity background
-                        '--tw-ring-color': categoryColor,
-                        color: categoryColor,
-                        boxShadow: `0 4px 12px ${categoryColor}25`
+                        backgroundColor: `${categoryColor}15`, // 15% opacity background
+                        color: categoryColor
                       } : {})
                     }}
                   >
@@ -1271,7 +1270,7 @@ export default function PDAForm() {
                 <h2 className="text-4xl md:text-5xl font-black text-slate-800 mb-4 tracking-tight">Qual tipo de ajuda você precisa?</h2>
                 <p className="text-xl text-slate-500 font-medium">Escolha a categoria que melhor descreve sua necessidade.</p>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <div className="flex flex-wrap justify-center gap-6">
                 {CATEGORIES.map((cat, index) => (
                   <motion.button
                     key={cat.id}
@@ -1324,7 +1323,7 @@ export default function PDAForm() {
               </div>
 
               {currentSubcategories.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+                <div className="flex flex-wrap justify-center gap-6 mb-12">
                   {currentSubcategories.map((sub) => {
                     const isSelected = formData.items.some(i => i.id === sub.id);
                     return (
@@ -1384,7 +1383,7 @@ export default function PDAForm() {
                   <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-3">
                     <ListChecks size={20} /> Itens Configurados
                   </h3>
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="flex flex-col gap-4">
                     {formData.items.map((item, idx) => (
                       <div 
                         key={idx} 
@@ -1456,8 +1455,8 @@ export default function PDAForm() {
                 <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">Conte sua história</h2>
                 <p className="text-lg text-slate-500">Sua descrição ajuda as pessoas a entenderem como podem ser úteis.</p>
               </div>
-              <div className="description-grid grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div>
+              <div className="description-container flex flex-row gap-8">
+                <div className="flex-[3]">
                   <div className="bg-white rounded-[32px] p-8 shadow-lg transition-shadow hover:shadow-xl border-0">
                     <div className="flex justify-between items-center mb-6">
                       <div className="flex items-center gap-3 text-rose-500 font-extrabold text-xl">
@@ -1514,7 +1513,7 @@ export default function PDAForm() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-[32px] p-8 shadow-lg h-fit">
+                <div className="flex-1 bg-white rounded-[32px] p-8 shadow-lg h-fit">
                   <div className="flex items-center gap-3 mb-6">
                     <Lightbulb size={24} className="text-amber-500" />
                     <span className="text-lg font-bold text-slate-800">Dicas importantes</span>
@@ -1605,7 +1604,7 @@ export default function PDAForm() {
                 <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">Qual a urgência?</h2>
                 <p className="text-lg text-slate-500">Isso ajuda a priorizar casos críticos.</p>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="flex flex-wrap justify-center gap-8">
                 {URGENCY_OPTIONS.map((opt, index) => (
                   <motion.button
                     key={opt.id}
@@ -1638,61 +1637,171 @@ export default function PDAForm() {
       case 5:
         return (
           <motion.div className="form-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <div className="max-w-5xl mx-auto px-6 py-8">
-              <div className="text-center mb-16">
+            <div className="visibility-step-container">
+              <div className="text-center mb-6">
                 <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-4">Quem deve ver seu pedido?</h2>
                 <p className="text-lg text-slate-500">Defina o alcance para notificar pessoas próximas.</p>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                <div className="grid grid-cols-1 gap-6 content-start">
-                  {VISIBILITY_OPTIONS.map((opt, index) => {
-                    const isActive = formData.visibility.includes(opt.id);
-                    return (
-                      <motion.button
-                        key={opt.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.1 }}
-                        onClick={() => {
-                          const newRadius = opt.id === 'bairro' ? 2 : opt.id === 'proximos' ? 10 : opt.id === 'todos' ? 50 : 5;
-                          updateData({ 
-                            visibility: formData.visibility.includes(opt.id) 
-                              ? formData.visibility.filter(i => i !== opt.id)
-                              : [...formData.visibility, opt.id],
-                            radius: newRadius
-                          });
-                        }}
-                        className={`relative flex items-center gap-6 p-8 rounded-[32px] transition-all duration-300 bg-white border-0 text-left group ${
-                          isActive 
-                            ? 'shadow-xl ring-4 ring-offset-2' 
-                            : 'shadow-lg hover:shadow-2xl hover:-translate-y-1'
-                        }`}
-                        style={{ '--vis-color': opt.color, '--vis-rgb': opt.rgb }}
-                      >
-                        <div className="p-4 rounded-2xl bg-slate-50 group-hover:bg-white transition-colors shadow-sm">
-                          <opt.icon size={28} color={opt.color} />
-                        </div>
-                        <div className="flex-1">
-                          <strong className="block text-xl font-bold text-slate-800 mb-1">{opt.label}</strong>
-                          <p className="text-slate-500">{opt.desc}</p>
-                        </div>
-                        {isActive && <Check size={24} className="ml-auto text-green-500" />}
-                      </motion.button>
-                    );
-                  })}
-                </div>
-                <div className="bg-white rounded-[40px] shadow-2xl overflow-hidden border-0 h-full min-h-[400px] flex flex-col">
-                  <div className="flex-1 bg-slate-100 relative flex items-center justify-center p-8">
-                    <div className="text-center">
-                      <MapPin size={48} className="text-blue-500 animate-bounce" />
-                      <span className="block mt-4 font-black text-slate-800 text-xl">{formData.locationString}</span>
-                      <p className="text-base text-slate-500 mt-2">Sua localização para encontrar ajuda próxima.</p>
+              
+              <div className="visibility-flex-container">
+                <div className="visibility-options-side">
+                  <div className="bg-white rounded-[32px] p-6 shadow-xl h-full flex flex-col justify-center overflow-y-auto">
+                    <h3 className="text-lg font-bold text-slate-400 uppercase tracking-wider mb-6 ml-2">Opções de Visibilidade</h3>
+                    <div className="space-y-4">
+                      {VISIBILITY_OPTIONS.map((opt, index) => {
+                        const isActive = formData.visibility.includes(opt.id);
+                        return (
+                          <motion.button
+                            key={opt.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            onClick={() => {
+                              const newRadius = opt.id === 'bairro' ? 2 : opt.id === 'proximos' ? 10 : opt.id === 'todos' ? 50 : 5;
+                              updateData({
+                                visibility: formData.visibility.includes(opt.id)
+                                  ? formData.visibility.filter(i => i !== opt.id)
+                                  : [...formData.visibility, opt.id],
+                                radius: newRadius
+                              });
+                            }}
+                            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-200 border-2 text-left group relative overflow-hidden ${
+                              isActive
+                                ? 'bg-slate-50 border-blue-500 shadow-md'
+                                : 'bg-white border-slate-100 hover:border-blue-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                              isActive ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:text-blue-500 group-hover:bg-blue-50'
+                            }`}>
+                              <opt.icon size={24} />
+                            </div>
+                            <div className="flex-1 z-10">
+                              <strong className={`block text-base font-bold mb-0.5 ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>{opt.label}</strong>
+                              <p className="text-sm text-slate-500">{opt.desc}</p>
+                            </div>
+                            {isActive && (
+                              <motion.div 
+                                initial={{ scale: 0 }} 
+                                animate={{ scale: 1 }}
+                                className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-sm"
+                              >
+                                <Check size={14} strokeWidth={3} />
+                              </motion.div>
+                            )}
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="p-8 bg-white border-t border-slate-100">
-                    <p className="text-sm font-black text-blue-700 flex items-center gap-2">
-                      <Globe size={16} /> Alcance selecionado: {formData.radius}km
-                    </p>
+                </div>
+
+                <div className="visibility-map-side">
+                  <div className="bg-slate-900 rounded-[40px] shadow-2xl overflow-hidden border-0 h-full min-h-[400px] lg:min-h-0 flex flex-col relative text-white group">
+                    {/* Map Background Effect - Enhanced */}
+                    <div className="absolute inset-0 opacity-30">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-600/20 via-slate-900/60 to-slate-900"></div>
+                        <div className="map-grid-pattern absolute inset-0"></div>
+                    </div>
+
+                    <div className="flex-1 relative flex items-center justify-center p-8 overflow-hidden">
+                      {/* Radius Circles Animation - Dynamic based on radius */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                         {/* Multiple rings for radar effect */}
+                         {[1, 2, 3].map(i => (
+                             <motion.div 
+                                key={i}
+                                animate={{ 
+                                    scale: [1, 1.1, 1],
+                                    opacity: [0.1, 0.2, 0.1],
+                                }}
+                                transition={{ duration: 4, delay: i * 1.5, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute rounded-full border border-blue-500/20"
+                                style={{
+                                    width: `${Math.min(formData.radius * 15 + (i * 80), 400)}px`,
+                                    height: `${Math.min(formData.radius * 15 + (i * 80), 400)}px`,
+                                }}
+                             />
+                         ))}
+                         
+                         {/* Active Radius Circle */}
+                         <motion.div 
+                            animate={{ 
+                                width: `${Math.min(Math.max(formData.radius * 20, 120), 380)}px`,
+                                height: `${Math.min(Math.max(formData.radius * 20, 120), 380)}px`,
+                                borderColor: ['rgba(59, 130, 246, 0.3)', 'rgba(59, 130, 246, 0.6)', 'rgba(59, 130, 246, 0.3)']
+                            }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                            className="absolute rounded-full border-2 border-dashed border-blue-400/50 bg-blue-500/5 backdrop-blur-[1px]"
+                         />
+                      </div>
+
+                      <div className="relative z-10 text-center">
+                        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full shadow-[0_0_50px_-10px_rgba(59,130,246,0.6)] flex items-center justify-center mx-auto mb-6 relative z-20 ring-4 ring-slate-900/50">
+                           <MapPin size={32} className="text-white drop-shadow-md" />
+                           <div className="absolute inset-0 rounded-full border-2 border-white/20 animate-pulse"></div>
+                        </div>
+                        
+                        <div className="bg-slate-900/80 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 shadow-xl inline-block max-w-[280px]">
+                             <h4 className="font-bold text-white text-lg leading-tight truncate">{formData.locationString.split(',')[0]}</h4>
+                             <p className="text-blue-300 text-xs mt-1 font-medium">{formData.city || 'Localização Atual'}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Controls Section */}
+                    <div className="p-6 bg-slate-800/80 backdrop-blur-md border-t border-white/10 relative z-30">
+                      <div className="flex items-center justify-between mb-6">
+                          <div>
+                              <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1">Raio de Alcance</p>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-black text-white tracking-tight">{formData.radius}</span>
+                                <span className="text-sm font-bold text-slate-400">km</span>
+                              </div>
+                          </div>
+                          <div className="text-right">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Estimativa</p>
+                              <div className="flex items-center justify-end gap-1.5 text-emerald-400 text-sm font-bold bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20">
+                                <Users size={14} />
+                                <span>~{Math.floor(formData.radius * 150)} pessoas</span>
+                              </div>
+                          </div>
+                      </div>
+                      
+                      {/* Slider Control */}
+                      <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => updateData({ radius: Math.max(1, formData.radius - 1) })}
+                            className="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center transition-colors border border-white/5 active:scale-95"
+                          >
+                            <Minus size={18} />
+                          </button>
+                          
+                          <div className="flex-1 relative h-12 flex items-center">
+                             <input 
+                                type="range" 
+                                min="1" 
+                                max="50" 
+                                step="1"
+                                value={formData.radius}
+                                onChange={(e) => updateData({ radius: parseInt(e.target.value) })}
+                                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500 relative z-10"
+                             />
+                             <div className="absolute inset-0 flex justify-between items-center px-1 pointer-events-none opacity-30 text-[10px] font-bold text-slate-400 mt-6">
+                                 <span>1km</span>
+                                 <span>25km</span>
+                                 <span>50km</span>
+                             </div>
+                          </div>
+
+                          <button 
+                            onClick={() => updateData({ radius: Math.min(50, formData.radius + 1) })}
+                            className="w-10 h-10 rounded-xl bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center transition-colors border border-white/5 active:scale-95"
+                          >
+                            <Plus size={18} />
+                          </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1738,7 +1847,7 @@ export default function PDAForm() {
                   "{formData.description}"
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+                <div className="flex flex-wrap gap-8 mt-12">
                   <div className="p-8 rounded-[32px] bg-slate-50 border-0 flex items-center gap-6">
                     <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
                       <Eye size={28} />
