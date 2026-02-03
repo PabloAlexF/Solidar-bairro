@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  User, 
-  MapPin, 
-  Calendar, 
-  Award, 
-  ShieldCheck, 
-  Pencil, 
-  Lock, 
+import {
+  User,
+  MapPin,
+  Calendar,
+  Award,
+  ShieldCheck,
+  Pencil,
+  Lock,
   Smartphone,
   CheckCircle2,
   ArrowRight,
@@ -34,6 +34,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { StatsManager } from '../../utils/statsManager';
 import apiService from '../../services/apiService';
+import LandingHeader from '../../components/layout/LandingHeader';
 import ProfileMobile from './ProfileMobile';
 import './profile.css';
 
@@ -315,104 +316,7 @@ const ProfileComponent = () => {
         </div>
       )}
       {/* Profile Header */}
-      <nav className="landing-nav scrolled">
-        <div className="section-container nav-container">
-          <div className="logo-wrapper" onClick={() => navigate('/')}>
-            <div className="logo-icon">
-              <Heart fill="white" size={24} />
-            </div>
-            <span className="logo-text">Solidar<span className="logo-accent">Bairro</span></span>
-          </div>
-          
-          <div className="nav-menu">
-            {(user?.role === 'admin' || user?.isAdmin || user?.tipo === 'admin' || user?.email === 'admin@solidarbairro.com') && (
-              <>
-                <button onClick={() => navigate('/painel-social')} title="Painel Social" className="panel-icon-button">
-                  <Globe size={20} />
-                </button>
-                <button onClick={() => navigate('/admin')} title="Painel Admin" className="panel-icon-button admin">
-                  <Settings size={20} />
-                </button>
-              </>
-            )}
-            
-            <button className="notification-btn" onClick={() => setShowNotifications(!showNotifications)}>
-              <Bell size={24} />
-              {getUnreadCount() > 0 && <span className="notification-badge">{getUnreadCount()}</span>}
-            </button>
-            
-            {showNotifications && (
-              <div className="notification-dropdown">
-                <div className="notification-header">
-                  <h3>Notificações</h3>
-                  {notifications.length > 0 && (
-                    <div className="notification-actions">
-                      {getUnreadCount() > 0 && <button className="action-btn" onClick={markAllAsRead}>✓</button>}
-                      <button className="action-btn" onClick={clearNotifications}>🗑️</button>
-                    </div>
-                  )}
-                </div>
-                <div className="notification-list">
-                  {notifications.length === 0 ? (
-                    <div className="no-notifications">Nenhuma notificação ainda</div>
-                  ) : (
-                    notifications.map((notification) => (
-                      <div key={notification.id} className={`notification-item ${notification.read ? 'read' : 'unread'}`} onClick={() => markAsRead(notification.id)}>
-                        <div className="notification-content">
-                          <div className="notification-icon">{notification.type === 'chat' ? '💬' : '🔔'}</div>
-                          <div className="notification-text">
-                            <p className="notification-title">{notification.title}</p>
-                            <p className="notification-message">{notification.message}</p>
-                          </div>
-                        </div>
-                        {!notification.read && <div className="unread-dot"></div>}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-            
-            <div className="user-menu-wrapper">
-              <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
-                <div className="user-avatar">
-                  {user?.fotoPerfil ? (
-                    <img src={user.fotoPerfil} alt="Perfil" className="avatar-image" />
-                  ) : (
-                    (user?.nome || user?.nomeCompleto || 'U')?.substring(0, 2).toUpperCase()
-                  )}
-                </div>
-              </button>
-              
-              {showUserMenu && (
-                <div className="user-dropdown">
-                  <div className="user-info">
-                    <div className="user-avatar-large">
-                      {user?.fotoPerfil ? (
-                        <img src={user.fotoPerfil} alt="Perfil" className="avatar-image-large" />
-                      ) : (
-                        (user?.nome || user?.nomeCompleto || 'U')?.substring(0, 2).toUpperCase()
-                      )}
-                    </div>
-                    <div className="user-details">
-                      <div className="user-name">{user?.nome || user?.nomeCompleto || 'Usuário'}</div>
-                      <div className="user-phone">{user?.telefone || user?.email}</div>
-                    </div>
-                  </div>
-                  <div className="user-actions">
-                    <button className="menu-item" onClick={() => { navigate('/perfil'); setShowUserMenu(false); }}>👤 Ver perfil</button>
-                    <button className="menu-item" onClick={() => { navigate('/conversas'); setShowUserMenu(false); }}>💬 Minhas conversas</button>
-                    {(user?.role === 'admin' || user?.isAdmin || user?.tipo === 'admin' || user?.email === 'admin@solidarbairro.com') && (
-                      <button className="menu-item admin-btn" onClick={() => { navigate('/admin'); setShowUserMenu(false); }}>⚙️ Dashboard Admin</button>
-                    )}
-                    <button className="menu-item logout-btn" onClick={() => { localStorage.removeItem('solidar-user'); window.location.reload(); }}>🚪 Sair</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <LandingHeader scrolled={true} showPanelButtons={true} showNavLinks={false} />
       
       <div style={{ height: '80px' }}></div>
       

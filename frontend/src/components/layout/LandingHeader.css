@@ -599,13 +599,7 @@
 }
 
 
-/* Panel buttons positioning */
-.panel-buttons-container {
-  position: absolute;
-  right: 420px;
-  display: flex;
-  gap: 10px;
-}
+
 
 .panel-icon-button {
   background: linear-gradient(135deg, #10b981, #059669);

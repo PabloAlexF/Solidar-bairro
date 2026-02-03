@@ -12,6 +12,7 @@ import GlobeFeatureSection from './GlobeFeatureSection';
 import ApiService from '../../services/apiService';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
 import Footer from '../../components/layout/Footer';
+import LandingHeader from '../../components/layout/LandingHeader';
 import {
   Heart,
   HandHelping,
@@ -34,7 +35,8 @@ import {
   Copy,
   Share2,
   Settings,
-  Shield
+  Shield,
+  Globe
 } from 'lucide-react';
 
 import marca from '../../assets/images/marca.png';
@@ -96,7 +98,7 @@ const ActionCard = ({
   );
 };
 
-const Globe = () => {
+const GlobeVisualization = () => {
   const canvasRef = useRef(null);
   const globeRef = useRef(null);
   const [globeError, setGlobeError] = useState(false);
@@ -377,241 +379,31 @@ export default function DesktopLandingPage() {
   
   // Verificar se é administrador
   const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
-  const isAdmin = user?.role === 'admin' || 
-                  user?.isAdmin || 
-                  user?.tipo === 'admin' || 
+  const isAdmin = user?.role === 'admin' ||
+                  user?.isAdmin ||
+                  user?.tipo === 'admin' ||
                   user?.email === 'admin@solidarbairro.com' ||
-                  storedUser?.role === 'admin' || 
-                  storedUser?.isAdmin || 
+                  storedUser?.role === 'admin' ||
+                  storedUser?.isAdmin ||
                   storedUser?.tipo === 'admin' ||
                   storedUser?.email === 'admin@solidarbairro.com';
+
+  console.log('=== ADMIN DEBUG ===');
+  console.log('user:', user);
+  console.log('storedUser:', storedUser);
+  console.log('isAdmin:', isAdmin);
+  console.log('isAuthenticated():', isAuthenticated());
 
   return (
     <div className="landing-wrapper">
       <div className="bg-mesh" />
 
-      <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
-        <div className={`section-container nav-container`}>
-          <div className="logo-wrapper" onClick={() => navigateToTop('/')}>
-            <div className="logo-icon" style={{ width: '48px', height: '48px', position: 'relative', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-            </div>
-            <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
-          </div>
-          
-          <div className="nav-menu">
-            <a href="#action-cards" className="nav-link">
-              Plataforma
-              <span className="link-underline" />
-            </a>
-            <a href="#features" className="nav-link">
-              Recursos
-              <span className="link-underline" />
-            </a>
-            <a href="#about" className="nav-link">
-              Sobre
-              <span className="link-underline" />
-            </a>
-
-            <NotificationDropdown />
-
-            {!isAuthenticated() ? (
-              <div className="auth-group">
-                <button
-                  className="auth-btn-login"
-                  onClick={() => navigateToTop('/login')}
-                >
-                  Entrar
-                </button>
-                <button
-                  className="auth-btn-register"
-                  onClick={() => navigateToTop('/cadastro')}
-                >
-                  Cadastrar
-                </button>
-              </div>
-            ) : (
-              <div className="user-section">
-                {isAdmin && (
-                  <>
-                    <button
-                      className="admin-dashboard-btn"
-                      onClick={() => navigateToTop('/admin')}
-                      title="Dashboard Admin"
-                      style={{
-                        background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                        border: 'none',
-                        color: 'white',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
-                        marginRight: '0.5rem'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.4)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.3)';
-                      }}
-                    >
-                      <Settings size={20} />
-                    </button>
-                    <button
-                      className="admin-dashboard-btn"
-                      onClick={() => navigateToTop('/painel-social')}
-                      title="Painel Social"
-                      style={{
-                        background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
-                        border: 'none',
-                        color: 'white',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
-                        marginRight: '1rem'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 6px 20px rgba(13, 148, 136, 0.4)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 4px 12px rgba(13, 148, 136, 0.3)';
-                      }}
-                    >
-                      <Shield size={20} />
-                    </button>
-                  </>
-                )}
-
-                <div className="user-menu-wrapper">
-                  <button
-                    className="user-btn"
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                  >
-                    <div className="user-avatar">
-                      {user?.fotoPerfil ? (
-                        <img
-                          src={user.fotoPerfil}
-                          alt="Foto do perfil"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                          onError={(e) => {
-                            console.log('Erro ao carregar imagem:', user.fotoPerfil);
-                            e.target.style.display = 'none';
-                            e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
-                          }}
-                        />
-                      ) : (
-                        userName?.substring(0, 2).toUpperCase()
-                      )}
-                    </div>
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="user-dropdown">
-                      <div className="user-info">
-                        <div className="user-avatar-large">
-                          {user?.fotoPerfil ? (
-                            <img
-                              src={user.fotoPerfil}
-                              alt="Foto do perfil"
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                              onError={(e) => {
-                                console.log('Erro ao carregar imagem grande:', user.fotoPerfil);
-                                e.target.style.display = 'none';
-                                e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
-                              }}
-                            />
-                          ) : (
-                            userName?.substring(0, 2).toUpperCase()
-                          )}
-                        </div>
-                        <div className="user-details">
-                          <div className="user-name">
-                            {userName}
-                            {user?.isVerified && (
-                              <span className="verified-text">Verificado</span>
-                            )}
-                          </div>
-                          <div className="user-phone">{user?.phone || user?.telefone || user?.email}</div>
-                        </div>
-                      </div>
-
-                      <div className="user-stats">
-                        <div className="stat">
-                          <div className="stat-number">{userStats.helpedCount}</div>
-                          <div className="stat-label">Pessoas ajudadas</div>
-                        </div>
-                        <div className="stat">
-                          <div className="stat-number">{userStats.receivedHelpCount}</div>
-                          <div className="stat-label">Ajudas recebidas</div>
-                        </div>
-                      </div>
-
-                      <div className="user-actions">
-                        <button
-                          className="menu-item profile-btn"
-                          onClick={() => {
-                            navigate('/perfil');
-                            setShowUserMenu(false);
-                          }}
-                        >
-                          👤 Ver perfil
-                        </button>
-
-                        <button
-                          className="menu-item"
-                          onClick={() => {
-                            navigate('/conversas');
-                            setShowUserMenu(false);
-                          }}
-                        >
-                          💬 Minhas conversas
-                        </button>
-
-                        {isAdmin && (
-                          <button
-                            className="menu-item"
-                            onClick={() => {
-                              navigate('/admin');
-                              setShowUserMenu(false);
-                            }}
-                          >
-                            ⚙️ Dashboard Admin
-                          </button>
-                        )}
-
-                        <button
-                          className="menu-item logout-btn"
-                          onClick={() => {
-                            localStorage.removeItem('solidar-user');
-                            window.location.reload();
-                          }}
-                        >
-                          🚪 Sair
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
+      <LandingHeader
+        scrolled={scrolled}
+        showPanelButtons={true}
+        showCadastroButtons={false}
+        showNavLinks={true}
+      />
 
       {/* Hero Section */}
       <header className="hero-section" ref={heroRef} style={{

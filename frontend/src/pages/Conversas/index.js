@@ -88,11 +88,13 @@ const Conversas = () => {
           const otherParticipant = conv.otherParticipant || {};
           const lastMessage = conv.lastMessage || {};
           
-          // Garantir que sempre temos um nome válido
-          let userName = 'Usuário';
-          if (otherParticipant.nome && otherParticipant.nome.trim()) {
-            userName = otherParticipant.nome;
-          }
+              // Garantir que sempre temos um nome válido
+              let userName = 'Usuário';
+              if (otherParticipant.nome && otherParticipant.nome.trim()) {
+                userName = otherParticipant.nome.split(' ')[0]; // Abrevia para o primeiro nome
+              } else if (otherParticipant.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+                userName = otherParticipant.nomeCompleto.split(' ')[0]; // Abrevia para o primeiro nome
+              }
           
           return {
             id: conv.id,
@@ -172,8 +174,10 @@ const Conversas = () => {
 
               // Garantir que sempre temos um nome válido
               let userName = 'Usuário';
-              if (otherParticipant.nome && otherParticipant.nome.trim()) {
-                userName = otherParticipant.nome;
+              if (otherParticipant.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+                userName = otherParticipant.nomeCompleto.split(' ')[0]; // Abrevia para o primeiro nome
+              } else if (otherParticipant.nome && otherParticipant.nome.trim()) {
+                userName = otherParticipant.nome.split(' ')[0]; // Abrevia para o primeiro nome
               }
 
               return {
@@ -353,7 +357,7 @@ const Conversas = () => {
                 <div className="profile-avatar-large">
                   {user?.nome ? user.nome.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <h3>{user?.nome || 'Usuário'}</h3>
+                <h3>{user?.nomeCompleto ? user.nomeCompleto.split(' ')[0] : 'Usuário'}</h3>
                 <div className="profile-rank">
                   <Star size={14} fill="#10b981" /> Nível 3 • Solidário
                 </div>

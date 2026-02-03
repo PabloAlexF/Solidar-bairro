@@ -264,7 +264,7 @@
 }
 
 /* Main Chat Area */
-.chat-main-area {
+.chat-main-content {
   flex: 1;
   display: flex;
   flex-direction: column;

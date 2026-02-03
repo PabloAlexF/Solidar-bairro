@@ -9,23 +9,19 @@ import ApiService from '../../services/apiService';
 import apiService from '../../services/apiService';
 import './LandingHeader.css';
 
-const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastroButtons = false }) => {
+const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastroButtons = false, showNavLinks = true }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   
-  console.log('=== LANDING HEADER DEBUG ===');
-  console.log('showPanelButtons:', showPanelButtons);
-  console.log('isAuthenticated:', isAuthenticated());
-  console.log('user:', user);
-  const { 
-    notifications, 
-    addChatNotification, 
-    markAsRead, 
-    markAllAsRead, 
-    clearNotifications, 
-    getUnreadCount 
+  const {
+    notifications,
+    addChatNotification,
+    markAsRead,
+    markAllAsRead,
+    clearNotifications,
+    getUnreadCount
   } = useNotifications();
-  
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [globalMonitoringInterval, setGlobalMonitoringInterval] = useState(null);
@@ -37,17 +33,24 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
   // Verificar se é administrador
   const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
   console.log('User data:', { user, storedUser }); // Debug
-  
-  const isAdmin = user?.role === 'admin' || 
-                  user?.isAdmin || 
-                  user?.tipo === 'admin' || 
+
+  const isAdmin = user?.role === 'admin' ||
+                  user?.isAdmin ||
+                  user?.tipo === 'admin' ||
                   user?.email === 'admin@solidarbairro.com' ||
-                  storedUser?.role === 'admin' || 
-                  storedUser?.isAdmin || 
+                  storedUser?.role === 'admin' ||
+                  storedUser?.isAdmin ||
                   storedUser?.tipo === 'admin' ||
                   storedUser?.email === 'admin@solidarbairro.com';
-  
+
   const showAdminButton = isAdmin;
+
+  console.log('=== LANDING HEADER DEBUG ===');
+  console.log('showPanelButtons:', showPanelButtons);
+  console.log('isAuthenticated:', isAuthenticated());
+  console.log('user:', user);
+  console.log('isAdmin:', isAdmin);
+  console.log('showAdminButton:', showAdminButton);
 
   useEffect(() => {
     // Iniciar monitoramento global de mensagens
@@ -194,41 +197,26 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
         </div>
 
         <div className="nav-menu">
-          <a href="/#features" className="nav-link">
-            Funcionalidades
-            <span className="link-underline" />
-          </a>
-          <button className="nav-link" onClick={() => navigate('/quero-ajudar')}>
-            Quero Ajudar
-            <span className="link-underline" />
-          </button>
-          <button className="nav-link" onClick={() => navigate('/preciso-de-ajuda')}>
-            Preciso de Ajuda
-            <span className="link-underline" />
-          </button>
-          <button className="nav-link" onClick={() => navigate('/achados-perdidos')}>
-            <span className="link-underline" />
-          </button>
-          
-          {showPanelButtons && (
-            <div className="panel-buttons-container">
-              <button 
-                onClick={() => navigate('/painel-social')}
-                title="Painel Social"
-                className="panel-icon-button"
-              >
-                <Globe size={20} />
+          {showNavLinks && (
+            <>
+              <a href="/#features" className="nav-link">
+                Funcionalidades
+                <span className="link-underline" />
+              </a>
+              <button className="nav-link" onClick={() => navigate('/quero-ajudar')}>
+                Quero Ajudar
+                <span className="link-underline" />
               </button>
-              <button 
-                onClick={() => navigate('/admin')}
-                title="Painel Admin"
-                className="panel-icon-button admin"
-              >
-                <Settings size={20} />
+              <button className="nav-link" onClick={() => navigate('/preciso-de-ajuda')}>
+                Preciso de Ajuda
+                <span className="link-underline" />
               </button>
-            </div>
+              <button className="nav-link" onClick={() => navigate('/achados-perdidos')}>
+                <span className="link-underline" />
+              </button>
+            </>
           )}
-          
+
           {showCadastroButtons ? (
             <button
               className="cadastro-login-btn"
@@ -248,23 +236,27 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
             >
               Entrar
             </button>
-          ) : !isAuthenticated() && !showPanelButtons ? (
-            <div className="auth-group">
-              <button
-                className="auth-btn-login"
-                onClick={() => navigate('/login')}
-              >
-                Entrar
-              </button>
-              <button
-                className="auth-btn-register"
-                onClick={() => navigate('/cadastro')}
-              >
-                Cadastrar
-              </button>
-            </div>
-          ) : isAuthenticated() ? (
+          ) : (isAuthenticated() || showPanelButtons) ? (
             <>
+              {showAdminButton && (
+                <>
+                  <button
+                    onClick={() => navigate('/painel-social')}
+                    title="Painel Social"
+                    className="panel-icon-button"
+                  >
+                    <Globe size={20} />
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin')}
+                    title="Painel Admin"
+                    className="panel-icon-button admin"
+                  >
+                    <Settings size={20} />
+                  </button>
+                </>
+              )}
+
               <button
                 className="notification-btn"
                 onClick={() => setShowNotifications(!showNotifications)}

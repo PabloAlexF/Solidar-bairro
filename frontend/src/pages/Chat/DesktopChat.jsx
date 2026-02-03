@@ -855,7 +855,7 @@ const Chat = () => {
         </aside>
 
         {/* Main Chat Area */}
-        <main className="chat-main-area">
+        <main className="chat-main-content">
           {/* Header */}
           <header className="chat-header-bar">
             <div className="header-left-group">
