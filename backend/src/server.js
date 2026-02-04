@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const familiaRoutes = require('./routes/familiaRoutes');
@@ -19,12 +20,17 @@ const painelSocialRoutes = require('./routes/painelSocialRoutes');
 const botRoutes = require('./routes/botRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const cacheService = require('./services/cacheService');
+const socketService = require('./services/socketService');
 const logger = require('./services/loggerService');
 const { generalLimiter } = require('./middleware/rateLimiting');
 require('dotenv').config();
 
 const app = express();
+const httpServer = http.createServer(app);
 const PORT = process.env.PORT || 3001;
+
+// Initialize WebSocket server
+socketService.init(httpServer);
 
 // Initialize cache service
 async function initializeServices() {
@@ -168,7 +174,7 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-app.listen(PORT, async () => {
+httpServer.listen(PORT, async () => {
   console.log(`🚀 Servidor: http://localhost:${PORT}`);
   await initializeServices();
 });

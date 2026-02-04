@@ -1,6 +1,7 @@
 const chatModel = require('../models/chatModel');
 const notificationService = require('./notificationService');
 const firebase = require('../config/firebase');
+const userService = require('./userService');
 
 class ChatService {
   constructor() {
@@ -29,11 +30,9 @@ class ChatService {
 
     // Se há uma mensagem inicial, enviá-la
     if (data.initialMessage && data.senderId) {
-      await chatModel.createMessage({
-        conversationId: conversation.id,
-        senderId: data.senderId,
-        type: 'text',
-        content: data.initialMessage
+      await this.sendMessage(conversation.id, data.senderId, {
+        content: data.initialMessage,
+        type: 'text'
       });
     }
 
@@ -98,7 +97,7 @@ class ChatService {
       // Buscar dados do outro participante
       let otherParticipant = null;
       if (otherParticipantIds.length > 0) {
-        otherParticipant = await this.getUserData(otherParticipantIds[0]);
+        otherParticipant = await userService.getUserData(otherParticipantIds[0]);
       }
       
       enrichedConversations.push({

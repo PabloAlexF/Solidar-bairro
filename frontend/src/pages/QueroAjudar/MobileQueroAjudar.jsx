@@ -25,6 +25,7 @@ import {
   AlertCircle,
   Calendar,
   Zap,
+  Bell,
   Search,
   CheckCircle2,
   ChevronDown,
@@ -39,6 +40,7 @@ import {
 } from './constants';
 import ApiService from '../../services/apiService';
 import { getCurrentLocation, getLocationWithFallback } from '../../utils/geolocation';
+import { getSocket } from '../../services/socketService';
 
 export const MobileQueroAjudar = () => {
   const navigate = useNavigate();
@@ -56,8 +58,10 @@ export const MobileQueroAjudar = () => {
   const [highContrast, setHighContrast] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [pedidos, setPedidos] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [loadingPedidos, setLoadingPedidos] = useState(true);
   const [error, setError] = useState(null);
+  const [notifications, setNotifications] = useState([]);
 
   const [selectedLocation, setSelectedLocation] = useState('brasil');
   const [selectedTimeframe, setSelectedTimeframe] = useState('todos');
@@ -249,6 +253,40 @@ export const MobileQueroAjudar = () => {
       loadPedidos();
     }
   }, [userLocation, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe]);
+
+  // WebSocket para notificações em tempo real (Mobile)
+  useEffect(() => {
+    if (!user) return;
+
+    // Carregar notificações iniciais
+    const fetchNotifications = async () => {
+      try {
+        const response = await ApiService.get('/notifications');
+        if (response.success) {
+          setNotifications(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNewNotification = (notification) => {
+      setNotifications(prev => [notification, ...prev]);
+    };
+
+    socket.on('notification', handleNewNotification);
+
+    return () => {
+      socket.off('notification', handleNewNotification);
+    };
+  }, [user, navigate]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const filteredOrders = useMemo(() => {
     // Como os filtros agora são aplicados no backend, apenas retornamos os pedidos
@@ -546,6 +584,24 @@ export const MobileQueroAjudar = () => {
                 style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
               >
                 <span style={{ fontSize: '1.2rem' }}>Aa</span>
+              </button>
+              <button
+                onClick={() => setShowNotifications(true)}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  background: 'white',
+                  color: '#64748b',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative'
+                }}
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }} />
+                )}
               </button>
               <button
                 onClick={requestLocation}
@@ -915,6 +971,85 @@ export const MobileQueroAjudar = () => {
       </AnimatePresence>
 
       <AnimatePresence>
+        {showNotifications && (
+          <motion.div 
+            className="bottom-sheet-overlay" 
+            onClick={() => setShowNotifications(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ zIndex: 2000 }}
+          >
+            <motion.div 
+              className="bottom-sheet" 
+              onClick={e => e.stopPropagation()}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            >
+              <div className="sheet-header">
+                <div className="sheet-handle" />
+                <div className="sheet-title-row">
+                  <h2>Notificações</h2>
+                  <button onClick={() => setShowNotifications(false)}><X size={20} /></button>
+                </div>
+              </div>
+              <div className="sheet-content" style={{ padding: '0 16px' }}>
+                {notifications.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+                    <Bell size={40} style={{ marginBottom: '16px' }} />
+                    <p>Nenhuma notificação por aqui.</p>
+                  </div>
+                ) : (
+                  notifications.map(n => {
+                    const time = new Date(n.timestamp || n.createdAt);
+                    const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    const getIcon = (type) => {
+                      switch(type) {
+                        case 'chat': return <MessageCircle size={20} color="#3b82f6" />;
+                        case 'pedido': return <Heart size={20} color="#ef4444" />;
+                        default: return <Bell size={20} color="#64748b" />;
+                      }
+                    }
+
+                    return (
+                      <div 
+                        key={n.id} 
+                        style={{ 
+                          display: 'flex', 
+                          gap: '12px', 
+                          padding: '12px 0', 
+                          borderBottom: '1px solid #f1f5f9',
+                          background: n.read ? 'transparent' : '#eff6ff'
+                        }}
+                        onClick={() => {
+                          if (n.type === 'chat' && n.data?.conversationId) {
+                            navigate(`/chat/${n.data.conversationId}`);
+                            setShowNotifications(false);
+                          }
+                        }}
+                      >
+                        <div style={{ flexShrink: 0, marginTop: '4px' }}>{getIcon(n.type)}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h4 style={{ margin: 0, fontWeight: '600', fontSize: '0.9rem', color: '#1e293b' }}>{n.title}</h4>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{timeString}</span>
+                          </div>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>{n.message}</p>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {showAccessibility && (
           <motion.div 
             className="bottom-sheet-overlay" 
@@ -1103,6 +1238,7 @@ export const MobileQueroAjudar = () => {
                         // Depois criar conversa
                         const conversationData = {
                           participants: [user.uid || user.id, orderToHelp.userId], // Inclui ambos os participantes
+                          senderId: user.uid || user.id,
                           pedidoId: orderToHelp.id,
                           type: 'ajuda',
                           title: `Ajuda: ${orderToHelp.title || orderToHelp.category}`,
@@ -1237,7 +1373,6 @@ export const MobileQueroAjudar = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <Toaster position="bottom-center" />
     </div>
   );
 };

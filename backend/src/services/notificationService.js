@@ -1,4 +1,5 @@
 const notificationModel = require('../models/notificationModel');
+const userService = require('./userService');
 
 class NotificationService {
   async createNotification(data) {
@@ -8,8 +9,8 @@ class NotificationService {
   async createChatNotification(conversationId, senderId, receiverId, message) {
     try {
       // Buscar dados do remetente
-      const senderData = await this.getUserData(senderId);
-      const senderName = senderData?.nome || senderData?.nomeFantasia || 'Usuário';
+      const senderData = await userService.getUserData(senderId);
+      const senderName = senderData?.nome || 'Usuário';
 
       // Criar notificação para o destinatário
       const notification = await notificationModel.createNotification({
@@ -28,36 +29,6 @@ class NotificationService {
     } catch (error) {
       console.error('Erro ao criar notificação de chat:', error);
       throw error;
-    }
-  }
-
-  async getUserData(userId) {
-    try {
-      const firebase = require('../config/firebase');
-      const db = firebase.getDb();
-
-      // Buscar em cidadãos
-      const cidadaoDoc = await db.collection('cidadaos').doc(userId).get();
-      if (cidadaoDoc.exists) {
-        return { id: cidadaoDoc.id, ...cidadaoDoc.data() };
-      }
-
-      // Buscar em comércios
-      const comercioDoc = await db.collection('comercios').doc(userId).get();
-      if (comercioDoc.exists) {
-        return { id: comercioDoc.id, ...comercioDoc.data() };
-      }
-
-      // Buscar em ONGs
-      const ongDoc = await db.collection('ongs').doc(userId).get();
-      if (ongDoc.exists) {
-        return { id: ongDoc.id, ...ongDoc.data() };
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Erro ao buscar dados do usuário:', error);
-      return null;
     }
   }
 
@@ -88,8 +59,8 @@ class NotificationService {
   // Notificações específicas do sistema
   async createPedidoNotification(pedidoId, ownerId, interestedUserId, type) {
     try {
-      const interestedUserData = await this.getUserData(interestedUserId);
-      const userName = interestedUserData?.nome || interestedUserData?.nomeFantasia || 'Usuário';
+      const interestedUserData = await userService.getUserData(interestedUserId);
+      const userName = interestedUserData?.nome || 'Usuário';
 
       let title, message;
       
@@ -126,8 +97,8 @@ class NotificationService {
 
   async createAchadoPerdidoNotification(itemId, ownerId, interestedUserId, type) {
     try {
-      const interestedUserData = await this.getUserData(interestedUserId);
-      const userName = interestedUserData?.nome || interestedUserData?.nomeFantasia || 'Usuário';
+      const interestedUserData = await userService.getUserData(interestedUserId);
+      const userName = interestedUserData?.nome || 'Usuário';
 
       let title, message;
       

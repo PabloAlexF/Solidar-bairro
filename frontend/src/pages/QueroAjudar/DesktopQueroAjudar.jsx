@@ -61,6 +61,7 @@ import {
 } from 'lucide-react';
 import './styles-v4.css';
 import marca from '../../assets/images/marca.png';
+import { getSocket } from '../../services/socketService';
 
 const CATEGORY_METADATA = {
   'Alimentos': { color: '#f97316', icon: <ShoppingCart size={18} aria-hidden="true" />, label: 'Alimentos' },
@@ -1687,6 +1688,39 @@ export default function QueroAjudarPage() {
     loadInitialLocation();
   }, [user]); // Executar quando user mudar
 
+  // WebSocket para notificações em tempo real
+  useEffect(() => {
+    if (!user) return;
+
+    // Carregar notificações iniciais
+    const fetchNotifications = async () => {
+      try {
+        const response = await ApiService.get('/notifications');
+        if (response.success) {
+          setNotifications(response.data);
+          localStorage.setItem('solidar-notifications', JSON.stringify(response.data));
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNewNotification = (notification) => {
+      setNotifications(prev => [notification, ...prev]);
+    };
+
+    socket.on('notification', handleNewNotification);
+
+    return () => {
+      socket.off('notification', handleNewNotification);
+    };
+  }, [user, navigate]);
+
   useEffect(() => {
     const loadNotifications = () => {
       const savedNotifications = typeof window !== 'undefined' ? localStorage.getItem('solidar-notifications') : null;
@@ -1763,6 +1797,7 @@ export default function QueroAjudarPage() {
       // Depois criar conversa
       const conversationData = {
         participants: [currentUserId, orderToHelp.userId],
+        senderId: currentUserId,
         pedidoId: orderToHelp.id,
         type: 'help_request'
       };
@@ -2472,14 +2507,6 @@ export default function QueroAjudarPage() {
         onClose={() => setOrderToHelp(null)}
       />
 
-      <Toaster position="top-right" toastOptions={{
-        duration: 3000,
-        style: { background: '#1e293b', color: '#fff', borderRadius: '12px' },
-        ariaProps: {
-          role: 'status',
-          'aria-live': 'polite',
-        },
-      }} />
     </div>
   );
 }

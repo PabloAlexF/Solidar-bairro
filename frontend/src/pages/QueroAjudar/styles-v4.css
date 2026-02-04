@@ -2007,6 +2007,28 @@ a:focus-visible {
    IMPROVED NOTIFICATIONS STYLES
    ======================================== */
 
+.notification-btn {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
 .notification-dropdown-improved {
   position: absolute;
   top: calc(100% + 8px);
