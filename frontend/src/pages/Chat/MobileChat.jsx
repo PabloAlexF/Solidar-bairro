@@ -631,17 +631,24 @@ const Chat = () => {
       
       // Iniciar escuta de novas mensagens
       chatNotificationService.startListening(conversaId, (newMessages) => {
-        setMessages(prev => [...prev, ...newMessages.map(msg => ({
-          id: msg.id,
-          type: msg.type || 'text',
-          sender: msg.senderId === user?.uid ? 'sent' : 'received',
-          content: msg.content || msg.text,
-          timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
-          read: msg.read || false,
-          location: msg.metadata?.location,
-          metadata: msg.metadata,
-          mediaUrl: msg.mediaUrl
-        }))]);
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+          
+          if (uniqueNewMessages.length === 0) return prev;
+
+          return [...prev, ...uniqueNewMessages.map(msg => ({
+            id: msg.id,
+            type: msg.type || 'text',
+            sender: msg.senderId === user?.uid ? 'sent' : 'received',
+            content: msg.content || msg.text,
+            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+            read: msg.read || false,
+            location: msg.metadata?.location,
+            metadata: msg.metadata,
+            mediaUrl: msg.mediaUrl
+          }))];
+        });
       });
     }
     
@@ -713,7 +720,10 @@ const Chat = () => {
           metadata: metadata
         };
         
-        setMessages(prev => [...prev, newMessage]);
+        setMessages(prev => {
+          if (prev.some(m => m.id === newMessage.id)) return prev;
+          return [...prev, newMessage];
+        });
         setReplyingTo(null);
       }
     } catch (error) {
@@ -817,7 +827,10 @@ const Chat = () => {
               location: locationData,
             };
             
-            setMessages(prev => [...prev, newMessage]);
+            setMessages(prev => {
+              if (prev.some(m => m.id === newMessage.id)) return prev;
+              return [...prev, newMessage];
+            });
           }
         } catch (error) {
           console.error("Erro ao enviar localização:", error);
@@ -976,7 +989,7 @@ const Chat = () => {
         {/* Sidebar */}
         <div className={`sb-sidebar-overlay ${sidebarOpen ? 'sb-visible' : ''}`} onClick={() => setSidebarOpen(false)} />
         <aside className={`sb-chat-sidebar ${sidebarOpen ? 'sb-open' : ''}`}>
-          <div className="sb-sidebar-header">
+          <div className="sb-sidebar-header" style={{ background: 'linear-gradient(to bottom, #ffffff, #f8fafc)', borderBottom: '1px solid #e2e8f0' }}>
             <div className="sb-sidebar-title-row">
               <h2>Conversas</h2>
               <button className="sb-icon-btn" title="Nova conversa">

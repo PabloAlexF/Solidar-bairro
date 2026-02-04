@@ -552,17 +552,24 @@ const Chat = () => {
       
       // Iniciar escuta de novas mensagens
       chatNotificationService.startListening(conversaId, (newMessages) => {
-        setMessages(prev => [...prev, ...newMessages.map(msg => ({
-          id: msg.id,
-          type: msg.type || 'text',
-          sender: msg.senderId === user?.uid ? 'sent' : 'received',
-          content: msg.content || msg.text,
-          timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
-          read: msg.read || false,
-          location: msg.metadata?.location,
-          metadata: msg.metadata,
-          mediaUrl: msg.mediaUrl
-        }))]);
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+          
+          if (uniqueNewMessages.length === 0) return prev;
+
+          return [...prev, ...uniqueNewMessages.map(msg => ({
+            id: msg.id,
+            type: msg.type || 'text',
+            sender: msg.senderId === user?.uid ? 'sent' : 'received',
+            content: msg.content || msg.text,
+            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+            read: msg.read || false,
+            location: msg.metadata?.location,
+            metadata: msg.metadata,
+            mediaUrl: msg.mediaUrl
+          }))];
+        });
       });
     }
     
@@ -661,7 +668,10 @@ const Chat = () => {
           metadata: metadata
         };
         
-        setMessages(prev => [...prev, newMessage]);
+        setMessages(prev => {
+          if (prev.some(m => m.id === newMessage.id)) return prev;
+          return [...prev, newMessage];
+        });
         setReplyingTo(null);
       }
     } catch (error) {
@@ -778,7 +788,10 @@ const Chat = () => {
               location: locationData,
             };
             
-            setMessages(prev => [...prev, newMessage]);
+            setMessages(prev => {
+              if (prev.some(m => m.id === newMessage.id)) return prev;
+              return [...prev, newMessage];
+            });
           }
         } catch (error) {
           console.error("Erro ao enviar localização:", error);
@@ -879,7 +892,7 @@ const Chat = () => {
       <div className="chat-layout">
         {/* Sidebar */}
         <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-          <div className="sidebar-header">
+          <div className="sidebar-header" style={{ background: 'linear-gradient(to bottom, #ffffff, #f8fafc)', borderBottom: '1px solid #e2e8f0' }}>
             <div className="sidebar-title-row">
               <h2>Conversas</h2>
               <button className="icon-btn" title="Nova conversa">
@@ -1206,7 +1219,25 @@ const Chat = () => {
                         {currentContact?.initials || 'U'}
                       </div>
                     )}
-                    
+                    {!isSent && (
+                    <div className="msg-wrapper">
+                      {bubbleContent}
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div className="reactions-display">
+                          {Object.entries(msg.reactions).map(([emoji, users]) => (
+                            <div key={emoji} className={`reaction-pill ${users.includes(user?.uid || 'me') ? 'active' : ''}`} onClick={() => handleReactionClick(msg.id, emoji)}>
+                              {emoji} <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{users.length}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="msg-metadata">
+                        {msg.edited && <span className="edited-label">(editado)</span>}
+                        <span className="msg-time">{formatTime(msg.timestamp)}</span>
+                      </div>
+                    </div>
+                    )}
+
                     {!isSent && !isConversationClosed && (
                       <div className="msg-actions">
                         <button className="msg-action-btn" onClick={() => setReplyingTo(msg)} title="Responder">
@@ -1227,27 +1258,6 @@ const Chat = () => {
                       </div>
                     )}
 
-                    <div className="msg-wrapper">
-                      {bubbleContent}
-                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
-                        <div className="reactions-display">
-                          {Object.entries(msg.reactions).map(([emoji, users]) => (
-                            <div key={emoji} className={`reaction-pill ${users.includes(user?.uid || 'me') ? 'active' : ''}`} onClick={() => handleReactionClick(msg.id, emoji)}>
-                              {emoji} <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{users.length}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div className="msg-metadata">
-                        {msg.edited && <span className="edited-label">(editado)</span>}
-                        <span className="msg-time">{formatTime(msg.timestamp)}</span>
-                        {isSent && (
-                          <span className="msg-status">
-                            {msg.read ? <CheckCheck size={14} className="read" /> : <Check size={14} />}
-                          </span>
-                        )}
-                      </div>
-                    </div>
                     {isSent && (
                       <>
                       {!isConversationClosed && (
@@ -1274,6 +1284,25 @@ const Chat = () => {
                         </button>
                       </div>
                       )}
+                      <div className="msg-wrapper">
+                        {bubbleContent}
+                        {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                          <div className="reactions-display">
+                            {Object.entries(msg.reactions).map(([emoji, users]) => (
+                              <div key={emoji} className={`reaction-pill ${users.includes(user?.uid || 'me') ? 'active' : ''}`} onClick={() => handleReactionClick(msg.id, emoji)}>
+                                {emoji} <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{users.length}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="msg-metadata">
+                          {msg.edited && <span className="edited-label">(editado)</span>}
+                          <span className="msg-time">{formatTime(msg.timestamp)}</span>
+                          <span className="msg-status">
+                            {msg.read ? <CheckCheck size={14} className="read" /> : <Check size={14} />}
+                          </span>
+                        </div>
+                      </div>
                       <div className="msg-sender-avatar self" onClick={() => handleAvatarClick(true)}>
                         {currentUserData?.initials || 'EU'}
                       </div>
