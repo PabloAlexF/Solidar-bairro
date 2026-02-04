@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Users, ArrowLeft, User, Home, Users2, DollarSign, 
   ListChecks, MapPin, CheckCircle2, ChevronRight, 
@@ -6,7 +6,7 @@ import {
   Phone, Mail, ShieldCheck, Trophy, 
   Zap, Info, X
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
 import './CadastroFamiliaMobile.css';
@@ -61,6 +61,7 @@ const MapLocationButton = ({ isLocating, onClick }) => (
 );
 
 export default function CadastroFamiliaMobile() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(true);
@@ -181,6 +182,9 @@ export default function CadastroFamiliaMobile() {
         if (!addressData.numero && !formData.numero) newErrors.numero = true;
         if (!addressData.bairro && !formData.bairro) newErrors.bairro = true;
         if (!formData.tipoMoradia) newErrors.tipoMoradia = true;
+        break;
+      case 6:
+        if (formData.necessidades.length === 0) newErrors.necessidades = true;
         break;
     }
     return newErrors;
@@ -329,6 +333,14 @@ export default function CadastroFamiliaMobile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      showToast('Por favor, selecione pelo menos uma necessidade.', 'error');
+      return;
+    }
+
     setIsLoading(true);
 
     if (formData.senha !== formData.confirmarSenha) {
@@ -492,8 +504,8 @@ export default function CadastroFamiliaMobile() {
                 </div>
               </div>
               <div className="fam-mob-success-actions">
-                <Link href="/" className="fam-mob-btn-base fam-mob-btn-primary">Início</Link>
-                <button className="fam-mob-btn-base fam-mob-btn-secondary">Acessar Painel</button>
+                <Link to="/login" className="fam-mob-btn-base fam-mob-btn-primary">Início</Link>
+                <button className="fam-mob-btn-base fam-mob-btn-secondary" onClick={() => navigate('/login')}>Acessar Painel</button>
               </div>
             </div>
           </div>
@@ -811,6 +823,11 @@ export default function CadastroFamiliaMobile() {
                       value={formData.confirmarSenha}
                       onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
                     />
+                    {formData.confirmarSenha && (
+                      <div style={{ marginTop: '-10px', marginBottom: '15px', padding: '0 4px', fontSize: '11px', textAlign: 'right', fontWeight: '600', color: formData.senha === formData.confirmarSenha ? '#10b981' : '#ef4444' }}>
+                        {formData.senha === formData.confirmarSenha ? 'Senhas conferem' : 'Senhas não conferem'}
+                      </div>
+                    )}
                   </div>
                 )}
 

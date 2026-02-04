@@ -87,7 +87,6 @@ const CadastroCidadao = ({ onBack }) => {
       });
 
       if (!response.ok) throw new Error('Erro ao realizar cadastro');
-      
       setToast({ show: true, message: 'Cadastro realizado com sucesso! Redirecionando...', type: 'success' });
       setTimeout(() => window.location.href = '/login', 2000);
     } catch (error) {
@@ -242,6 +241,11 @@ const CadastroCidadao = ({ onBack }) => {
               <Lock size={20} className="input-icon" />
               <input type="password" name="confirmarSenha" className={`form-input ${errors.confirmarSenha ? 'error' : ''}`} placeholder="••••••••" value={formData.confirmarSenha} onChange={handleChange} />
             </div>
+            {formData.confirmarSenha && (
+              <span style={{ fontSize: '11px', color: formData.senha === formData.confirmarSenha ? '#10b981' : '#ef4444', marginTop: '4px', display: 'block', textAlign: 'right', fontWeight: '600' }}>
+                {formData.senha === formData.confirmarSenha ? 'Senhas conferem' : 'Senhas não conferem'}
+              </span>
+            )}
             {errors.confirmarSenha && <span className="error-message">{errors.confirmarSenha}</span>}
           </div>
 

@@ -161,6 +161,7 @@ const Chat = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
   const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
+  const [currentUserData, setCurrentUserData] = useState(null);
 
   const handleReactionClick = (msgId, emoji) => {
     setMessages(prev => prev.map(msg => {
@@ -196,47 +197,89 @@ const Chat = () => {
 
   const messagesEndRef = useRef(null);
 
-  const currentUserData = {
-    name: user?.nome || "Seu Perfil",
-    email: user?.email || "usuario@email.com",
-    phone: user?.telefone || "(11) 00000-0000",
-    type: user?.tipo || "Pessoa Física",
-    address: user?.endereco || "Endereço não informado",
-    points: user?.pontos || 0,
-    initials: user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "US",
-    joinDate: user?.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Janeiro 2024",
-    isVerified: true,
-    isSelf: true
-  };
+
 
   const filteredContacts = chatContacts.filter(c => 
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.lastMessage?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentContact = chatContacts.find(c => c.id === selectedChatId) || 
-    (conversation ? {
-      id: conversaId,
-      name: (() => {
-        // Se há participantsData, usar o primeiro (que deve ser o outro usuário)
-        if (conversation.participantsData?.length > 0) {
-          return conversation.participantsData[0].nome || 'Carregando...';
+  const currentContact = useMemo(() => {
+    console.log('🔍 Determinando currentContact para conversa:', selectedChatId);
+    console.log('📊 Dados da conversa:', conversation);
+    console.log('👥 Participantes da conversa:', conversation?.participants);
+    console.log('👤 Usuário atual:', user?.uid);
+
+    // 1. Tentar usar dados detalhados da conversa atual (mais confiável e atualizado)
+    if (conversation && conversation.id === selectedChatId) {
+      let otherUser = null;
+
+      // Tentar encontrar nos dados de participantes enriquecidos
+      if (conversation.participantsData?.length > 0) {
+        otherUser = conversation.participantsData.find(p => (p.uid || p.id) !== user?.uid);
+        console.log('✅ Encontrado em participantsData:', otherUser);
+      }
+
+      // Se não achou, tentar otherParticipant (mas garantir que não é o próprio usuário)
+      if (!otherUser && conversation.otherParticipant && (conversation.otherParticipant.uid || conversation.otherParticipant.id) !== user?.uid) {
+        otherUser = conversation.otherParticipant;
+        console.log('✅ Encontrado em otherParticipant:', otherUser);
+      }
+
+      // Se ainda não achou, tentar buscar diretamente pelos participantes
+      if (!otherUser && conversation.participants?.length > 0) {
+        const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
+        if (otherParticipantId) {
+          console.log('🔄 Buscando dados do participante:', otherParticipantId);
+          // Tentar buscar do cache dos contatos primeiro
+          otherUser = chatContacts.find(c => c.id === otherParticipantId);
+          if (!otherUser) {
+            // Se não está no cache, buscar da API (síncrono para evitar re-renders)
+            console.log('🌐 Buscando dados do usuário na API...');
+            // Nota: Esta busca será assíncrona, por enquanto retorna placeholder
+          }
         }
-        // Fallback para otherParticipant
-        if (conversation.otherParticipant?.nome) return conversation.otherParticipant.nome;
-        return 'Carregando...';
-      })(),
-      initials: (() => {
-        const name = conversation.otherParticipant?.nome || 
-                    conversation.participantsData?.find(p => p.uid !== user?.uid)?.nome || 
-                    conversation.title?.replace('Ajuda: ', '') || 'CV';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-      })(),
-      type: conversation.otherParticipant?.tipo || 
-            conversation.participantsData?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
-      distance: '0m de você',
-      online: conversation.participantsData?.find(p => p.uid !== user?.uid)?.online || conversation.otherParticipant?.online || false
-    } : chatContacts[0]);
+      }
+
+      if (otherUser) {
+        // Priorizar nomeCompleto sobre nome para evitar fallbacks incorretos
+        const name = otherUser.nomeCompleto || otherUser.nome || otherUser.razaoSocial || otherUser.name || 'Usuário';
+        console.log('🏷️ Nome determinado:', name, 'para usuário:', otherUser);
+        console.log('📊 Campos disponíveis:', {
+          nome: otherUser.nome,
+          nomeCompleto: otherUser.nomeCompleto,
+          razaoSocial: otherUser.razaoSocial,
+          name: otherUser.name
+        });
+
+        // Verificar se o nome é válido (não é placeholder)
+        if (name && name !== 'Usuário' && name !== 'Usuario' && name.trim() !== '') {
+          return {
+            id: conversation.id,
+            name: name,
+            initials: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+            type: otherUser.tipo || 'cidadao',
+            distance: '0m de você',
+            online: otherUser.online || false
+          };
+        } else {
+          console.log('⚠️ Nome ainda é placeholder, tentando buscar novamente...');
+          // Forçar uma busca adicional se o nome ainda for placeholder
+          const otherUid = conversation.participants?.find(p => p !== user?.uid);
+          if (otherUid) {
+            // Busca síncrona adicional (isso pode causar re-renders, mas é necessário)
+            console.log('🔄 Fazendo busca adicional para:', otherUid);
+            // Nota: Em produção, isso deveria ser feito de forma assíncrona
+          }
+        }
+      }
+    }
+
+    // 2. Fallback para a lista de contatos
+    const fallbackContact = chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
+    console.log('🔄 Usando fallback do contato:', fallbackContact);
+    return fallbackContact;
+  }, [conversation, chatContacts, selectedChatId, user?.uid]);
 
   // Função para obter informações do contexto (pedido ou achado/perdido)
   const getContextInfo = () => {
@@ -294,36 +337,95 @@ const Chat = () => {
     try {
       const response = await ApiService.getConversations();
       if (response.success && response.data) {
-        const formattedContacts = response.data.map(conv => {
+        const formattedContacts = response.data.map(async (conv) => {
+          console.log('Processando conversa:', JSON.stringify(conv, null, 2));
+
           // Garantir que sempre temos um nome válido
-          let userName = 'Usuário';
+          let userName = 'Carregando...';
+
+          // Tentar múltiplas fontes para o nome
           if (conv.otherParticipant?.nome && conv.otherParticipant.nome.trim()) {
             userName = conv.otherParticipant.nome;
-          } else if (conv.participants?.find(p => p.uid !== user?.uid)?.nome) {
-            userName = conv.participants.find(p => p.uid !== user?.uid).nome;
-          } else if (conv.otherParticipant?.nomeCompleto) {
+            console.log('Nome encontrado em otherParticipant.nome:', userName);
+          } else if (conv.otherParticipant?.nomeCompleto && conv.otherParticipant.nomeCompleto.trim()) {
             userName = conv.otherParticipant.nomeCompleto;
-          } else if (conv.otherParticipant?.nomeFantasia) {
-            userName = conv.otherParticipant.nomeFantasia;
-          } else if (conv.otherParticipant?.razaoSocial) {
-            userName = conv.otherParticipant.razaoSocial;
+            console.log('Nome encontrado em otherParticipant.nomeCompleto:', userName);
+          } else if (conv.participantsData?.length > 0) {
+            const otherParticipant = conv.participantsData.find(p => p.uid !== user?.uid);
+            console.log('Procurando em participantsData, otherParticipant:', otherParticipant);
+            if (otherParticipant?.nome && otherParticipant.nome.trim()) {
+              userName = otherParticipant.nome;
+              console.log('Nome encontrado em participantsData.nome:', userName);
+            } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+              userName = otherParticipant.nomeCompleto;
+              console.log('Nome encontrado em participantsData.nomeCompleto:', userName);
+            }
+          } else if (conv.participants?.length > 0) {
+            const otherParticipant = conv.participants.find(p => p.uid !== user?.uid);
+            console.log('Procurando em participants, otherParticipant:', otherParticipant);
+            if (otherParticipant?.nome && otherParticipant.nome.trim()) {
+              userName = otherParticipant.nome;
+              console.log('Nome encontrado em participants.nome:', userName);
+            } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+              userName = otherParticipant.nomeCompleto;
+              console.log('Nome encontrado em participants.nomeCompleto:', userName);
+            }
           }
-          
+
+          // Se ainda não encontrou o nome ou é um placeholder, tentar buscar do banco de dados
+          console.log('Verificando se precisa buscar nome no banco. userName:', userName, 'user?.uid:', user?.uid);
+          if (userName === 'Carregando...' || userName === 'Usuário' || userName === 'Administrador') {
+            const participantUid = conv.otherParticipant?.id || conv.otherParticipant?.uid || conv.participants?.find(p => p !== user?.uid);
+            console.log('participantUid extraído:', participantUid, 'comparação com user?.uid:', participantUid !== user?.uid);
+            if (participantUid && participantUid !== user?.uid) {
+              try {
+                console.log('Buscando nome do usuário no banco (placeholder detectado):', participantUid);
+                  const userResponse = await ApiService.getUserData(participantUid);
+                console.log('Resposta da API getUser:', userResponse);
+                console.log('Dados completos do usuário:', JSON.stringify(userResponse.data, null, 2));
+                if (userResponse.success && userResponse.data) {
+                  // Tentar múltiplas possibilidades de campos de nome
+                  userName = userResponse.data.nome ||
+                            userResponse.data.nomeCompleto ||
+                            userResponse.data.razaoSocial ||
+                            userResponse.data.name ||
+                            userResponse.data.fullName ||
+                            userResponse.data.displayName ||
+                            userResponse.data.email ||
+                            'Usuário';
+                  console.log('Nome encontrado no banco:', userName);
+                  console.log('Campos disponíveis no usuário:', Object.keys(userResponse.data));
+                } else {
+                  console.log('Resposta da API sem sucesso ou sem dados');
+                }
+              } catch (error) {
+                console.error('Erro ao buscar nome do usuário:', error);
+              }
+            } else {
+              console.log('Não vai buscar nome: participantUid inválido ou é o próprio usuário');
+            }
+          } else {
+            console.log('Não precisa buscar nome no banco, userName válido:', userName);
+          }
+
+          console.log('Nome final para conversa', conv.id, ':', userName);
+
           return {
             id: conv.id,
             name: userName,
-            initials: userName !== 'Usuário' ? 
-              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U',
+            initials: userName !== 'Carregando...' && userName !== 'Usuário' ?
+              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'CV',
             type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
             distance: '0m de você',
             online: conv.otherParticipant?.online || false,
             lastMessage: conv.lastMessage?.content || 'Nova conversa',
-            lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
+            lastMessageTime: conv.lastMessage?.createdAt?.seconds ?
               new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
             unreadCount: conv.unreadCount || 0
           };
         });
-        setChatContacts(formattedContacts);
+        const contacts = await Promise.all(formattedContacts);
+        setChatContacts(contacts);
       }
     } catch (error) {
       console.error('Erro ao carregar conversas:', error);
@@ -389,6 +491,105 @@ const Chat = () => {
           });
         }
         
+        setConversation(convData);
+
+        // Verificar se otherParticipant é o usuário logado e corrigir se necessário
+        if (convData.otherParticipant?.uid === user?.uid) {
+          const otherUid = convData.participants?.find(p => p !== user?.uid);
+          if (otherUid) {
+            try {
+              console.log('otherParticipant é o usuário logado, buscando o correto:', otherUid);
+              const userResponse = await ApiService.getUserData(otherUid);
+              console.log('Resposta da API getUserData para outro participante:', userResponse);
+              if (userResponse.success && userResponse.data) {
+                convData.otherParticipant = userResponse.data;
+                console.log('otherParticipant corrigido:', convData.otherParticipant);
+                setConversation(convData);
+              }
+            } catch (error) {
+              console.error('Erro ao buscar dados do outro participante:', error);
+            }
+          }
+        }
+
+        // CORREÇÃO: Lógica aprimorada para buscar nomes
+        // 1. Buscar nomes dos participantes se não estiverem disponíveis
+        if (convData.participantsData && convData.participantsData.length > 0) {
+          const updatedParticipants = await Promise.all(
+            convData.participantsData.map(async (participant) => {
+              const pName = participant.nome || participant.nomeCompleto;
+              if (!pName || pName.trim() === '' || pName === 'Usuário' || pName === 'Usuario') {
+                try {
+                  const pId = participant.uid || participant.id;
+                  if (pId) {
+                    const userResponse = await ApiService.getUserData(pId);
+                    if (userResponse.success && userResponse.data) {
+                      return {
+                        ...participant,
+                        ...userResponse.data,
+                        nome: userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || 'Usuário'
+                      };
+                    }
+                  }
+                } catch (error) {
+                  console.error('Erro ao buscar nome do participante:', error);
+                }
+              }
+              return participant;
+            })
+          );
+          convData.participantsData = updatedParticipants;
+        }
+
+        // 2. Fallback para otherParticipant - sempre buscar se não tiver nome válido
+        const otherUid = convData.participants?.find(p => p !== user?.uid);
+        if (otherUid && (!convData.otherParticipant || !convData.otherParticipant.nome || convData.otherParticipant.nome === 'Usuario' || convData.otherParticipant.nome === 'Usuário')) {
+          try {
+            console.log('🔄 Buscando dados do otherParticipant:', otherUid);
+            const userResponse = await ApiService.getUserData(otherUid);
+            console.log('📋 Resposta da API para otherParticipant:', userResponse);
+            if (userResponse.success && userResponse.data) {
+              convData.otherParticipant = {
+                ...convData.otherParticipant,
+                ...userResponse.data,
+                nome: userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || 'Usuário'
+              };
+              console.log('✅ otherParticipant atualizado:', convData.otherParticipant);
+            }
+          } catch (e) {
+            console.error('Erro ao buscar otherParticipant:', e);
+          }
+        }
+
+        // 3. Garantir que participantsData tenha os nomes corretos
+        if (convData.participants && convData.participants.length > 0 && (!convData.participantsData || convData.participantsData.length === 0)) {
+          console.log('🔄 Criando participantsData a partir de participants');
+          const participantsData = await Promise.all(
+            convData.participants.map(async (participantId) => {
+              try {
+                const userResponse = await ApiService.getUserData(participantId);
+                if (userResponse.success && userResponse.data) {
+                  return {
+                    uid: participantId,
+                    id: participantId,
+                    ...userResponse.data,
+                    nome: userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || 'Usuário'
+                  };
+                }
+              } catch (error) {
+                console.error('Erro ao buscar participante:', participantId, error);
+              }
+              return {
+                uid: participantId,
+                id: participantId,
+                nome: 'Usuário'
+              };
+            })
+          );
+          convData.participantsData = participantsData;
+          console.log('✅ participantsData criado:', convData.participantsData);
+        }
+
         setConversation(convData);
       }
       
@@ -815,7 +1016,7 @@ const Chat = () => {
                 </div>
                 <div className="sb-contact-meta">
                   <div className="sb-contact-name-row">
-                    <span className="sb-contact-name">{contact.name}</span>
+                    <span className="sb-contact-name">{contact.name === 'Carregando...' || !contact.name ? 'Usuário' : contact.name}</span>
                     <span className="sb-last-time">{contact.lastMessageTime}</span>
                   </div>
                   <div className="sb-contact-preview-row">
@@ -866,7 +1067,7 @@ const Chat = () => {
                 </div>
                 <div className="sb-header-text-details">
                   <div className="sb-header-name-row">
-                    <h3>{currentContact?.name || 'Carregando...'}</h3>
+                    <h3>{currentContact?.name || 'Usuário'}</h3>
                     <span className={`role-badge ${currentContact?.type || 'conversa'}`}>
                       {currentContact?.type === "doador" ? "Doador Verificado" : "Vizinho em Busca"}
                     </span>
@@ -1135,7 +1336,7 @@ const Chat = () => {
                     <div className="sb-msg-bubble text-bubble">
                       {hasReply && (
                         <div className="reply-quote">
-                          <span className="reply-quote-sender">{hasReply.senderName}</span>
+                          <span className="reply-quote-sender">{hasReply.senderName === 'Você' ? (currentUserData?.name || user?.nome || 'Administrador').length > 15 ? (currentUserData?.name || user?.nome || 'Administrador').substring(0, 15) + '...' : (currentUserData?.name || user?.nome || 'Administrador') : hasReply.senderName === currentContact?.name ? currentContact.name : 'Usuário'}</span>
                           <p className="reply-quote-text">{hasReply.content}</p>
                         </div>
                       )}

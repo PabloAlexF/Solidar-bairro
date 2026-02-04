@@ -454,7 +454,7 @@ export default function AdminDashboard() {
         <div className="admin-sidebar-footer">
           <button onClick={() => navigate('/')} className="admin-nav-btn" style={{ marginBottom: '0.5rem' }}>
             <ArrowLeft size={20} />
-            <span>Voltar ao Site</span>
+            <span>Navegar Site</span>
           </button>
           <button onClick={handleLogout} className="admin-logout-btn">
             <LogOut size={20} />

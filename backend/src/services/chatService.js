@@ -112,68 +112,202 @@ class ChatService {
 
   async getUserData(id) {
     try {
-      console.log('Buscando dados do usuário:', id);
-      
+      console.log('🔍 getUserData called with ID:', id);
+      if (!id) return null;
+
+      console.log('🔍 Buscando dados do usuário ID:', id);
+
       // Buscar em cidadãos
+      console.log('📋 Verificando coleção cidadãos...');
       const cidadaoDoc = await this.db.collection('cidadaos').doc(id).get();
-      
+
       if (cidadaoDoc.exists) {
         const cidadaoData = cidadaoDoc.data();
-        console.log('Usuário encontrado em cidadãos:', cidadaoData.nome);
+        console.log('✅ Usuário encontrado em cidadãos:', {
+          id: cidadaoDoc.id,
+          nome: cidadaoData.nome,
+          email: cidadaoData.email,
+          tipo: cidadaoData.tipo
+        });
         return {
           id: cidadaoDoc.id,
           nome: cidadaoData.nome,
+          nomeCompleto: cidadaoData.nomeCompleto,
           tipo: 'cidadao',
           bairro: cidadaoData.endereco?.bairro,
           isOnline: true // Temporário: considerar todos online
         };
+      } else {
+        console.log('❌ Usuário não encontrado em cidadãos');
       }
 
       // Buscar em comércios
+      console.log('🏪 Verificando coleção comercios...');
       const comercioDoc = await this.db.collection('comercios').doc(id).get();
-      
+
       if (comercioDoc.exists) {
         const comercioData = comercioDoc.data();
-        console.log('Usuário encontrado em comércios:', comercioData.nomeFantasia || comercioData.razaoSocial);
+        console.log('✅ Usuário encontrado em comércios:', {
+          id: comercioDoc.id,
+          nomeFantasia: comercioData.nomeFantasia,
+          razaoSocial: comercioData.razaoSocial,
+          email: comercioData.email
+        });
         return {
           id: comercioDoc.id,
           nome: comercioData.nomeFantasia || comercioData.razaoSocial,
+          nomeCompleto: comercioData.razaoSocial,
           tipo: 'comercio',
           bairro: comercioData.endereco?.bairro,
           isOnline: true // Temporário: considerar todos online
         };
+      } else {
+        console.log('❌ Usuário não encontrado em comercios');
       }
 
       // Buscar em ONGs
+      console.log('🏢 Verificando coleção ongs...');
       const ongDoc = await this.db.collection('ongs').doc(id).get();
-      
+
       if (ongDoc.exists) {
         const ongData = ongDoc.data();
-        console.log('Usuário encontrado em ONGs:', ongData.nome);
+        console.log('✅ Usuário encontrado em ONGs:', {
+          id: ongDoc.id,
+          nome: ongData.nome,
+          email: ongData.email
+        });
         return {
           id: ongDoc.id,
           nome: ongData.nome,
+          nomeCompleto: ongData.nome,
           tipo: 'ong',
           bairro: ongData.endereco?.bairro,
           isOnline: true // Temporário: considerar todos online
         };
+      } else {
+        console.log('❌ Usuário não encontrado em ongs');
       }
 
-      console.log('Usuário não encontrado em nenhuma coleção:', id);
-      
-      // Retornar dados padrão em vez de null
+      // Buscar em famílias
+      console.log('🏠 Verificando coleção familias...');
+      const familiaDoc = await this.db.collection('familias').doc(id).get();
+
+      if (familiaDoc.exists) {
+        const familiaData = familiaDoc.data();
+        console.log('✅ Usuário encontrado em familias:', {
+          id: familiaDoc.id,
+          nome: familiaData.nomeCompleto || familiaData.nome,
+          email: familiaData.email
+        });
+        return {
+          id: familiaDoc.id,
+          nome: familiaData.nomeCompleto || familiaData.nome,
+          nomeCompleto: familiaData.nomeCompleto || familiaData.nome,
+          tipo: 'familia',
+          bairro: familiaData.endereco?.bairro,
+          isOnline: true // Temporário: considerar todos online
+        };
+      } else {
+        console.log('❌ Usuário não encontrado em familias');
+      }
+
+      // Buscar em admins
+      console.log('🛡️ Verificando coleção admins...');
+      const adminDoc = await this.db.collection('admins').doc(id).get();
+
+      if (adminDoc.exists) {
+        const adminData = adminDoc.data();
+        console.log('✅ Usuário encontrado em admins:', {
+          id: adminDoc.id,
+          nome: adminData.nome,
+          email: adminData.email
+        });
+        return {
+          id: adminDoc.id,
+          nome: adminData.nome || 'Administrador',
+          nomeCompleto: adminData.nome || 'Administrador',
+          tipo: 'admin',
+          bairro: 'Sede',
+          isOnline: true // Temporário: considerar todos online
+        };
+      } else {
+        console.log('❌ Usuário não encontrado em admins');
+      }
+
+      console.log('🚨 Usuário não encontrado em nenhuma coleção:', id);
+
+      // Tentar buscar por email se o ID parecer ser um email
+      if (id.includes('@')) {
+        console.log('📧 ID parece ser um email, tentando buscar por email...');
+        try {
+          const userByEmail = await this.getUserDataByEmail(id);
+          if (userByEmail) {
+            console.log('✅ Usuário encontrado por email:', userByEmail);
+            return userByEmail;
+          }
+        } catch (emailError) {
+          console.log('❌ Erro ao buscar por email:', emailError.message);
+        }
+      }
+
+      // Verificar se o ID pode ser um ID do Firebase Auth (mais longo)
+      if (id.length > 20) {
+        console.log('🔄 ID parece ser do Firebase Auth, tentando buscar em todas as coleções novamente...');
+        // Tentar uma busca mais ampla
+        try {
+          const allCollections = ['cidadaos', 'comercios', 'ongs', 'familias', 'admins'];
+          for (const collectionName of allCollections) {
+            const snapshot = await this.db.collection(collectionName).where('uid', '==', id).limit(1).get();
+            if (!snapshot.empty) {
+              const doc = snapshot.docs[0];
+              const data = doc.data();
+              console.log(`✅ Usuário encontrado por UID em ${collectionName}:`, {
+                id: doc.id,
+                nome: data.nome || data.nomeCompleto || data.razaoSocial || data.nomeFantasia,
+                tipo: data.tipo
+              });
+              return this.formatUserData(doc.id, data, collectionName.slice(0, -1)); // Remove 's' do plural
+            }
+          }
+        } catch (uidError) {
+          console.log('❌ Erro ao buscar por UID:', uidError.message);
+        }
+      }
+
+      // Listar alguns documentos de cada coleção para debug (apenas em desenvolvimento)
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔍 Debug: Listando alguns documentos das coleções...');
+        try {
+          const cidadaosSnapshot = await this.db.collection('cidadaos').limit(3).get();
+          console.log('📋 Cidadãos encontrados:', cidadaosSnapshot.docs.map(doc => ({ id: doc.id, nome: doc.data().nome })));
+
+          const comerciosSnapshot = await this.db.collection('comercios').limit(3).get();
+          console.log('🏪 Comércios encontrados:', comerciosSnapshot.docs.map(doc => ({ id: doc.id, nome: doc.data().nomeFantasia || doc.data().razaoSocial })));
+
+          const ongsSnapshot = await this.db.collection('ongs').limit(3).get();
+          console.log('🏢 ONGs encontradas:', ongsSnapshot.docs.map(doc => ({ id: doc.id, nome: doc.data().nome })));
+        } catch (debugError) {
+          console.error('Erro no debug das coleções:', debugError);
+        }
+      }
+
+      // Retornar dados com melhor fallback baseado no contexto
+      console.log('⚠️ Retornando dados padrão para usuário não encontrado');
       return {
         id: id,
-        nome: 'Usuário',
+        nome: this.getFallbackName(id),
+        nomeCompleto: this.getFallbackName(id),
         tipo: 'cidadao',
-        bairro: 'Não informado'
+        bairro: 'Não informado',
+        notFound: true // Flag para indicar que o usuário não foi encontrado
       };
     } catch (error) {
-      console.error('Erro ao buscar dados do usuário:', error);
+      console.error('💥 Erro ao buscar dados do usuário:', error);
       // Retornar dados padrão em caso de erro
       return {
         id: id,
         nome: 'Usuário',
+        nomeCompleto: 'Usuário',
         tipo: 'cidadao',
         bairro: 'Não informado'
       };

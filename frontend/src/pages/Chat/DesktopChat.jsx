@@ -120,6 +120,7 @@ const Chat = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
   const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
+  const [currentUserData, setCurrentUserData] = useState(null);
 
   const messagesEndRef = useRef(null);
 
@@ -127,68 +128,87 @@ const Chat = () => {
     return conversation?.status === 'closed' || conversation?.status === 'finalizada' || conversation?.status === 'completed';
   }, [conversation]);
 
-  const currentUserData = {
-    name: user?.nome || "Seu Perfil",
-    email: user?.email || "usuario@email.com",
-    phone: user?.telefone || "(11) 00000-0000",
-    type: user?.tipo || "Pessoa Física",
-    address: user?.endereco || "Endereço não informado",
-    points: user?.pontos || 0,
-    initials: user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "US",
-    joinDate: user?.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Janeiro 2024",
-    isVerified: true,
-    isSelf: true
-  };
-
   const filteredContacts = chatContacts.filter(c => 
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.lastMessage?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentContact = chatContacts.find(c => c.id === selectedChatId) || 
-    (conversation ? {
-      id: conversaId,
-      name: (() => {
-        // Se há participantsData, usar o primeiro (que deve ser o outro usuário)
-        if (conversation.participantsData?.length > 0) {
-          const otherUser = conversation.participantsData.find(p => p.uid !== user?.uid);
-          if (otherUser?.nome && otherUser.nome.trim()) return otherUser.nome;
-          if (otherUser?.nomeCompleto && otherUser.nomeCompleto.trim()) return otherUser.nomeCompleto;
-        }
-        // Fallback para otherParticipant
-        if (conversation.otherParticipant?.nome && conversation.otherParticipant.nome.trim()) {
-          return conversation.otherParticipant.nome;
-        }
-        if (conversation.otherParticipant?.nomeCompleto && conversation.otherParticipant.nomeCompleto.trim()) {
-          return conversation.otherParticipant.nomeCompleto;
-        }
-        return 'Carregando...';
-      })(),
-      initials: (() => {
-        // Usar primeiro participante dos participantsData
-        if (conversation.participantsData?.length > 0) {
-          const otherUser = conversation.participantsData.find(p => p.uid !== user?.uid);
-          if (otherUser?.nome && otherUser.nome.trim()) {
-            return otherUser.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const currentContact = useMemo(() => {
+    console.log('🔍 Determinando currentContact para conversa:', selectedChatId);
+    console.log('📊 Dados da conversa:', conversation);
+    console.log('👥 Participantes da conversa:', conversation?.participants);
+    console.log('👤 Usuário atual:', user?.uid);
+
+    // 1. Tentar usar dados detalhados da conversa atual (mais confiável e atualizado)
+    if (conversation && conversation.id === selectedChatId) {
+      let otherUser = null;
+
+      // Tentar encontrar nos dados de participantes enriquecidos
+      if (conversation.participantsData?.length > 0) {
+        otherUser = conversation.participantsData.find(p => (p.uid || p.id) !== user?.uid);
+        console.log('✅ Encontrado em participantsData:', otherUser);
+      }
+
+      // Se não achou, tentar otherParticipant (mas garantir que não é o próprio usuário)
+      if (!otherUser && conversation.otherParticipant && (conversation.otherParticipant.uid || conversation.otherParticipant.id) !== user?.uid) {
+        otherUser = conversation.otherParticipant;
+        console.log('✅ Encontrado em otherParticipant:', otherUser);
+      }
+
+      // Se ainda não achou, tentar buscar diretamente pelos participantes
+      if (!otherUser && conversation.participants?.length > 0) {
+        const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
+        if (otherParticipantId) {
+          console.log('🔄 Buscando dados do participante:', otherParticipantId);
+          // Tentar buscar do cache dos contatos primeiro
+          otherUser = chatContacts.find(c => c.id === otherParticipantId);
+          if (!otherUser) {
+            // Se não está no cache, buscar da API (síncrono para evitar re-renders)
+            console.log('🌐 Buscando dados do usuário na API...');
+            // Nota: Esta busca será assíncrona, por enquanto retorna placeholder
           }
-          if (otherUser?.nomeCompleto && otherUser.nomeCompleto.trim()) {
-            return otherUser.nomeCompleto.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        }
+      }
+
+      if (otherUser) {
+        // Priorizar nomeCompleto sobre nome para evitar fallbacks incorretos
+        const name = otherUser.nomeCompleto || otherUser.nome || otherUser.razaoSocial || otherUser.name || 'Usuário';
+        console.log('🏷️ Nome determinado:', name, 'para usuário:', otherUser);
+        console.log('📊 Campos disponíveis:', {
+          nome: otherUser.nome,
+          nomeCompleto: otherUser.nomeCompleto,
+          razaoSocial: otherUser.razaoSocial,
+          name: otherUser.name
+        });
+
+        // Verificar se o nome é válido (não é placeholder)
+        if (name && name !== 'Usuário' && name !== 'Usuario' && name.trim() !== '') {
+          return {
+            id: conversation.id,
+            name: name,
+            initials: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+            type: otherUser.tipo || 'cidadao',
+            distance: '0m de você',
+            online: otherUser.online || false
+          };
+        } else {
+          console.log('⚠️ Nome ainda é placeholder, tentando buscar novamente...');
+          // Forçar uma busca adicional se o nome ainda for placeholder
+          const otherUid = conversation.participants?.find(p => p !== user?.uid);
+          if (otherUid) {
+            // Busca síncrona adicional (isso pode causar re-renders, mas é necessário)
+            console.log('🔄 Fazendo busca adicional para:', otherUid);
+            // Nota: Em produção, isso deveria ser feito de forma assíncrona
           }
         }
-        // Fallback
-        const name = conversation.otherParticipant?.nome || conversation.otherParticipant?.nomeCompleto || 'CV';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-      })(),
-      type: (() => {
-        if (conversation.participantsData?.length > 0) {
-          const otherUser = conversation.participantsData.find(p => p.uid !== user?.uid);
-          return otherUser?.tipo || 'cidadao';
-        }
-        return conversation.otherParticipant?.tipo || 'cidadao';
-      })(),
-      distance: '0m de você',
-      online: conversation.participantsData?.[0]?.online || conversation.otherParticipant?.online || false
-    } : chatContacts[0]);
+      }
+    }
+
+    // 2. Fallback para a lista de contatos
+    const fallbackContact = chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
+    console.log('🔄 Usando fallback do contato:', fallbackContact);
+    return fallbackContact;
+  }, [conversation, chatContacts, selectedChatId, user?.uid]);
 
   // Função para obter informações do contexto (pedido ou achado/perdido)
   const getContextInfo = () => {
@@ -270,6 +290,48 @@ const Chat = () => {
     }
   };
 
+  // Buscar dados do usuário atual do banco de dados
+  useEffect(() => {
+    const fetchCurrentUserData = async () => {
+      if (user?.uid) {
+        try {
+          const userResponse = await ApiService.getUserData(user.uid);
+          if (userResponse.success && userResponse.data) {
+            setCurrentUserData({
+              name: userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || "Administrador",
+              email: userResponse.data.email || "usuario@email.com",
+              phone: userResponse.data.telefone || "(11) 00000-0000",
+              type: userResponse.data.tipo || "Pessoa Física",
+              address: userResponse.data.endereco || "Endereço não informado",
+              points: userResponse.data.pontos || 0,
+              initials: (userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || "A").split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+              joinDate: userResponse.data.createdAt ? new Date(userResponse.data.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Janeiro 2024",
+              isVerified: true,
+              isSelf: true
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao buscar dados do usuário:', error);
+          // Fallback para dados locais
+          setCurrentUserData({
+            name: user?.nome || "Administrador",
+            email: user?.email || "usuario@email.com",
+            phone: user?.telefone || "(11) 00000-0000",
+            type: user?.tipo || "Pessoa Física",
+            address: user?.endereco || "Endereço não informado",
+            points: user?.pontos || 0,
+            initials: (user?.nome || "A").split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+            joinDate: user?.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Janeiro 2024",
+            isVerified: true,
+            isSelf: true
+          });
+        }
+      }
+    };
+
+    fetchCurrentUserData();
+  }, [user?.uid]);
+
   // Adicionar ao useEffect para limpar cache antigo
   useEffect(() => {
     // Limpar cache antigo na inicialização
@@ -285,8 +347,8 @@ const Chat = () => {
     try {
       const response = await ApiService.getConversations();
       if (response.success && response.data) {
-        const formattedContacts = response.data.map(conv => {
-          console.log('Processando conversa:', JSON.stringify(conv, null, 2));
+        const formattedContacts = await Promise.all(response.data.map(async (conv) => {
+          // console.log('Processando conversa:', JSON.stringify(conv, null, 2));
           
           // Garantir que sempre temos um nome válido
           let userName = 'Carregando...';
@@ -294,33 +356,49 @@ const Chat = () => {
           // Tentar múltiplas fontes para o nome
           if (conv.otherParticipant?.nome && conv.otherParticipant.nome.trim()) {
             userName = conv.otherParticipant.nome;
-            console.log('Nome encontrado em otherParticipant.nome:', userName);
           } else if (conv.otherParticipant?.nomeCompleto && conv.otherParticipant.nomeCompleto.trim()) {
             userName = conv.otherParticipant.nomeCompleto;
-            console.log('Nome encontrado em otherParticipant.nomeCompleto:', userName);
           } else if (conv.participantsData?.length > 0) {
             const otherParticipant = conv.participantsData.find(p => p.uid !== user?.uid);
-            console.log('Procurando em participantsData, otherParticipant:', otherParticipant);
             if (otherParticipant?.nome && otherParticipant.nome.trim()) {
               userName = otherParticipant.nome;
-              console.log('Nome encontrado em participantsData.nome:', userName);
             } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
               userName = otherParticipant.nomeCompleto;
-              console.log('Nome encontrado em participantsData.nomeCompleto:', userName);
             }
           } else if (conv.participants?.length > 0) {
             const otherParticipant = conv.participants.find(p => p.uid !== user?.uid);
-            console.log('Procurando em participants, otherParticipant:', otherParticipant);
             if (otherParticipant?.nome && otherParticipant.nome.trim()) {
               userName = otherParticipant.nome;
-              console.log('Nome encontrado em participants.nome:', userName);
             } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
               userName = otherParticipant.nomeCompleto;
-              console.log('Nome encontrado em participants.nomeCompleto:', userName);
             }
           }
           
-          console.log('Nome final para conversa', conv.id, ':', userName);
+          // Se ainda não encontrou o nome ou é um placeholder, tentar buscar do banco de dados
+          if (userName === 'Carregando...' || userName === 'Usuário' || userName === 'Administrador') {
+            const participantUid = conv.otherParticipant?.id || conv.otherParticipant?.uid || conv.participants?.find(p => p !== user?.uid);
+            
+            if (participantUid && participantUid !== user?.uid) {
+              try {
+                const userResponse = await ApiService.getUserData(participantUid);
+                if (userResponse.success && userResponse.data) {
+                  // Tentar múltiplas possibilidades de campos de nome
+                  userName = userResponse.data.nome ||
+                            userResponse.data.nomeCompleto ||
+                            userResponse.data.razaoSocial ||
+                            userResponse.data.name ||
+                            userResponse.data.fullName ||
+                            userResponse.data.displayName ||
+                            userResponse.data.email ||
+                            'Usuário';
+                }
+              } catch (error) {
+                console.error('Erro ao buscar nome do usuário:', error);
+              }
+            }
+          }
+          
+          // console.log('Nome final para conversa', conv.id, ':', userName);
           
           return {
             id: conv.id,
@@ -335,7 +413,7 @@ const Chat = () => {
               new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
             unreadCount: conv.unreadCount || 0
           };
-        });
+        }));
         setChatContacts(formattedContacts);
       }
     } catch (error) {
@@ -356,6 +434,11 @@ const Chat = () => {
       
       if (conversationResponse.success) {
         const convData = conversationResponse.data;
+        
+        if (!convData) {
+          console.error('Dados da conversa vazios');
+          return;
+        }
         console.log('Dados completos da conversa:', JSON.stringify(convData, null, 2));
         console.log('pedidoId:', convData.pedidoId);
         console.log('itemId:', convData.itemId);
@@ -412,14 +495,13 @@ const Chat = () => {
         setConversation(convData);
 
         // Fetch other participant data if name is not available or is "Usuario"
-        if (conversation.otherParticipant && (!conversation.otherParticipant.nome || conversation.otherParticipant.nome === 'Usuario')) {
+        if (convData.otherParticipant && (!convData.otherParticipant.nome || convData.otherParticipant.nome === 'Usuario')) {
           try {
-            const otherUid = conversation.participants.find(p => p !== user?.uid);
+            const otherUid = convData.participants.find(p => p !== user?.uid);
             if (otherUid) {
               const userResponse = await ApiService.getUser(otherUid);
               if (userResponse.success && userResponse.data) {
-                conversation.otherParticipant = { ...conversation.otherParticipant, ...userResponse.data };
-                setConversation({ ...conversation });
+                setConversation({ ...convData, otherParticipant: { ...convData.otherParticipant, ...userResponse.data } });
               }
             }
           } catch (error) {
@@ -837,7 +919,7 @@ const Chat = () => {
                 </div>
                 <div className="contact-meta">
                   <div className="contact-name-row">
-                    <span className="contact-name">{contact.name}</span>
+                    <span className="contact-name">{contact.name === 'Carregando...' || !contact.name ? 'Usuário' : contact.name}</span>
                     <span className="last-time">{contact.lastMessageTime}</span>
                   </div>
                   <div className="contact-preview-row">
@@ -885,9 +967,9 @@ const Chat = () => {
                 </div>
                 <div className="header-text-details">
                   <div className="header-name-row">
-                    <h3>{currentContact?.name || 'Carregando...'}</h3>
-                    <span className={`role-badge ${currentContact?.type || 'conversa'}`}>
-                      {currentContact?.type === "doador" ? "Doador Verificado" : "Vizinho em Busca"}
+                    <h3>{currentContact?.name || 'Usuário'}</h3>
+                    <span className={`role-badge ${currentContact?.type || 'cidadao'}`}>
+                      {currentContact?.type === 'doador' ? 'Doador' : currentContact?.type === 'ong' ? 'ONG' : 'Cidadão'}
                     </span>
                   </div>
                   <div className="header-status-pills">
@@ -1108,7 +1190,7 @@ const Chat = () => {
                     <div className="msg-bubble text-bubble">
                       {hasReply && (
                         <div className="reply-quote">
-                          <span className="reply-quote-sender">{hasReply.senderName}</span>
+                          <span className="reply-quote-sender">{hasReply.senderName === 'Você' ? (currentUserData?.name || user?.nome || 'Administrador').length > 15 ? (currentUserData?.name || user?.nome || 'Administrador').substring(0, 15) + '...' : (currentUserData?.name || user?.nome || 'Administrador') : hasReply.senderName}</span>
                           <p className="reply-quote-text">{hasReply.content}</p>
                         </div>
                       )}

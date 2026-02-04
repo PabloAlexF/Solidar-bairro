@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, ArrowLeft, User, Home, Users2, DollarSign, 
   ListChecks, MapPin, CheckCircle2, ChevronRight, 
@@ -156,6 +156,9 @@ export default function CadastroFamiliaDesktop() {
         if (formData.estado.trim() === '') newErrors.estado = true;
         if (formData.tipoMoradia === '') newErrors.tipoMoradia = true;
         break;
+      case 6:
+        if (formData.necessidades.length === 0) newErrors.necessidades = true;
+        break;
     }
     return newErrors;
   };
@@ -289,6 +292,13 @@ export default function CadastroFamiliaDesktop() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      showToast('Por favor, selecione pelo menos uma necessidade.', 'error');
+      return;
+    }
     
     if (formData.password !== formData.confirmPassword) {
       showToast('As senhas não coincidem', 'error');
@@ -357,7 +367,7 @@ export default function CadastroFamiliaDesktop() {
                   <p style={{ fontSize: '0.85rem', opacity: 0.9, marginTop: '4px' }}>Seu perfil está visível para ONGs locais.</p>
                 </div>
               </div>
-              <Link to="/" className="btn-go-home-orange" style={{ padding: '1rem 2rem', fontSize: '1rem', width: '100%', justifyContent: 'center', marginTop: '1.5rem' }}>
+              <Link to="/login" className="btn-go-home-orange" style={{ padding: '1rem 2rem', fontSize: '1rem', width: '100%', justifyContent: 'center', marginTop: '1.5rem' }}>
                 Acessar Painel
               </Link>
             </div>
@@ -645,6 +655,11 @@ export default function CadastroFamiliaDesktop() {
                     error={errors.confirmPassword}
                     required
                   />
+                  {formData.confirmPassword && (
+                    <div style={{ marginTop: '-10px', marginBottom: '15px', fontSize: '0.8rem', textAlign: 'right', fontWeight: '600', color: formData.password === formData.confirmPassword ? '#10b981' : '#ef4444' }}>
+                      {formData.password === formData.confirmPassword ? 'Senhas conferem' : 'Senhas não conferem'}
+                    </div>
+                  )}
                   <div className="form-group span-2">
                     <label className="field-label">Melhor horário para contato</label>
                     <select 

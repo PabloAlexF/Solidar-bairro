@@ -205,6 +205,11 @@ const CadastroONG = ({ onBack }) => {
               <Lock size={20} className="input-icon" />
               <input type="password" name="confirmarSenha" className={`form-input ${errors.confirmarSenha ? 'error' : ''}`} value={formData.confirmarSenha} onChange={handleChange} />
             </div>
+            {formData.confirmarSenha && (
+              <span style={{ fontSize: '11px', color: formData.senha === formData.confirmarSenha ? '#10b981' : '#ef4444', marginTop: '4px', display: 'block', textAlign: 'right', fontWeight: '600' }}>
+                {formData.senha === formData.confirmarSenha ? 'Senhas conferem' : 'Senhas não conferem'}
+              </span>
+            )}
           </div>
           <button type="submit" className="btn-submit full-width" disabled={loading}>{loading ? <Loader2 className="spin" /> : <>Cadastrar ONG <ArrowRight size={20} /></>}</button>
         </form>

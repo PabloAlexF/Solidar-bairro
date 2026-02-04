@@ -23,35 +23,32 @@ export const AuthProvider = ({ children }) => {
 
   const initializeAuth = async () => {
     try {
-      // Check for existing valid authentication data
-      const storedUser = localStorage.getItem('solidar-user');
-      const storedToken = localStorage.getItem('solidar-token');
+      // Load cached authentication data to persist login
+      const cachedUser = localStorage.getItem('solidar-user');
+      const cachedToken = localStorage.getItem('solidar-token');
 
-      if (storedUser && storedToken) {
+      if (cachedUser && cachedToken) {
         try {
-          // Validate token with backend if needed
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
-          setToken(storedToken);
-        } catch (error) {
-          // If parsing fails, clear invalid data
+          const userData = JSON.parse(cachedUser);
+          // Ensure address data is properly formatted
+          let processedUserData = userData;
+          if (userData && typeof userData.endereco === 'object') {
+            processedUserData = {
+              ...userData,
+              endereco: formatAddress(userData.endereco)
+            };
+          }
+          setUser(processedUserData);
+          setToken(cachedToken);
+        } catch (parseError) {
+          console.error('Erro ao parsear dados do usuário:', parseError);
+          // Clear invalid data
           localStorage.removeItem('solidar-user');
           localStorage.removeItem('solidar-token');
-          setUser(null);
-          setToken(null);
         }
-      } else {
-        // No stored data, reset state
-        setUser(null);
-        setToken(null);
       }
     } catch (error) {
       console.error('Erro ao inicializar auth:', error);
-      // Clear potentially corrupted data
-      localStorage.removeItem('solidar-user');
-      localStorage.removeItem('solidar-token');
-      setUser(null);
-      setToken(null);
     } finally {
       setLoading(false);
     }
