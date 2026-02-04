@@ -38,7 +38,7 @@ import {
   SUB_QUESTION_LABELS
 } from './constants';
 import ApiService from '../../services/apiService';
-import { getCurrentLocation } from '../../utils/geolocation';
+import { getCurrentLocation, getLocationWithFallback } from '../../utils/geolocation';
 
 export const MobileQueroAjudar = () => {
   const navigate = useNavigate();
@@ -50,7 +50,8 @@ export const MobileQueroAjudar = () => {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
-  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationRequested, setLocationRequested] = useState(false);
   const [fontSize, setFontSize] = useState('normal');
   const [highContrast, setHighContrast] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
@@ -62,13 +63,50 @@ export const MobileQueroAjudar = () => {
     try {
       setLoadingPedidos(true);
       setError(null);
-      
+
       // Simular delay mínimo para mostrar o skeleton
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
+      // Preparar filtros para a API (igual ao desktop)
+      const apiFilters = {};
+
+      // Filtro de categoria
+      if (selectedCat !== 'Todas') {
+        apiFilters.category = selectedCat;
+      }
+
+      // Filtro de urgência
+      if (selectedUrgency) {
+        apiFilters.urgency = selectedUrgency;
+      }
+
+      // Filtros de localização
+      if (selectedLocation === 'minha_cidade' && userLocation) {
+        apiFilters.city = userLocation.city;
+        apiFilters.state = userLocation.state;
+      } else if (selectedLocation === 'meu_estado' && userLocation) {
+        apiFilters.state = userLocation.state;
+      } else if (selectedLocation === 'meu_bairro' && userLocation) {
+        apiFilters.neighborhood = userLocation.neighborhood;
+      }
+
+      // Localização do usuário para ordenação por proximidade
+      if (userLocation) {
+        apiFilters.userCity = userLocation.city;
+        apiFilters.userState = userLocation.state;
+        console.log('Buscando pedidos próximos à localização:', userLocation);
+      } else {
+        console.warn('Localização do usuário não disponível para ordenação por proximidade');
+      }
+
+      // Filtro "apenas novos"
+      if (selectedTimeframe === 'hoje') {
+        apiFilters.onlyNew = true;
+      }
+
       // Verificar se a API está disponível
-      const response = await ApiService.getPedidos();
-      
+      const response = await ApiService.getPedidos(apiFilters);
+
       if (response.success && response.data) {
         const transformedPedidos = response.data.map(pedido => ({
           id: pedido.id,
@@ -88,7 +126,7 @@ export const MobileQueroAjudar = () => {
           isNew: isNewPedido(pedido.createdAt),
           createdAt: pedido.createdAt
         }));
-        
+
         setPedidos(transformedPedidos);
       } else {
         throw new Error('Erro ao carregar pedidos');
@@ -96,7 +134,7 @@ export const MobileQueroAjudar = () => {
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error);
       setError(error.message);
-      
+
       // Se for erro de conexão, mostrar dados mock para desenvolvimento
       if (error.message.includes('conectar com a API')) {
         console.warn('Usando dados mock para desenvolvimento');
@@ -154,34 +192,48 @@ export const MobileQueroAjudar = () => {
     setFontSize(savedFontSize);
     setHighContrast(savedContrast);
     document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
-    
-    loadPedidos();
-    
-  const loadLocation = async () => {
-    try {
-      // Verificar se geolocalização está disponível
-      if (!navigator.geolocation) {
-        throw new Error('Geolocalização não suportada');
+
+    // Try to get current location first, fallback to registered address or default
+    const loadLocation = async () => {
+      try {
+        const location = await getLocationWithFallback();
+        setUserLocation(location);
+        console.log('Localização obtida automaticamente:', location);
+      } catch (error) {
+        console.warn('Não foi possível obter localização automática, usando endereço cadastrado ou padrão:', error.message);
+        // Fallback to user's registered location or default
+        if (user && user.endereco) {
+          const userCity = user.endereco.cidade || user.endereco.city || 'São Paulo';
+          const userState = user.endereco.estado || user.endereco.state || 'SP';
+          setUserLocation({ city: userCity, state: userState });
+          console.log('Localização definida pelo endereço cadastrado:', { city: userCity, state: userState });
+        } else {
+          // Fallback to São Paulo if no user address
+          setUserLocation({ city: 'São Paulo', state: 'SP' });
+          console.log('Usando localização padrão (São Paulo) - usuário não logado ou sem endereço');
+        }
       }
-      
-      // Solicitar localização apenas se o usuário interagir
-      const location = await getCurrentLocation();
-      console.log('Localização obtida:', location);
-      setUserLocation(location);
-    } catch (error) {
-      console.warn('Erro ao obter localização:', error);
-      // Usar localização genérica apenas se realmente não conseguir obter
-      setUserLocation({ city: 'Sua Cidade', state: 'Seu Estado' });
-    } finally {
-      setLocationLoading(false);
-    }
-  };
-    
+    };
+
     loadLocation();
-    
+
     const timer = setTimeout(() => setIsLoading(false), 1000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [user]);
+
+  // Recarregar pedidos quando a localização do usuário for definida
+  useEffect(() => {
+    if (userLocation) {
+      loadPedidos();
+    }
+  }, [userLocation]);
+
+  // Recarregar pedidos quando os filtros mudarem
+  useEffect(() => {
+    if (userLocation) {
+      loadPedidos();
+    }
+  }, [selectedCat, selectedUrgency, selectedLocation, selectedTimeframe]);
 
   const [selectedLocation, setSelectedLocation] = useState('brasil');
   const [selectedTimeframe, setSelectedTimeframe] = useState('todos');
@@ -189,22 +241,9 @@ export const MobileQueroAjudar = () => {
   const [expandedItem, setExpandedItem] = useState(null);
 
   const filteredOrders = useMemo(() => {
-    return pedidos.filter((order) => {
-      const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
-      const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
-      
-      let locationMatch = true;
-      if (selectedLocation === 'meu_estado') {
-        locationMatch = order.state === userLocation.state;
-      } else if (selectedLocation === 'minha_cidade') {
-        locationMatch = order.city === userLocation.city && order.state === userLocation.state;
-      }
-
-      const timeMatch = selectedTimeframe === 'todos' || (selectedTimeframe === 'hoje' && order.isNew);
-      
-      return catMatch && urgMatch && locationMatch && timeMatch;
-    });
-  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, userLocation, user]);
+    // Como os filtros agora são aplicados no backend, apenas retornamos os pedidos
+    return pedidos;
+  }, [pedidos]);
 
   const changeFontSize = (size) => {
     setFontSize(size);
@@ -227,6 +266,27 @@ export const MobileQueroAjudar = () => {
       return;
     }
     setOrderToHelp(order);
+  };
+
+  const requestLocation = async () => {
+    if (locationRequested) return; // Prevent multiple requests
+
+    setLocationRequested(true);
+    setLocationLoading(true);
+
+    try {
+      const location = await getCurrentLocation();
+      console.log('Localização obtida:', location);
+      setUserLocation(location);
+      toast.success(`Localização atualizada: ${location.city}, ${location.state}`);
+    } catch (error) {
+      console.warn('Erro ao obter localização:', error);
+      toast.error('Não foi possível obter sua localização. Usando São Paulo como padrão.');
+      setUserLocation({ city: 'São Paulo', state: 'SP' });
+    } finally {
+      setLocationLoading(false);
+      setLocationRequested(false);
+    }
   };
 
   const { ref } = useInView({ threshold: 0.1, triggerOnce: true });
@@ -488,17 +548,42 @@ export const MobileQueroAjudar = () => {
               </p>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-               <button 
+              <button
                 onClick={() => setShowAccessibility(true)}
                 style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
               >
                 <span style={{ fontSize: '1.2rem' }}>Aa</span>
               </button>
-              <button 
+              <button
+                onClick={requestLocation}
+                disabled={locationLoading}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  background: locationLoading ? '#f1f5f9' : 'white',
+                  color: locationLoading ? '#94a3b8' : '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: locationLoading ? 'not-allowed' : 'pointer'
+                }}
+                title="Atualizar localização"
+              >
+                {locationLoading ? (
+                  <div style={{ width: '16px', height: '16px', border: '2px solid #94a3b8', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                ) : (
+                  <Navigation size={20} />
+                )}
+              </button>
+              <button
                 onClick={() => setShowFiltersModal(true)}
-                style={{ 
-                  width: '40px', height: '40px', borderRadius: '12px', 
-                  border: '1px solid #e2e8f0', 
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
                   background: (selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil') ? '#eff6ff' : 'white',
                   color: (selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil') ? '#3b82f6' : '#64748b',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',

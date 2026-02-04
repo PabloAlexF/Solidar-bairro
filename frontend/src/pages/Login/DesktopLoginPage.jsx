@@ -5,7 +5,7 @@ import { Eye, EyeOff, Mail, Lock, ArrowRight, Compass } from 'lucide-react';
 import createGlobe from 'cobe';
 import './styles.css';
 
-const Login = () => {
+const DesktopLoginPage = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ const Login = () => {
     const onResize = () => canvasRef.current && (width = canvasRef.current.offsetWidth);
     window.addEventListener('resize', onResize);
     onResize();
-    
+
     if (!canvasRef.current) return;
 
     const globe = createGlobe(canvasRef.current, {
@@ -79,7 +79,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     try {
       // Usuário temporário para admin
       if (formData.email === 'admin@solidar.com' && formData.senha === 'admin123') {
@@ -88,10 +88,10 @@ const Login = () => {
         navigate('/admin');
         return;
       }
-      
+
       const result = await login(formData.email, formData.senha);
       console.log('Login result:', result);
-      
+
       // Verificar se é admin e redirecionar apropriadamente
       if (result && result.user && result.user.tipo === 'admin') {
         console.log('Admin detected, redirecting to /admin');
@@ -122,7 +122,7 @@ const Login = () => {
       <div className="modal-wrapper">
         <div className="modal-card">
           <div className="modal-content">
-            
+
             {/* Left Section: Branding & Welcome */}
             <div className="branding-section section-padding">
               <div className="logo-container">
@@ -137,7 +137,7 @@ const Login = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="branding-content">
                 <h1 className="title">
                   Juntos somos <br />
@@ -170,7 +170,7 @@ const Login = () => {
                     <span>{error}</span>
                   </div>
                 )}
-                
+
                 <div className="form-group">
                   <label htmlFor="email" className="label-text">
                     Identificação Institucional
@@ -241,7 +241,7 @@ const Login = () => {
                   <div className="divider-line" />
                 </div>
 
-                <button 
+                <button
                   className="secondary-button"
                   onClick={() => navigate('/cadastro')}
                 >
@@ -254,7 +254,7 @@ const Login = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="footer">
           <p className="footer-text">
             © 2026 • Ação Solidária • Transformando vidas com amor
@@ -266,4 +266,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default DesktopLoginPage;

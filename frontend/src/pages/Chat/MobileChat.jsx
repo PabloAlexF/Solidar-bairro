@@ -29,7 +29,11 @@ import {
   Reply,
   Calendar,
   Shield,
-  Pencil
+  Pencil,
+  Pin,
+  PinOff,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import './mobile-styles.css';
@@ -62,6 +66,14 @@ const ensureDependencies = () => {
           }
         }
       }
+      return { success: true };
+    };
+  }
+
+  // Polyfill para typing status
+  if (ApiService && !ApiService.sendTypingStatus) {
+    ApiService.sendTypingStatus = async (conversaId, isTyping) => {
+      // console.log(`Enviando status digitando: ${isTyping} para conversa ${conversaId}`);
       return { success: true };
     };
   }
@@ -158,10 +170,22 @@ const Chat = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const [replyingTo, setReplyingTo] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
   const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
   const [currentUserData, setCurrentUserData] = useState(null);
+  const [pinnedConversations, setPinnedConversations] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pinnedConversations');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const typingTimeoutRef = useRef(null);
+  const [showMsgSearch, setShowMsgSearch] = useState(false);
+  const [msgSearchTerm, setMsgSearchTerm] = useState("");
 
   const handleReactionClick = (msgId, emoji) => {
     setMessages(prev => prev.map(msg => {
@@ -203,6 +227,42 @@ const Chat = () => {
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.lastMessage?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const sortedContacts = useMemo(() => {
+    return [...filteredContacts].sort((a, b) => {
+      const aPinned = pinnedConversations.includes(a.id);
+      const bPinned = pinnedConversations.includes(b.id);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      return 0;
+    });
+  }, [filteredContacts, pinnedConversations]);
+
+  const displayedMessages = useMemo(() => {
+    if (!msgSearchTerm.trim()) return messages;
+    return messages.filter(msg => 
+      (msg.content && typeof msg.content === 'string' && msg.content.toLowerCase().includes(msgSearchTerm.toLowerCase())) ||
+      (msg.type === 'location' && msg.location?.address?.toLowerCase().includes(msgSearchTerm.toLowerCase()))
+    );
+  }, [messages, msgSearchTerm]);
+
+  const handlePinConversation = (e, id) => {
+    e.stopPropagation();
+    setPinnedConversations(prev => {
+      let newPinned;
+      if (prev.includes(id)) {
+        newPinned = prev.filter(p => p !== id);
+      } else {
+        if (prev.length >= 2) {
+          alert('Você pode fixar no máximo 2 conversas.');
+          return prev;
+        }
+        newPinned = [...prev, id];
+      }
+      localStorage.setItem('pinnedConversations', JSON.stringify(newPinned));
+      return newPinned;
+    });
+  };
 
   const currentContact = useMemo(() => {
     console.log('🔍 Determinando currentContact para conversa:', selectedChatId);
@@ -650,6 +710,14 @@ const Chat = () => {
           }))];
         });
       });
+
+      // Iniciar escuta de "digitando..."
+      if (chatNotificationService.subscribeToTyping) {
+        const unsubscribeTyping = chatNotificationService.subscribeToTyping(conversaId, (isTypingStatus) => {
+          setIsTyping(isTypingStatus);
+        });
+        return () => { unsubscribeTyping && unsubscribeTyping(); };
+      }
     }
     
     loadConversations();
@@ -664,6 +732,21 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  const handleTypingInput = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+
+    if (conversaId) {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      
+      ApiService.sendTypingStatus(conversaId, true).catch(() => {});
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        ApiService.sendTypingStatus(conversaId, false).catch(() => {});
+      }, 2000);
+    }
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim() || sendingMessage) return;
@@ -1009,7 +1092,7 @@ const Chat = () => {
           </div>
           
           <div className="sb-contacts-list">
-            {filteredContacts.map((contact) => (
+            {sortedContacts.map((contact) => (
               <div 
                 key={contact.id} 
                 className={`contact-item ${selectedChatId === contact.id ? 'active' : ''}`}
@@ -1025,6 +1108,9 @@ const Chat = () => {
                   <div className={`contact-avatar ${contact.type}`}>
                     {contact.initials}
                   </div>
+                  {pinnedConversations.includes(contact.id) && (
+                    <div style={{ position: 'absolute', top: -4, left: -4, background: '#fff', borderRadius: '50%', padding: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><Pin size={12} fill="#64748b" color="#64748b" /></div>
+                  )}
                   {contact.online && <span className="sb-online-status-dot" />}
                 </div>
                 <div className="sb-contact-meta">
@@ -1039,6 +1125,13 @@ const Chat = () => {
                     )}
                   </div>
                 </div>
+                <button 
+                  onClick={(e) => handlePinConversation(e, contact.id)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: pinnedConversations.includes(contact.id) ? '#10b981' : '#94a3b8', padding: 4, alignSelf: 'center', opacity: 1 }}
+                  title={pinnedConversations.includes(contact.id) ? "Desafixar conversa" : "Fixar conversa"}
+                >
+                  {pinnedConversations.includes(contact.id) ? <PinOff size={16} /> : <Pin size={16} />}
+                </button>
               </div>
             ))}
           </div>
@@ -1101,6 +1194,12 @@ const Chat = () => {
             <div className="sb-header-right-group">
               <div className="sb-quick-actions-desktop">
                 <button
+                  className="sb-header-action-btn"
+                  onClick={() => setShowMsgSearch(!showMsgSearch)}
+                >
+                  <Search size={20} />
+                </button>
+                <button
                   className="sb-header-action-btn danger"
                   onClick={() => setShowReportModal(true)}
                   title="Denunciar ou Bloquear"
@@ -1118,6 +1217,28 @@ const Chat = () => {
             <ShieldCheck size={16} />
             <span>Conexão segura SolidarBairro • Dados protegidos</span>
           </div>
+
+          {showMsgSearch && (
+            <div className="sb-msg-search-bar" style={{ padding: '10px 16px', borderBottom: '1px solid #f1f5f9', background: 'white', display: 'flex', alignItems: 'center', gap: '10px', animation: 'fadeIn 0.2s ease-out' }}>
+              <Search size={16} color="#94a3b8" />
+              <input
+                type="text"
+                placeholder="Buscar mensagem..."
+                value={msgSearchTerm}
+                onChange={(e) => setMsgSearchTerm(e.target.value)}
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: '0.9rem', color: '#1e293b' }}
+                autoFocus
+              />
+              {msgSearchTerm && (
+                <button onClick={() => setMsgSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4 }}>
+                  <X size={16} />
+                </button>
+              )}
+              <button onClick={() => { setShowMsgSearch(false); setMsgSearchTerm(''); }} style={{ background: '#f1f5f9', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', cursor: 'pointer' }}>
+                Fechar
+              </button>
+            </div>
+          )}
 
           <div className="sb-chat-content-scroll">
             {/* Context Info Card Mobile */}
@@ -1276,11 +1397,13 @@ const Chat = () => {
                 </div>
               ) : (
               <>
-              <div className="sb-date-separator">
-                <span>Hoje</span>
-              </div>
+              {!msgSearchTerm && (
+                <div className="sb-date-separator">
+                  <span>Hoje</span>
+                </div>
+              )}
 
-              {messages.map((msg) => {
+              {displayedMessages.map((msg) => {
                 if (msg.type === "system") {
                   const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso") || msg.content?.includes("resolvido") || msg.content?.includes("encerrada");
                   const isSecurity = msg.content?.includes("seguro") || msg.content?.includes("ambiente");
@@ -1334,7 +1457,10 @@ const Chat = () => {
                         src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} 
                         alt="Imagem enviada" 
                         className="sb-msg-media-img" 
-                        onClick={() => setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content)}
+                        onClick={() => {
+                          setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content);
+                          setZoomLevel(1);
+                        }}
                       />
                     </div>
                   );
@@ -1539,7 +1665,7 @@ const Chat = () => {
                     className="sb-chat-textarea"
                     placeholder="Digite sua mensagem..."
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={handleTypingInput}
                     onKeyDown={handleKeyPress}
                     rows={1}
                   />
@@ -1796,10 +1922,24 @@ const Chat = () => {
       {selectedImage && (
         <div className="sb-image-modal-overlay" onClick={() => setSelectedImage(null)}>
           <div className="sb-image-modal-content">
-            <img src={selectedImage} alt="Visualização em tela cheia" />
-            <button className="sb-close-image-modal" onClick={() => setSelectedImage(null)}>
-              <X size={24} />
-            </button>
+            <div className="sb-image-controls" style={{ position: 'absolute', top: 20, right: 20, zIndex: 3002, display: 'flex', gap: 10 }} onClick={(e) => e.stopPropagation()}>
+              <button className="sb-control-btn" onClick={() => setZoomLevel(z => Math.max(1, z - 0.5))}><ZoomOut size={24} color="white"/></button>
+              <button className="sb-control-btn" onClick={() => setZoomLevel(z => Math.min(4, z + 0.5))}><ZoomIn size={24} color="white"/></button>
+              <button className="sb-control-btn" onClick={() => setSelectedImage(null)}><X size={24} color="white"/></button>
+            </div>
+            <div style={{ overflow: 'auto', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+              <img 
+                src={selectedImage} 
+                alt="Visualização em tela cheia" 
+                style={{ 
+                  transform: `scale(${zoomLevel})`, 
+                  transition: 'transform 0.2s ease-out',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain'
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

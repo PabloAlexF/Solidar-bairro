@@ -6,7 +6,7 @@ import AdminProtectedRoute from '../components/AdminProtectedRoute';
 
 // Feature-based imports
 import LandingPage from '../pages/LandingPage';
-import Login from '../pages/Login';
+import ResponsiveLoginPage from '../pages/Login/ResponsiveLoginPage';
 import CadastroWrapper from '../pages/Cadastro/CadastroWrapper';
 import CadastroCidadaoWrapper from '../pages/Cadastro/CadastroCidadao/CadastroCidadaoWrapper';
 import CadastroComercio from '../pages/Cadastro/CadastroComercio/CadastroComercio';
@@ -32,7 +32,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/solidar-bairro" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<ResponsiveLoginPage />} />
       <Route path="/cadastro" element={<CadastroWrapper />} />
       <Route path="/cadastro/cidadao" element={<CadastroCidadaoWrapper />} />
       <Route path="/cadastro/comercio" element={<CadastroComercio />} />

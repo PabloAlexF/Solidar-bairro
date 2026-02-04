@@ -30,7 +30,11 @@ import {
   Reply,
   Smile,
   X,
-  Pencil
+  Pencil,
+  Pin,
+  PinOff,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
@@ -63,6 +67,15 @@ const ensureDependencies = () => {
           }
         }
       }
+      return { success: true };
+    };
+  }
+
+  // Polyfill para typing status
+  if (ApiService && !ApiService.sendTypingStatus) {
+    ApiService.sendTypingStatus = async (conversaId, isTyping) => {
+      // Em produção, isso chamaria o backend/socket
+      // console.log(`Enviando status digitando: ${isTyping} para conversa ${conversaId}`);
       return { success: true };
     };
   }
@@ -121,6 +134,19 @@ const Chat = () => {
   const [editingMessage, setEditingMessage] = useState(null);
   const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
   const [currentUserData, setCurrentUserData] = useState(null);
+  const [pinnedConversations, setPinnedConversations] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pinnedConversations');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const typingTimeoutRef = useRef(null);
+  const [showMsgSearch, setShowMsgSearch] = useState(false);
+  const [msgSearchTerm, setMsgSearchTerm] = useState("");
 
   const messagesEndRef = useRef(null);
 
@@ -132,6 +158,42 @@ const Chat = () => {
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.lastMessage?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const sortedContacts = useMemo(() => {
+    return [...filteredContacts].sort((a, b) => {
+      const aPinned = pinnedConversations.includes(a.id);
+      const bPinned = pinnedConversations.includes(b.id);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      return 0;
+    });
+  }, [filteredContacts, pinnedConversations]);
+
+  const handlePinConversation = (e, id) => {
+    e.stopPropagation();
+    setPinnedConversations(prev => {
+      let newPinned;
+      if (prev.includes(id)) {
+        newPinned = prev.filter(p => p !== id);
+      } else {
+        if (prev.length >= 2) {
+          alert('Você pode fixar no máximo 2 conversas.');
+          return prev;
+        }
+        newPinned = [...prev, id];
+      }
+      localStorage.setItem('pinnedConversations', JSON.stringify(newPinned));
+      return newPinned;
+    });
+  };
+
+  const displayedMessages = useMemo(() => {
+    if (!msgSearchTerm.trim()) return messages;
+    return messages.filter(msg => 
+      (msg.content && typeof msg.content === 'string' && msg.content.toLowerCase().includes(msgSearchTerm.toLowerCase())) ||
+      (msg.type === 'location' && msg.location?.address?.toLowerCase().includes(msgSearchTerm.toLowerCase()))
+    );
+  }, [messages, msgSearchTerm]);
 
   const currentContact = useMemo(() => {
     console.log('🔍 Determinando currentContact para conversa:', selectedChatId);
@@ -571,6 +633,14 @@ const Chat = () => {
           }))];
         });
       });
+
+      // Iniciar escuta de "digitando..." (Simulação se o serviço não tiver implementado)
+      if (chatNotificationService.subscribeToTyping) {
+        const unsubscribeTyping = chatNotificationService.subscribeToTyping(conversaId, (isTypingStatus) => {
+          setIsTyping(isTypingStatus);
+        });
+        return () => { unsubscribeTyping && unsubscribeTyping(); };
+      }
     }
     
     loadConversations();
@@ -607,6 +677,21 @@ const Chat = () => {
     setInputValue(msg.content);
     setReplyingTo(null);
     fileInputRef.current?.focus();
+  };
+
+  const handleTypingInput = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+
+    if (conversaId) {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      
+      ApiService.sendTypingStatus(conversaId, true).catch(() => {});
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        ApiService.sendTypingStatus(conversaId, false).catch(() => {});
+      }, 2000);
+    }
   };
 
   useEffect(() => {
@@ -912,7 +997,7 @@ const Chat = () => {
           </div>
           
           <div className="contacts-list">
-            {filteredContacts.map((contact) => (
+            {sortedContacts.map((contact) => (
               <div 
                 key={contact.id} 
                 className={`contact-item ${selectedChatId === contact.id ? 'active' : ''}`}
@@ -928,6 +1013,9 @@ const Chat = () => {
                   <div className={`contact-avatar ${contact.type}`}>
                     {contact.initials}
                   </div>
+                  {pinnedConversations.includes(contact.id) && (
+                    <div style={{ position: 'absolute', top: -4, left: -4, background: '#fff', borderRadius: '50%', padding: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><Pin size={12} fill="#64748b" color="#64748b" /></div>
+                  )}
                   {contact.online && <span className="online-status-dot" />}
                 </div>
                 <div className="contact-meta">
@@ -942,6 +1030,13 @@ const Chat = () => {
                     )}
                   </div>
                 </div>
+                <button 
+                  onClick={(e) => handlePinConversation(e, contact.id)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: pinnedConversations.includes(contact.id) ? '#10b981' : '#94a3b8', padding: 4, alignSelf: 'center', opacity: 1 }}
+                  title={pinnedConversations.includes(contact.id) ? "Desafixar conversa" : "Fixar conversa"}
+                >
+                  {pinnedConversations.includes(contact.id) ? <PinOff size={16} /> : <Pin size={16} />}
+                </button>
               </div>
             ))}
           </div>
@@ -1001,6 +1096,13 @@ const Chat = () => {
             <div className="header-right-group">
               <div className="quick-actions-desktop">
                 <button
+                  className={`header-action-btn ${showMsgSearch ? 'active' : ''}`}
+                  onClick={() => setShowMsgSearch(!showMsgSearch)}
+                  title="Buscar na conversa"
+                >
+                  <Search size={20} />
+                </button>
+                <button
                   className="header-action-btn danger"
                   onClick={() => setShowReportModal(true)}
                   title="Denunciar ou Bloquear"
@@ -1018,6 +1120,28 @@ const Chat = () => {
             <ShieldCheck size={16} />
             <span>Conexão segura SolidarBairro • Dados protegidos</span>
           </div>
+
+          {showMsgSearch && (
+            <div className="msg-search-bar" style={{ padding: '12px 24px', borderBottom: '1px solid #f1f5f9', background: 'white', display: 'flex', alignItems: 'center', gap: '12px', animation: 'fadeIn 0.2s ease-out' }}>
+              <Search size={18} color="#94a3b8" />
+              <input
+                type="text"
+                placeholder="Buscar mensagem..."
+                value={msgSearchTerm}
+                onChange={(e) => setMsgSearchTerm(e.target.value)}
+                style={{ flex: 1, border: 'none', outline: 'none', fontSize: '0.95rem', color: '#1e293b' }}
+                autoFocus
+              />
+              {msgSearchTerm && (
+                <button onClick={() => setMsgSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4 }}>
+                  <X size={16} />
+                </button>
+              )}
+              <button onClick={() => { setShowMsgSearch(false); setMsgSearchTerm(''); }} style={{ background: '#f1f5f9', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', cursor: 'pointer' }}>
+                Fechar
+              </button>
+            </div>
+          )}
 
           <div className="chat-content-scroll">
             {/* Context Info Card */}
@@ -1135,11 +1259,13 @@ const Chat = () => {
                 </div>
               ) : (
               <>
-              <div className="date-separator">
-                <span>Hoje</span>
-              </div>
+              {!msgSearchTerm && (
+                <div className="date-separator">
+                  <span>Hoje</span>
+                </div>
+              )}
 
-              {messages.map((msg) => {
+              {displayedMessages.map((msg) => {
                 if (msg.type === "system") {
                   const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso") || msg.content?.includes("resolvido") || msg.content?.includes("encerrada");
                   const isSecurity = msg.content?.includes("seguro") || msg.content?.includes("ambiente");
@@ -1189,7 +1315,16 @@ const Chat = () => {
                 } else if (msg.type === "image") {
                   bubbleContent = (
                     <div className="msg-bubble media-bubble">
-                      <img src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} alt="Imagem enviada" className="msg-media-img" />
+                      <img 
+                        src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} 
+                        alt="Imagem enviada" 
+                        className="msg-media-img" 
+                        onClick={() => {
+                          setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content);
+                          setZoomLevel(1);
+                        }}
+                        style={{ cursor: 'pointer' }}
+                      />
                     </div>
                   );
                 } else if (msg.type === "video") {
@@ -1396,7 +1531,7 @@ const Chat = () => {
                     className="chat-textarea"
                     placeholder="Digite sua mensagem..."
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={handleTypingInput}
                     onKeyDown={handleKeyPress}
                     rows={1}
                   />
@@ -1644,6 +1779,32 @@ const Chat = () => {
               <Star className="star-icon" size={20} fill="currentColor" />
               <span>+10 Pontos de Impacto Social</span>
               <Sparkles size={16} className="text-yellow-300" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Modal Desktop */}
+      {selectedImage && (
+        <div className="image-modal-overlay" onClick={() => setSelectedImage(null)}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="image-modal-controls">
+              <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))} title="Diminuir Zoom"><ZoomOut size={20}/></button>
+              <button onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))} title="Aumentar Zoom"><ZoomIn size={20}/></button>
+              <button onClick={() => setSelectedImage(null)} title="Fechar"><X size={20}/></button>
+            </div>
+            <div className="image-viewport" style={{ overflow: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+              <img 
+                src={selectedImage} 
+                alt="Visualização em tela cheia"
+                style={{ 
+                  transform: `scale(${zoomLevel})`, 
+                  transition: 'transform 0.2s ease-out', 
+                  maxWidth: '100%', 
+                  maxHeight: '100%',
+                  objectFit: 'contain' 
+                }} 
+              />
             </div>
           </div>
         </div>

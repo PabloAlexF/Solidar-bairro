@@ -1397,41 +1397,41 @@ export default function QueroAjudarPage() {
     const loadPedidos = async () => {
       try {
         setLoadingPedidos(true);
-        
+
         // Simular delay mínimo para mostrar o skeleton
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
+
         // Preparar filtros para a API
         const apiFilters = {};
-        
+
         // Filtro de categoria
         if (selectedCat !== 'Todas') {
           apiFilters.category = selectedCat;
         }
-        
+
         // Filtro de urgência
         if (selectedUrgency) {
           apiFilters.urgency = selectedUrgency;
         }
-        
+
         // Filtros de localização
         if (selectedLocation === 'minha_cidade' && userLocation) {
           apiFilters.city = userLocation.city;
         } else if (selectedLocation === 'meu_bairro' && userLocation) {
           apiFilters.neighborhood = userLocation.neighborhood;
         }
-        
+
         // Localização do usuário para ordenação por proximidade
         if (userLocation) {
           apiFilters.userCity = userLocation.city;
           apiFilters.userState = userLocation.state;
         }
-        
+
         // Filtro "apenas novos"
         if (onlyNew) {
           apiFilters.onlyNew = true;
         }
-        
+
         const response = await ApiService.getPedidos(apiFilters);
         if (response.success && response.data) {
           // Mapear dados do backend para o formato esperado pelo frontend
@@ -1472,7 +1472,7 @@ export default function QueroAjudarPage() {
             let city = pedido.city || 'Não informado';
             let state = pedido.state || 'Não informado';
             let neighborhood = pedido.neighborhood || 'Não informado';
-            
+
             // Se não tem dados diretos, extrair da location string
             if ((!city || city === 'Não informado') && pedido.location) {
               const parts = pedido.location.split(',');
@@ -1520,24 +1520,25 @@ export default function QueroAjudarPage() {
       }
     };
 
-    // Get real user location
-    const loadLocation = async () => {
-      try {
-        console.log('Tentando obter localização...');
-        const location = await getCurrentLocation();
-        console.log('Localização obtida:', location);
-        setUserLocation(location);
-      } catch (error) {
-        console.warn('Erro ao obter localização:', error);
-        setUserLocation(null);
-      } finally {
-        setLocationLoading(false);
+    // Set user's registered location initially
+    const loadInitialLocation = () => {
+      if (user && user.endereco) {
+        const userCity = user.endereco.cidade || user.endereco.city || 'São Paulo';
+        const userState = user.endereco.estado || user.endereco.state || 'SP';
+        setUserLocation({ city: userCity, state: userState });
+        console.log('Localização definida pelo endereço cadastrado (Desktop):', { city: userCity, state: userState });
+      } else {
+        // Fallback to São Paulo if no user address
+        setUserLocation({ city: 'São Paulo', state: 'SP' });
+        console.log('Usando localização padrão (São Paulo) - usuário não logado ou sem endereço (Desktop)');
       }
+      setLocationLoading(false);
     };
 
     // Sempre carregar pedidos
     loadPedidos();
-  }, [selectedCat, selectedUrgency, selectedLocation, onlyNew, userLocation]);
+    loadInitialLocation();
+  }, [selectedCat, selectedUrgency, selectedLocation, onlyNew, userLocation, user]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -1547,23 +1548,22 @@ export default function QueroAjudarPage() {
 
   // UseEffect separado para carregar localização na inicialização
   useEffect(() => {
-    const loadInitialLocation = async () => {
-      try {
-        console.log('Carregando localização inicial...');
-        const location = await getLocationWithFallback();
-        console.log('Localização inicial obtida:', location);
-        setUserLocation(location);
-      } catch (error) {
-        console.warn('Erro ao obter localização inicial:', error);
-        // Fallback já é tratado pela função getLocationWithFallback
-        setUserLocation(null);
-      } finally {
-        setLocationLoading(false);
+    const loadInitialLocation = () => {
+      if (user && user.endereco) {
+        const userCity = user.endereco.cidade || user.endereco.city || 'São Paulo';
+        const userState = user.endereco.estado || user.endereco.state || 'SP';
+        setUserLocation({ city: userCity, state: userState });
+        console.log('Localização definida pelo endereço cadastrado (Desktop):', { city: userCity, state: userState });
+      } else {
+        // Fallback to São Paulo if no user address
+        setUserLocation({ city: 'São Paulo', state: 'SP' });
+        console.log('Usando localização padrão (São Paulo) - usuário não logado ou sem endereço (Desktop)');
       }
+      setLocationLoading(false);
     };
 
     loadInitialLocation();
-  }, []); // Executar apenas uma vez na inicialização
+  }, [user]); // Executar quando user mudar
 
   useEffect(() => {
     const loadNotifications = () => {
