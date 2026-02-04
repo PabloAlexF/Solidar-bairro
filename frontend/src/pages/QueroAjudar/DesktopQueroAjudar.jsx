@@ -90,7 +90,6 @@ const URGENCY_OPTIONS = [
 ];
 
 
-
 function CobeGlobe() {
   const canvasRef = useRef();
   const [globe, setGlobe] = useState();
@@ -714,7 +713,9 @@ function OrderCard({ order, onViewDetails, onHelp }) {
       </div>
 
       <p id={`order-desc-${order.id}`} className="card-description-v4">
-        {order.description?.substring(0, 150)}...
+        {order.description?.length > 36
+          ? `${order.description.substring(0, 36)}...`
+          : order.description}
       </p>
 
       <dl className="card-meta-v4">
@@ -938,7 +939,15 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                   <h3 id="section-historia-title">O Relato de {order.userName.split(' ')[0]}</h3>
                 </div>
                 <div className="story-card-v4">
-                  <p>{order.description}</p>
+                  <p style={{
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    paddingRight: '10px',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word'
+                  }}>
+                    {order.description}
+                  </p>
                 </div>
               </section>
 
@@ -1177,6 +1186,14 @@ function FiltersModal({
               {userLocation && (
                 <>
                   <button 
+                    className={`filter-chip-v4 ${selectedLocation === 'meu_estado' ? 'active' : ''}`}
+                    onClick={() => setSelectedLocation('meu_estado')}
+                    role="radio"
+                    aria-checked={selectedLocation === 'meu_estado'}
+                  >
+                    Meu Estado ({userLocation.state})
+                  </button>
+                  <button 
                     className={`filter-chip-v4 ${selectedLocation === 'minha_cidade' ? 'active' : ''}`}
                     onClick={() => setSelectedLocation('minha_cidade')}
                     role="radio"
@@ -1296,6 +1313,86 @@ function FiltersModal({
   );
 }
 
+function AccessibilityModal({ show, onClose, fontSize, onFontSizeChange, highContrast, onContrastChange }) {
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (show && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, [show]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    if (show) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [show, onClose]);
+
+  if (!show) return null;
+
+  return (
+    <div 
+      className="filters-modal-overlay-v4" 
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="accessibility-title"
+    >
+      <div 
+        className="filters-modal-v4" 
+        onClick={e => e.stopPropagation()}
+        ref={modalRef}
+        style={{ maxWidth: '500px' }}
+      >
+        <div className="filters-header-v4">
+          <div className="filters-title-v4">
+            <Accessibility size={20} aria-hidden="true" />
+            <h2 id="accessibility-title">Acessibilidade</h2>
+          </div>
+          <button 
+            ref={closeButtonRef}
+            className="filters-close-v4" 
+            onClick={onClose}
+            aria-label="Fechar acessibilidade"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="filters-content-v4">
+          <fieldset className="filter-group-v4">
+            <legend>Tamanho da Fonte</legend>
+            <div className="filter-chips-v4" role="group">
+              <button className={`filter-chip-v4 ${fontSize === 'small' ? 'active' : ''}`} onClick={() => onFontSizeChange('small')}>Pequeno</button>
+              <button className={`filter-chip-v4 ${fontSize === 'normal' ? 'active' : ''}`} onClick={() => onFontSizeChange('normal')}>Normal</button>
+              <button className={`filter-chip-v4 ${fontSize === 'large' ? 'active' : ''}`} onClick={() => onFontSizeChange('large')}>Grande</button>
+            </div>
+          </fieldset>
+          <fieldset className="filter-group-v4">
+            <legend>Contraste</legend>
+            <button className={`filter-chip-v4 ${highContrast ? 'active' : ''}`} onClick={onContrastChange}>
+              Ativar Alto Contraste
+            </button>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ConfirmHelpModal({ order, onConfirm, onClose }) {
   const confirmButtonRef = useRef(null);
 
@@ -1386,12 +1483,14 @@ export default function QueroAjudarPage() {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [pedidos, setPedidos] = useState([]);
   const [loadingPedidos, setLoadingPedidos] = useState(true);
-  const [highContrast, setHighContrast] = useState(false);
   const [liveMessage, setLiveMessage] = useState('');
   const [scrolled, setScrolled] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
+  const [fontSize, setFontSize] = useState('normal');
+  const [showAccessibilityModal, setShowAccessibilityModal] = useState(false);
 
   useEffect(() => {
     const loadPedidos = async () => {
@@ -1417,6 +1516,9 @@ export default function QueroAjudarPage() {
         // Filtros de localização
         if (selectedLocation === 'minha_cidade' && userLocation) {
           apiFilters.city = userLocation.city;
+          apiFilters.state = userLocation.state;
+        } else if (selectedLocation === 'meu_estado' && userLocation) {
+          apiFilters.state = userLocation.state;
         } else if (selectedLocation === 'meu_bairro' && userLocation) {
           apiFilters.neighborhood = userLocation.neighborhood;
         }
@@ -1520,31 +1622,51 @@ export default function QueroAjudarPage() {
       }
     };
 
-    // Set user's registered location initially
-    const loadInitialLocation = () => {
-      if (user && user.endereco) {
-        const userCity = user.endereco.cidade || user.endereco.city || 'São Paulo';
-        const userState = user.endereco.estado || user.endereco.state || 'SP';
-        setUserLocation({ city: userCity, state: userState });
-        console.log('Localização definida pelo endereço cadastrado (Desktop):', { city: userCity, state: userState });
-      } else {
-        // Fallback to São Paulo if no user address
-        setUserLocation({ city: 'São Paulo', state: 'SP' });
-        console.log('Usando localização padrão (São Paulo) - usuário não logado ou sem endereço (Desktop)');
-      }
-      setLocationLoading(false);
-    };
-
-    // Sempre carregar pedidos
-    loadPedidos();
-    loadInitialLocation();
-  }, [selectedCat, selectedUrgency, selectedLocation, onlyNew, userLocation, user]);
+    // A localização é carregada em um useEffect separado.
+    // Carregamos os pedidos apenas quando a localização estiver disponível.
+    if (userLocation) {
+      loadPedidos();
+    }
+  }, [selectedCat, selectedUrgency, selectedLocation, onlyNew, userLocation]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Efeitos para acessibilidade
+  useEffect(() => {
+    const savedFontSize = localStorage.getItem('fontSize') || 'normal';
+    const savedContrast = localStorage.getItem('highContrast') === 'true';
+    setFontSize(savedFontSize);
+    setHighContrast(savedContrast);
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    // Limpa classes de acessibilidade anteriores para evitar conflitos
+    root.classList.remove('font-small', 'font-normal', 'font-large', 'high-contrast');
+
+    // Adiciona as classes atuais
+    root.classList.add(`font-${fontSize}`);
+    if (highContrast) {
+      root.classList.add('high-contrast');
+    }
+  }, [fontSize, highContrast]);
+
+  const handleFontSizeChange = (size) => {
+    setFontSize(size);
+    localStorage.setItem('fontSize', size);
+    toast.success(`Fonte alterada para ${size === 'large' ? 'Grande' : size === 'small' ? 'Pequena' : 'Normal'}`);
+  };
+
+  const handleContrastChange = () => {
+    const newContrast = !highContrast;
+    setHighContrast(newContrast);
+    localStorage.setItem('highContrast', newContrast.toString());
+    toast.success(newContrast ? 'Alto contraste ativado' : 'Alto contraste desativado');
+  };
 
   // UseEffect separado para carregar localização na inicialização
   useEffect(() => {
@@ -1758,7 +1880,7 @@ export default function QueroAjudarPage() {
                   storedUser?.email === 'admin@solidarbairro.com';
 
   return (
-    <div className={`qa-page-v4 ${highContrast ? 'high-contrast' : ''} ${selectedOrder ? 'modal-open' : ''}`}>
+    <div className={`qa-page-v4 ${selectedOrder ? 'modal-open' : ''}`}>
       <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="section-container nav-container">
           <div className="logo-wrapper" onClick={() => navigate('/')}>
@@ -2144,9 +2266,9 @@ export default function QueroAjudarPage() {
               
               <button
                 className={`btn-accessibility-section ${highContrast ? 'active' : ''}`}
-                onClick={() => setHighContrast(!highContrast)}
-                aria-label={highContrast ? 'Desativar alto contraste' : 'Ativar alto contraste'}
-                title={highContrast ? 'Desativar alto contraste' : 'Ativar alto contraste'}
+                onClick={() => setShowAccessibilityModal(true)}
+                aria-label="Abrir opções de acessibilidade"
+                title="Abrir opções de acessibilidade"
               >
                 <Accessibility size={18} aria-hidden="true" />
               </button>
@@ -2316,6 +2438,15 @@ export default function QueroAjudarPage() {
         userLocation={userLocation}
         setUserLocation={setUserLocation}
         onClear={clearFilters}
+      />
+
+      <AccessibilityModal
+        show={showAccessibilityModal}
+        onClose={() => setShowAccessibilityModal(false)}
+        fontSize={fontSize}
+        onFontSizeChange={handleFontSizeChange}
+        highContrast={highContrast}
+        onContrastChange={handleContrastChange}
       />
 
       {selectedOrder && (

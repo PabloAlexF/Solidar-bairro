@@ -2219,3 +2219,106 @@ a:focus-visible {
     right: -20px;
   }
 }
+
+/* ========================================
+   HIGH CONTRAST MODE (DESKTOP)
+   ======================================== */
+
+html.high-contrast, html.high-contrast body, html.high-contrast #root {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast .qa-page-v4,
+html.high-contrast nav,
+html.high-contrast .landing-nav,
+html.high-contrast .hero-section {
+  background-color: #000000 !important;
+  background: #000000 !important;
+}
+
+html.high-contrast .order-card-v4,
+html.high-contrast .qa-modal-content-v4,
+html.high-contrast .filters-modal-v4,
+html.high-contrast .confirm-modal-v4,
+html.high-contrast .modal-sidebar-v4,
+html.high-contrast .modal-main-v4,
+html.high-contrast .notification-dropdown-improved,
+html.high-contrast .user-dropdown,
+html.high-contrast .content-section-v4,
+html.high-contrast .story-card-v4,
+html.high-contrast .contact-card-v4,
+html.high-contrast .urgency-card-v4 {
+  background-color: #121212 !important;
+  border: 2px solid #ffff00 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html.high-contrast h1,
+html.high-contrast h2,
+html.high-contrast h3,
+html.high-contrast h4,
+html.high-contrast h5,
+html.high-contrast h6,
+html.high-contrast strong,
+html.high-contrast b,
+html.high-contrast .logo-text,
+html.high-contrast .logo-accent,
+html.high-contrast .stat-number,
+html.high-contrast .category-name-v4 {
+  color: #ffff00 !important;
+}
+
+html.high-contrast p,
+html.high-contrast span,
+html.high-contrast div,
+html.high-contrast li,
+html.high-contrast dd,
+html.high-contrast dt,
+html.high-contrast label {
+  color: #ffffff !important;
+}
+
+html.high-contrast button,
+html.high-contrast a,
+html.high-contrast .filter-chip-v4,
+html.high-contrast .nav-item-v4,
+html.high-contrast .btn-view-v4,
+html.high-contrast .btn-help-v4,
+html.high-contrast .btn-primary-v4,
+html.high-contrast .btn-secondary-v4,
+html.high-contrast .notification-btn,
+html.high-contrast .user-btn,
+html.high-contrast .btn-filters-section,
+html.high-contrast .btn-accessibility-section {
+  background-color: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html.high-contrast button:hover,
+html.high-contrast button.active,
+html.high-contrast .filter-chip-v4.active,
+html.high-contrast .nav-item-v4.active {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  border-color: #ffff00 !important;
+}
+
+html.high-contrast svg {
+  color: inherit !important;
+}
+
+html.high-contrast .card-accent-v4,
+html.high-contrast .bg-overlay {
+  display: none !important;
+}
+
+html.high-contrast .badge-urgency-v4,
+html.high-contrast .badge-new-v4 {
+  background-color: #000000 !important;
+  border: 1px solid #ffff00 !important;
+  color: #ffff00 !important;
+}

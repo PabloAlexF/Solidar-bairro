@@ -1027,3 +1027,85 @@
     opacity: 0.8;
   }
 }
+
+/* ========================================
+   HIGH CONTRAST MODE (MOBILE)
+   ======================================== */
+
+html.high-contrast, html.high-contrast body, html.high-contrast #root {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast .qa-page-mobile,
+html.high-contrast .mobile-header {
+  background-color: #000000 !important;
+  background: #000000 !important;
+}
+
+html.high-contrast .bottom-sheet,
+html.high-contrast .full-modal-v4-mobile,
+html.high-contrast .detail-section-mobile > div,
+html.high-contrast .items-list-v4-mobile > div,
+html.high-contrast .sheet-content,
+html.high-contrast .sheet-header,
+html.high-contrast .confirm-help-v4-mobile,
+html.high-contrast .mobile-order-card,
+html.high-contrast .mobile-skeleton-card {
+  background-color: #121212 !important;
+  border: 2px solid #ffff00 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html.high-contrast h1,
+html.high-contrast h2,
+html.high-contrast h3,
+html.high-contrast h4,
+html.high-contrast h5,
+html.high-contrast h6,
+html.high-contrast strong,
+html.high-contrast b {
+  color: #ffff00 !important;
+}
+
+html.high-contrast p,
+html.high-contrast span,
+html.high-contrast div,
+html.high-contrast li {
+  color: #ffffff !important;
+}
+
+html.high-contrast button,
+html.high-contrast .pill-mobile,
+html.high-contrast .btn-apply-mobile,
+html.high-contrast .btn-confirm-chat-v4-mobile,
+html.high-contrast .btn-cancel-help-v4-mobile {
+  background-color: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html.high-contrast button:hover,
+html.high-contrast button.active,
+html.high-contrast .pill-mobile.active {
+  background-color: #ffff00 !important;
+  color: #000000 !important;
+  border-color: #ffff00 !important;
+}
+
+html.high-contrast svg {
+  color: inherit !important;
+}
+
+html.high-contrast input,
+html.high-contrast textarea {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #ffffff !important;
+}
+
+html.high-contrast .mobile-header {
+  border-bottom: 1px solid #ffff00 !important;
+}
