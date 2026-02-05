@@ -13,7 +13,7 @@ import { useCEP } from '../../AdminDashboard/useCEP';
 export default function CadastroONGMobile() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [errors, setErrors] = useState({});
@@ -140,7 +140,6 @@ export default function CadastroONGMobile() {
     try {
       await ApiService.createONG(formData);
       setIsSubmitted(true);
-      setTimeout(() => setShowAnalysisAlert(true), 2000);
     } catch (error) {
       console.error('Erro ao cadastrar ONG:', error);
       showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
@@ -239,23 +238,7 @@ export default function CadastroONGMobile() {
           </div>
         </div>
 
-        {showAnalysisAlert && (
-          <div className="ong-reg-modal-overlay">
-            <div className="ong-reg-alert-modal">
-              <div className="ong-reg-alert-icon-box">
-                <ShieldCheck size={48} />
-              </div>
-              <h3>Cadastro em Análise</h3>
-              <p>Seu cadastro está sendo analisado por nossa equipe. Você receberá uma notificação em até 24 horas.</p>
-              <button 
-                className="ong-reg-alert-btn" 
-                onClick={() => setShowAnalysisAlert(false)}
-              >
-                Entendi
-              </button>
-            </div>
-          </div>
-        )}
+
       </div>
     );
   }

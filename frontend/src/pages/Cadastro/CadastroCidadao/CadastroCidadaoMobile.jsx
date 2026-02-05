@@ -20,7 +20,7 @@ import { useCEP } from '../../AdminDashboard/useCEP';
 export default function CadastroCidadaoMobile() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
   const [errors, setErrors] = useState({});
@@ -244,7 +244,6 @@ export default function CadastroCidadaoMobile() {
 
       await ApiService.createCidadao(dataWithSenha);
       setIsSubmitted(true);
-      setTimeout(() => setShowAnalysisAlert(true), 2000);
     } catch (error) {
       console.error('Erro ao cadastrar cidadão:', error);
       showToast(error.message || 'Erro ao realizar cadastro. Tente novamente.', 'error');
@@ -688,55 +687,7 @@ export default function CadastroCidadaoMobile() {
         </div>
       )}
 
-      {/* ANALYSIS MODAL */}
-      {showAnalysisAlert && (
-        <div className="mobile-vlt-analysis-overlay mobile-vlt-animate-fade">
-          <div className="mobile-vlt-analysis-card mobile-vlt-animate-up">
-            <div className="mobile-vlt-analysis-accent"></div>
-            
-            <div className="mobile-vlt-analysis-content">
-              <div className="mobile-vlt-analysis-icon-container">
-                <div className="mobile-vlt-analysis-icon-halo"></div>
-                <div className="mobile-vlt-analysis-icon-box">
-                  <Search size={44} strokeWidth={2.5} />
-                </div>
-              </div>
 
-              <h2 className="mobile-vlt-analysis-title">Análise de Segurança</h2>
-              <p className="mobile-vlt-analysis-desc">
-                Para manter nossa comunidade segura, realizamos uma revisão manual de cada perfil voluntário.
-              </p>
-
-              <div className="mobile-vlt-analysis-timeline">
-                <div className="mobile-vlt-timeline-item mobile-vlt-done">
-                  <div className="mobile-vlt-timeline-check"><Check size={14} /></div>
-                  <span className="mobile-vlt-timeline-text">Recebimento dos dados</span>
-                </div>
-                <div className="mobile-vlt-timeline-item mobile-vlt-curr">
-                  <div className="mobile-vlt-timeline-check"></div>
-                  <span className="mobile-vlt-timeline-text">Validação de documentos</span>
-                </div>
-                <div className="mobile-vlt-timeline-item">
-                  <div className="mobile-vlt-timeline-check"></div>
-                  <span className="mobile-vlt-timeline-text">Antecedentes e referências</span>
-                </div>
-                <div className="mobile-vlt-timeline-item">
-                  <div className="mobile-vlt-timeline-check"></div>
-                  <span className="mobile-vlt-timeline-text">Liberação de acesso</span>
-                </div>
-              </div>
-
-              <button 
-                className="mobile-vlt-analysis-btn" 
-                onClick={() => setShowAnalysisAlert(false)}
-              >
-                <span>Entendi, vou aguardar</span>
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Toast */}
       {toast.show && (

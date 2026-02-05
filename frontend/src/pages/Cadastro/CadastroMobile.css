@@ -111,6 +111,10 @@
   padding: 2rem 0.5rem 1rem;
 }
 
+.vlt-reg-wrapper main#vlt-reg-main-content {
+  padding-bottom: 20px;
+}
+
 .vlt-reg-wrapper .vlt-reg-badge-sparkles {
   display: inline-flex;
   align-items: center;

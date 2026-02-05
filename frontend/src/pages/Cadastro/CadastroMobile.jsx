@@ -165,7 +165,7 @@ export default function CadastroMobile() {
         </button>
       </div>
 
-      <main id="vlt-reg-main-content" style={{ paddingTop: '120px' }}>
+      <main id="vlt-reg-main-content">
         <div className="vlt-reg-hero">
           <div className="vlt-reg-badge-sparkles">
             <Sparkles />
@@ -253,14 +253,15 @@ export default function CadastroMobile() {
 
       <footer className="vlt-reg-footer">
         <div className="vlt-reg-footer-content">
+          <div className="vlt-reg-footer-links">
+            <Link to="#" className="vlt-reg-footer-link">Termos de Uso</Link>
+            <Link to="#" className="vlt-reg-footer-link">Privacidade</Link>
+            <Link to="#" className="vlt-reg-footer-link">Ajuda</Link>
+          </div>
           <div className="vlt-reg-footer-logo">
             <p className="vlt-reg-footer-copy">
-              © 2024 Bairro
+              © {new Date().getFullYear()} SolidarBairro. Todos os direitos reservados.
             </p>
-          </div>
-          <div className="vlt-reg-footer-links">
-            <Link to="#" className="vlt-reg-footer-link">Termos</Link>
-            <Link to="#" className="vlt-reg-footer-link">Suporte</Link>
           </div>
         </div>
       </footer>
