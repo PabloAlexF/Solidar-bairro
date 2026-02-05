@@ -87,25 +87,47 @@ class ChatService {
 
   async getConversations(userId) {
     const conversations = await chatModel.getConversationsByUser(userId);
-    
+
     // Enriquecer com informações dos participantes
     const enrichedConversations = [];
-    
+
     for (const conv of conversations) {
       const otherParticipantIds = conv.participants.filter(p => p !== userId);
-      
+
       // Buscar dados do outro participante
       let otherParticipant = null;
       if (otherParticipantIds.length > 0) {
         otherParticipant = await userService.getUserData(otherParticipantIds[0]);
       }
-      
+
+      // Calcular unreadCount
+      let unreadCount = 0;
+      try {
+        const messages = await chatModel.getMessages(conv.id, 100); // Buscar últimas 100 mensagens
+        unreadCount = messages.filter(msg => !msg.readBy || !msg.readBy.includes(userId)).length;
+      } catch (error) {
+        console.warn('Erro ao calcular unreadCount para conversa', conv.id, error.message);
+      }
+
+      // Buscar última mensagem
+      let lastMessage = null;
+      try {
+        const messages = await chatModel.getMessages(conv.id, 1); // Buscar última mensagem
+        if (messages.length > 0) {
+          lastMessage = messages[messages.length - 1];
+        }
+      } catch (error) {
+        console.warn('Erro ao buscar lastMessage para conversa', conv.id, error.message);
+      }
+
       enrichedConversations.push({
         ...conv,
-        otherParticipant
+        otherParticipant,
+        unreadCount,
+        lastMessage
       });
     }
-    
+
     return enrichedConversations;
   }
 

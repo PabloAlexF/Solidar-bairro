@@ -20,7 +20,7 @@ const init = (httpServer) => {
     transports: ['websocket', 'polling']
   });
 
-  io.on('connection', (socket) => {
+  io.on('connection', async (socket) => {
     const userId = socket.handshake.query.userId;
     logger.info(`🔌 Usuário conectado: ${userId} (socket: ${socket.id})`);
 
@@ -34,13 +34,16 @@ const init = (httpServer) => {
       });
 
       // Buscar conversas do usuário e entrar nas salas
-      chatService.getConversations(userId).then(conversations => {
-        conversations.forEach(conv => {
-          socket.join(`conversation_${conv.id}`);
-        });
-      }).catch(error => {
+      try {
+        const conversations = await chatService.getConversations(userId);
+        if (conversations && Array.isArray(conversations)) {
+          conversations.forEach(conv => {
+            socket.join(`conversation_${conv.id}`);
+          });
+        }
+      } catch (error) {
         logger.error('Erro ao buscar conversas para socket:', error);
-      });
+      }
     }
 
     // Evento para entrar em uma conversa específica

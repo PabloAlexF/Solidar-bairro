@@ -31,10 +31,10 @@ class ChatModel {
     const snapshot = await this.db.collection('conversations')
       .where('participants', 'array-contains', userId)
       .get();
-    
+
     return snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
-      .filter(conv => conv.isActive !== false && conv.status !== 'closed')
+      .filter(conv => conv.isActive !== false)
       .sort((a, b) => {
         const dateA = a.updatedAt?.seconds || 0;
         const dateB = b.updatedAt?.seconds || 0;

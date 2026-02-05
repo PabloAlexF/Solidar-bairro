@@ -28,18 +28,15 @@ export class SecurityMiddleware {
   
   // Configurar headers de segurança adicionais
   static setupSecurityHeaders() {
-    // X-Frame-Options
-    const frameOptions = document.createElement('meta');
-    frameOptions.httpEquiv = 'X-Frame-Options';
-    frameOptions.content = 'DENY';
-    document.head.appendChild(frameOptions);
-    
+    // Nota: X-Frame-Options deve ser configurado no servidor via headers HTTP
+    // Não pode ser definido via meta tag
+
     // X-Content-Type-Options
     const contentType = document.createElement('meta');
     contentType.httpEquiv = 'X-Content-Type-Options';
     contentType.content = 'nosniff';
     document.head.appendChild(contentType);
-    
+
     // Referrer Policy
     const referrer = document.createElement('meta');
     referrer.name = 'referrer';

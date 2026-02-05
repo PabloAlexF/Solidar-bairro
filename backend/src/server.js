@@ -89,6 +89,7 @@ app.use(helmet({
       fontSrc: ["'self'", "https://cdn-uicons.flaticon.com"],
     },
   },
+  frameguard: { action: 'deny' }, // X-Frame-Options: DENY
 }));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));

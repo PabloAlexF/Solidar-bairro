@@ -1,17 +1,9 @@
 const notificationModel = require('../models/notificationModel');
 const userService = require('./userService');
-const { emitNotification, emitNotificationRead } = require('./socketService');
 
 class NotificationService {
   async createNotification(data) {
     const notification = await notificationModel.createNotification(data);
-
-    // Emitir notificação via socket em tempo real
-    try {
-      emitNotification(data.userId, notification);
-    } catch (error) {
-      console.error('Erro ao emitir notificação via socket:', error);
-    }
 
     return notification;
   }
