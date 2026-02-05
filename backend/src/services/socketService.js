@@ -1,5 +1,6 @@
 const socketIo = require('socket.io');
 const chatService = require('./chatService');
+const presenceService = require('./presenceService');
 const logger = require('./loggerService');
 
 let io;
@@ -26,6 +27,11 @@ const init = (httpServer) => {
     // Entrar nas salas das conversas do usuário
     if (userId) {
       socket.join(`user_${userId}`);
+
+      // Marcar usuário como online
+      presenceService.userConnected(userId, socket.id).catch(error => {
+        logger.error('Erro ao marcar usuário como online:', error);
+      });
 
       // Buscar conversas do usuário e entrar nas salas
       chatService.getConversations(userId).then(conversations => {
@@ -65,11 +71,23 @@ const init = (httpServer) => {
         const conversation = await chatService.getConversation(conversationId);
         const otherParticipants = conversation.participants.filter(p => p !== userId);
 
-        otherParticipants.forEach(participantId => {
-          io.to(`user_${participantId}`).emit('message_notification', {
+        otherParticipants.forEach(async (participantId) => {
+          // Criar notificação no banco de dados
+          try {
+            await notificationService.createChatNotification(conversationId, userId, participantId, messageData.content || messageData.text);
+          } catch (error) {
+            logger.error('Erro ao criar notificação de chat:', error);
+          }
+
+          // Emitir notificação via socket
+          io.to(`user_${participantId}`).emit('notification', {
             conversationId,
             message: messageData.content || messageData.text,
-            senderId: userId
+            senderId: userId,
+            type: 'chat',
+            title: `Nova mensagem`,
+            message: messageData.content || messageData.text,
+            createdAt: new Date()
           });
         });
 
@@ -96,6 +114,27 @@ const init = (httpServer) => {
     // Evento de desconexão
     socket.on('disconnect', () => {
       logger.info(`🔌 Usuário desconectado: ${userId} (socket: ${socket.id})`);
+
+      // Marcar usuário como offline
+      if (userId) {
+        presenceService.userDisconnected(userId, socket.id).catch(error => {
+          logger.error('Erro ao marcar usuário como offline:', error);
+        });
+      }
+    });
+
+    // Evento para consultar status de presença
+    socket.on('get_presence', async (targetUserId) => {
+      try {
+        const presence = await presenceService.getUserPresence(targetUserId);
+        socket.emit('presence_status', {
+          userId: targetUserId,
+          isOnline: presence.isOnline,
+          lastSeen: presence.lastSeen
+        });
+      } catch (error) {
+        logger.error('Erro ao consultar presença:', error);
+      }
     });
   });
 

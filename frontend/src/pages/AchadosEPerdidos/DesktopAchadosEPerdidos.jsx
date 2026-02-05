@@ -34,7 +34,7 @@ import {
   Settings
 } from 'lucide-react';
 import ThreeScene from '../../components/ThreeScene';
-import LandingHeader from '../../components/layout/LandingHeader';
+import ReusableHeader from '../../components/layout/ReusableHeader';
 import './styles.css';
 
 const CATEGORIES = [
@@ -797,7 +797,16 @@ export default function DesktopAchadosEPerdidos() {
   return (
     <div className="lost-found-wrapper">
       <div className="lf-bg-mesh"></div>
-      <LandingHeader />
+      <ReusableHeader
+        navigationItems={[
+          { path: '/', label: 'Início' },
+          { path: '/chat', label: 'Mensagens' },
+          { path: '/perfil', label: 'Meu Perfil' }
+        ]}
+        showLoginButton={true}
+        showAdminButtons={true}
+        showPainelSocial={true}
+      />
       
       {/* Hero Section */}
       <header className="lf-header" style={{ paddingTop: '80px' }}>

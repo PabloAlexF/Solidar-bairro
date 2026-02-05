@@ -12,14 +12,10 @@ import { Tooltip } from 'react-tooltip';
 import { motion } from 'framer-motion';
 import ApiService from '../../services/apiService';
 import { getCurrentLocation, getLocationWithFallback } from '../../utils/geolocation';
+import ReusableHeader from '../../components/layout/ReusableHeader';
 import {
-  Bell,
-  LogOut,
-  Settings,
-  Shield,
   Sparkles,
   Heart,
-  HelpCircle,
   CheckCircle2
 } from 'lucide-react';
 import createGlobe from 'cobe';
@@ -61,7 +57,6 @@ import {
 } from 'lucide-react';
 import './styles-v4.css';
 import marca from '../../assets/images/marca.png';
-import { getSocket } from '../../services/socketService';
 
 const CATEGORY_METADATA = {
   'Alimentos': { color: '#f97316', icon: <ShoppingCart size={18} aria-hidden="true" />, label: 'Alimentos' },
@@ -580,7 +575,7 @@ function HeroSection({
                 boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
               }}
             >
-              <Shield size={20} style={{ color: '#7c3aed' }} />
+              <Users size={20} style={{ color: '#7c3aed' }} />
             </motion.div>
           </div>
         </motion.div>
@@ -1486,9 +1481,7 @@ export default function QueroAjudarPage() {
   const [loadingPedidos, setLoadingPedidos] = useState(true);
   const [liveMessage, setLiveMessage] = useState('');
   const [scrolled, setScrolled] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
+
   const [highContrast, setHighContrast] = useState(false);
   const [fontSize, setFontSize] = useState('normal');
   const [showAccessibilityModal, setShowAccessibilityModal] = useState(false);
@@ -1698,77 +1691,7 @@ export default function QueroAjudarPage() {
     loadInitialLocation();
   }, [user]); // Executar quando user mudar
 
-  // WebSocket para notificações em tempo real
-  useEffect(() => {
-    if (!user) return;
 
-    // Carregar notificações iniciais
-    const fetchNotifications = async () => {
-      try {
-        const response = await ApiService.get('/notifications');
-        if (response.success) {
-          setNotifications(response.data);
-          localStorage.setItem('solidar-notifications', JSON.stringify(response.data));
-        }
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      }
-    };
-
-    fetchNotifications();
-
-    const socket = getSocket();
-    if (!socket) return;
-
-    const handleNewNotification = (notification) => {
-      setNotifications(prev => [notification, ...prev]);
-    };
-
-    socket.on('notification', handleNewNotification);
-
-    return () => {
-      socket.off('notification', handleNewNotification);
-    };
-  }, [user, navigate]);
-
-  useEffect(() => {
-    const loadNotifications = () => {
-      const savedNotifications = typeof window !== 'undefined' ? localStorage.getItem('solidar-notifications') : null;
-      if (savedNotifications) {
-        try {
-          setNotifications(JSON.parse(savedNotifications));
-        } catch (error) {
-          console.error('Error parsing notifications:', error);
-          setNotifications([]);
-        }
-      }
-    };
-
-    loadNotifications();
-
-    const handleClickOutside = (event) => {
-      if (showUserMenu || showNotifications) {
-        const userMenuElement = document.querySelector('.user-menu-wrapper');
-        const notificationElement = document.querySelector('.notification-wrapper');
-
-        if (userMenuElement && !userMenuElement.contains(event.target)) {
-          setShowUserMenu(false);
-        }
-
-        if (notificationElement && !notificationElement.contains(event.target)) {
-          setShowNotifications(false);
-        }
-      }
-    };
-
-    window.addEventListener('notificationAdded', loadNotifications);
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      window.removeEventListener('notificationAdded', loadNotifications);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showUserMenu, showNotifications]);
 
   const filteredOrders = useMemo(() => {
     // Como os filtros agora são aplicados no backend, apenas retornamos os pedidos
@@ -1891,26 +1814,7 @@ export default function QueroAjudarPage() {
     setLiveMessage('Filtros limpos');
   };
 
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
 
-  const clearAllNotifications = () => {
-    setNotifications([]);
-    localStorage.removeItem('solidar-notifications');
-  };
-
-  const markAsRead = (notificationId) => {
-    const updatedNotifications = notifications.map(n =>
-      n.id === notificationId ? { ...n, read: true } : n
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
 
   // Verificar se é administrador
@@ -1924,353 +1828,18 @@ export default function QueroAjudarPage() {
                   storedUser?.tipo === 'admin' ||
                   storedUser?.email === 'admin@solidarbairro.com';
 
+  const queroAjudarNavigationItems = [
+    { path: '/preciso-de-ajuda', label: 'Preciso de Ajuda' },
+    { path: '/achados-e-perdidos', label: 'Achados e Perdidos' }
+  ];
+
   return (
     <div className={`qa-page-v4 ${selectedOrder ? 'modal-open' : ''}`}>
-      <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
-        <div className="section-container nav-container">
-          <div className="logo-wrapper" onClick={() => navigate('/')}>
-            <div className="logo-icon" style={{ width: '48px', height: '48px', position: 'relative', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-            </div>
-            <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
-          </div>
-
-          <div className="nav-menu">
-            <Link to="/preciso-de-ajuda" className="nav-link">
-              Preciso de Ajuda
-              <span className="link-underline" />
-            </Link>
-            <Link to="/achados-e-perdidos" className="nav-link">
-              Achados e Perdidos
-              <span className="link-underline" />
-            </Link>
-
-            {!isAuthenticated() ? (
-              <div className="auth-group">
-                <button
-                  className="auth-btn-login"
-                  onClick={() => navigate('/login')}
-                >
-                  Entrar
-                </button>
-                <button
-                  className="auth-btn-register"
-                  onClick={() => navigate('/cadastro')}
-                >
-                  Cadastrar
-                </button>
-              </div>
-            ) : (
-              <div className="user-section">
-                {isAdmin && (
-                  <>
-                    <button
-                      style={{
-                        background: 'linear-gradient(135deg, rgb(139, 92, 246), rgb(124, 58, 237))',
-                        border: 'none',
-                        color: 'white',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: '0.3s',
-                        boxShadow: 'rgba(139, 92, 246, 0.4) 0px 6px 20px',
-                        marginRight: '0.5rem',
-                        transform: 'translateY(-2px)'
-                      }}
-                      onClick={() => navigate('/admin')}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-settings"
-                        aria-hidden="true"
-                        style={{
-                          transform: 'translateY(0px)',
-                          boxShadow: 'rgba(139, 92, 246, 0.3) 0px 4px 12px'
-                        }}
-                      >
-                        <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    </button>
-                    <button
-                      title="Painel Social"
-                      style={{
-                        background: 'linear-gradient(135deg, rgb(13, 148, 136), rgb(20, 184, 166))',
-                        border: 'none',
-                        color: 'white',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: '0.3s',
-                        boxShadow: 'rgba(13, 148, 136, 0.4) 0px 6px 20px',
-                        marginRight: '1rem',
-                        transform: 'translateY(-2px)'
-                      }}
-                      onClick={() => navigate('/painel-social')}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-shield"
-                        aria-hidden="true"
-                        style={{
-                          transform: 'translateY(0px)',
-                          boxShadow: 'rgba(13, 148, 136, 0.3) 0px 4px 12px'
-                        }}
-                      >
-                        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
-                      </svg>
-                    </button>
-                  </>
-                )}
-
-                <div className="notification-wrapper">
-                  <button
-                    className="notification-btn"
-                    onClick={() => setShowNotifications(!showNotifications)}
-                  >
-                    <Bell size={20} />
-                    {unreadCount > 0 && (
-                      <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
-                    )}
-                  </button>
-
-                  {showNotifications && (
-                    <div className="notification-dropdown-improved">
-                      <div className="notification-header-improved">
-                        <div className="notification-title-section">
-                          <h3>Notificações</h3>
-                          {unreadCount > 0 && (
-                            <span className="unread-count">{unreadCount} não lidas</span>
-                          )}
-                        </div>
-                        <button 
-                          className="notification-close-btn"
-                          onClick={() => setShowNotifications(false)}
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                      
-                      {notifications.length === 0 ? (
-                        <div className="notification-empty-improved">
-                          <Bell size={32} className="empty-icon" />
-                          <p className="empty-title">Nenhuma notificação</p>
-                          <p className="empty-subtitle">Você receberá notificações sobre mensagens e atividades aqui</p>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="notification-list-improved">
-                            {notifications.slice(0, 10).map((notification) => {
-                              const timeAgo = (() => {
-                                const now = new Date();
-                                const time = new Date(notification.timestamp);
-                                const diffInMinutes = Math.floor((now - time) / (1000 * 60));
-                                
-                                if (diffInMinutes < 1) return 'Agora mesmo';
-                                if (diffInMinutes < 60) return `${diffInMinutes}min atrás`;
-                                
-                                const diffInHours = Math.floor(diffInMinutes / 60);
-                                if (diffInHours < 24) return `${diffInHours}h atrás`;
-                                
-                                const diffInDays = Math.floor(diffInHours / 24);
-                                if (diffInDays < 7) return `${diffInDays}d atrás`;
-                                
-                                return time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                              })();
-                              
-                              const getNotificationIcon = (type) => {
-                                switch (type) {
-                                  case 'chat': return <MessageCircle size={16} className="text-blue-500" />;
-                                  case 'help': return <Heart size={16} className="text-red-500" />;
-                                  case 'success': return <CheckCircle2 size={16} className="text-green-500" />;
-                                  case 'warning': return <AlertTriangle size={16} className="text-orange-500" />;
-                                  default: return <Bell size={16} className="text-gray-500" />;
-                                }
-                              };
-                              
-                              return (
-                                <div
-                                  key={notification.id}
-                                  className={`notification-item-improved ${!notification.read ? 'unread' : ''}`}
-                                  onClick={() => !notification.read && markAsRead(notification.id)}
-                                >
-                                  <div className="notification-icon-improved">
-                                    {getNotificationIcon(notification.type)}
-                                  </div>
-                                  <div className="notification-content-improved">
-                                    <div className="notification-item-header">
-                                      <h4 className="notification-item-title">{notification.title}</h4>
-                                      <span className="notification-time">
-                                        <Clock size={12} />
-                                        {timeAgo}
-                                      </span>
-                                    </div>
-                                    <p className="notification-item-message">{notification.message}</p>
-                                  </div>
-                                  {!notification.read && <div className="unread-dot" />}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          
-                          <div className="notification-footer-improved">
-                            <button
-                              onClick={clearAllNotifications}
-                              className="clear-all-btn"
-                            >
-                              Limpar todas
-                            </button>
-                            {notifications.length > 10 && (
-                              <span className="more-notifications">
-                                +{notifications.length - 10} mais
-                              </span>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="user-menu-wrapper">
-                  <button
-                    className="user-btn"
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                  >
-                    <div className="user-avatar">
-                      {user?.fotoPerfil ? (
-                        <img
-                          src={user.fotoPerfil}
-                          alt="Foto do perfil"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                          onError={(e) => {
-                            console.log('Erro ao carregar imagem:', user.fotoPerfil);
-                            e.target.style.display = 'none';
-                            e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
-                          }}
-                        />
-                      ) : (
-                        userName?.substring(0, 2).toUpperCase()
-                      )}
-                    </div>
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="user-dropdown">
-                      <div className="user-info">
-                        <div className="user-avatar-large">
-                          {user?.fotoPerfil ? (
-                            <img
-                              src={user.fotoPerfil}
-                              alt="Foto do perfil"
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                              onError={(e) => {
-                                console.log('Erro ao carregar imagem grande:', user.fotoPerfil);
-                                e.target.style.display = 'none';
-                                e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
-                              }}
-                            />
-                          ) : (
-                            userName?.substring(0, 2).toUpperCase()
-                          )}
-                        </div>
-                        <div className="user-details">
-                          <div className="user-name">
-                            {userName}
-                            {user?.isVerified && (
-                              <span className="verified-text">Verificado</span>
-                            )}
-                          </div>
-                          <div className="user-phone">{user?.phone || user?.telefone || user?.email}</div>
-                        </div>
-                      </div>
-
-                      <div className="user-stats">
-                        <div className="stat">
-                          <div className="stat-number">{user?.helpedCount || 0}</div>
-                          <div className="stat-label">Pessoas ajudadas</div>
-                        </div>
-                        <div className="stat">
-                          <div className="stat-number">{user?.receivedHelpCount || 0}</div>
-                          <div className="stat-label">Ajudas recebidas</div>
-                        </div>
-                      </div>
-
-                      <div className="user-actions">
-                        <button
-                          className="menu-item profile-btn"
-                          onClick={() => {
-                            navigate('/perfil');
-                            setShowUserMenu(false);
-                          }}
-                        >
-                          👤 Ver perfil
-                        </button>
-
-                        <button
-                          className="menu-item"
-                          onClick={() => {
-                            navigate('/conversas');
-                            setShowUserMenu(false);
-                          }}
-                        >
-                          💬 Minhas conversas
-                        </button>
-
-                        {isAdmin && (
-                          <button
-                            className="menu-item"
-                            onClick={() => {
-                              navigate('/admin');
-                              setShowUserMenu(false);
-                            }}
-                          >
-                            ⚙️ Dashboard Admin
-                          </button>
-                        )}
-
-                        <button
-                          className="menu-item logout-btn"
-                          onClick={() => {
-                            localStorage.removeItem('solidar-user');
-                            window.location.reload();
-                          }}
-                        >
-                          🚪 Sair
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
+      <ReusableHeader
+        navigationItems={queroAjudarNavigationItems}
+        showAdminButtons={true}
+        showPainelSocial={true}
+      />
 
       <div className="skip-links">
         <a href="#main-content" className="skip-link">

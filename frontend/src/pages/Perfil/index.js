@@ -25,7 +25,10 @@ import {
   Palette,
   Bell,
   Sparkles,
-  Mail
+  Mail,
+  MessageCircle,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -34,7 +37,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { StatsManager } from '../../utils/statsManager';
 import apiService from '../../services/apiService';
-import LandingHeader from '../../components/layout/LandingHeader';
+import ReusableHeader from '../../components/layout/ReusableHeader';
 import ProfileMobile from './ProfileMobile';
 import './profile.css';
 
@@ -316,7 +319,7 @@ const ProfileComponent = () => {
         </div>
       )}
       {/* Profile Header */}
-      <LandingHeader scrolled={true} showPanelButtons={true} showNavLinks={false} />
+      <ReusableHeader scrolled={true} showPanelButtons={true} showNavLinks={false} />
       
       <div style={{ height: '80px' }}></div>
       
@@ -631,7 +634,226 @@ const ProfileComponent = () => {
                 </div>
               )}
               
-              <button className="btn btn-outline" style={{ width: '100%', marginTop: '32px' }} onClick={() => setIsSettingsOpen(true)}>
+              {/* Notificações */}
+              <div className="notification-wrapper" style={{ width: '100%', marginTop: '16px' }}>
+                <button
+                  className="notification-btn"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    background: 'var(--background)',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <Bell size={18} />
+                  Notificações
+                  {getUnreadCount() > 0 && (
+                    <span style={{
+                      background: 'var(--primary)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}>
+                      {getUnreadCount()}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div className="notification-dropdown-improved" style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '0',
+                    right: '0',
+                    background: 'var(--card-bg)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    zIndex: 1000,
+                    marginTop: '8px',
+                    maxHeight: '400px',
+                    overflow: 'hidden'
+                  }}>
+                    <div className="notification-header-improved" style={{
+                      padding: '16px',
+                      borderBottom: '1px solid var(--border-color)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div className="notification-title-section">
+                        <h3 style={{ margin: '0', fontSize: '16px', fontWeight: '700' }}>Notificações</h3>
+                        {getUnreadCount() > 0 && (
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{getUnreadCount()} não lidas</span>
+                        )}
+                      </div>
+                      <button
+                        className="notification-close-btn"
+                        onClick={() => setShowNotifications(false)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          padding: '4px'
+                        }}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    {notifications.length === 0 ? (
+                      <div className="notification-empty-improved" style={{
+                        padding: '32px 16px',
+                        textAlign: 'center',
+                        color: 'var(--text-muted)'
+                      }}>
+                        <Bell size={32} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
+                        <p style={{ margin: '8px 0', fontSize: '16px', fontWeight: '700' }}>Nenhuma notificação</p>
+                        <p style={{ margin: '0', fontSize: '14px' }}>Você receberá notificações sobre mensagens e atividades aqui</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="notification-list-improved" style={{
+                          maxHeight: '300px',
+                          overflowY: 'auto'
+                        }}>
+                          {notifications.slice(0, 10).map((notification) => {
+                            const timeAgo = (() => {
+                              const now = new Date();
+                              let time;
+                              if (notification.timestamp && notification.timestamp.seconds) {
+                                time = new Date(notification.timestamp.seconds * 1000);
+                              } else {
+                                time = new Date(notification.timestamp);
+                              }
+                              
+                              if (isNaN(time.getTime())) return 'Data desconhecida';
+
+                              const diffInMinutes = Math.floor((now - time) / (1000 * 60));
+
+                              if (diffInMinutes < 1) return 'Agora mesmo';
+                              if (diffInMinutes < 60) return `${diffInMinutes}min atrás`;
+
+                              const diffInHours = Math.floor(diffInMinutes / 60);
+                              if (diffInHours < 24) return `${diffInHours}h atrás`;
+
+                              const diffInDays = Math.floor(diffInHours / 24);
+                              if (diffInDays < 7) return `${diffInDays}d atrás`;
+
+                              return time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                            })();
+
+                            const getNotificationIcon = (type) => {
+                              switch (type) {
+                                case 'chat': return <MessageCircle size={16} style={{ color: '#3b82f6' }} />;
+                                case 'help': return <Heart size={16} style={{ color: '#ef4444' }} />;
+                                case 'success': return <CheckCircle2 size={16} style={{ color: '#10b981' }} />;
+                                case 'warning': return <AlertTriangle size={16} style={{ color: '#f97316' }} />;
+                                default: return <Bell size={16} style={{ color: '#6b7280' }} />;
+                              }
+                            };
+
+                            return (
+                              <div
+                                key={notification.id}
+                                className={`notification-item-improved ${!notification.read ? 'unread' : ''}`}
+                                onClick={() => {
+                                  if (!notification.read) {
+                                    markAsRead(notification.id);
+                                  }
+                                  // Se for notificação de chat, navegar para a conversa
+                                  if (notification.type === 'chat' && notification.conversationId) {
+                                    navigate(`/chat/${notification.conversationId}`);
+                                    setShowNotifications(false);
+                                  }
+                                }}
+                                style={{
+                                  padding: '12px 16px',
+                                  borderBottom: '1px solid var(--border-color)',
+                                  cursor: 'pointer',
+                                  background: !notification.read ? 'rgba(16, 185, 129, 0.05)' : 'transparent',
+                                  display: 'flex',
+                                  alignItems: 'flex-start',
+                                  gap: '12px'
+                                }}
+                              >
+                                <div className="notification-icon-improved">
+                                  {getNotificationIcon(notification.type)}
+                                </div>
+                                <div className="notification-content-improved" style={{ flex: 1 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                    <h4 style={{ margin: '0', fontSize: '14px', fontWeight: '700' }}>{notification.title}</h4>
+                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                      <Clock size={12} />
+                                      {timeAgo}
+                                    </span>
+                                  </div>
+                                  <p style={{ margin: '0', fontSize: '14px', color: 'var(--text-muted)' }}>{notification.message}</p>
+                                </div>
+                                {!notification.read && <div style={{
+                                  width: '8px',
+                                  height: '8px',
+                                  background: 'var(--primary)',
+                                  borderRadius: '50%',
+                                  flexShrink: 0,
+                                  marginTop: '6px'
+                                }} />}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="notification-footer-improved" style={{
+                          padding: '16px',
+                          borderTop: '1px solid var(--border-color)',
+                          display: 'flex',
+                          justifyContent: 'center'
+                        }}>
+                          <button
+                            onClick={() => {
+                              clearNotifications();
+                              setShowNotifications(false);
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--primary)',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            Limpar todas
+                          </button>
+                          {notifications.length > 10 && (
+                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '16px' }}>
+                              +{notifications.length - 10} mais
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <button className="btn btn-outline" style={{ width: '100%', marginTop: '16px' }} onClick={() => setIsSettingsOpen(true)}>
                 <Settings size={18} />
                 Configurações
               </button>

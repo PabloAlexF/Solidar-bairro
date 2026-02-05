@@ -6,6 +6,9 @@ import { useInView } from 'react-intersection-observer';
 import { AIAssistant } from './AIAssistant';
 import { StatsManager } from '../../../utils/statsManager';
 import { useAuth } from '../../../contexts/AuthContext';
+import ApiService from '../../../services/apiService';
+import { getSocket } from '../../../services/socketService';
+import toast, { Toaster } from 'react-hot-toast';
 import { 
   ShoppingCart, 
   Shirt, 
@@ -1078,7 +1081,13 @@ export default function PDAForm() {
   const [pendingCategory, setPendingCategory] = useState(null);
   const [showStep2IntroModal, setShowStep2IntroModal] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(true);
-  
+
+  // Notification states
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+
   const [isPublished, setIsPublished] = useState(false);
     
   const stages = ['Analisando categoria', 'Verificando urgência', 'Avaliando descrição', 'Gerando sugestões'];

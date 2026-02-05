@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { X, Bell, MessageCircle, Heart, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import apiService from '../../services/apiService';
-import chatNotificationService from '../../services/chatNotificationService';
+import { getSocket } from '../../services/socketService';
 import LogoutButton from '../LogoutButton';
 import logo from '../../assets/images/marca.png';
 import '../../styles/components/Header.css';
@@ -23,66 +24,63 @@ const Header = ({ showLoginButton = false }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userStats, setUserStats] = useState({ helpedCount: 0, receivedHelpCount: 0 });
-  const [globalMonitoringInterval, setGlobalMonitoringInterval] = useState(null);
 
   useEffect(() => {
-    // Load user stats
-    const loadUserStats = async () => {
-      if (user?.uid || user?.id) {
-        try {
-          // Buscar pedidos do usuário (ajudas recebidas)
-          const pedidosResponse = await apiService.getMeusPedidos();
-          const receivedHelpCount = pedidosResponse?.data?.length || 0;
-          
-          // Buscar interesses do usuário (pessoas ajudadas)
-          const interessesResponse = await apiService.getMeusInteresses();
-          const helpedCount = interessesResponse?.data?.length || 0;
-          
-          setUserStats({ helpedCount, receivedHelpCount });
-        } catch (error) {
-          console.error('Erro ao carregar estatísticas:', error);
+    if (isAuthenticated()) {
+      // Load user stats
+      const loadUserStats = async () => {
+        if (user?.uid || user?.id) {
+          try {
+            const pedidosResponse = await apiService.getMeusPedidos();
+            const receivedHelpCount = pedidosResponse?.data?.length || 0;
+            
+            const interessesResponse = await apiService.getMeusInteresses();
+            const helpedCount = interessesResponse?.data?.length || 0;
+            
+            setUserStats({ helpedCount, receivedHelpCount });
+          } catch (error) {
+            console.error('Erro ao carregar estatísticas:', error);
+          }
         }
-      }
-    };
-    
-    // Iniciar monitoramento global de mensagens
-    const startChatMonitoring = () => {
-      if (isAuthenticated() && (user?.uid || user?.id)) {
-        const userId = user.uid || user.id;
-        
-        // Callback para novas mensagens
-        const handleNewChatMessage = (conversationId, senderName, message) => {
-          addChatNotification(conversationId, senderName, message);
+      };
+
+      loadUserStats();
+
+      // Iniciar monitoramento via Socket (Substituindo o serviço antigo)
+      const socket = getSocket();
+      
+      if (socket) {
+        const handleNewNotification = (data) => {
+          // Verifica se é uma notificação de chat e adiciona
+          if (data && (data.type === 'chat' || data.conversationId)) {
+            addChatNotification(
+              data.conversationId, 
+              data.senderName || data.title || 'Usuário', 
+              data.message
+            );
+          }
         };
         
-        // Iniciar monitoramento global
-        const interval = chatNotificationService.startGlobalMessageMonitoring(
-          userId, 
-          handleNewChatMessage
-        );
+        socket.on('notification', handleNewNotification);
         
-        setGlobalMonitoringInterval(interval);
+        return () => {
+          socket.off('notification', handleNewNotification);
+        };
       }
-    };
-    
-    if (isAuthenticated()) {
-      loadUserStats();
-      startChatMonitoring();
     }
+  }, [isAuthenticated, user, addChatNotification]);
 
+  useEffect(() => {
     // Close dropdowns when clicking outside
     const handleClickOutside = (event) => {
-      if (showUserMenu || showNotifications) {
-        const userMenuElement = document.querySelector('.user-menu-wrapper');
-        const notificationElement = document.querySelector('.notification-wrapper');
-        
-        if (userMenuElement && !userMenuElement.contains(event.target)) {
-          setShowUserMenu(false);
-        }
-        
-        if (notificationElement && !notificationElement.contains(event.target)) {
-          setShowNotifications(false);
-        }
+      const userMenuElement = document.querySelector('.user-menu-wrapper');
+      if (showUserMenu && userMenuElement && !userMenuElement.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+      
+      const notificationElement = document.querySelector('.notification-wrapper');
+      if (showNotifications && notificationElement && !notificationElement.contains(event.target)) {
+        setShowNotifications(false);
       }
     };
     
@@ -90,16 +88,8 @@ const Header = ({ showLoginButton = false }) => {
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      
-      // Limpar monitoramento global
-      if (globalMonitoringInterval) {
-        clearInterval(globalMonitoringInterval);
-      }
-      
-      // Limpar serviço de chat
-      chatNotificationService.cleanup();
     };
-  }, [showUserMenu, showNotifications, isAuthenticated, user, addChatNotification]);
+  }, [showUserMenu, showNotifications]);
 
   const handleNotificationClick = (notification) => {
     // Marcar como lida
@@ -171,67 +161,110 @@ const Header = ({ showLoginButton = false }) => {
                   )}
                 </button>
                 
-                {showNotifications && (
-                  <div className="notification-dropdown">
-                    <div className="notification-header">
-                      <h3>Notificações</h3>
-                      {notifications.length > 0 && (
-                        <div className="notification-actions">
+                  {showNotifications && (
+                    <div className="notification-dropdown-improved">
+                      <div className="notification-header-improved">
+                        <div className="notification-title-section">
+                          <h3>Notificações</h3>
                           {unreadCount > 0 && (
-                            <button 
-                              className="action-btn mark-read-btn"
-                              onClick={markAllAsRead}
-                              title="Marcar todas como lidas"
-                            >
-                              ✓
-                            </button>
+                            <span className="unread-count">{unreadCount} não lidas</span>
                           )}
-                          <button 
-                            className="action-btn clear-btn"
-                            onClick={clearNotifications}
-                            title="Limpar todas"
-                          >
-                            🗑️
-                          </button>
                         </div>
-                      )}
-                    </div>
-                    <div className="notification-list">
+                        <button
+                          className="notification-close-btn"
+                          onClick={() => setShowNotifications(false)}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+
                       {notifications.length === 0 ? (
-                        <div className="no-notifications">
-                          Nenhuma notificação ainda
+                        <div className="notification-empty-improved">
+                          <Bell size={32} className="empty-icon" />
+                          <p className="empty-title">Nenhuma notificação</p>
+                          <p className="empty-subtitle">Você receberá notificações sobre mensagens e atividades aqui</p>
                         </div>
                       ) : (
-                        notifications.map((notification) => (
-                          <div 
-                            key={notification.id} 
-                            className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.type === 'chat' ? 'chat-notification' : ''}`}
-                            onClick={() => handleNotificationClick(notification)}
-                          >
-                            <div className="notification-content">
-                              <div className="notification-icon">
-                                {notification.type === 'chat' ? '💬' : '🔔'}
-                              </div>
-                              <div className="notification-text">
-                                <p className="notification-title">{notification.title}</p>
-                                <p className="notification-message">{notification.message}</p>
-                                <span className="notification-time">
-                                  {new Date(notification.timestamp).toLocaleString('pt-BR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                              </div>
-                            </div>
-                            {!notification.read && <div className="unread-dot"></div>}
+                        <>
+                          <div className="notification-list-improved">
+                            {notifications.slice(0, 10).map((notification) => {
+                              const timeAgo = (() => {
+                                const now = new Date();
+                                let time;
+                                if (notification.timestamp && notification.timestamp.seconds) {
+                                  time = new Date(notification.timestamp.seconds * 1000);
+                                } else {
+                                  time = new Date(notification.timestamp);
+                                }
+                                
+                                if (isNaN(time.getTime())) return 'Data desconhecida';
+
+                                const diffInMinutes = Math.floor((now - time) / (1000 * 60));
+
+                                if (diffInMinutes < 1) return 'Agora mesmo';
+                                if (diffInMinutes < 60) return `${diffInMinutes}min atrás`;
+
+                                const diffInHours = Math.floor(diffInMinutes / 60);
+                                if (diffInHours < 24) return `${diffInHours}h atrás`;
+
+                                const diffInDays = Math.floor(diffInHours / 24);
+                                if (diffInDays < 7) return `${diffInDays}d atrás`;
+
+                                return time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                              })();
+
+                              const getNotificationIcon = (type) => {
+                                switch (type) {
+                                  case 'chat': return <MessageCircle size={16} className="text-blue-500" />;
+                                  case 'help': return <Heart size={16} className="text-red-500" />;
+                                  case 'success': return <CheckCircle2 size={16} className="text-green-500" />;
+                                  case 'warning': return <AlertTriangle size={16} className="text-orange-500" />;
+                                  default: return <Bell size={16} className="text-gray-500" />;
+                                }
+                              };
+
+                              return (
+                                <div
+                                  key={notification.id}
+                                  className={`notification-item-improved ${!notification.read ? 'unread' : ''}`}
+                                  onClick={() => !notification.read && markAsRead(notification.id)}
+                                >
+                                  <div className="notification-icon-improved">
+                                    {getNotificationIcon(notification.type)}
+                                  </div>
+                                  <div className="notification-content-improved">
+                                    <div className="notification-item-header">
+                                      <h4 className="notification-item-title">{notification.title}</h4>
+                                      <span className="notification-time">
+                                        <Clock size={12} />
+                                        {timeAgo}
+                                      </span>
+                                    </div>
+                                    <p className="notification-item-message">{notification.message}</p>
+                                  </div>
+                                  {!notification.read && <div className="unread-dot" />}
+                                </div>
+                              );
+                            })}
                           </div>
-                        ))
+
+                          <div className="notification-footer-improved">
+                            <button
+                              onClick={clearNotifications}
+                              className="clear-all-btn"
+                            >
+                              Limpar todas
+                            </button>
+                            {notifications.length > 10 && (
+                              <span className="more-notifications">
+                                +{notifications.length - 10} mais
+                              </span>
+                            )}
+                          </div>
+                        </>
                       )}
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
 
               {/* Menu do usuário */}

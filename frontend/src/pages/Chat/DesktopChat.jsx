@@ -2,19 +2,21 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
-import { 
-  Heart, 
-  ArrowLeft, 
-  AlertTriangle, 
-  ShieldCheck, 
-  Package, 
-  MapPin, 
-  Check, 
-  CheckCheck, 
-  Paperclip, 
-  Send, 
+import { getSocket } from '../../services/socketService';
+import {
+  Heart,
+  ArrowLeft,
+  AlertTriangle,
+  ShieldCheck,
+  Package,
+  MapPin,
+  Check,
+  CheckCheck,
+  Paperclip,
+  Send,
   MoreVertical,
   ChevronRight,
   Search,
@@ -34,7 +36,8 @@ import {
   Pin,
   PinOff,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
@@ -105,6 +108,7 @@ const Chat = () => {
   const params = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { notifications, addChatNotification, markAsRead, markAllAsRead, clearNotifications, unreadCount } = useNotifications();
   const conversaId = params.id;
   
   const [messages, setMessages] = useState([]);
@@ -147,6 +151,8 @@ const Chat = () => {
   const typingTimeoutRef = useRef(null);
   const [showMsgSearch, setShowMsgSearch] = useState(false);
   const [msgSearchTerm, setMsgSearchTerm] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [presenceStatus, setPresenceStatus] = useState({});
 
   const messagesEndRef = useRef(null);
 
@@ -245,13 +251,17 @@ const Chat = () => {
 
         // Verificar se o nome é válido (não é placeholder)
         if (name && name !== 'Usuário' && name !== 'Usuario' && name.trim() !== '') {
+          // Get the other participant ID for presence status
+          const otherParticipantId = conversation.participants?.find(p => p !== user?.uid);
+          const presenceData = presenceStatus[otherParticipantId];
+
           return {
             id: conversation.id,
             name: name,
             initials: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
             type: otherUser.tipo || 'cidadao',
             distance: '0m de você',
-            online: otherUser.online || false
+            online: presenceData?.isOnline || false
           };
         } else {
           console.log('⚠️ Nome ainda é placeholder, tentando buscar novamente...');
@@ -611,13 +621,13 @@ const Chat = () => {
       ensureDependencies();
       setSelectedChatId(conversaId);
       loadMessages();
-      
+
       // Iniciar escuta de novas mensagens
       chatNotificationService.startListening(conversaId, (newMessages) => {
         setMessages(prev => {
           const existingIds = new Set(prev.map(m => m.id));
           const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
-          
+
           if (uniqueNewMessages.length === 0) return prev;
 
           return [...prev, ...uniqueNewMessages.map(msg => ({
@@ -642,15 +652,59 @@ const Chat = () => {
         return () => { unsubscribeTyping && unsubscribeTyping(); };
       }
     }
-    
+
     loadConversations();
-    
+
     return () => {
       if (conversaId) {
         chatNotificationService.stopListening(conversaId);
       }
     };
   }, [conversaId, user?.uid, loadConversations, loadMessages]);
+
+  // Socket listeners for presence updates
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket && user?.uid) {
+      const handlePresenceUpdate = (data) => {
+        console.log('Presence update received:', data);
+        setPresenceStatus(prev => ({
+          ...prev,
+          [data.userId]: {
+            isOnline: data.isOnline,
+            lastSeen: data.lastSeen
+          }
+        }));
+      };
+
+      const handlePresenceStatus = (data) => {
+        console.log('Presence status received:', data);
+        setPresenceStatus(prev => ({
+          ...prev,
+          [data.userId]: {
+            isOnline: data.isOnline,
+            lastSeen: data.lastSeen
+          }
+        }));
+      };
+
+      socket.on('presence_update', handlePresenceUpdate);
+      socket.on('presence_status', handlePresenceStatus);
+
+      // Request presence status for the current contact
+      if (conversation && conversation.participants) {
+        const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
+        if (otherParticipantId) {
+          socket.emit('get_presence', otherParticipantId);
+        }
+      }
+
+      return () => {
+        socket.off('presence_update', handlePresenceUpdate);
+        socket.off('presence_status', handlePresenceStatus);
+      };
+    }
+  }, [conversation, user?.uid]);
 
   const handleReactionClick = (msgId, emoji) => {
     setMessages(prev => prev.map(msg => {
@@ -950,13 +1004,26 @@ const Chat = () => {
     }
   };
 
+  const handleNotificationClick = (notification) => {
+    // Marcar como lida
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+
+    // Se for notificação de chat, navegar para a conversa
+    if (notification.type === 'chat' && notification.conversationId) {
+      navigate(`/chat/${notification.conversationId}`);
+      setShowNotifications(false);
+    }
+  };
+
   const handleAvatarClick = (isSender) => {
     if (isSender) {
       setViewingProfile(currentUserData);
     } else {
       const otherUser = conversation?.participantsData?.find(p => p.uid !== user?.uid) || conversation?.otherParticipant;
       const userName = otherUser?.nome || otherUser?.nomeCompleto || currentContact?.name || "Carregando...";
-      
+
       setViewingProfile({
         name: userName,
         email: otherUser?.email || "Informação privada",
@@ -1095,6 +1162,79 @@ const Chat = () => {
             </div>
             <div className="header-right-group">
               <div className="quick-actions-desktop">
+                <div className="notification-wrapper">
+                  <button
+                    className="notification-btn"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="notification-badge">{unreadCount}</span>
+                    )}
+                  </button>
+
+                  {showNotifications && (
+                    <div className="notification-dropdown">
+                      <div className="notification-header">
+                        <h3>Notificações</h3>
+                        {notifications.length > 0 && (
+                          <div className="notification-actions">
+                            {unreadCount > 0 && (
+                              <button
+                                className="action-btn mark-read-btn"
+                                onClick={markAllAsRead}
+                                title="Marcar todas como lidas"
+                              >
+                                ✓
+                              </button>
+                            )}
+                            <button
+                              className="action-btn clear-btn"
+                              onClick={clearNotifications}
+                              title="Limpar todas"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="notification-list">
+                        {notifications.length === 0 ? (
+                          <div className="no-notifications">
+                            Nenhuma notificação ainda
+                          </div>
+                        ) : (
+                          notifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.type === 'chat' ? 'chat-notification' : ''}`}
+                              onClick={() => handleNotificationClick(notification)}
+                            >
+                              <div className="notification-content">
+                                <div className="notification-icon">
+                                  {notification.type === 'chat' ? '💬' : '🔔'}
+                                </div>
+                                <div className="notification-text">
+                                  <p className="notification-title">{notification.title}</p>
+                                  <p className="notification-message">{notification.message}</p>
+                                  <span className="notification-time">
+                                    {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                              {!notification.read && <div className="unread-dot"></div>}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <button
                   className={`header-action-btn ${showMsgSearch ? 'active' : ''}`}
                   onClick={() => setShowMsgSearch(!showMsgSearch)}

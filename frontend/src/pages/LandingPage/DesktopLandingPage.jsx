@@ -12,7 +12,7 @@ import GlobeFeatureSection from './GlobeFeatureSection';
 import ApiService from '../../services/apiService';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
 import Footer from '../../components/layout/Footer';
-import LandingHeader from '../../components/layout/LandingHeader';
+import ReusableHeader from '../../components/layout/ReusableHeader';
 import {
   Heart,
   HandHelping,
@@ -392,11 +392,16 @@ export default function DesktopLandingPage() {
     <div className="landing-wrapper">
       <div className="bg-mesh" />
 
-      <LandingHeader
-        scrolled={scrolled}
-        showPanelButtons={true}
-        showCadastroButtons={false}
-        showNavLinks={true}
+      <ReusableHeader
+        navigationItems={[
+          { path: '/#features', label: 'Funcionalidades' },
+          { path: '/quero-ajudar', label: 'Quero Ajudar' },
+          { path: '/preciso-de-ajuda', label: 'Preciso de Ajuda' },
+          { path: '/achados-e-perdidos', label: 'Achados e Perdidos' }
+        ]}
+        showLoginButton={true}
+        showAdminButtons={true}
+        showPainelSocial={true}
       />
 
       {/* Hero Section */}

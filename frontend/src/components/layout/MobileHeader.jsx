@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { SecurityUtils } from '../../utils/security';
+import { getSocket } from '../../services/socketService';
 import logo from '../../assets/images/marca.png';
 import { 
   Menu, 
@@ -25,12 +26,39 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { notifications, markAsRead, markAllAsRead, clearNotifications, getUnreadCount } = useNotifications();
+  const { user, isAuthenticated } = useAuth();
+  const { 
+    notifications, 
+    addChatNotification, 
+    markAsRead, 
+    markAllAsRead, 
+    clearNotifications, 
+    getUnreadCount 
+  } = useNotifications();
   const unreadCount = getUnreadCount();
 
   // Verificar se é administrador
   const isAdmin = user?.role === 'admin' || user?.isAdmin || user?.tipo === 'admin';
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const socket = getSocket();
+      if (socket) {
+        const handleNewNotification = (data) => {
+          if (data && (data.type === 'chat' || data.conversationId)) {
+            addChatNotification(
+              data.conversationId,
+              data.senderName || data.title || 'Usuário',
+              data.message,
+              data.timestamp
+            );
+          }
+        };
+        socket.on('notification', handleNewNotification);
+        return () => socket.off('notification', handleNewNotification);
+      }
+    }
+  }, [isAuthenticated, addChatNotification]);
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -200,7 +228,14 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
                   <p style={{ margin: 0 }}>Nenhuma notificação no momento</p>
                 </div>
               ) : (
-                notifications.map(n => (
+                      notifications.map(n => {
+                        let time;
+                        if (n.timestamp && n.timestamp.seconds) {
+                          time = new Date(n.timestamp.seconds * 1000);
+                        } else {
+                          time = new Date(n.timestamp);
+                        }
+                        return (
                   <div key={n.id} 
                     onClick={() => {
                       markAsRead(n.id);
@@ -235,13 +270,13 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
                         <div style={{ color: '#64748b', fontSize: '0.85rem', lineHeight: '1.4' }}>{n.message}</div>
                         <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Clock size={10} />
-                          {new Date(n.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                          {isNaN(time.getTime()) ? 'Data inválida' : time.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
                       {!n.read && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0d9488', marginTop: '6px' }} />}
                     </div>
                   </div>
-                ))
+                )})
               )}
             </div>
             
