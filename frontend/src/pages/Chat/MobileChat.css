@@ -156,20 +156,27 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem 1rem;
-  background: #f1f5f9;
+  background: white;
   border: 1px solid var(--sb-border-color);
   border-radius: 10px;
-  color: var(--sb-text-main);
+  color: var(--sb-text-muted);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
 }
 
 .sb-home-btn:hover {
-  background: var(--sb-primary-teal-light);
-  border-color: var(--sb-primary-teal);
-  color: var(--sb-primary-teal);
+  background: #f8fafc;
+  color: var(--sb-text-main);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+  border-color: #cbd5e1;
+}
+
+.sb-home-btn:active {
+  transform: scale(0.96);
 }
 
 .sb-mini-profile {
@@ -235,6 +242,19 @@
   padding: 1rem;
   border: 1px solid var(--sb-border-color);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.sb-chat-context-card-mobile::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to bottom, var(--sb-primary-teal), var(--sb-primary-teal-dark));
 }
 
 .sb-context-header-mobile {
@@ -374,8 +394,9 @@
 }
 
 .sb-contact-item.sb-active {
-  background-color: var(--sb-primary-teal-light);
-  border-color: rgba(16, 185, 129, 0.1);
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .sb-avatar-wrapper {
@@ -1101,20 +1122,27 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.75rem 1rem;
-  background: #f1f5f9;
+  background: white;
   border: 1px solid var(--sb-border-color);
   border-radius: 10px;
-  color: var(--sb-text-main);
+  color: var(--sb-text-muted);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
 }
 
 .sb-conversations-btn:hover {
-  background: var(--sb-primary-teal-light);
-  border-color: var(--sb-primary-teal);
-  color: var(--sb-primary-teal);
+  background: #f8fafc;
+  color: var(--sb-text-main);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+  border-color: #cbd5e1;
+}
+
+.sb-conversations-btn:active {
+  transform: scale(0.96);
 }
 
 .sb-conversation-closed-banner {

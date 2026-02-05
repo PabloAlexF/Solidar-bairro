@@ -56,8 +56,8 @@ export const ValidationModal = ({ isOpen, onClose, validationResult, onReview, o
           <button onClick={onClose}><X size={20} /></button>
         </div>
 
-        <div className="pdam-validation-modal-content">
-          {/* Confidence Score */}
+        <div className="pdam-modal-scroll-content">
+          <div className="pdam-validation-content-wrapper">
           {!isErrorState && (
             <div className="pdam-confidence-score">
               <div className="pdam-confidence-header">
@@ -93,9 +93,10 @@ export const ValidationModal = ({ isOpen, onClose, validationResult, onReview, o
               ))}
             </div>
           )}
+          </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="pdam-validation-actions">
+        <div className="pdam-modal-footer-fixed">
             {isErrorState ? (
               <button onClick={onClose} className="pdam-btn-next">
                 <RefreshCw size={18} /> Tentar Novamente
@@ -115,7 +116,6 @@ export const ValidationModal = ({ isOpen, onClose, validationResult, onReview, o
                 </button>
               </>
             )}
-          </div>
         </div>
       </motion.div>
     </div>

@@ -45,7 +45,8 @@ import {
   X,
   Minus,
   Quote,
-  Save
+  ArrowDown,
+  ShieldCheck
 } from 'lucide-react';
 import './styles.css';
 
@@ -80,40 +81,68 @@ const VISIBILITY_OPTIONS = [
 
 const SUBCATEGORIES = {
   'Alimentos': [
-    { id: 'Cesta Básica', label: 'Cesta Básica', desc: 'Monte sua cesta com o que mais precisa', options: ['Arroz', 'Feijão', 'Açúcar', 'Óleo', 'Macarrão', 'Farinha', 'Café', 'Sal', 'Leite em pó', 'Biscoito', 'Molho de Tomate', 'Sardinha'] },
-    { id: 'Leite', label: 'Leite', desc: 'Caixa, em pó ou especial', options: ['Integral', 'Desnatado', 'Sem lactose', 'Em pó', 'Infantil'] },
-    { id: 'Perecíveis', label: 'Perecíveis', desc: 'Carnes, verduras, legumes, frutas', options: ['Carne Bovina', 'Frango', 'Ovos', 'Legumes', 'Frutas', 'Verduras'] },
-    { id: 'Marmita', label: 'Marmita/Refeição', desc: 'Alimento pronto para consumo', options: ['Almoço', 'Jantar', 'Sopa', 'Sanduíche'] },
-    { id: 'Formula', label: 'Fórmula Infantil', desc: 'Leite específico para bebês', options: ['NAN', 'Aptamil', 'Nestogeno', '0-6 meses', '6-12 meses'] },
-    { id: 'Padaria', label: 'Padaria', desc: 'Pães e massas', options: ['Pão Francês', 'Pão de Forma', 'Bolo', 'Salgados'] },
-    { id: 'Suplemento', label: 'Suplementos', desc: 'Nutrição especial', options: ['Ensure', 'Nutren', 'Whey', 'Vitamina'] },
-    { id: 'Água', label: 'Água Potável', desc: 'Garrafas ou galões', options: ['Garrafa 1.5L', 'Galão 5L', 'Galão 20L'] }
+    { id: 'Cesta Básica', label: 'Cesta Básica Completa', desc: 'Arroz, feijão, óleo, açúcar', options: ['Arroz', 'Feijão', 'Açúcar', 'Óleo', 'Macarrão', 'Farinha', 'Café', 'Sal', 'Leite em pó', 'Biscoito', 'Molho de Tomate', 'Sardinha'] },
+    { id: 'Cereais & Grãos', label: 'Cereais & Grãos', desc: 'Arroz, feijão, lentilha', options: ['Arroz', 'Feijão', 'Lentilha', 'Milho', 'Soja'] },
+    { id: 'Carnes & Aves', label: 'Carnes & Aves', desc: 'Carne, frango, peixe', options: ['Carne Bovina', 'Frango', 'Peixe', 'Porco', 'Ovelha'] },
+    { id: 'Ovos & Laticínios', label: 'Ovos & Laticínios', desc: 'Ovos, leite, queijo', options: ['Ovos', 'Leite', 'Queijo', 'Iogurte', 'Manteiga'] },
+    { id: 'Frutas Frescas', label: 'Frutas Frescas', desc: 'Banana, maçã, laranja', options: ['Banana', 'Maçã', 'Laranja', 'Uva', 'Abacaxi'] },
+    { id: 'Verduras & Legumes', label: 'Verduras & Legumes', desc: 'Alface, tomate, batata', options: ['Alface', 'Tomate', 'Batata', 'Cenoura', 'Cebola'] },
+    { id: 'Padaria & Café', label: 'Padaria & Café', desc: 'Pão, biscoito, café', options: ['Pão Francês', 'Pão de Forma', 'Bolo', 'Salgados', 'Café'] },
+    { id: 'Temperos', label: 'Temperos', desc: 'Sal, açúcar, óleo', options: ['Sal', 'Açúcar', 'Óleo', 'Vinagre', 'Temperos'] },
+    { id: 'Massas & Farinhas', label: 'Massas & Farinhas', desc: 'Macarrão, farinha', options: ['Macarrão', 'Farinha', 'Arroz', 'Aveia', 'Trigo'] },
+    { id: 'Enlatados', label: 'Enlatados', desc: 'Sardinha, atum, milho', options: ['Sardinha', 'Atum', 'Milho', 'Ervilha', 'Seleta'] },
+    { id: 'Bebidas & Sucos', label: 'Bebidas & Sucos', desc: 'Suco, refrigerante', options: ['Suco', 'Refrigerante', 'Água', 'Chá', 'Café'] },
+    { id: 'Doces', label: 'Doces', desc: 'Chocolate, bolo', options: ['Chocolate', 'Bolo', 'Doce', 'Biscoito', 'Sorvete'] },
+    { id: 'Alimentação Infantil', label: 'Alimentação Infantil', desc: 'Papinha, fórmula', options: ['Papinha', 'Fórmula', 'Leite Infantil', 'Suco Infantil', 'Cereais'] },
+    { id: 'Alimentação Especial', label: 'Alimentação Especial', desc: 'Sem glúten, vegano', options: ['Sem Glúten', 'Vegano', 'Lactose Free', 'Diabético', 'Hipocalórico'] },
+    { id: 'Marmitas', label: 'Marmitas', desc: 'Refeições prontas', options: ['Almoço', 'Jantar', 'Sopa', 'Sanduíche', 'Prato Feito'] },
+    { id: 'Merenda', label: 'Merenda', desc: 'Lanche escolar', options: ['Pão', 'Fruta', 'Suco', 'Biscoito', 'Iogurte'] }
   ],
   'Roupas': [
-    { id: 'Infantil', label: 'Roupas Infantis', desc: 'Para crianças de 0 a 12 anos', options: ['Recém-nascido', '1-3 anos', '4-8 anos', '9-12 anos', 'Menino', 'Menina', 'Calçados', 'Agasalhos'] },
-    { id: 'Adulto', label: 'Roupas Adulto', desc: 'Masculino e Feminino', options: ['P', 'M', 'G', 'GG', 'Plus Size', 'Masculino', 'Feminino', 'Calça', 'Camisa', 'Vestido'] },
-    { id: 'Inverno', label: 'Roupas de Frio', desc: 'Casacos, blusas, toucas', options: ['Casacos pesados', 'Moletom', 'Cobertores', 'Toucas/Luvas', 'Meias'] },
-    { id: 'Acessorios', label: 'Acessórios', desc: 'Cintos, bolsas, bonés', options: ['Cinto', 'Boné', 'Bolsa', 'Mochila'] },
-    { id: 'CamaBanho', label: 'Cama e Banho', desc: 'Lençóis, toalhas, cobertores', options: ['Lençol Solteiro', 'Lençol Casal', 'Toalha de Banho', 'Cobertor', 'Travesseiro'] },
-    { id: 'Enxoval', label: 'Enxoval Bebê', desc: 'Itens para recém-nascido', options: ['Banheira', 'Saída Maternidade', 'Cueiro', 'Mantas'] }
+    { id: 'Roupas Infantis', label: 'Roupas Infantis', desc: 'Para crianças de 0 a 12 anos', options: ['Recém-nascido', '1-3 anos', '4-8 anos', '9-12 anos', 'Menino', 'Menina', 'Calçados', 'Agasalhos'] },
+    { id: 'Roupas Adulto', label: 'Roupas Adulto', desc: 'Masculino e Feminino', options: ['P', 'M', 'G', 'GG', 'Plus Size', 'Masculino', 'Feminino', 'Calça', 'Camisa', 'Vestido'] },
+    { id: 'Roupas de Frio', label: 'Roupas de Frio', desc: 'Casacos, blusas, toucas', options: ['Casacos pesados', 'Moletom', 'Cobertores', 'Toucas/Luvas', 'Meias'] },
+    { id: 'Roupas Verão', label: 'Roupas Verão', desc: 'Camisetas, bermudas', options: ['Camiseta', 'Bermuda', 'Short', 'Sunga', 'Sapatilha'] },
+    { id: 'Uniforme Escolar', label: 'Uniforme Escolar', desc: 'Kits escolares', options: ['Camisa', 'Calça', 'Sapato', 'Mochila', 'Material Escolar'] },
+    { id: 'Uniforme Trabalho', label: 'Uniforme Trabalho', desc: 'Aventais, jalecos', options: ['Avental', 'Jaleco', 'Calça', 'Camisa', 'Sapato'] },
+    { id: 'Roupa Social', label: 'Roupa Social', desc: 'Entrevistas, trabalho', options: ['Calça Social', 'Camisa Social', 'Paletó', 'Sapato Social', 'Gravata'] },
+    { id: 'Roupas Íntimas', label: 'Roupas Íntimas', desc: 'Cueca, calcinha (NOVAS)', options: ['Cueca', 'Calcinha', 'Sutiã', 'Meia', 'Pijama'] },
+    { id: 'Roupas Infantis', label: 'Roupas Infantis', desc: '1 a 14 anos', options: ['1-3 anos', '4-8 anos', '9-12 anos', '13-14 anos', 'Menino', 'Menina'] },
+    { id: 'Pijamas', label: 'Pijamas', desc: 'Roupas para dormir', options: ['Pijama Adulto', 'Pijama Infantil', 'Roupão', 'Chinelo', 'Touca'] }
   ],
   'Medicamentos': [
-    { id: 'Analgesicos', label: 'Analgésicos', desc: 'Dor e febre', options: ['Dipirona', 'Paracetamol', 'Ibuprofeno', 'Aspirina'] },
-    { id: 'Uso Continuo', label: 'Uso Contínuo', desc: 'Hipertensão, Diabetes...', options: ['Losartana', 'Enalapril', 'Metformina', 'Glibenclamida', 'Insulina'] },
+    { id: 'Analgésicos', label: 'Analgésicos', desc: 'Dor e febre', options: ['Dipirona', 'Paracetamol', 'Ibuprofeno', 'Aspirina'] },
+    { id: 'Uso Contínuo', label: 'Uso Contínuo', desc: 'Hipertensão, Diabetes...', options: ['Losartana', 'Enalapril', 'Metformina', 'Glibenclamida', 'Insulina'] },
     { id: 'Primeiros Socorros', label: 'Primeiros Socorros', desc: 'Curativos, antissépticos', options: ['Alcool 70%', 'Gaze', 'Esparadrapo', 'Band-aid', 'Antisséptico', 'Algodão'] },
-    { id: 'Vitaminas', label: 'Vitaminas', desc: 'Suplementação vitamínica', options: ['Vitamina C', 'Vitamina D', 'Complexo B', 'Ferro'] }
+    { id: 'Vitaminas', label: 'Vitaminas', desc: 'Suplementação vitamínica', options: ['Vitamina C', 'Vitamina D', 'Complexo B', 'Ferro'] },
+    { id: 'Asma', label: 'Asma', desc: 'Bombinhas, Salbutamol', options: ['Salbutamol', 'Beclometasona', 'Montelucaste', 'Bombinha'] },
+    { id: 'Antibióticos', label: 'Antibióticos', desc: 'Com receita', options: ['Amoxicilina', 'Azitromicina', 'Ciprofloxacino', 'Cefalexina'] },
+    { id: 'Saúde Mental', label: 'Saúde Mental', desc: 'Controlados', options: ['Fluoxetina', 'Sertralina', 'Clonazepam', 'Diazepam'] },
+    { id: 'Anti-inflamatórios', label: 'Anti-inflamatórios', desc: 'Diclofenaco', options: ['Diclofenaco', 'Cetoprofeno', 'Nimesulida', 'Piroxicam'] },
+    { id: 'Gástrico', label: 'Gástrico', desc: 'Omeprazol', options: ['Omeprazol', 'Pantoprazol', 'Ranitidina', 'Domperidona'] },
+    { id: 'Pediátrico', label: 'Pediátrico', desc: 'Xaropes infantis', options: ['Xarope para Tosse', 'Antitérmico Infantil', 'Probiótico', 'Vitaminas Infantis'] }
   ],
   'Higiene': [
     { id: 'Pessoal', label: 'Higiene Pessoal', desc: 'Sabonete, shampoo, pasta...', options: ['Sabonete', 'Shampoo', 'Condicionador', 'Pasta de Dente', 'Escova de Dente', 'Desodorante', 'Absorvente', 'Papel Higiênico'] },
     { id: 'Limpeza', label: 'Limpeza da Casa', desc: 'Detergente, sabão, água sanitária', options: ['Detergente', 'Sabão em Pó', 'Água Sanitária', 'Desinfetante', 'Esponja'] },
     { id: 'Bebe', label: 'Higiene do Bebê', desc: 'Fraldas, lenços', options: ['Fraldas P', 'Fraldas M', 'Fraldas G', 'Fraldas XG', 'Lenço Umedecido', 'Pomada'] },
-    { id: 'Geriatrica', label: 'Higiene Geriátrica', desc: 'Fraldas e cuidados para idosos', options: ['Fralda Geriátrica M', 'Fralda Geriátrica G', 'Fralda Geriátrica XG', 'Lenço Umedecido'] }
+    { id: 'Geriatrica', label: 'Higiene Geriátrica', desc: 'Fraldas e cuidados para idosos', options: ['Fralda Geriátrica M', 'Fralda Geriátrica G', 'Fralda Geriátrica XG', 'Lenço Umedecido'] },
+    { id: 'Banho', label: 'Produtos de Banho', desc: 'Sabonete líquido, espuma', options: ['Sabonete Líquido', 'Espuma de Banho', 'Óleo de Banho', 'Creme Hidratante', 'Loção Corporal'] },
+    { id: 'Cabelo', label: 'Cuidados com Cabelo', desc: 'Shampoo, condicionador, óleo', options: ['Shampoo', 'Condicionador', 'Óleo Capilar', 'Máscara de Hidratação', 'Creme para Pentear'] },
+    { id: 'Rosto', label: 'Cuidados com Rosto', desc: 'Creme dental, sabonete facial', options: ['Sabonete Facial', 'Creme Hidratante', 'Protetor Solar', 'Tônico Facial', 'Máscara Facial'] },
+    { id: 'Feminina', label: 'Higiene Feminina', desc: 'Absorventes, protetores', options: ['Absorvente', 'Protetor Diário', 'Coletores Menstruais', 'Sabonete Íntimo', 'Lenços Umedecidos'] },
+    { id: 'Masculina', label: 'Higiene Masculina', desc: 'Produtos específicos', options: ['Sabonete', 'Desodorante', 'Creme de Barbear', 'Gel de Cabelo', 'Loção Pós-Barbe'] },
+    { id: 'Infantil', label: 'Higiene Infantil', desc: 'Produtos para crianças', options: ['Sabonete Infantil', 'Shampoo Infantil', 'Creme Hidratante', 'Lenços Umedecidos', 'Pomada para Assaduras'] }
   ],
   'Móveis': [
     { id: 'Cama', label: 'Cama/Colchão', desc: 'Solteiro, Casal, Beliche', options: ['Solteiro', 'Casal', 'Apenas Colchão', 'Cama Box', 'Beliche'] },
     { id: 'Mesa', label: 'Mesa e Cadeiras', desc: 'Para refeições', options: ['4 lugares', '6 lugares', 'Apenas cadeiras', 'Mesa pequena'] },
     { id: 'Sofa', label: 'Sofá', desc: 'Para sala de estar', options: ['2 lugares', '3 lugares', 'Retrátil', 'Poltrona'] },
-    { id: 'Armario', label: 'Armário', desc: 'Quarto ou cozinha', options: ['Cozinha', 'Guarda-roupa Solteiro', 'Guarda-roupa Casal', 'Cômoda'] }
+    { id: 'Armario', label: 'Armário', desc: 'Quarto ou cozinha', options: ['Cozinha', 'Guarda-roupa Solteiro', 'Guarda-roupa Casal', 'Cômoda'] },
+    { id: 'Estante', label: 'Estante/Livros', desc: 'Para livros e objetos', options: ['Estante pequena', 'Estante grande', 'Prateleira', 'Biblioteca'] },
+    { id: 'Cadeira', label: 'Cadeiras', desc: 'Escritório, cozinha', options: ['Cadeira escritório', 'Cadeira cozinha', 'Cadeira balanço', 'Banqueta'] },
+    { id: 'Rack', label: 'Rack/TV', desc: 'Para TV e objetos', options: ['Rack pequeno', 'Rack grande', 'Painel TV', 'Centro de entretenimento'] },
+    { id: 'Criado', label: 'Criado-mudo', desc: 'Ao lado da cama', options: ['Criado-mudo simples', 'Criado-mudo com gavetas', 'Mesinha lateral'] }
   ],
   'Eletrodomésticos': [
     { id: 'Geladeira', label: 'Geladeira', desc: 'Refrigerador', options: ['110v', '220v', 'Duplex', 'Simples'] },
@@ -124,13 +153,19 @@ const SUBCATEGORIES = {
     { id: 'Tenis', label: 'Tênis', desc: 'Esportivo ou casual', options: ['Masculino', 'Feminino', 'Infantil', '34-38', '39-44'] },
     { id: 'Social', label: 'Sapato Social', desc: 'Para trabalho ou eventos', options: ['Preto', 'Marrom', 'Salto', 'Sapatilha'] },
     { id: 'Chinelo', label: 'Chinelo/Sandália', desc: 'Uso diário', options: ['Havaianas', 'Sandália', 'Pantufa'] },
-    { id: 'Bota', label: 'Botas', desc: 'Para chuva ou frio', options: ['Galocha', 'Coturno', 'Cano Curto'] }
+    { id: 'Bota', label: 'Botas', desc: 'Para chuva ou frio', options: ['Galocha', 'Coturno', 'Cano Curto'] },
+    { id: 'Sapatilha', label: 'Sapatilhas', desc: 'Confortáveis', options: ['Esporte', 'Casual', 'Trabalho', 'Escola'] },
+    { id: 'Meia', label: 'Meias', desc: 'Para calçados', options: ['Curta', 'Longa', 'Esportiva', 'Social'] },
+    { id: 'Cinto', label: 'Cintos', desc: 'Acessório', options: ['Couro', 'Sintético', 'Fino', 'Grosso'] }
   ],
   'Contas': [
     { id: 'Luz', label: 'Conta de Luz', desc: 'Pagamento de energia', options: ['Atrasada', 'Vencendo', 'Aviso de Corte'] },
     { id: 'Agua', label: 'Conta de Água', desc: 'Abastecimento', options: ['Atrasada', 'Vencendo', 'Aviso de Corte'] },
     { id: 'Aluguel', label: 'Aluguel', desc: 'Moradia', options: ['Atrasado', 'Parcial', 'Despejo'] },
-    { id: 'Gas', label: 'Gás de Cozinha', desc: 'Botijão ou encanado', options: ['Botijão 13kg', 'Conta Gás'] }
+    { id: 'Gas', label: 'Gás de Cozinha', desc: 'Botijão ou encanado', options: ['Botijão 13kg', 'Conta Gás'] },
+    { id: 'Telefone', label: 'Telefone/Internet', desc: 'Comunicação', options: ['Fixo', 'Celular', 'Internet', 'Combo'] },
+    { id: 'IPTU', label: 'IPTU', desc: 'Imposto territorial', options: ['Atrasado', 'Parcial', 'Parcelado'] },
+    { id: 'Condominio', label: 'Condomínio', desc: 'Taxa mensal', options: ['Atrasado', 'Parcial', 'Despejo'] }
   ],
   'Emprego': [
     { id: 'Curriculo', label: 'Currículo', desc: 'Ajuda para montar ou imprimir', options: ['Revisão', 'Impressão', 'Formatação'] },
@@ -140,13 +175,21 @@ const SUBCATEGORIES = {
   'Transporte': [
     { id: 'Passagem', label: 'Passagem', desc: 'Transporte público', options: ['Ônibus', 'Metrô', 'Trem', 'Cartão Transporte'] },
     { id: 'Combustivel', label: 'Combustível', desc: 'Ajuda para abastecer', options: ['Gasolina', 'Etanol'] },
-    { id: 'Bicicleta', label: 'Bicicleta', desc: 'Meio de transporte', options: ['Manutenção', 'Doação'] }
+    { id: 'Bicicleta', label: 'Bicicleta', desc: 'Meio de transporte', options: ['Manutenção', 'Doação'] },
+    { id: 'Moto', label: 'Moto', desc: 'Transporte pessoal', options: ['Manutenção', 'Combustível', 'Doação'] },
+    { id: 'Carro', label: 'Carro', desc: 'Veículo próprio', options: ['Manutenção', 'Combustível', 'Seguro', 'Licenciamento'] },
+    { id: 'Taxi', label: 'Táxi/Uber', desc: 'Transporte por aplicativo', options: ['Viagem Médica', 'Entrevista', 'Emergência'] },
+    { id: 'Acessibilidade', label: 'Transporte Acessível', desc: 'Para pessoas com deficiência', options: ['Cadeira de Rodas', 'Rampas', 'Veículo Adaptado'] }
   ],
   'Outros': [
     { id: 'Brinquedos', label: 'Brinquedos', desc: 'Para crianças', options: ['Boneca', 'Carrinho', 'Jogos', 'Educativos'] },
     { id: 'Livros', label: 'Livros/Material', desc: 'Educação e cultura', options: ['Didáticos', 'Literatura', 'Cadernos'] },
     { id: 'Ferramentas', label: 'Ferramentas', desc: 'Para trabalho', options: ['Construção', 'Jardinagem', 'Mecânica'] },
-    { id: 'Pet', label: 'Para Pet', desc: 'Ração e cuidados', options: ['Ração Cão', 'Ração Gato', 'Areia', 'Remédio'] }
+    { id: 'Pet', label: 'Para Pet', desc: 'Ração e cuidados', options: ['Ração Cão', 'Ração Gato', 'Areia', 'Remédio'] },
+    { id: 'Material Escolar', label: 'Material Escolar', desc: 'Para estudantes', options: ['Cadernos', 'Lápis', 'Borracha', 'Livros'] },
+    { id: 'Equipamentos', label: 'Equipamentos', desc: 'Eletrônicos e outros', options: ['Computador', 'Impressora', 'Telefone', 'Tablet'] },
+    { id: 'Roupas Especiais', label: 'Roupas Especiais', desc: 'Para necessidades específicas', options: ['Roupa Hospitalar', 'Roupa de Segurança', 'Uniforme', 'Roupa Térmica'] },
+    { id: 'Ajuda Financeira', label: 'Ajuda Financeira', desc: 'Suporte financeiro', options: ['Empréstimo', 'Doação', 'Bolsa', 'Auxílio'] }
   ]
 };
 
@@ -734,8 +777,8 @@ const SuccessModal = ({ urgencyColor, urgencyLabel, urgencyIcon: UrgencyIcon, re
         </div>
       )}
       
-      <div className="flex items-center justify-center gap-3 mb-12 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-        <div style={{ color: urgencyColor }} className="flex items-center gap-2 font-black uppercase tracking-widest text-sm">
+      <div className="flex items-center justify-center gap-3 mb-12 p-4 bg-slate-50 rounded-2xl border border-slate-100" style={{ '--urgency-color': urgencyColor }}>
+        <div className="flex items-center gap-2 font-black uppercase tracking-widest text-sm success-urgency-label">
           {UrgencyIcon && <UrgencyIcon size={20} />}
           {urgencyLabel}
         </div>
@@ -750,9 +793,19 @@ const SuccessModal = ({ urgencyColor, urgencyLabel, urgencyIcon: UrgencyIcon, re
   </div>
 );
 
+const SoundWave = () => (
+  <div className="sound-wave">
+    <div className="bar"></div>
+    <div className="bar"></div>
+    <div className="bar"></div>
+    <div className="bar"></div>
+    <div className="bar"></div>
+  </div>
+);
+
 const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
-  const [selectedOptions, setSelectedOptions] = useState([]);
-  const [details, setDetails] = useState('');
+  const [selectedOptions, setSelectedOptions] = useState(item.selectedOptions || []);
+  const [details, setDetails] = useState(item.details || '');
 
   const toggleOption = (option) => {
     if (selectedOptions.includes(option)) {
@@ -782,7 +835,8 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
           stiffness: 400,
           duration: 0.3
         }}
-        className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-lg relative border-0"
+        className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm sm:max-w-md w-full shadow-lg relative border-0 modal-dynamic-wrapper"
+        style={{ '--modal-color': categoryColor }}
       >
         {/* Subtle background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-50/30 to-transparent rounded-3xl" />
@@ -818,19 +872,11 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => toggleOption(opt)}
-                    className={`group pda-option-btn ${
+                    className={`group pda-option-btn modal-option-btn ${
                       isSelected
-                        ? 'bg-[var(--hover-bg)] text-[var(--active-color)]'
-                        : 'bg-slate-50 text-slate-600 hover:bg-[var(--hover-bg)] hover:text-[var(--active-color)]'
+                        ? 'selected'
+                        : ''
                     }`}
-                    style={{
-                      '--hover-bg': `${categoryColor}15`,
-                      '--active-color': categoryColor,
-                      ...(isSelected ? {
-                        backgroundColor: `${categoryColor}15`, // 15% opacity background
-                        color: categoryColor
-                      } : {})
-                    }}
                   >
                     <div className="flex items-center justify-between w-full">
                       <span className="truncate flex-1">
@@ -841,8 +887,7 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="w-4 h-4 rounded-full flex items-center justify-center"
-                          style={{ backgroundColor: categoryColor }}
+                          className="w-4 h-4 rounded-full flex items-center justify-center modal-check-circle"
                         >
                           <Check size={12} className="text-white" strokeWidth={3} />
                         </motion.div>
@@ -861,9 +906,8 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
               Observações adicionais
             </label>
             <textarea
-              className="w-full p-4 bg-slate-50 border-0 rounded-2xl text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-0 transition-all resize-none min-h-[100px] text-sm font-medium shadow-inner"
+              className="w-full p-4 bg-slate-50 border-0 rounded-2xl text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-0 transition-all resize-none min-h-[100px] text-sm font-medium shadow-inner modal-textarea"
               style={{ 
-                '--tw-ring-color': categoryColor,
                 borderColor: details ? categoryColor : undefined
               }}
               placeholder="Ex: Quantidade específica, preferências..."
@@ -882,11 +926,7 @@ const ItemSpecificationModal = ({ item, onClose, onSave, categoryColor }) => {
             </button>
             <button
               onClick={handleSave}
-              className="flex-[2] py-4 px-6 text-white font-bold rounded-2xl transition-all hover:shadow-lg border-0"
-              style={{
-                backgroundColor: categoryColor,
-                boxShadow: `0 8px 20px -4px ${categoryColor}40`
-              }}
+              className="flex-[2] py-4 px-6 text-white font-bold rounded-2xl transition-all hover:shadow-lg border-0 modal-confirm-btn"
             >
               Confirmar Seleção
             </button>
@@ -905,11 +945,12 @@ const CategoryConfirmationModal = ({ category, onClose, onConfirm }) => {
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden"
+        className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center relative overflow-hidden modal-dynamic-wrapper"
+        style={{ '--modal-color': category.color }}
       >
-        <div className="absolute top-0 left-0 right-0 h-2" style={{ backgroundColor: category.color }} />
+        <div className="absolute top-0 left-0 right-0 h-2 cat-confirm-bar" />
         
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center" style={{ backgroundColor: `${category.color}15` }}>
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center cat-confirm-icon-bg">
           <category.icon size={40} color={category.color} />
         </div>
         
@@ -929,8 +970,7 @@ const CategoryConfirmationModal = ({ category, onClose, onConfirm }) => {
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 py-3 px-4 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 border-0"
-            style={{ backgroundColor: category.color, boxShadow: `0 8px 20px -4px ${category.color}50` }}
+            className="flex-1 py-3 px-4 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 border-0 cat-confirm-btn"
           >
             Sim, continuar
           </button>
@@ -939,6 +979,85 @@ const CategoryConfirmationModal = ({ category, onClose, onConfirm }) => {
     </div>
   );
 };
+
+const fireConfetti = (e) => {
+  const container = document.getElementById('pda-confetti-container');
+  if (!container) {
+    console.error('Confetti container not found!');
+    return;
+  }
+  
+  const x = e?.clientX || window.innerWidth / 2;
+  const y = e?.clientY || window.innerHeight / 2;
+
+  // Efeito sonoro de "pop"
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.15);
+      
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+      
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    }
+  } catch (err) {
+    // Silently fail if audio is not supported or blocked
+  }
+
+  for (let i = 0; i < 50; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'pda-confetti';
+    confetti.style.left = `${x}px`;
+    confetti.style.top = `${y}px`;
+    confetti.style.backgroundColor = ['#ff595e', '#ffca3a', '#8ac926', '#1982c4', '#6a4c93', '#f72585', '#4cc9f0'][Math.floor(Math.random() * 7)];
+    
+    const angle = Math.random() * 360;
+    const velocity = 100 + Math.random() * 200;
+    const tx = Math.cos(angle * Math.PI / 180) * velocity;
+    const ty = Math.sin(angle * Math.PI / 180) * velocity;
+
+    confetti.style.setProperty('--tx', `${tx}px`);
+    confetti.style.setProperty('--ty', `${ty}px`);
+    confetti.style.setProperty('--rot', `${Math.random() * 720}deg`);
+    container.appendChild(confetti);
+    setTimeout(() => confetti.remove(), 1000);
+  }
+};
+
+const Step2IntroModal = ({ onClose }) => (
+  <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <motion.div
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center"
+    >
+      <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+        <ListChecks size={32} />
+      </div>
+      <h3 className="text-2xl font-black text-slate-900 mb-4">Vamos detalhar seu pedido</h3>
+      <p className="text-slate-500 mb-8 text-lg">
+        Clique nos itens abaixo que correspondem à sua necessidade. Você pode selecionar vários e adicionar detalhes específicos em cada um.
+      </p>
+      <button
+        onClick={onClose}
+        className="btn-start-selection"
+      >
+        Começar a selecionar
+      </button>
+    </motion.div>
+  </div>
+);
 
 export default function PDAForm() {
   const { user } = useAuth();
@@ -957,7 +1076,8 @@ export default function PDAForm() {
   const [showItemModal, setShowItemModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [pendingCategory, setPendingCategory] = useState(null);
-  const [showDraftSaved, setShowDraftSaved] = useState(false);
+  const [showStep2IntroModal, setShowStep2IntroModal] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(true);
   
   const [isPublished, setIsPublished] = useState(false);
     
@@ -970,6 +1090,7 @@ export default function PDAForm() {
     urgency: '',
     visibility: ['bairro'],
     radius: 2,
+    isPublic: true,
     userLocation: null,
     locationString: 'Detectando localização...',
     city: '',
@@ -1000,12 +1121,29 @@ export default function PDAForm() {
     if (!isPublished) {
       const timeoutId = setTimeout(() => {
         localStorage.setItem('solidar-pda-draft', JSON.stringify({ formData, step }));
-        setShowDraftSaved(true);
-        setTimeout(() => setShowDraftSaved(false), 2000);
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
   }, [formData, step, isPublished]);
+
+  useEffect(() => {
+    if (step === 2) {
+      setShowStep2IntroModal(true);
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 2) {
+      const handleScroll = () => {
+        const isBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 150;
+        setShowScrollHint(!isBottom);
+      };
+      
+      window.addEventListener('scroll', handleScroll);
+      handleScroll(); // Check initially
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, [step]);
 
   const [headerRef, headerInView] = useInView({ threshold: 0.1, triggerOnce: true });
   const [formRef, formInView] = useInView({ threshold: 0.1, triggerOnce: true });
@@ -1108,6 +1246,7 @@ export default function PDAForm() {
         city: formData.city,
         state: formData.state,
         neighborhood: formData.neighborhood,
+        isPublic: formData.isPublic,
         status: 'ativo'
       };
       
@@ -1185,6 +1324,7 @@ export default function PDAForm() {
         city: formData.city,
         state: formData.state,
         neighborhood: formData.neighborhood,
+        isPublic: formData.isPublic,
         status: 'ativo'
       };
       
@@ -1220,7 +1360,7 @@ export default function PDAForm() {
     if (len === 0) return { label: "Esperando sua história", color: "text-slate-400", bg: "bg-slate-100", width: "w-0" };
     if (len < 30) return { label: "Muito curto", color: "text-rose-500", bg: "bg-rose-50", width: "w-[20%]" };
     if (len < 100) return { label: "Ficando melhor!", color: "text-amber-500", bg: "bg-amber-50", width: "w-[50%]" };
-    if (len < 300) return { label: "História envolvente", color: "text-emerald-500", bg: "bg-emerald-50", width: "w-[80%]" };
+    if (len < 200) return { label: "História envolvente", color: "text-emerald-500", bg: "bg-emerald-50", width: "w-[80%]" };
     return { label: "História completa!", color: "text-blue-600", bg: "bg-blue-50", width: "w-full" };
   }, [formData.description]);
 
@@ -1337,7 +1477,7 @@ export default function PDAForm() {
     let text = formData.description.trim();
     if (!text.endsWith('.') && !text.endsWith('!') && !text.endsWith('?')) text += '.';
     
-    updateData({ description: `${prefix}${text}${suffix}`.slice(0, 500) });
+    updateData({ description: `${prefix}${text}${suffix}`.slice(0, 300) });
     setIsImproving(false);
   };
 
@@ -1420,52 +1560,81 @@ export default function PDAForm() {
               </div>
 
               {currentSubcategories.length > 0 ? (
-                <div className="flex flex-wrap justify-center gap-6 mb-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12 max-w-7xl mx-auto">
+                  {currentSubcategories.length > 4 && showScrollHint && (
+                    <div className="scroll-hint-badge">
+                      <span className="text-sm font-bold text-white">Role para ver mais opções</span>
+                      <ArrowDown size={16} className="text-white" />
+                    </div>
+                  )}
+                  
                   {currentSubcategories.map((sub) => {
-                    const isSelected = formData.items.some(i => i.id === sub.id);
+                    const savedItem = formData.items.find(i => i.id === sub.id);
+                    const isSelected = !!savedItem;
+                    
                     return (
-                      <motion.button
+                      <motion.div
                         key={sub.id}
                         whileHover={{ y: -4, boxShadow: '0 16px 32px rgba(0,0,0,0.08)' }}
-                        whileTap={{ scale: 0.98 }}
                         onClick={() => {
-                          setCurrentItem(sub);
-                          setShowItemModal(true);
+                          if (!isSelected) {
+                            setCurrentItem(sub);
+                            setShowItemModal(true);
+                          }
                         }}
-                        className={`p-8 rounded-[32px] text-left transition-all duration-300 relative overflow-hidden group border-0 ${
+                        className={`p-8 rounded-[32px] text-left transition-all duration-300 relative overflow-hidden group border-0 cursor-pointer h-full item-card-wrapper ${
                           isSelected
-                            ? 'bg-white shadow-xl ring-2 ring-offset-2'
-                            : 'bg-white shadow-lg hover:shadow-2xl hover:-translate-y-1'
+                            ? 'bg-white shadow-xl ring-2 ring-offset-2 item-card-selected'
+                            : 'bg-white shadow-lg hover:shadow-2xl'
                         }`}
-                        style={isSelected ? {
-                          '--tw-ring-color': catColor
-                        } : {}}
+                        style={{ '--item-color': catColor, '--tw-ring-color': catColor }}
                       >
-                        <div className={`absolute top-0 right-0 p-4 opacity-0 transition-opacity duration-300 ${isSelected ? 'opacity-100' : 'group-hover:opacity-100'}`}>
-                           <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: isSelected ? catColor : '#f1f5f9' }}>
-                             {isSelected ? <CheckCircle2 size={18} className="text-white" /> : <Plus size={18} className="text-slate-400" />}
-                           </div>
+                        <div className={`transition-all duration-300 ${isSelected ? 'blur-sm opacity-40 pointer-events-none' : ''}`}>
+                          <div className={`absolute top-0 right-0 p-4 opacity-0 transition-opacity duration-300 ${isSelected ? 'opacity-100' : 'group-hover:opacity-100'}`}>
+                             <div className="w-8 h-8 rounded-full flex items-center justify-center item-icon-bg">
+                               {isSelected ? <CheckCircle2 size={18} className="text-white" /> : <Plus size={18} className="text-slate-400" />}
+                             </div>
+                          </div>
+
+                          <div className="flex justify-between items-start mb-2">
+                            <span className={`block text-xl font-black mb-2 item-label-text`}>{sub.label}</span>
+                          </div>
+                          <p className="text-base font-medium text-slate-400 leading-relaxed pr-8">{sub.desc}</p>
                         </div>
 
-                        <div className="flex justify-between items-start mb-2">
-                          <span className={`block text-xl font-black mb-2 ${isSelected ? '' : 'text-slate-700'}`} style={isSelected ? { color: catColor } : {}}>{sub.label}</span>
-                        </div>
-                        <p className="text-base font-medium text-slate-400 leading-relaxed pr-8">{sub.desc}</p>
-                        <div className="mt-4 min-h-[28px] flex items-center">
-                          {isSelected && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50"
+                        {isSelected && (
+                          <div className="item-card-overlay">
+                            <motion.button
+                              initial={{ scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                fireConfetti(e);
+                                setTimeout(() => nextStep(), 400);
+                              }}
+                              className="w-full py-3 px-4 btn-confirm-continue text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
                             >
-                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: catColor }} />
-                              <span className="text-xs font-bold text-slate-600">
-                                {formData.items.find(i => i.id === sub.id).selectedOptions.length} opções
-                              </span>
-                            </motion.div>
-                          )}
-                        </div>
-                      </motion.button>
+                              <CheckCircle2 size={18} />
+                              Confirmar e Continuar
+                            </motion.button>
+                            
+                            <motion.button
+                              initial={{ scale: 0.8, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              transition={{ delay: 0.1 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentItem({ ...sub, ...savedItem });
+                                setShowItemModal(true);
+                              }}
+                              className="w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold shadow-md border border-slate-200 flex items-center justify-center gap-2 transition-all hover:scale-105"
+                            >
+                              <Edit2 size={18} />
+                              Editar
+                            </motion.button>
+                          </div>
+                        )}
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -1553,7 +1722,7 @@ export default function PDAForm() {
                 <p className="text-lg text-slate-500">Sua descrição ajuda as pessoas a entenderem como podem ser úteis.</p>
               </div>
               <div className="description-container flex flex-row gap-8">
-                <div className="flex-[3]">
+                <div className="flex-[3] flex flex-col gap-6">
                   <div className="bg-white rounded-[32px] p-8 shadow-lg transition-shadow hover:shadow-xl border-0">
                     <div className="flex justify-between items-center mb-6">
                       <div className="flex items-center gap-3 text-rose-500 font-extrabold text-xl">
@@ -1570,23 +1739,22 @@ export default function PDAForm() {
                       <textarea
                         placeholder="Exemplo: Sou mãe solteira de 3 filhos e estou desempregada há 2 meses. Preciso de cestas básicas para alimentar minha família. Meus filhos têm 5, 8 e 12 anos e estamos passando por dificuldades. Qualquer ajuda será muito bem-vinda e Deus abençoará quem puder nos ajudar neste momento difícil."
                         value={formData.description}
-                        onChange={(e) => updateData({ description: e.target.value.slice(0, 500) })}
-                        className="w-full p-0 border-0 text-lg leading-relaxed text-slate-700 placeholder:text-slate-300 focus:outline-none resize-none bg-transparent"
-                        style={{ height: '240px' }}
+                        onChange={(e) => updateData({ description: e.target.value.slice(0, 300) })}
+                        className="w-full p-0 border-0 text-lg leading-relaxed text-slate-700 placeholder:text-slate-300 focus:outline-none resize-none bg-transparent description-step-textarea"
                       />
                     </div>
                     
                     <div className="flex justify-between items-center pt-4 border-t border-slate-100">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-slate-500">
-                          {formData.description.length}/500
+                          {formData.description.length}/300
                         </span>
                         <div className="flex items-center gap-1">
                           {[...Array(5)].map((_, i) => (
                             <div 
                               key={i}
                               className={`w-1 h-1 rounded-full transition-all ${
-                                i < Math.ceil((formData.description.length / 500) * 5) 
+                                i < Math.ceil((formData.description.length / 300) * 5) 
                                   ? 'bg-blue-500' 
                                   : 'bg-slate-300'
                               }`}
@@ -1603,41 +1771,70 @@ export default function PDAForm() {
                             formData.description.length < 100 ? 'bg-amber-400' :
                             formData.description.length < 300 ? 'bg-emerald-400' : 'bg-blue-500'
                           }`}
-                          style={{ width: `${Math.min((formData.description.length / 500) * 100, 100)}%` }}
+                          style={{ width: `${Math.min((formData.description.length / 300) * 100, 100)}%` }}
                         />
                       </div>
                     </div>
                   </div>
+
+                  <div className="action-buttons-container">
+                    <motion.button
+                      onClick={toggleRecording}
+                      className={`voice-btn ${isRecording ? 'recording' : ''}`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {isRecording ? <SoundWave /> : <Mic size={20} />}
+                      {isRecording ? 'Parar Gravação' : 'Gravar Voz'}
+                    </motion.button>
+                    
+                    <motion.button
+                      onClick={improveWithAI}
+                      disabled={formData.description.length < 20 || isImproving}
+                      className="ai-btn"
+                      whileHover={formData.description.length >= 20 && !isImproving ? { scale: 1.02 } : {}}
+                      whileTap={formData.description.length >= 20 && !isImproving ? { scale: 0.98 } : {}}
+                    >
+                      {isImproving ? (
+                        <RefreshCcw size={20} className="animate-spin" />
+                      ) : (
+                        <Sparkles size={20} />
+                      )}
+                      {isImproving ? 'Melhorando...' : 'Melhorar com IA'}
+                    </motion.button>
+                  </div>
                 </div>
 
-                <div className="flex-1 bg-white rounded-[32px] p-8 shadow-lg h-fit">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Lightbulb size={24} className="text-amber-500" />
-                    <span className="text-lg font-bold text-slate-800">Dicas importantes</span>
+                <div className="flex-1 tips-card h-fit">
+                  <div className="tips-header">
+                    <div className="tips-icon-box">
+                      <Lightbulb size={24} />
+                    </div>
+                    <span className="tips-title">Dicas importantes</span>
                   </div>
-                  <ul className="space-y-4">
+                  <ul className="tips-list">
                     {dynamicTips.map((tip, i) => (
                       <motion.li 
                         key={i}
                         initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 + (i * 0.1) }}
-                        className="flex items-start gap-3 text-base text-slate-600 leading-relaxed"
+                        className="tip-item"
                       >
-                        <div className="w-5 h-5 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <Check size={12} strokeWidth={3} />
+                        <div className="tip-check">
+                          <Check size={14} strokeWidth={3} />
                         </div>
-                        {tip}
+                        <span className="tip-text">{tip}</span>
                       </motion.li>
                     ))}
                   </ul>
                   
                   {/* Quality indicator */}
-                  <div className="mt-6 pt-4 border-t border-slate-200">
+                  <div className="mt-6 pt-4 border-t border-slate-100">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Qualidade da História</span>
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Qualidade da História</span>
                       <span className={`text-xs font-bold ${descriptionQuality.color}`}>
-                        {Math.round((formData.description.length / 500) * 100)}%
+                        {Math.round((formData.description.length / 300) * 100)}%
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
@@ -1648,46 +1845,11 @@ export default function PDAForm() {
                           formData.description.length < 100 ? 'bg-amber-400' :
                           formData.description.length < 300 ? 'bg-emerald-400' : 'bg-blue-500'
                         }`}
-                        style={{ width: `${Math.min((formData.description.length / 500) * 100, 100)}%` }}
+                        style={{ width: `${Math.min((formData.description.length / 300) * 100, 100)}%` }}
                       />
                     </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex justify-center items-center gap-3 mt-6">
-                <motion.button
-                  onClick={toggleRecording}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border-0 ${
-                    isRecording 
-                      ? 'bg-red-500 text-white' 
-                      : 'bg-white text-slate-600 hover:bg-slate-50 shadow-sm border border-slate-200'
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {isRecording ? <MicOff size={16} /> : <Mic size={16} />}
-                  {isRecording ? 'Parar Gravação' : 'Gravar Voz'}
-                </motion.button>
-                
-                <motion.button
-                  onClick={improveWithAI}
-                  disabled={formData.description.length < 20 || isImproving}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border-0 ${
-                    formData.description.length >= 20 && !isImproving
-                      ? 'bg-white text-slate-600 hover:bg-slate-50 shadow-sm border border-slate-200' 
-                      : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                  }`}
-                  whileHover={formData.description.length >= 20 && !isImproving ? { scale: 1.05 } : {}}
-                  whileTap={formData.description.length >= 20 && !isImproving ? { scale: 0.95 } : {}}
-                >
-                  {isImproving ? (
-                    <RefreshCcw size={16} className="animate-spin" />
-                  ) : (
-                    <Sparkles size={16} />
-                  )}
-                  {isImproving ? 'Melhorando...' : 'Melhorar com IA'}
-                </motion.button>
               </div>
             </div>
           </motion.div>
@@ -1915,7 +2077,7 @@ export default function PDAForm() {
                 <p className="text-lg text-slate-500">Revise os detalhes antes de publicar.</p>
               </div>
               
-              <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100 relative transition-transform hover:-translate-y-1 duration-300">
+              <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100 relative transition-transform hover:-translate-y-1 duration-300 mb-12">
                 {/* Top colored bar */}
                 <div className="h-2 w-full" style={{ background: `linear-gradient(90deg, ${selectedCategory?.color || '#3b82f6'}, ${selectedUrgency?.color || '#f97316'})` }}></div>
                 
@@ -1970,7 +2132,7 @@ export default function PDAForm() {
                             <span className="text-xs font-bold uppercase tracking-widest">Relato</span>
                         </div>
                         <div className="relative pl-6 border-l-4 border-slate-200 py-1">
-                            <p className="text-lg text-slate-600 italic leading-relaxed">"{formData.description}"</p>
+                            <p className="text-lg text-slate-600 italic leading-relaxed confirmation-description-text">"{formData.description}"</p>
                         </div>
                     </div>
 
@@ -1995,6 +2157,26 @@ export default function PDAForm() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Privacy Toggle */}
+                    <label className="privacy-toggle-container">
+                      <div className="pdam-public-switch" style={{ padding: 0, width: 'auto' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={formData.isPublic} 
+                          onChange={(e) => updateData({ isPublic: e.target.checked })} 
+                        />
+                        <span className="pdam-switch-slider"></span>
+                      </div>
+                      <div className="privacy-content">
+                        <h4>
+                          {formData.isPublic ? <><Globe size={18} /> Pedido Público</> : <><ShieldCheck size={18} /> Pedido Anônimo</>}
+                        </h4>
+                        <p>
+                          {formData.isPublic ? 'Seu nome será exibido para todos na plataforma.' : 'Seu nome será ocultado e aparecerá como "Usuário Anônimo".'}
+                        </p>
+                      </div>
+                    </label>
                 </div>
               </div>
             </div>
@@ -2008,7 +2190,10 @@ export default function PDAForm() {
 
   return (
     <div className="pda-page">
+      <div id="pda-confetti-container" style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', pointerEvents: 'none', zIndex: 10000 }} />
       <AnimatedBackground />
+      
+      {showStep2IntroModal && <Step2IntroModal onClose={() => setShowStep2IntroModal(false)} />}
       
       {/* AI Analysis Modal */}
       {isAnalyzing && <AnalyzingModal stages={stages} analysisStage={analysisStage} />}
@@ -2053,23 +2238,7 @@ export default function PDAForm() {
         />
       )}
 
-      <AnimatePresence>
-        {showDraftSaved && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, x: 20 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            exit={{ opacity: 0, y: 20, x: 20 }}
-            className="fixed bottom-24 right-6 md:bottom-8 md:right-8 z-50 bg-white/90 backdrop-blur-md border border-slate-200 shadow-xl px-4 py-2.5 rounded-full flex items-center gap-2.5 pointer-events-none"
-          >
-            <div className="bg-emerald-100 p-1.5 rounded-full">
-              <Save size={14} className="text-emerald-600" />
-            </div>
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Rascunho salvo</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <main className="pda-main-wrapper" style={{ paddingTop: '20px' }}>
+      <main className="pda-main-wrapper">
         <div className="content-section" ref={formRef}>
           {!isPublished && (
             <>
@@ -2087,18 +2256,21 @@ export default function PDAForm() {
 
               <div className="form-actions">
                 {step > 1 ? (
-                  <button onClick={prevStep} className="btn-back border-0">
+                  <button onClick={prevStep} className="btn-back">
                     <ChevronLeft size={20} /> Voltar
                   </button>
                 ) : (
-                  <div />
+                  null
                 )}
                 
                 {step < TOTAL_STEPS && step !== 1 ? (
                   <button 
-                    onClick={nextStep} 
+                    onClick={(e) => {
+                      if (step === 3) fireConfetti(e);
+                      nextStep();
+                    }} 
                     disabled={!isStepValid} 
-                    className="btn-next border-0"
+                    className="btn-next"
                   >
                     {step === 1 ? 'Confirmar Categoria' : 'Continuar'} <ArrowRight size={20} />
                   </button>
@@ -2106,7 +2278,7 @@ export default function PDAForm() {
                   <button 
                     onClick={handlePublish} 
                     disabled={isSubmitting} 
-                    className="btn-publish border-0"
+                    className="btn-publish"
                   >
                     {isSubmitting ? 'Publicando...' : 'Publicar Pedido'} <Rocket size={20} />
                   </button>

@@ -35,6 +35,7 @@ class PedidoController {
         neighborhood: req.query.neighborhood,
         userCity: req.query.userCity, // Cidade do usuário para ordenação por proximidade
         userState: req.query.userState, // Estado do usuário
+        userNeighborhood: req.query.userNeighborhood, // Bairro do usuário para ordenação por proximidade
         timeframe: req.query.timeframe,
         onlyNew: req.query.onlyNew === 'true'
       };

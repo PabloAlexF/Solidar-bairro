@@ -49,92 +49,59 @@ class PedidoModel {
 
   async findAll(filters = {}) {
     try {
-      // Buscar todos os pedidos primeiro (sem filtros complexos)
-      const snapshot = await this.collection.orderBy('createdAt', 'desc').get();
-      
+      let query = this.collection.where('status', '==', 'ativo');
+
+      // Aplicar filtros de localização no nível da query
+      if (filters.city) {
+        query = query.where('city', '==', filters.city);
+      }
+
+      if (filters.state) {
+        query = query.where('state', '==', filters.state);
+      }
+
+      if (filters.neighborhood) {
+        query = query.where('neighborhood', '==', filters.neighborhood);
+      }
+
+      if (filters.category && filters.category !== 'Todas') {
+        query = query.where('category', '==', filters.category);
+      }
+
+      if (filters.urgency) {
+        query = query.where('urgency', '==', filters.urgency);
+      }
+
+      // Aplicar filtro de tempo se necessário
+      if (filters.onlyNew) {
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        query = query.where('createdAt', '>=', yesterday);
+      }
+
+      // Ordenar por data de criação (mais recente primeiro) como padrão
+      query = query.orderBy('createdAt', 'desc');
+
+      const snapshot = await query.get();
+
       const pedidos = [];
       for (const doc of snapshot.docs) {
         const pedidoData = doc.data();
         const userData = await this.getUserData(pedidoData.userId);
-        
+
         const pedido = {
           id: doc.id,
           ...pedidoData,
           usuario: userData
         };
-        
-        // Aplicar filtros no código (temporário até criar índices)
+
+        // Filtros adicionais que não podem ser feitos na query (se necessário)
         let incluir = true;
-        
-        if (filters.category && filters.category !== 'Todas' && pedidoData.category !== filters.category) {
-          incluir = false;
-        }
-        
-        if (filters.urgency && pedidoData.urgency !== filters.urgency) {
-          incluir = false;
-        }
-        
-        if (filters.city) {
-          let pedidoCity = pedidoData.city;
-          
-          // Se não tem city direto, extrair da location
-          if (!pedidoCity && pedidoData.location) {
-            // Formato esperado: "Bairro, Cidade - Estado"
-            const parts = pedidoData.location.split(',');
-            if (parts.length >= 2) {
-              const secondPart = parts[1].trim();
-              if (secondPart.includes('-')) {
-                pedidoCity = secondPart.split('-')[0].trim();
-              } else {
-                pedidoCity = secondPart;
-              }
-            }
-          }
-          
-          if (pedidoCity !== filters.city) {
-            incluir = false;
-          }
-        }
-        
-        if (filters.state) {
-          let pedidoState = pedidoData.state;
-          
-          // Se não tem state direto, extrair da location
-          if (!pedidoState && pedidoData.location) {
-            // Formato esperado: "Bairro, Cidade - Estado"
-            const parts = pedidoData.location.split(',');
-            if (parts.length >= 2) {
-              const secondPart = parts[1].trim();
-              if (secondPart.includes('-')) {
-                pedidoState = secondPart.split('-')[1].trim();
-              }
-            }
-          }
-          
-          if (pedidoState !== filters.state) {
-            incluir = false;
-          }
-        }
-        
-        if (filters.neighborhood) {
-          let pedidoNeighborhood = pedidoData.neighborhood;
-          
-          // Se não tem neighborhood direto, extrair da location
-          if (!pedidoNeighborhood && pedidoData.location) {
-            const parts = pedidoData.location.split(',');
-            pedidoNeighborhood = parts[0]?.trim();
-          }
-          
-          if (pedidoNeighborhood !== filters.neighborhood) {
-            incluir = false;
-          }
-        }
-        
-        // Filtro de tempo
-        if (filters.timeframe) {
+
+        // Filtro de tempo adicional se timeframe for especificado
+        if (filters.timeframe && !filters.onlyNew) {
           const now = new Date();
           const createdAt = pedidoData.createdAt?.toDate ? pedidoData.createdAt.toDate() : new Date(pedidoData.createdAt);
-          
+
           let startDate;
           switch (filters.timeframe) {
             case 'hoje':
@@ -147,62 +114,187 @@ class PedidoModel {
               startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
               break;
           }
-          
+
           if (startDate && createdAt < startDate) {
             incluir = false;
           }
         }
-        
-        // Filtro "apenas novos" (últimas 24h)
-        if (filters.onlyNew) {
-          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          const createdAt = pedidoData.createdAt?.toDate ? pedidoData.createdAt.toDate() : new Date(pedidoData.createdAt);
-          
-          if (createdAt < yesterday) {
-            incluir = false;
-          }
-        }
-        
+
         if (incluir) {
           pedidos.push(pedido);
         }
       }
-      
-      // Ordenar por proximidade se cidade do usuário for fornecida
+
+      // Ordenar por proximidade geográfica se localização do usuário for fornecida
       if (filters.userCity && filters.userState) {
         pedidos.sort((a, b) => {
-          // Prioridade 1: Mesma cidade
-          const aCityMatch = (a.city === filters.userCity);
-          const bCityMatch = (b.city === filters.userCity);
-          
-          if (aCityMatch && !bCityMatch) return -1;
-          if (!aCityMatch && bCityMatch) return 1;
-          
-          // Prioridade 2: Mesmo estado
-          const aStateMatch = (a.state === filters.userState);
-          const bStateMatch = (b.state === filters.userState);
-          
-          if (aStateMatch && !bStateMatch) return -1;
-          if (!aStateMatch && bStateMatch) return 1;
-          
-          // Prioridade 3: Urgência (crítico > urgente > moderada > tranquilo > recorrente)
+          // Função auxiliar para calcular "distância" baseada em localização
+          const calculateProximityScore = (pedido) => {
+            let score = 0;
+
+            // Prioridade máxima: mesma cidade
+            if (pedido.city === filters.userCity) {
+              score += 1000;
+            }
+
+            // Prioridade alta: mesmo estado
+            if (pedido.state === filters.userState) {
+              score += 100;
+            }
+
+            // Prioridade média: mesmo bairro (se disponível)
+            if (filters.userNeighborhood && pedido.neighborhood === filters.userNeighborhood) {
+              score += 50;
+            }
+
+            // Se não tem coordenadas exatas, usar matching de strings para proximidade regional
+            if (!pedido.coordinates && pedido.city && filters.userCity) {
+              // Mesmo estado mas cidade diferente: score menor
+              if (pedido.state === filters.userState && pedido.city !== filters.userCity) {
+                score += 10;
+              }
+            }
+
+            return score;
+          };
+
+          const scoreA = calculateProximityScore(a);
+          const scoreB = calculateProximityScore(b);
+
+          // Primeiro ordenar por score de proximidade (maior primeiro)
+          if (scoreA !== scoreB) {
+            return scoreB - scoreA;
+          }
+
+          // Segundo critério: urgência (crítico > urgente > moderada > tranquilo > recorrente)
           const urgencyOrder = { 'critico': 0, 'urgente': 1, 'moderada': 2, 'tranquilo': 3, 'recorrente': 4 };
           const aUrgency = urgencyOrder[a.urgency] || 5;
           const bUrgency = urgencyOrder[b.urgency] || 5;
-          
+
           if (aUrgency !== bUrgency) return aUrgency - bUrgency;
-          
-          // Prioridade 4: Data de criação (mais recente primeiro)
+
+          // Terceiro critério: Data de criação (mais recente primeiro)
           const aDate = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
           const bDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
-          
+
           return bDate - aDate;
         });
       }
-      
+
       return pedidos;
     } catch (error) {
       console.error('Erro detalhado no findAll:', error);
+
+      // Fallback: se a query falhar devido a índices, tentar busca sem filtros complexos
+      if (error.message.includes('index')) {
+        console.warn('Índice não encontrado, usando busca alternativa...');
+        return await this.findAllFallback(filters);
+      }
+
+      throw new Error(`Erro ao buscar pedidos: ${error.message}`);
+    }
+  }
+
+  // Método fallback para quando índices não existem
+  async findAllFallback(filters = {}) {
+    try {
+      console.log('Usando método fallback para busca de pedidos');
+
+      // Busca básica ordenada por data
+      const snapshot = await this.collection
+        .where('status', '==', 'ativo')
+        .orderBy('createdAt', 'desc')
+        .limit(500) // Limitar para performance
+        .get();
+
+      const pedidos = [];
+      for (const doc of snapshot.docs) {
+        const pedidoData = doc.data();
+        const userData = await this.getUserData(pedidoData.userId);
+
+        const pedido = {
+          id: doc.id,
+          ...pedidoData,
+          usuario: userData
+        };
+
+        // Aplicar filtros básicos em memória
+        let incluir = true;
+
+        if (filters.category && filters.category !== 'Todas' && pedidoData.category !== filters.category) {
+          incluir = false;
+        }
+
+        if (filters.urgency && pedidoData.urgency !== filters.urgency) {
+          incluir = false;
+        }
+
+        // Filtros de localização mais permissivos no fallback
+        if (filters.city && pedidoData.city !== filters.city) {
+          incluir = false;
+        }
+
+        if (filters.state && pedidoData.state !== filters.state) {
+          incluir = false;
+        }
+
+        if (filters.neighborhood && pedidoData.neighborhood !== filters.neighborhood) {
+          incluir = false;
+        }
+
+        if (filters.onlyNew) {
+          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          const createdAt = pedidoData.createdAt?.toDate ? pedidoData.createdAt.toDate() : new Date(pedidoData.createdAt);
+          if (createdAt < yesterday) {
+            incluir = false;
+          }
+        }
+
+        if (incluir) {
+          pedidos.push(pedido);
+        }
+      }
+
+      // Mesmo algoritmo de ordenação por proximidade
+      if (filters.userCity && filters.userState) {
+        pedidos.sort((a, b) => {
+          const calculateProximityScore = (pedido) => {
+            let score = 0;
+
+            if (pedido.city === filters.userCity) score += 1000;
+            if (pedido.state === filters.userState) score += 100;
+            if (filters.userNeighborhood && pedido.neighborhood === filters.userNeighborhood) score += 50;
+
+            if (!pedido.coordinates && pedido.city && filters.userCity) {
+              if (pedido.state === filters.userState && pedido.city !== filters.userCity) {
+                score += 10;
+              }
+            }
+
+            return score;
+          };
+
+          const scoreA = calculateProximityScore(a);
+          const scoreB = calculateProximityScore(b);
+
+          if (scoreA !== scoreB) return scoreB - scoreA;
+
+          const urgencyOrder = { 'critico': 0, 'urgente': 1, 'moderada': 2, 'tranquilo': 3, 'recorrente': 4 };
+          const aUrgency = urgencyOrder[a.urgency] || 5;
+          const bUrgency = urgencyOrder[b.urgency] || 5;
+
+          if (aUrgency !== bUrgency) return aUrgency - bUrgency;
+
+          const aDate = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+          const bDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+
+          return bDate - aDate;
+        });
+      }
+
+      return pedidos;
+    } catch (error) {
+      console.error('Erro no fallback findAll:', error);
       throw new Error(`Erro ao buscar pedidos: ${error.message}`);
     }
   }

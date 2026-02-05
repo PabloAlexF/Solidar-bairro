@@ -1477,7 +1477,7 @@ export default function QueroAjudarPage() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalPosition, setModalPosition] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
   const [orderToHelp, setOrderToHelp] = useState(null);
-  const [selectedLocation, setSelectedLocation] = useState('brasil');
+  const [selectedLocation, setSelectedLocation] = useState('minha_cidade');
   const [onlyNew, setOnlyNew] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(true);
@@ -1671,16 +1671,26 @@ export default function QueroAjudarPage() {
 
   // UseEffect separado para carregar localização na inicialização
   useEffect(() => {
-    const loadInitialLocation = () => {
-      if (user && user.endereco) {
-        const userCity = user.endereco.cidade || user.endereco.city || 'São Paulo';
-        const userState = user.endereco.estado || user.endereco.state || 'SP';
-        setUserLocation({ city: userCity, state: userState });
-        console.log('Localização definida pelo endereço cadastrado (Desktop):', { city: userCity, state: userState });
-      } else {
-        // Fallback to São Paulo if no user address
-        setUserLocation({ city: 'São Paulo', state: 'SP' });
-        console.log('Usando localização padrão (São Paulo) - usuário não logado ou sem endereço (Desktop)');
+    const loadInitialLocation = async () => {
+      try {
+        // Primeiro tentar obter localização atual
+        console.log('Tentando obter localização atual...');
+        const currentLocation = await getCurrentLocation();
+        setUserLocation(currentLocation);
+        console.log('Localização atual obtida:', currentLocation);
+      } catch (error) {
+        console.warn('Não foi possível obter localização atual:', error.message);
+        // Fallback para endereço cadastrado
+        if (user && user.endereco) {
+          const userCity = user.endereco.cidade || user.endereco.city || 'São Paulo';
+          const userState = user.endereco.estado || user.endereco.state || 'SP';
+          setUserLocation({ city: userCity, state: userState });
+          console.log('Localização definida pelo endereço cadastrado (Desktop):', { city: userCity, state: userState });
+        } else {
+          // Fallback to São Paulo if no user address
+          setUserLocation({ city: 'São Paulo', state: 'SP' });
+          console.log('Usando localização padrão (São Paulo) - usuário não logado ou sem endereço (Desktop)');
+        }
       }
       setLocationLoading(false);
     };

@@ -4,10 +4,18 @@ class NotificationController {
   async getNotifications(req, res) {
     try {
       const userId = req.user.uid || req.user.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'User not authenticated'
+        });
+      }
+
       const limit = parseInt(req.query.limit) || 50;
-      
+
       const notifications = await notificationService.getUserNotifications(userId, limit);
-      
+
       res.json({
         success: true,
         data: notifications
@@ -24,9 +32,16 @@ class NotificationController {
   async getUnreadCount(req, res) {
     try {
       const userId = req.user.uid || req.user.id;
-      
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'User not authenticated'
+        });
+      }
+
       const count = await notificationService.getUnreadCount(userId);
-      
+
       res.json({
         success: true,
         data: { count }
@@ -43,10 +58,18 @@ class NotificationController {
   async markAsRead(req, res) {
     try {
       const userId = req.user.uid || req.user.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'User not authenticated'
+        });
+      }
+
       const notificationId = req.params.id;
-      
+
       await notificationService.markAsRead(notificationId, userId);
-      
+
       res.json({
         success: true,
         message: 'Notificação marcada como lida'
@@ -63,9 +86,16 @@ class NotificationController {
   async markAllAsRead(req, res) {
     try {
       const userId = req.user.uid || req.user.id;
-      
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'User not authenticated'
+        });
+      }
+
       const count = await notificationService.markAllAsRead(userId);
-      
+
       res.json({
         success: true,
         message: `${count} notificações marcadas como lidas`
@@ -82,10 +112,18 @@ class NotificationController {
   async deleteNotification(req, res) {
     try {
       const userId = req.user.uid || req.user.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'User not authenticated'
+        });
+      }
+
       const notificationId = req.params.id;
-      
+
       await notificationService.deleteNotification(notificationId, userId);
-      
+
       res.json({
         success: true,
         message: 'Notificação deletada'
@@ -102,9 +140,16 @@ class NotificationController {
   async deleteAllNotifications(req, res) {
     try {
       const userId = req.user.uid || req.user.id;
-      
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'User not authenticated'
+        });
+      }
+
       const count = await notificationService.deleteAllNotifications(userId);
-      
+
       res.json({
         success: true,
         message: `${count} notificações deletadas`
