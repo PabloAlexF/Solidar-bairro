@@ -19,6 +19,8 @@ import {
   Send,
   MoreVertical,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Search,
   Star,
   Mail,
@@ -134,6 +136,7 @@ const Chat = () => {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [editingMessage, setEditingMessage] = useState(null);
   const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
@@ -152,6 +155,9 @@ const Chat = () => {
   const [showMsgSearch, setShowMsgSearch] = useState(false);
   const [msgSearchTerm, setMsgSearchTerm] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showContext, setShowContext] = useState(false);
+  const [hasContextUpdate, setHasContextUpdate] = useState(false);
+  const prevStatusRef = useRef(null);
   const [presenceStatus, setPresenceStatus] = useState({});
   const [typingStatus, setTypingStatus] = useState({});
 
@@ -312,6 +318,24 @@ const Chat = () => {
   };
 
   const helpInfo = getContextInfo();
+
+  // Monitorar mudanças de status para notificar no menu
+  useEffect(() => {
+    if (prevStatusRef.current && prevStatusRef.current !== helpInfo.status) {
+      setHasContextUpdate(true);
+    }
+    prevStatusRef.current = helpInfo.status;
+  }, [helpInfo.status]);
+
+  // Fechar menu ao rolar mensagens
+  const handleScroll = () => {
+    if (showContext) {
+      setShowContext(false);
+    }
+  };
+
+  const canFinish = (helpInfo.contextType === 'pedido' && deliveryStatus === "andamento" && user?.uid === pedidoData?.userId) ||
+                    (helpInfo.contextType === 'achado-perdido' && helpInfo.status !== 'resolvido');
 
   // Função para limpar dados do chat (para debug)
   const clearChatData = () => {
@@ -484,9 +508,15 @@ const Chat = () => {
   // Carregar mensagens da conversa
   const loadMessages = useCallback(async () => {
     if (!conversaId) return;
-    
+
+    setLoading(true);
+    setError(null);
+    // Limpa o contexto da colaboração para evitar exibir dados de outra conversa.
+    setContextType(null);
+    setPedidoData(null);
+    setAchadoPerdidoData(null);
+
     try {
-      setLoading(true);
       const conversationResponse = await ApiService.getConversation(conversaId);
       const messagesResponse = await ApiService.getMessages(conversaId);
       
@@ -774,11 +804,17 @@ const Chat = () => {
     setActiveReactionMessageId(null);
   };
 
+  const handleReply = (msg) => {
+    setReplyingTo(msg);
+    setEditingMessage(null);
+    textareaRef.current?.focus();
+  };
+
   const handleEditClick = (msg) => {
     setEditingMessage(msg);
     setInputValue(msg.content);
     setReplyingTo(null);
-    fileInputRef.current?.focus();
+    textareaRef.current?.focus();
   };
 
   const handleTypingInput = (e) => {
@@ -1092,7 +1128,7 @@ const Chat = () => {
       <div className="chat-layout">
         {/* Sidebar */}
         <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-          <div className="sidebar-header" style={{ background: 'linear-gradient(to bottom, #ffffff, #f8fafc)', borderBottom: '1px solid #e2e8f0' }}>
+          <div className="sidebar-header sidebar-header-custom">
             <div className="sidebar-title-row">
               <h2>Conversas</h2>
               <button className="icon-btn" title="Nova conversa">
@@ -1134,7 +1170,7 @@ const Chat = () => {
                     {contact.initials}
                   </div>
                   {pinnedConversations.includes(contact.id) && (
-                    <div style={{ position: 'absolute', top: -4, left: -4, background: '#fff', borderRadius: '50%', padding: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><Pin size={12} fill="#64748b" color="#64748b" /></div>
+                    <div className="pinned-icon-wrapper"><Pin size={12} fill="#64748b" color="#64748b" /></div>
                   )}
                   {isOnline && <span className="online-status-dot" />}
                 </div>
@@ -1144,9 +1180,9 @@ const Chat = () => {
                     <span className="last-time">{contact.lastMessageTime}</span>
                   </div>
                   <div className="contact-preview-row">
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', overflow: 'hidden' }}>
+                    <div className="contact-preview-col">
                       {isTyping ? (
-                        <p className="last-message" style={{ color: '#10b981', fontWeight: '500', fontStyle: 'italic' }}>
+                        <p className="last-message typing-text-style">
                           Digitando...
                         </p>
                       ) : (
@@ -1165,7 +1201,7 @@ const Chat = () => {
                 </div>
                 <button 
                   onClick={(e) => handlePinConversation(e, contact.id)}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: pinnedConversations.includes(contact.id) ? '#10b981' : '#94a3b8', padding: 4, alignSelf: 'center', opacity: 1 }}
+                  className={`pin-btn-style ${pinnedConversations.includes(contact.id) ? 'active' : 'inactive'}`}
                   title={pinnedConversations.includes(contact.id) ? "Desafixar conversa" : "Fixar conversa"}
                 >
                   {pinnedConversations.includes(contact.id) ? <PinOff size={16} /> : <Pin size={16} />}
@@ -1176,11 +1212,11 @@ const Chat = () => {
           </div>
           
           <div className="sidebar-footer">
-             <button className="home-btn" onClick={() => navigate('/')} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: '#f1f5f9', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-main)', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', marginBottom: '0.75rem'}}>
+             <button className="home-btn nav-btn-style" onClick={() => navigate('/')}>
                <Home size={18} />
                <span>Voltar para Home</span>
              </button>
-             <button className="conversations-btn" onClick={() => navigate('/conversas')} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: '#f1f5f9', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-main)', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', marginBottom: '0.75rem'}}>
+             <button className="conversations-btn nav-btn-style" onClick={() => navigate('/conversas')}>
                <MessageSquare size={18} />
                <span>Voltar para Conversas</span>
              </button>
@@ -1333,138 +1369,124 @@ const Chat = () => {
           </div>
 
           {showMsgSearch && (
-            <div className="msg-search-bar" style={{ padding: '12px 24px', borderBottom: '1px solid #f1f5f9', background: 'white', display: 'flex', alignItems: 'center', gap: '12px', animation: 'fadeIn 0.2s ease-out' }}>
+            <div className="msg-search-bar">
               <Search size={18} color="#94a3b8" />
               <input
                 type="text"
                 placeholder="Buscar mensagem..."
                 value={msgSearchTerm}
                 onChange={(e) => setMsgSearchTerm(e.target.value)}
-                style={{ flex: 1, border: 'none', outline: 'none', fontSize: '0.95rem', color: '#1e293b' }}
+                className="msg-search-input"
                 autoFocus
               />
               {msgSearchTerm && (
-                <button onClick={() => setMsgSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4 }}>
+                <button onClick={() => setMsgSearchTerm('')} className="search-clear-btn">
                   <X size={16} />
                 </button>
               )}
-              <button onClick={() => { setShowMsgSearch(false); setMsgSearchTerm(''); }} style={{ background: '#f1f5f9', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', cursor: 'pointer' }}>
+              <button onClick={() => { setShowMsgSearch(false); setMsgSearchTerm(''); }} className="search-close-btn">
                 Fechar
               </button>
             </div>
           )}
 
-          <div className="chat-content-scroll">
-            {/* Context Info Card */}
-            {(contextType === 'pedido' || contextType === 'achado-perdido') && (
-              <div className="chat-context-card">
-                <div className="card-left-section">
-                  <div className="card-icon-box">
+          {/* Context Menu Dropdown (New) */}
+          {(contextType === 'pedido' || contextType === 'achado-perdido') && (
+            <div className="chat-context-menu">
+              <button 
+                className="context-toggle-btn" 
+                onClick={() => {
+                  setShowContext(!showContext);
+                  if (!showContext) setHasContextUpdate(false);
+                }}
+              >
+                {hasContextUpdate && <span className="context-update-dot" />}
+                <div className="context-summary">
+                  <div className={`context-icon-small ${helpInfo.contextType}`}>
                     {helpInfo.contextType === 'achado-perdido' ? (
-                      helpInfo.itemType === 'perdido' ? (
-                        <Search size={24} />
-                      ) : (
-                        <Package size={24} />
-                      )
+                      helpInfo.itemType === 'perdido' ? <Search size={16} /> : <Package size={16} />
                     ) : (
-                      <Package size={24} />
+                      <Package size={16} />
                     )}
                   </div>
-                  <div className="card-info-text">
-                    <h4>{helpInfo.title}</h4>
-                    <p className="help-title">{helpInfo.type}</p>
-                    {helpInfo.descricao && (
-                      <p className="help-description">{helpInfo.descricao}</p>
-                    )}
-                    <div className="help-tags">
-                      {helpInfo.contextType === 'achado-perdido' ? (
-                        <>
-                          <span className={`type-pill ${helpInfo.itemType}`}>
-                            {helpInfo.itemType === 'perdido' ? '🔍 Perdido' : '📦 Encontrado'}
-                          </span>
-                          <span className={`status-pill ${helpInfo.status}`}>
-                            {helpInfo.status === 'resolvido' ? '✅ Resolvido' : '🔄 Ativo'}
-                          </span>
-                        </>
-                      ) : (
-                        <span className={`urgency-pill ${helpInfo.urgency}`}>
-                          Urgência {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
-                        </span>
-                      )}
-                      <span className="neighborhood-pill">
-                        {helpInfo.bairro}{helpInfo.cidade && `, ${helpInfo.cidade}`}
-                      </span>
-                      {helpInfo.categoria && helpInfo.categoria !== "Geral" && (
-                        <span className="category-pill">
-                          {helpInfo.categoria}
-                        </span>
-                      )}
-                    </div>
+                  <div className="context-text-summary">
+                    <span className="context-type-label">{helpInfo.title}</span>
+                    <span className="context-main-info">{helpInfo.type}</span>
                   </div>
+                  <span className={`status-pill ${helpInfo.status}`}>
+                    {helpInfo.status === 'resolvido' ? 'Resolvido' : helpInfo.status}
+                  </span>
                 </div>
-                
-                {helpInfo.contextType === 'pedido' && (
-                  <div className="card-middle-section">
-                    <div className="status-progress-bar">
-                      <div className={`status-step ${['aguardando', 'andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("aguardando")}>1</div>
-                        <span className="step-label">Pendente</span>
-                      </div>
-                      <div className="progress-line" />
-                      <div className={`status-step ${['andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("andamento")}>2</div>
-                        <span className="step-label">Em curso</span>
-                      </div>
-                      <div className="progress-line" />
-                      <div className={`status-step ${deliveryStatus === "entregue" ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("entregue")}>3</div>
-                        <span className="step-label">Concluído</span>
-                      </div>
-                    </div>
-                  </div>
+                {canFinish && !showContext && (
+                  <span className="finish-hint-badge">
+                    <CheckCheck size={16} />
+                    Finalizar
+                  </span>
                 )}
-                
-                <div className="card-right-section">
-                  {helpInfo.contextType === 'pedido' ? (
-                    deliveryStatus === "andamento" && user?.uid === pedidoData?.userId ? (
-                      <button
-                        className="finish-collaboration-btn"
-                        onClick={() => setShowFinishModal(true)}
-                      >
-                        <Heart size={16} fill="white" />
-                        Finalizar Ajuda
-                      </button>
-                    ) : (
-                      <button className="details-btn">
-                        Detalhes <ChevronRight size={16} />
-                      </button>
-                    )
-                  ) : (
-                    <button
-                      className={`resolve-btn ${helpInfo.status === 'resolvido' ? 'resolved' : ''}`}
-                      onClick={() => {
-                        if (helpInfo.status !== 'resolvido') {
-                          // Lógica para marcar como resolvido
-                          setShowFinishModal(true);
-                        }
-                      }}
-                      disabled={helpInfo.status === 'resolvido'}
-                    >
-                      {helpInfo.status === 'resolvido' ? (
-                        <>✅ Resolvido</>
-                      ) : (
-                        <>🔄 Marcar como Resolvido</>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+                {showContext ? <ChevronUp size={20} className="toggle-icon" /> : <ChevronDown size={20} className="toggle-icon" />}
+              </button>
 
+              <AnimatePresence>
+                {showContext && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="context-details-panel"
+                  >
+                    <div className="context-panel-content">
+                      <div className="panel-info-grid">
+                        <div className="panel-item full-width">
+                          <span className="panel-label">Descrição</span>
+                          <p className="panel-value">{helpInfo.descricao || "Sem descrição"}</p>
+                        </div>
+                        <div className="panel-item">
+                          <span className="panel-label">Localização</span>
+                          <span className="panel-value">{helpInfo.bairro}{helpInfo.cidade && `, ${helpInfo.cidade}`}</span>
+                        </div>
+                        <div className="panel-item">
+                          <span className="panel-label">Urgência</span>
+                          <span className={`urgency-badge ${helpInfo.urgency}`}>
+                            {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="panel-actions">
+                        {helpInfo.contextType === 'pedido' ? (
+                          deliveryStatus === "andamento" && user?.uid === pedidoData?.userId ? (
+                            <button
+                              className="finish-collaboration-btn small"
+                              onClick={() => setShowFinishModal(true)}
+                            >
+                              <Heart size={14} fill="white" />
+                              Finalizar
+                            </button>
+                          ) : null
+                        ) : (
+                          <button
+                            className={`resolve-btn small ${helpInfo.status === 'resolvido' ? 'resolved' : ''}`}
+                            onClick={() => {
+                              if (helpInfo.status !== 'resolvido') setShowFinishModal(true);
+                            }}
+                            disabled={helpInfo.status === 'resolvido'}
+                          >
+                            {helpInfo.status === 'resolvido' ? 'Resolvido' : 'Marcar Resolvido'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          <div className="chat-content-scroll" onScroll={handleScroll}>
             {/* Messages Feed */}
             <div className="messages-container">
               {loading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', color: '#64748b', gap: '10px' }}>
+                <div className="loading-container">
                   <div className="mini-loader" />
                   <span>Carregando conversa...</span>
                 </div>
@@ -1529,12 +1551,11 @@ const Chat = () => {
                       <img 
                         src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} 
                         alt="Imagem enviada" 
-                        className="msg-media-img" 
+                        className="msg-media-img msg-media-img" 
                         onClick={() => {
                           setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content);
                           setZoomLevel(1);
                         }}
-                        style={{ cursor: 'pointer' }}
                       />
                     </div>
                   );
@@ -1586,7 +1607,7 @@ const Chat = () => {
 
                     {!isSent && !isConversationClosed && (
                       <div className="msg-actions">
-                        <button className="msg-action-btn" onClick={() => setReplyingTo(msg)} title="Responder">
+                        <button className="msg-action-btn" onClick={() => handleReply(msg)} title="Responder">
                           <Reply size={16} />
                         </button>
                         <div style={{ position: 'relative' }}>
@@ -1594,9 +1615,9 @@ const Chat = () => {
                             <Smile size={16} />
                           </button>
                           {activeReactionMessageId === msg.id && (
-                            <div style={{ position: 'absolute', bottom: '100%', left: 0, background: 'white', padding: '8px', borderRadius: '50px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', gap: '8px', zIndex: 10, marginBottom: '8px' }}>
+                            <div className="reaction-options-container left">
                               {REACTION_OPTIONS.map(emoji => (
-                                <button key={emoji} onClick={() => handleReactionClick(msg.id, emoji)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: 0 }}>{emoji}</button>
+                                <button key={emoji} onClick={() => handleReactionClick(msg.id, emoji)} className="reaction-btn">{emoji}</button>
                               ))}
                             </div>
                           )}
@@ -1613,9 +1634,9 @@ const Chat = () => {
                             <Smile size={16} />
                           </button>
                           {activeReactionMessageId === msg.id && (
-                            <div style={{ position: 'absolute', bottom: '100%', right: 0, background: 'white', padding: '8px', borderRadius: '50px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'flex', gap: '8px', zIndex: 10, marginBottom: '8px' }}>
+                            <div className="reaction-options-container right">
                               {REACTION_OPTIONS.map(emoji => (
-                                <button key={emoji} onClick={() => handleReactionClick(msg.id, emoji)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', padding: 0 }}>{emoji}</button>
+                                <button key={emoji} onClick={() => handleReactionClick(msg.id, emoji)} className="reaction-btn">{emoji}</button>
                               ))}
                             </div>
                           )}
@@ -1625,7 +1646,7 @@ const Chat = () => {
                             <Pencil size={16} />
                           </button>
                         )}
-                        <button className="msg-action-btn" onClick={() => setReplyingTo(msg)} title="Responder">
+                        <button className="msg-action-btn" onClick={() => handleReply(msg)} title="Responder">
                           <Reply size={16} />
                         </button>
                       </div>
@@ -1692,10 +1713,10 @@ const Chat = () => {
             ) : (
               <div className="input-container">
                 {editingMessage && (
-                  <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, padding: '0 20px' }}>
-                    <div className="reply-preview-bar" style={{ borderLeftColor: '#3b82f6' }}>
+                  <div className="reply-preview-wrapper">
+                    <div className="reply-preview-bar reply-preview-bar-edit">
                       <div className="reply-info">
-                        <span className="reply-sender" style={{ color: '#3b82f6' }}>Editando mensagem</span>
+                        <span className="reply-sender reply-sender-edit">Editando mensagem</span>
                         <p className="reply-text">{editingMessage.content}</p>
                       </div>
                       <button onClick={() => { setEditingMessage(null); setInputValue(''); }} className="close-reply-btn"><X size={18} /></button>
@@ -1703,7 +1724,7 @@ const Chat = () => {
                   </div>
                 )}
                 {replyingTo && (
-                  <div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, padding: '0 20px' }}>
+                  <div className="reply-preview-wrapper">
                     <div className="reply-preview-bar">
                       <div className="reply-info">
                         <span className="reply-sender">Respondendo a {replyingTo.sender === 'sent' ? 'Você' : currentContact?.name}</span>
@@ -1739,6 +1760,7 @@ const Chat = () => {
                 </div>
                 <div className="textarea-wrapper">
                   <textarea
+                    ref={textareaRef}
                     className="chat-textarea"
                     placeholder="Digite sua mensagem..."
                     value={inputValue}
@@ -1850,9 +1872,8 @@ const Chat = () => {
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <button 
-                className="close-modal-btn" 
+                className="close-modal-btn sb-close-modal-btn" 
                 onClick={() => setViewingProfile(null)}
-                style={{ position: 'absolute', right: '1.5rem', top: '1.5rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', zIndex: 10 }}
               >
                 <MoreVertical size={16} />
               </button>
@@ -1926,7 +1947,7 @@ const Chat = () => {
                 </div>
               </div>
             </div>
-            <div className="modal-footer" style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
+            <div className="modal-footer profile-modal-footer">
               {!viewingProfile.isSelf && (
                 <button 
                   className="btn-ghost danger" 
@@ -1938,7 +1959,7 @@ const Chat = () => {
                   Bloquear
                 </button>
               )}
-              <button className="btn-solid-success" style={{ flex: 1, padding: '1rem', borderRadius: '1rem', fontSize: '1rem' }} onClick={() => setViewingProfile(null)}>
+              <button className="btn-solid-success profile-btn-success" onClick={() => setViewingProfile(null)}>
                 Concluído
               </button>
             </div>
@@ -2004,17 +2025,12 @@ const Chat = () => {
               <button onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))} title="Aumentar Zoom"><ZoomIn size={20}/></button>
               <button onClick={() => setSelectedImage(null)} title="Fechar"><X size={20}/></button>
             </div>
-            <div className="image-viewport" style={{ overflow: 'auto', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+            <div className="image-viewport">
               <img 
                 src={selectedImage} 
                 alt="Visualização em tela cheia"
-                style={{ 
-                  transform: `scale(${zoomLevel})`, 
-                  transition: 'transform 0.2s ease-out', 
-                  maxWidth: '100%', 
-                  maxHeight: '100%',
-                  objectFit: 'contain' 
-                }} 
+                className="fullscreen-image"
+                style={{ transform: `scale(${zoomLevel})` }}
               />
             </div>
           </div>

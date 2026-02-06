@@ -9,6 +9,7 @@ import {
 import { Link } from 'react-router-dom';
 import ApiService from '../../../services/apiService';
 import './CadastroComercioMobile.css';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import { useCEP } from '../../AdminDashboard/useCEP';
 
 export default function CadastroComercioMobile() {
@@ -37,7 +38,8 @@ export default function CadastroComercioMobile() {
     numero: '',
     horarioFuncionamento: '',
     contribuicoes: [],
-    observacoes: ''
+    observacoes: '',
+    termosAceitos: false
   });
   const totalSteps = 6;
   const { formatCEP, searchCEP } = useCEP();
@@ -153,6 +155,11 @@ export default function CadastroComercioMobile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (step !== totalSteps) return;
+
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -571,6 +578,15 @@ export default function CadastroComercioMobile() {
                   <label className="cmr-prm-field-label">Observações Adicionais</label>
                   <textarea className="cmr-prm-form-input" placeholder="Conte algo mais sobre seu interesse na rede" rows={4} style={{ paddingLeft: '24px' }} value={formData.observacoes} onChange={(e) => updateFormData('observacoes', e.target.value)}></textarea>
                 </div>
+                <div className="cmr-prm-form-group cmr-prm-span-2">
+                  <TermsCheckbox 
+                    checked={formData.termosAceitos}
+                    onChange={(checked) => updateFormData('termosAceitos', checked)}
+                    mobile={true}
+                    color="#3b82f6"
+                    id="termos-comercio-mobile"
+                  />
+                </div>
                 <div className="cmr-prm-form-final-box cmr-prm-span-2" style={{ background: 'linear-gradient(135deg, #3b82f6, #0ea5e9)' }}>
                   <Award size={48} className="cmr-prm-final-icon" />
                   <p>Ao se tornar um comércio parceiro, você fortalece a economia local e ganha destaque como empresa socialmente responsável.</p>
@@ -595,7 +611,7 @@ export default function CadastroComercioMobile() {
                     <ChevronRight size={24} />
                   </button>
                 ) : (
-                  <button type="submit" className="cmr-prm-nav-btn cmr-prm-btn-finish" disabled={isLoading}>
+                  <button type="submit" className="cmr-prm-nav-btn cmr-prm-btn-finish" disabled={isLoading || !formData.termosAceitos}>
                     <span>{isLoading ? 'Enviando...' : 'Enviar para Análise'}</span>
                     <CheckCircle2 size={20} />
                   </button>

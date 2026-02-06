@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Users, ArrowLeft, User, Home, Users2, DollarSign, 
-  ListChecks, MapPin, CheckCircle2, ChevronRight, 
-  ChevronLeft, Fingerprint, IdCard, Calendar, 
-  Phone, Mail, ShieldCheck, Trophy, 
+import {
+  Users, ArrowLeft, User, Home, Users2, DollarSign,
+  ListChecks, MapPin, CheckCircle2, ChevronRight,
+  ChevronLeft, Fingerprint, IdCard, Calendar,
+  Phone, Mail, ShieldCheck, Trophy,
   Zap, Info, Heart, Sparkles, Target, Sun, Moon, CloudSun, AlertTriangle, Coffee, X,
   Apple, BookOpen, Stethoscope, Hammer, Smile, Truck, Share2, Rocket
 } from 'lucide-react';
@@ -15,6 +15,7 @@ import './CadastroFamiliaDesktop.css';
 import '../../../styles/components/PasswordField.css';
 import '../../../styles/components/Toast.css';
 import { useCEP } from '../../AdminDashboard/useCEP';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 
 export default function CadastroFamiliaDesktop() {
   const [step, setStep] = useState(1);
@@ -55,10 +56,9 @@ export default function CadastroFamiliaDesktop() {
     jovens: 0,
     adultos: 1,
     idosos: 0,
-    necessidades: []
+    necessidades: [],
+    termosAceitos: false
   });
-
-  const totalSteps = 6;
   const { loadingCep, formatCEP, searchCEP } = useCEP();
   
   const steps = [
@@ -69,6 +69,8 @@ export default function CadastroFamiliaDesktop() {
     { id: 5, title: "Família", icon: <Users2 size={22} /> },
     { id: 6, title: "Necessidades", icon: <ListChecks size={22} /> },
   ];
+
+  const totalSteps = steps.length;
   
   const familyTypes = [
     { label: 'Crianças (0-12)', icon: '👶', key: 'criancas' },
@@ -299,27 +301,32 @@ export default function CadastroFamiliaDesktop() {
       showToast('Por favor, selecione pelo menos uma necessidade.', 'error');
       return;
     }
-    
+
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       showToast('As senhas não coincidem', 'error');
       return;
     }
-    
+
     if (formData.password.length < 6 || !/[a-zA-Z]/.test(formData.password) || !/\d/.test(formData.password)) {
       showToast('A senha deve ter pelo menos 6 caracteres, letras e números', 'error');
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const { confirmPassword, ...dataToSend } = formData;
       dataToSend.subQuestionAnswers = needDetails;
       console.log('Dados sendo enviados para família:', dataToSend);
-      
+
       const response = await ApiService.createFamilia(dataToSend);
       console.log('Resposta da API:', response);
-      
+
       setIsSubmitted(true);
       showToast('Família cadastrada com sucesso! O administrador precisa liberar seu acesso.', 'success');
     } catch (error) {
@@ -848,6 +855,13 @@ export default function CadastroFamiliaDesktop() {
                       ))}
                     </div>
                   </div>
+                  <div className="form-group span-2">
+                    <TermsCheckbox 
+                      checked={formData.termosAceitos}
+                      onChange={(checked) => updateFormData('termosAceitos', checked)}
+                      color="#f97316"
+                    />
+                  </div>
                   <div className="form-final-box span-2">
                     <Heart size={48} className="final-icon" />
                     <p>Ao cadastrar sua família, você se conecta com uma rede de apoio que pode ajudar nas suas necessidades mais urgentes.</p>
@@ -874,10 +888,14 @@ export default function CadastroFamiliaDesktop() {
                       <ChevronRight size={20} />
                     </button>
                   ) : (
-                    <button type="submit" className="fam-reg-btn-finish" disabled={isLoading}>
-                      <span>{isLoading ? 'Cadastrando...' : 'Finalizar Cadastro'}</span>
-                      <CheckCircle2 size={20} />
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <button type="submit" className="fam-reg-btn-finish" disabled={isLoading || !formData.termosAceitos}>
+                          <span>{isLoading ? 'Cadastrando...' : 'Finalizar Cadastro'}</span>
+                          <CheckCircle2 size={20} />
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

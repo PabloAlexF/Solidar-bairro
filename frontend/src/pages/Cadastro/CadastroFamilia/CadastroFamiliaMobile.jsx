@@ -9,6 +9,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import './CadastroFamiliaMobile.css';
 import { useCEP } from '../../AdminDashboard/useCEP';
 
@@ -99,7 +100,8 @@ export default function CadastroFamiliaMobile() {
     jovens: 0,
     adultos: 1,
     idosos: 0,
-    necessidades: []
+    necessidades: [],
+    termosAceitos: false
   });
   
   const totalSteps = 6;
@@ -338,6 +340,11 @@ export default function CadastroFamiliaMobile() {
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       showToast('Por favor, selecione pelo menos uma necessidade.', 'error');
+      return;
+    }
+
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
       return;
     }
 
@@ -1018,6 +1025,15 @@ export default function CadastroFamiliaMobile() {
                       ))}
                     </div>
                     
+                    <div className="fam-mob-span-2" style={{ marginTop: '1rem' }}>
+                      <TermsCheckbox 
+                        checked={formData.termosAceitos}
+                        onChange={(checked) => updateFormData('termosAceitos', checked)}
+                        mobile={true}
+                        color="#f97316"
+                        id="termos-familia-mobile"
+                      />
+                    </div>
                     <div className="fam-mob-final-step-section">
                       <div className="fam-mob-final-card">
                         <h3 className="fam-mob-final-title">Quase Pronto!</h3>
@@ -1052,7 +1068,7 @@ export default function CadastroFamiliaMobile() {
                     <ChevronRight size={20} />
                   </button>
                 ) : (
-                  <button type="submit" className="fam-mob-btn-finish" disabled={isLoading}>
+                  <button type="submit" className="fam-mob-btn-finish" disabled={isLoading || !formData.termosAceitos}>
                     {isLoading ? 'Finalizando...' : 'Finalizar Cadastro'}
                     <CheckCircle2 size={20} />
                   </button>

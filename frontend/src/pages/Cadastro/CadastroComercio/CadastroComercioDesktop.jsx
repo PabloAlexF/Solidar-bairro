@@ -9,6 +9,7 @@ import {
 import { Link } from 'react-router-dom';
 import Toast from '../../../components/ui/Toast';
 import './CadastroComercio.css';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import { useCEP } from '../../AdminDashboard/useCEP';
 
 export default function CadastroComercioDesktop() {
@@ -33,7 +34,8 @@ export default function CadastroComercioDesktop() {
     categoria: '',
     horarioFuncionamento: '',
     senha: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    termosAceitos: false
   });
   const totalSteps = 6;
   const { loadingCep, formatCEP, searchCEP } = useCEP();
@@ -53,6 +55,10 @@ export default function CadastroComercioDesktop() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
     setIsSubmitted(true);
   };
 
@@ -503,6 +509,13 @@ export default function CadastroComercioDesktop() {
                     <label className="comercio-field-label">Observações Adicionais</label>
                     <textarea className="comercio-form-input" placeholder="Conte algo mais sobre seu interesse na rede" rows="4" style={{ paddingLeft: '24px' }}></textarea>
                   </div>
+                  <div className="comercio-form-group comercio-span-2">
+                    <TermsCheckbox 
+                      checked={formData.termosAceitos}
+                      onChange={(checked) => setFormData(prev => ({ ...prev, termosAceitos: checked }))}
+                      color="#3b82f6"
+                    />
+                  </div>
                   <div className="comercio-form-final-box comercio-span-2" style={{ background: 'linear-gradient(135deg, #3b82f6, #0ea5e9)' }}>
                     <Award size={48} className="comercio-final-icon" />
                     <p>Ao se tornar um comércio parceiro, você fortalece a economia local e ganha destaque como empresa socialmente responsável.</p>
@@ -527,7 +540,7 @@ export default function CadastroComercioDesktop() {
                       <ChevronRight size={20} />
                     </button>
                   ) : (
-                    <button type="submit" className="comercio-nav-btn comercio-btn-finish" style={{ background: 'linear-gradient(to right, #3b82f6, #0ea5e9)', boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)' }}>
+                    <button type="submit" className="comercio-nav-btn comercio-btn-finish" disabled={!formData.termosAceitos} style={{ background: 'linear-gradient(to right, #3b82f6, #0ea5e9)', boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)' }}>
                       <span>Enviar para Análise</span>
                       <CheckCircle2 size={20} />
                     </button>

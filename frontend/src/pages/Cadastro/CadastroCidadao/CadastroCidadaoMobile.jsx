@@ -12,6 +12,7 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import './CadastroCidadaoMobile.css';
 import '../../../styles/components/PasswordField.css';
 import '../../../styles/components/Toast.css';
@@ -43,7 +44,8 @@ export default function CadastroCidadaoMobile() {
     referencia: '',
     disponibilidade: [],
     interesses: [],
-    proposito: ''
+    proposito: '',
+    termosAceitos: false
   });
   const totalSteps = 6;
   const { loadingCep, formatCEP, searchCEP } = useCEP();
@@ -237,6 +239,11 @@ export default function CadastroCidadaoMobile() {
       return;
     }
 
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { confirmPassword, password, ...dataToSend } = formData;
@@ -372,15 +379,14 @@ export default function CadastroCidadaoMobile() {
               {step === 2 && (
                 <div className="mobile-vlt-form-grid">
                   <div>
-                    <label className="mobile-vlt-label">CPF <span style={{ color: '#ef4444' }}>*</span></label>
+                    <label className="mobile-vlt-label">CPF <span className="mobile-vlt-required">*</span></label>
                     <div className="mobile-vlt-input-wrapper">
                       <Fingerprint className="mobile-vlt-input-icon" size={20} />
                       <input 
                         required 
                         type="text" 
-                        className="mobile-vlt-input" 
+                        className={`mobile-vlt-input ${errors.cpf ? 'mobile-vlt-input-error' : ''}`}
                         placeholder="000.000.000-00" 
-                        style={errors.cpf ? { borderColor: '#ef4444' } : {}}
                         value={formData.cpf}
                         onChange={handleCPFChange}
                         maxLength={14}
@@ -388,12 +394,11 @@ export default function CadastroCidadaoMobile() {
                     </div>
                   </div>
                   <div>
-                    <label className="mobile-vlt-label">RG <span style={{ color: '#ef4444' }}>*</span></label>
+                    <label className="mobile-vlt-label">RG <span className="mobile-vlt-required">*</span></label>
                     <input 
                       required 
                       type="text" 
-                      className="mobile-vlt-input" 
-                      style={{ paddingLeft: '1rem', ...(errors.rg && { borderColor: '#ef4444' }) }}
+                      className={`mobile-vlt-input mobile-vlt-pl-4 ${errors.rg ? 'mobile-vlt-input-error' : ''}`}
                       placeholder="00.000.000-0 ou 000.000.000-00"
                       value={formData.rg}
                       onChange={handleRGChange}
@@ -415,15 +420,14 @@ export default function CadastroCidadaoMobile() {
               {step === 3 && (
                 <div className="mobile-vlt-form-grid">
                   <div>
-                    <label className="mobile-vlt-label">WhatsApp <span style={{ color: '#ef4444' }}>*</span></label>
+                    <label className="mobile-vlt-label">WhatsApp <span className="mobile-vlt-required">*</span></label>
                     <div className="mobile-vlt-input-wrapper">
                       <Phone className="mobile-vlt-input-icon" size={20} />
                       <input 
                         required 
                         type="tel" 
-                        className="mobile-vlt-input" 
+                        className={`mobile-vlt-input ${errors.telefone ? 'mobile-vlt-input-error' : ''}`}
                         placeholder="(00) 00000-0000" 
-                        style={errors.telefone ? { borderColor: '#ef4444' } : {}}
                         value={formData.telefone}
                         onChange={handlePhoneChange}
                         maxLength={15}
@@ -431,15 +435,14 @@ export default function CadastroCidadaoMobile() {
                     </div>
                   </div>
                   <div>
-                    <label className="mobile-vlt-label">E-mail <span style={{ color: '#ef4444' }}>*</span></label>
+                    <label className="mobile-vlt-label">E-mail <span className="mobile-vlt-required">*</span></label>
                     <div className="mobile-vlt-input-wrapper">
                       <Mail className="mobile-vlt-input-icon" size={20} />
                       <input 
                         required 
                         type="email" 
-                        className="mobile-vlt-input" 
+                        className={`mobile-vlt-input ${errors.email ? 'mobile-vlt-input-error' : ''}`}
                         placeholder="seu@email.com" 
-                        style={errors.email ? { borderColor: '#ef4444' } : {}}
                         value={formData.email}
                         onChange={(e) => updateFormData('email', e.target.value)}
                       />
@@ -561,7 +564,7 @@ export default function CadastroCidadaoMobile() {
                   </div>
                   <div className="mobile-vlt-span-2" style={{ marginTop: '1rem' }}>
                     <label className="mobile-vlt-label">Disponibilidade</label>
-                    <div className="mobile-vlt-selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                    <div className="mobile-vlt-selectable-grid mobile-vlt-grid-2">
                       {availabilityOptions.map((opt) => (
                         <label key={opt.label} className="mobile-vlt-selectable-item">
                           <input 
@@ -585,8 +588,8 @@ export default function CadastroCidadaoMobile() {
               {step === 5 && (
                 <div className="mobile-vlt-form-grid">
                   <div className="mobile-vlt-span-2">
-                    <label className="mobile-vlt-label" style={errors.interesses ? { color: '#ef4444' } : {}}>Como você quer ajudar? <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="mobile-vlt-selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', ...(errors.interesses && { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' }) }}>
+                    <label className={`mobile-vlt-label ${errors.interesses ? 'mobile-vlt-text-error' : ''}`}>Como você quer ajudar? <span className="mobile-vlt-required">*</span></label>
+                    <div className={`mobile-vlt-selectable-grid mobile-vlt-grid-2 ${errors.interesses ? 'mobile-vlt-border-error' : ''}`}>
                       {helpOptions.map((opt) => (
                         <label key={opt.label} className="mobile-vlt-selectable-item">
                           <input 
@@ -619,6 +622,15 @@ export default function CadastroCidadaoMobile() {
                       onChange={(e) => updateFormData('proposito', e.target.value)}
                     ></textarea>
                   </div>
+                  <div className="mobile-vlt-span-2">
+                    <TermsCheckbox 
+                      checked={formData.termosAceitos}
+                      onChange={(checked) => updateFormData('termosAceitos', checked)}
+                      mobile={true}
+                      color="var(--theme-v-primary)"
+                      id="termos-mobile"
+                    />
+                  </div>
                   <div className="mobile-vlt-final-box mobile-vlt-span-2">
                     <Award size={48} className="mobile-vlt-final-icon" />
                     <p>Ao se tornar um voluntário, você ganha acesso a missões exclusivas e badges de reconhecimento na comunidade.</p>
@@ -645,7 +657,7 @@ export default function CadastroCidadaoMobile() {
                       <ChevronRight size={20} />
                     </button>
                   ) : (
-                    <button type="button" onClick={handleSubmit} className="mobile-vlt-btn mobile-vlt-btn-finish" disabled={isLoading}>
+                    <button type="button" onClick={handleSubmit} className="mobile-vlt-btn mobile-vlt-btn-finish" disabled={isLoading || !formData.termosAceitos}>
                       <span>{isLoading ? 'Cadastrando...' : 'Finalizar Cadastro'}</span>
                       <CheckCircle2 size={20} />
                     </button>
@@ -672,14 +684,14 @@ export default function CadastroCidadaoMobile() {
             </div>
 
             <div className="mobile-vlt-success-card-main">
-              <Rocket size={48} style={{ color: 'var(--theme-v-primary)', marginBottom: '1.5rem' }} />
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--v-slate-900)', marginBottom: '1rem' }}>
+              <Rocket size={48} className="mobile-vlt-success-icon-large" />
+              <h3 className="mobile-vlt-success-subtitle">
                 Próximos Passos
               </h3>
-              <p style={{ color: 'var(--v-slate-500)', marginBottom: '2rem' }}>
+              <p className="mobile-vlt-success-text">
                 Agora nossa equipe validará seus dados. Você receberá uma notificação em breve.
               </p>
-              <Link to="/" className="mobile-vlt-btn mobile-vlt-btn-finish" style={{ width: '100%' }}>
+              <Link to="/" className="mobile-vlt-btn mobile-vlt-btn-finish mobile-vlt-w-full">
                 Voltar para Início
               </Link>
             </div>
@@ -700,6 +712,17 @@ export default function CadastroCidadaoMobile() {
             >
               ×
             </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Loading Modal */}
+      {loadingCep && (
+        <div className="mobile-vlt-modal-overlay">
+          <div className="mobile-vlt-modal-content">
+            <div className="mobile-vlt-spinner-large"></div>
+            <h3 className="mobile-vlt-modal-title">Buscando endereço...</h3>
+            <p className="mobile-vlt-modal-desc">Aguarde enquanto localizamos o CEP.</p>
           </div>
         </div>
       )}

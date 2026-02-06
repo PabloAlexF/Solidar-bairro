@@ -12,6 +12,7 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import Toast from '../../../components/ui/Toast';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import ApiService from '../../../services/apiService';
 import './CadastroCidadao.css';
 import '../../../styles/components/PasswordField.css';
@@ -43,7 +44,8 @@ export default function CadastroCidadao() {
     referencia: '',
     disponibilidade: [],
     interesses: [],
-    proposito: ''
+    proposito: '',
+    termosAceitos: false
   });
   const totalSteps = 6;
   const { loadingCep, formatCEP, searchCEP } = useCEP();
@@ -228,6 +230,11 @@ export default function CadastroCidadao() {
       showToast('A senha deve ter pelo menos 6 caracteres', 'error');
       return;
     }
+
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
     
     setIsLoading(true);
     
@@ -351,14 +358,14 @@ export default function CadastroCidadao() {
           <div className="cidadao-brand-icon-box">
             <Heart size={24} />
           </div>
-          <span className="cidadao-brand-text">SolidarBairro <span style={{ color: '#10b981', fontSize: '0.8rem' }}>VOLUNTÁRIO</span></span>
+          <span className="cidadao-brand-text">SolidarBairro <span className="brand-highlight">VOLUNTÁRIO</span></span>
         </div>
       </nav>
 
-      <div className="cidadao-main-layout" style={{ marginTop: '3rem', maxWidth: '1280px', marginInline: 'auto' }}>
+      <div className="cidadao-main-layout">
         <aside className="sidebar-stepper">
-          <div className="stepper-card" style={{ padding: '2rem' }}>
-            <h2 className="stepper-title" style={{ fontSize: '1rem', marginBottom: '1.5rem' }}>CADASTRO DE VOLUNTÁRIO</h2>
+          <div className="stepper-card">
+            <h2 className="stepper-title">CADASTRO DE VOLUNTÁRIO</h2>
             <div className="stepper-list">
               {steps.map((s, i) => (
                 <div key={s.id} className={`stepper-item ${step === s.id ? 'active' : step > s.id ? 'completed' : ''}`}>
@@ -366,8 +373,8 @@ export default function CadastroCidadao() {
                     {step > s.id ? <CheckCircle2 size={22} /> : s.icon}
                   </div>
                   <div className="stepper-info">
-                    <span className="stepper-step-num" style={{ fontSize: '0.75rem' }}>PASSO 0{s.id}</span>
-                    <span className="stepper-step-name" style={{ fontSize: '1rem' }}>{s.title}</span>
+                    <span className="stepper-step-num">PASSO 0{s.id}</span>
+                    <span className="stepper-step-name">{s.title}</span>
                   </div>
                   {i < steps.length - 1 && <div className="stepper-line" />}
                 </div>
@@ -377,15 +384,15 @@ export default function CadastroCidadao() {
         </aside>
 
         <main className="form-main">
-          <div className="form-container-card animate-slide-up" style={{ padding: '2.5rem' }}>
-            <div className="form-header-section" style={{ marginBottom: '2rem' }}>
+          <div className="form-container-card animate-slide-up">
+            <div className="form-header-section">
               <div className="header-top">
-                <span className="step-badge" style={{ fontSize: '0.85rem', padding: '0.35rem 1rem' }}>{steps.find(s => s.id === step)?.title}</span>
+                <span className="step-badge">{steps.find(s => s.id === step)?.title}</span>
                 <div className="progress-bar-container">
                   <div className="progress-bar-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
                 </div>
               </div>
-              <h1 className="form-main-title" style={{ fontSize: '2rem', marginTop: '1rem', marginBottom: '0.5rem' }}>
+              <h1 className="form-main-title">
                 {step === 1 && <>Qual o seu <span className="text-highlight">perfil</span>?</>}
                 {step === 2 && <>Sua <span className="text-highlight">identidade</span></>}
                 {step === 3 && <>Canais de <span className="text-highlight">contato</span></>}
@@ -393,7 +400,7 @@ export default function CadastroCidadao() {
                 {step === 5 && <>Seus <span className="text-highlight">interesses</span></>}
                 {step === 6 && <>Seu <span className="text-highlight">propósito</span></>}
               </h1>
-              <p className="form-subtitle" style={{ fontSize: '1.1rem' }}>
+              <p className="form-subtitle">
                 {step === 1 && "Conte-nos quem você é para começarmos sua jornada voluntária."}
                 {step === 2 && "A segurança é prioridade. Validamos todos os voluntários da nossa rede."}
                 {step === 3 && "Como podemos falar com você sobre oportunidades de ajuda?"}
@@ -406,43 +413,40 @@ export default function CadastroCidadao() {
             <form onSubmit={step === totalSteps ? handleSubmit : (e) => e.preventDefault()} className="form-content">
               {step === 1 && (
                 <div className="form-grid">
-                  <div className="form-group span-2">
-                    <label className="field-label">Nome Completo <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-12">
+                    <label className="field-label">Nome Completo <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <User className="field-icon" size={20} />
                       <input 
                         required 
                         type="text" 
-                        className="form-input"
+                        className={`form-input ${errors.nome ? 'input-error' : ''}`}
                         placeholder="Seu nome completo"
-                        style={errors.nome ? { borderColor: '#ef4444' } : {}}
                         value={formData.nome}
                         onChange={(e) => updateFormData('nome', e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">Data de Nascimento <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">Data de Nascimento <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <Calendar className="field-icon" size={20} />
                       <input 
                         required 
                         type="date" 
-                        className="form-input"
-                        style={errors.dataNascimento ? { borderColor: '#ef4444' } : {}}
+                        className={`form-input ${errors.dataNascimento ? 'input-error' : ''}`}
                         value={formData.dataNascimento}
                         onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">Ocupação / Habilidade <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">Ocupação / Habilidade <span className="required-asterisk">*</span></label>
                     <input 
                       required 
                       type="text" 
-                      className="form-input"
+                      className={`form-input ${errors.ocupacao ? 'input-error' : ''}`}
                       placeholder="Ex: Professor, Médico, etc."
-                      style={errors.ocupacao ? { borderColor: '#ef4444' } : {}}
                       value={formData.ocupacao}
                       onChange={(e) => updateFormData('ocupacao', e.target.value)}
                     />
@@ -452,15 +456,14 @@ export default function CadastroCidadao() {
 
               {step === 2 && (
                 <div className="form-grid">
-                  <div className="form-group">
-                    <label className="field-label">CPF <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">CPF <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <Fingerprint className="field-icon" size={20} />
                       <input 
                         required 
                         type="text" 
-                        className="form-input"
-                        style={errors.cpf ? { borderColor: '#ef4444' } : {}}
+                        className={`form-input ${errors.cpf ? 'input-error' : ''}`}
                         placeholder="000.000.000-00"
                         value={formData.cpf}
                         onChange={handleCPFChange}
@@ -468,20 +471,19 @@ export default function CadastroCidadao() {
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">RG <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">RG <span className="required-asterisk">*</span></label>
                     <input 
                       required 
                       type="text" 
-                      className="form-input"
-                      style={errors.rg ? { borderColor: '#ef4444' } : {}}
+                      className={`form-input ${errors.rg ? 'input-error' : ''}`}
                       placeholder="00.000.000-0 ou 000.000.000-00"
                       value={formData.rg}
                       onChange={handleRGChange}
                       maxLength={14}
                     />
                   </div>
-                  <div className="form-info-box span-2">
+                  <div className="form-info-box col-span-12">
                     <div className="info-icon-box">
                       <ShieldCheck size={32} />
                     </div>
@@ -495,15 +497,14 @@ export default function CadastroCidadao() {
 
               {step === 3 && (
                 <div className="form-grid">
-                  <div className="form-group">
-                    <label className="field-label">WhatsApp <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">WhatsApp <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <Phone className="field-icon" size={20} />
                       <input 
                         required 
                         type="tel" 
-                        className="form-input"
-                        style={errors.telefone ? { borderColor: '#ef4444' } : {}}
+                        className={`form-input ${errors.telefone ? 'input-error' : ''}`}
                         placeholder="(00) 00000-0000"
                         value={formData.telefone}
                         onChange={handlePhoneChange}
@@ -511,21 +512,21 @@ export default function CadastroCidadao() {
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">E-mail <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">E-mail <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <Mail className="field-icon" size={20} />
                       <input 
                         required 
                         type="email" 
-                        className="form-input"
-                        style={errors.email ? { borderColor: '#ef4444' } : {}}
+                        className={`form-input ${errors.email ? 'input-error' : ''}`}
                         placeholder="seu@email.com"
                         value={formData.email}
                         onChange={(e) => updateFormData('email', e.target.value)}
                       />
                     </div>
                   </div>
+                  <div className="form-group col-span-6">
                   <PasswordField 
                     label="Senha de Acesso"
                     placeholder="Crie uma senha segura"
@@ -534,6 +535,8 @@ export default function CadastroCidadao() {
                     required
                     error={errors.password}
                   />
+                  </div>
+                  <div className="form-group col-span-6">
                   <PasswordField 
                     label="Confirmar Senha"
                     placeholder="Digite a senha novamente"
@@ -542,94 +545,95 @@ export default function CadastroCidadao() {
                     error={errors.confirmPassword}
                     required
                   />
+                  </div>
                 </div>
               )}
 
               {step === 4 && (
                 <div className="form-grid">
-                  <div className="form-group">
-                    <label className="field-label">CEP <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="input-with-icon">
+                  <div className="form-group col-span-3">
+                    <label className="field-label">CEP <span className="required-asterisk">*</span></label>
+                    <div className={`input-with-icon ${loadingCep ? 'searching' : ''}`}>
                       <MapPin className="field-icon" size={20} />
                       <input
                         required
                         type="text"
-                        className="form-input"
-                        style={errors.cep ? { borderColor: '#ef4444' } : {}}
+                        className={`form-input ${errors.cep ? 'input-error' : ''}`}
                         placeholder="00000-000"
                         value={formData.cep}
-                        onChange={(e) => updateFormData('cep', formatCEP(e.target.value))}
+                        onChange={(e) => {
+                          const value = formatCEP(e.target.value);
+                          updateFormData('cep', value);
+                          if (value.length === 9) {
+                            handleCepBlur({ target: { value } });
+                          }
+                        }}
                         onBlur={handleCepBlur}
                         maxLength={9}
                       />
-                      {loadingCep && <div className="spinner" />}
+                      <div className="search-badge">Procurando...</div>
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">Endereço (Rua, Av.) <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">Endereço (Rua, Av.) <span className="required-asterisk">*</span></label>
                     <input
                       required
                       type="text"
-                      className="form-input"
-                      style={errors.endereco ? { borderColor: '#ef4444' } : {}}
+                      className={`form-input ${errors.endereco ? 'input-error' : ''}`}
                       placeholder="Sua rua ou avenida"
                       value={formData.endereco}
                       onChange={(e) => updateFormData('endereco', e.target.value)}
                       disabled={loadingCep}
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">Número <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-3">
+                    <label className="field-label">Número <span className="required-asterisk">*</span></label>
                     <input
                       required
                       type="text"
-                      className="form-input"
-                      style={errors.numero ? { borderColor: '#ef4444' } : {}}
+                      className={`form-input ${errors.numero ? 'input-error' : ''}`}
                       placeholder="Nº"
                       value={formData.numero}
                       onChange={(e) => updateFormData('numero', e.target.value)}
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">Bairro <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-4">
+                    <label className="field-label">Bairro <span className="required-asterisk">*</span></label>
                     <input
                       required
                       type="text"
-                      className="form-input"
-                      style={errors.bairro ? { borderColor: '#ef4444' } : {}}
+                      className={`form-input ${errors.bairro ? 'input-error' : ''}`}
                       placeholder="Seu bairro"
                       value={formData.bairro}
                       onChange={(e) => updateFormData('bairro', e.target.value)}
                       disabled={loadingCep}
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">Cidade <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-5">
+                    <label className="field-label">Cidade <span className="required-asterisk">*</span></label>
                     <input
                       required
                       type="text"
-                      className="form-input"
-                      style={errors.cidade ? { borderColor: '#ef4444' } : {}}
+                      className={`form-input ${errors.cidade ? 'input-error' : ''}`}
                       placeholder="Sua cidade"
                       value={formData.cidade}
                       onChange={(e) => updateFormData('cidade', e.target.value)}
                       disabled={loadingCep}
                     />
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">Estado <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-3">
+                    <label className="field-label">Estado <span className="required-asterisk">*</span></label>
                     <input
                       required
                       type="text"
-                      className="form-input"
-                      style={errors.estado ? { borderColor: '#ef4444' } : {}}
+                      className={`form-input ${errors.estado ? 'input-error' : ''}`}
                       placeholder="UF"
                       value={formData.estado}
                       onChange={(e) => updateFormData('estado', e.target.value)}
                       disabled={loadingCep}
                     />
                   </div>
-                  <div className="form-group span-2">
+                  <div className="form-group col-span-12">
                     <label className="field-label">Complemento / Ponto de Referência</label>
                     <input
                       type="text"
@@ -639,9 +643,9 @@ export default function CadastroCidadao() {
                       onChange={(e) => updateFormData('referencia', e.target.value)}
                     />
                   </div>
-                  <div className="form-group span-2">
+                  <div className="form-group col-span-12">
                     <label className="field-label">Disponibilidade</label>
-                    <div className="selectable-grid" id="availability-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
+                    <div className="selectable-grid-container">
                       {availabilityOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
                           <input 
@@ -664,9 +668,9 @@ export default function CadastroCidadao() {
 
               {step === 5 && (
                 <div className="form-grid">
-                  <div className="form-group span-2">
-                    <label className="field-label" style={errors.interesses ? { color: '#ef4444' } : {}}>Como você quer ajudar? <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem', ...(errors.interesses && { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' }) }}>
+                  <div className="form-group col-span-12">
+                    <label className={`field-label ${errors.interesses ? 'text-error' : ''}`}>Como você quer ajudar? <span className="required-asterisk">*</span></label>
+                    <div className={`selectable-grid-container ${errors.interesses ? 'grid-error' : ''}`}>
                       {helpOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
                           <input 
@@ -689,7 +693,7 @@ export default function CadastroCidadao() {
 
               {step === 6 && (
                 <div className="form-grid">
-                  <div className="form-group span-2">
+                  <div className="form-group col-span-12">
                     <label className="field-label">Conte seu propósito (Opcional)</label>
                     <textarea 
                       className="form-input" 
@@ -699,7 +703,13 @@ export default function CadastroCidadao() {
                       onChange={(e) => updateFormData('proposito', e.target.value)}
                     ></textarea>
                   </div>
-                  <div className="form-final-box span-2">
+                  <div className="form-group col-span-12">
+                    <TermsCheckbox 
+                      checked={formData.termosAceitos}
+                      onChange={(checked) => updateFormData('termosAceitos', checked)}
+                    />
+                  </div>
+                  <div className="form-final-box col-span-12">
                     <Award size={48} className="final-icon" />
                     <p>Ao se tornar um voluntário, você ganha acesso a missões exclusivas e badges de reconhecimento na comunidade.</p>
                   </div>
@@ -716,19 +726,13 @@ export default function CadastroCidadao() {
                   <div />
                 )}
 
-                <div className="nav-actions" style={{ display: 'flex', gap: '1rem' }}>
+                <div className="nav-actions">
                   {step === 1 && <Link to="/" className="btn-cancel">Cancelar</Link>}
 
                   {step < totalSteps ? (
                     <>
                       {!validateStep(step) && (
-                        <div className="validation-message" style={{
-                          fontSize: '0.85rem',
-                          color: '#ef4444',
-                          marginRight: '1rem',
-                          alignSelf: 'center',
-                          fontWeight: '500'
-                        }}>
+                        <div className="validation-message">
                           Preencha todos os campos obrigatórios para continuar
                         </div>
                       )}
@@ -743,7 +747,7 @@ export default function CadastroCidadao() {
                       </button>
                     </>
                   ) : (
-                    <button type="submit" className="btn-finish" disabled={isLoading}>
+                    <button type="submit" className="btn-finish" disabled={isLoading || !formData.termosAceitos}>
                       <span>{isLoading ? 'Cadastrando...' : 'Confirmar Compromisso'}</span>
                       <CheckCircle2 size={20} />
                     </button>
@@ -762,6 +766,17 @@ export default function CadastroCidadao() {
         type={toast.type}
         onClose={() => setToast({ show: false, message: '', type: 'error' })}
       />
+      
+      {/* Loading Modal */}
+      {loadingCep && (
+        <div className="modal-overlay-loading">
+          <div className="modal-loading-content">
+            <div className="spinner-large"></div>
+            <h3>Buscando endereço...</h3>
+            <p>Aguarde enquanto localizamos o CEP.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

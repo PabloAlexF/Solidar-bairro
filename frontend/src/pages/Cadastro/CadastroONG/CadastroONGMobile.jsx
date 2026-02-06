@@ -7,6 +7,7 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import './CadastroONGMobile.css';
 import { useCEP } from '../../AdminDashboard/useCEP';
 
@@ -27,7 +28,8 @@ export default function CadastroONGMobile() {
     confirmarSenha: '',
     senha: '',
     website: '',
-    causas: []
+    causas: [],
+    termosAceitos: false
   });
   const { searchCEP, formatCEP } = useCEP();
 
@@ -133,6 +135,11 @@ export default function CadastroONGMobile() {
     e.preventDefault();
     if (step !== totalSteps) {
       handleNextStep();
+      return;
+    }
+
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
       return;
     }
 
@@ -424,6 +431,15 @@ export default function CadastroONGMobile() {
                 value={formData.confirmarSenha}
                 onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
               />
+              <div className="ong-mob-input-group" style={{ marginTop: '1rem' }}>
+                <TermsCheckbox 
+                  checked={formData.termosAceitos}
+                  onChange={(checked) => updateFormData('termosAceitos', checked)}
+                  mobile={true}
+                  color="#8b5cf6"
+                  id="termos-ong-mobile"
+                />
+              </div>
             </>
           )}
 
@@ -443,7 +459,7 @@ export default function CadastroONGMobile() {
                 <ChevronRight size={20} />
               </button>
             ) : (
-              <button type="submit" className="ong-mob-btn ong-mob-btn-primary ong-mob-btn-full" disabled={isLoading}>
+              <button type="submit" className="ong-mob-btn ong-mob-btn-primary ong-mob-btn-full" disabled={isLoading || !formData.termosAceitos}>
                 <span>{isLoading ? 'Finalizando...' : 'Finalizar Registro'}</span>
                 <CheckCircle2 size={20} />
               </button>

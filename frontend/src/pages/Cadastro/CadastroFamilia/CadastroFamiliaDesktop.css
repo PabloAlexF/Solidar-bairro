@@ -794,6 +794,10 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
+.family-counter-card:active {
+  transform: scale(0.99);
+}
+
 .family-card-header {
   display: flex;
   align-items: center;
@@ -837,6 +841,10 @@
   border-color: var(--family-color);
   color: var(--family-color);
   transform: scale(1.1);
+}
+
+.counter-btn:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .counter-btn:disabled {

@@ -329,7 +329,7 @@
 .vlt-prm-form-input:focus {
   outline: none;
   border-color: var(--ong-reg-primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
 }
 
 .vlt-prm-password-toggle-btn {
@@ -650,7 +650,7 @@
 .ong-mob-input:focus {
   outline: none;
   border-color: var(--ong-reg-primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
   transform: translateY(-1px);
 }
 

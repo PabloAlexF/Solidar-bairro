@@ -17,6 +17,7 @@ import Step6ONGCausas from '../../../components/forms/Step6ONGCausas';
 import PasswordField from '../../../components/ui/PasswordField';
 import Toast from '../../../components/ui/Toast';
 import ApiService from '../../../services/apiService';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import './CadastroONG.css';
 
 export default function CadastroONGDesktop() {
@@ -43,7 +44,8 @@ export default function CadastroONGDesktop() {
     referencia: '',
     numVoluntarios: '',
     colaboradoresFixos: '',
-    causas: []
+    causas: [],
+    termosAceitos: false
   });
   const totalSteps = 6;
 
@@ -84,6 +86,10 @@ export default function CadastroONGDesktop() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
     setIsSubmitted(true);
     showToast('ONG registrada com sucesso! Seu cadastro está sendo analisado por nossa equipe. Você receberá uma notificação em até 24 horas com o resultado. O administrador precisa liberar seu acesso.', 'success');
   };
@@ -339,17 +345,26 @@ export default function CadastroONGDesktop() {
                 )}
 
                 {step === 6 && (
-                  <Step6ONGCausas
-                    formData={formData}
-                    handleCheckboxChange={(field, value, checked) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        [field]: checked
-                          ? [...prev[field], value]
-                          : prev[field].filter(item => item !== value)
-                      }));
-                    }}
-                  />
+                  <>
+                    <Step6ONGCausas
+                      formData={formData}
+                      handleCheckboxChange={(field, value, checked) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          [field]: checked
+                            ? [...prev[field], value]
+                            : prev[field].filter(item => item !== value)
+                        }));
+                      }}
+                    />
+                    <div className="form-group span-2" style={{ marginTop: '2rem' }}>
+                      <TermsCheckbox 
+                        checked={formData.termosAceitos}
+                        onChange={(checked) => setFormData(prev => ({ ...prev, termosAceitos: checked }))}
+                        color="#8b5cf6"
+                      />
+                    </div>
+                  </>
                 )}
               </div>
 
@@ -372,7 +387,7 @@ export default function CadastroONGDesktop() {
                       <ChevronRight size={20} />
                     </button>
                   ) : (
-                    <button type="submit" className="ong-reg-btn ong-reg-btn-finish">
+                    <button type="submit" className="ong-reg-btn ong-reg-btn-finish" disabled={!formData.termosAceitos}>
                       <span>Finalizar Registro</span>
                       <CheckCircle2 size={20} />
                     </button>

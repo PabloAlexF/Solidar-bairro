@@ -18,6 +18,8 @@ import {
   Send, 
   MoreVertical,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Search,
   Star,
   Mail,
@@ -170,6 +172,7 @@ const Chat = () => {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [replyingTo, setReplyingTo] = useState(null);
@@ -188,6 +191,10 @@ const Chat = () => {
   const [showMsgSearch, setShowMsgSearch] = useState(false);
   const [msgSearchTerm, setMsgSearchTerm] = useState("");
   const [presenceStatus, setPresenceStatus] = useState({});
+  const [showContext, setShowContext] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [hasContextUpdate, setHasContextUpdate] = useState(false);
+  const prevStatusRef = useRef(null);
   const [typingStatus, setTypingStatus] = useState({});
 
   const handleReactionClick = (msgId, emoji) => {
@@ -211,11 +218,17 @@ const Chat = () => {
     if (navigator.vibrate) navigator.vibrate(50);
   };
 
+  const handleReply = (msg) => {
+    setReplyingTo(msg);
+    setEditingMessage(null);
+    textareaRef.current?.focus();
+  };
+
   const handleEditClick = (msg) => {
     setEditingMessage(msg);
     setInputValue(msg.content);
     setReplyingTo(null);
-    // O foco automático pode variar no mobile, mas tentamos
+    textareaRef.current?.focus();
   };
 
   const isConversationClosed = useMemo(() => {
@@ -437,6 +450,24 @@ const Chat = () => {
 
   const helpInfo = getContextInfo();
 
+  // Monitorar mudanças de status para notificar no menu
+  useEffect(() => {
+    if (prevStatusRef.current && prevStatusRef.current !== helpInfo.status) {
+      setHasContextUpdate(true);
+    }
+    prevStatusRef.current = helpInfo.status;
+  }, [helpInfo.status]);
+
+  // Fechar menu ao rolar mensagens
+  const handleScroll = () => {
+    if (showContext) {
+      setShowContext(false);
+    }
+  };
+
+  const canFinish = (helpInfo.contextType === 'pedido' && deliveryStatus === "andamento" && user?.uid === pedidoData?.userId) ||
+                    (helpInfo.contextType === 'achado-perdido' && helpInfo.status !== 'resolvido');
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -528,9 +559,15 @@ const Chat = () => {
   // Carregar mensagens da conversa
   const loadMessages = useCallback(async () => {
     if (!conversaId) return;
-    
+
+    setLoading(true);
+    setError(null);
+    // Limpa o contexto da colaboração para evitar exibir dados de outra conversa.
+    setContextType(null);
+    setPedidoData(null);
+    setAchadoPerdidoData(null);
+
     try {
-      setLoading(true);
       const conversationResponse = await ApiService.getConversation(conversaId);
       const messagesResponse = await ApiService.getMessages(conversaId);
       
@@ -1161,7 +1198,7 @@ const Chat = () => {
         {/* Sidebar */}
         <div className={`sb-sidebar-overlay ${sidebarOpen ? 'sb-visible' : ''}`} onClick={() => setSidebarOpen(false)} />
         <aside className={`sb-chat-sidebar ${sidebarOpen ? 'sb-open' : ''}`}>
-          <div className="sb-sidebar-header" style={{ background: 'linear-gradient(to bottom, #ffffff, #f8fafc)', borderBottom: '1px solid #e2e8f0' }}>
+          <div className="sb-sidebar-header sb-sidebar-header-custom">
             <div className="sb-sidebar-title-row">
               <h2>Conversas</h2>
               <button className="sb-icon-btn" title="Nova conversa">
@@ -1203,7 +1240,7 @@ const Chat = () => {
                     {contact.initials}
                   </div>
                   {pinnedConversations.includes(contact.id) && (
-                    <div style={{ position: 'absolute', top: -4, left: -4, background: '#fff', borderRadius: '50%', padding: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><Pin size={12} fill="#64748b" color="#64748b" /></div>
+                    <div className="sb-pinned-icon"><Pin size={12} fill="#64748b" color="#64748b" /></div>
                   )}
                   {isOnline && <span className="sb-online-status-dot" />}
                 </div>
@@ -1213,9 +1250,9 @@ const Chat = () => {
                     <span className="sb-last-time">{contact.lastMessageTime}</span>
                   </div>
                   <div className="sb-contact-preview-row">
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', overflow: 'hidden' }}>
+                    <div className="sb-contact-preview-col">
                       {isTyping ? (
-                        <p className="sb-last-message" style={{ color: '#10b981', fontWeight: '500', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <p className="sb-last-message sb-typing-text">
                           Digitando<span className="sb-dot-animate">...</span>
                         </p>
                       ) : (
@@ -1234,7 +1271,7 @@ const Chat = () => {
                 </div>
                 <button 
                   onClick={(e) => handlePinConversation(e, contact.id)}
-                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: pinnedConversations.includes(contact.id) ? '#10b981' : '#94a3b8', padding: 4, alignSelf: 'center', opacity: 1 }}
+                  className={`sb-pin-btn ${pinnedConversations.includes(contact.id) ? 'active' : 'inactive'}`}
                   title={pinnedConversations.includes(contact.id) ? "Desafixar conversa" : "Fixar conversa"}
                 >
                   {pinnedConversations.includes(contact.id) ? <PinOff size={16} /> : <Pin size={16} />}
@@ -1259,6 +1296,7 @@ const Chat = () => {
                  <span className="mini-name">Seu Perfil</span>
                  <span className="mini-status">Disponível</span>
                </div>
+               <ChevronRight size={16} style={{ marginLeft: 'auto', color: '#94a3b8' }} />
              </div>
           </div>
         </aside>
@@ -1304,23 +1342,64 @@ const Chat = () => {
               </div>
             </div>
             <div className="sb-header-right-group">
-              <div className="sb-quick-actions-desktop">
-                <button
-                  className="sb-header-action-btn"
-                  onClick={() => setShowMsgSearch(!showMsgSearch)}
-                >
-                  <Search size={20} />
-                </button>
-                <button
-                  className="sb-header-action-btn danger"
-                  onClick={() => setShowReportModal(true)}
-                  title="Denunciar ou Bloquear"
-                >
-                  <AlertTriangle size={20} />
-                </button>
-                <button className="sb-header-action-btn">
-                  <MoreVertical size={20} />
-                </button>
+              <div className="sb-header-actions">
+                
+                <div style={{ position: 'relative' }}>
+                  <button 
+                    className="sb-header-action-btn"
+                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  >
+                    <MoreVertical size={20} />
+                  </button>
+
+                  <AnimatePresence>
+                    {showMobileMenu && (
+                      <>
+                        <div 
+                          style={{ position: 'fixed', inset: 0, zIndex: 98 }} 
+                          onClick={() => setShowMobileMenu(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                          className="sb-mobile-dropdown-menu"
+                        >
+                          <button 
+                            className="sb-dropdown-item"
+                            onClick={() => {
+                              setShowMsgSearch(!showMsgSearch);
+                              setShowMobileMenu(false);
+                            }}
+                          >
+                            <Search size={18} />
+                            <span>Pesquisar</span>
+                          </button>
+                          <button 
+                            className="sb-dropdown-item"
+                            onClick={() => {
+                              handleAvatarClick(false);
+                              setShowMobileMenu(false);
+                            }}
+                          >
+                            <User size={18} />
+                            <span>Ver Perfil</span>
+                          </button>
+                          <button 
+                            className="sb-dropdown-item danger"
+                            onClick={() => {
+                              setShowReportModal(true);
+                              setShowMobileMenu(false);
+                            }}
+                          >
+                            <AlertTriangle size={18} />
+                            <span>Denunciar / Bloquear</span>
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </header>
@@ -1331,179 +1410,111 @@ const Chat = () => {
           </div>
 
           {showMsgSearch && (
-            <div className="sb-msg-search-bar" style={{ padding: '10px 16px', borderBottom: '1px solid #f1f5f9', background: 'white', display: 'flex', alignItems: 'center', gap: '10px', animation: 'fadeIn 0.2s ease-out' }}>
+            <div className="sb-msg-search-bar">
               <Search size={16} color="#94a3b8" />
               <input
                 type="text"
                 placeholder="Buscar mensagem..."
                 value={msgSearchTerm}
                 onChange={(e) => setMsgSearchTerm(e.target.value)}
-                style={{ flex: 1, border: 'none', outline: 'none', fontSize: '0.9rem', color: '#1e293b' }}
+                className="sb-msg-search-input"
                 autoFocus
               />
               {msgSearchTerm && (
-                <button onClick={() => setMsgSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 4 }}>
+                <button onClick={() => setMsgSearchTerm('')} className="sb-search-clear-btn">
                   <X size={16} />
                 </button>
               )}
-              <button onClick={() => { setShowMsgSearch(false); setMsgSearchTerm(''); }} style={{ background: '#f1f5f9', border: 'none', borderRadius: '6px', padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', cursor: 'pointer' }}>
+              <button onClick={() => { setShowMsgSearch(false); setMsgSearchTerm(''); }} className="sb-search-close-btn">
                 Fechar
               </button>
             </div>
           )}
 
-          <div className="sb-chat-content-scroll">
-            {/* Context Info Card Mobile */}
-            {(contextType === 'pedido' || contextType === 'achado-perdido') && (
-              <div className="sb-chat-context-card-mobile">
-                <div className="sb-context-header-mobile">
-                  <div className="sb-context-icon-mobile">
+          {/* Context Menu Dropdown Mobile (New) */}
+          {(contextType === 'pedido' || contextType === 'achado-perdido') && (
+            <div className="sb-chat-context-menu">
+              <button 
+                className="sb-context-toggle-btn" 
+                onClick={() => {
+                  setShowContext(!showContext);
+                  if (!showContext) setHasContextUpdate(false);
+                }}
+              >
+                {hasContextUpdate && <span className="sb-context-update-dot" />}
+                <div className="sb-context-summary">
+                  <div className={`sb-context-icon-small ${helpInfo.contextType}`}>
                     {helpInfo.contextType === 'achado-perdido' ? (
-                      helpInfo.itemType === 'perdido' ? <Search size={20} /> : <Package size={20} />
+                      helpInfo.itemType === 'perdido' ? <Search size={16} /> : <Package size={16} />
                     ) : (
-                      <Package size={20} />
+                      <Package size={16} />
                     )}
                   </div>
-                  <div className="sb-context-title-mobile">
-                    <span className="sb-context-label">Colaboração</span>
-                    <h4>{helpInfo.type}</h4>
+                  <div className="sb-context-text-summary">
+                    <span className="sb-context-type-label">{helpInfo.title}</span>
+                    <span className="sb-context-main-info">{helpInfo.type}</span>
                   </div>
-                  <span className={`sb-urgency-badge-mobile sb-${helpInfo.urgency}`}>
-                    {helpInfo.urgency === "high" ? "Urgente" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
+                </div>
+                {canFinish && !showContext && (
+                  <span className="sb-finish-hint-badge">
+                    <CheckCheck size={14} />
+                    Finalizar
                   </span>
-                </div>
-                
-                <p className="sb-context-description-mobile">{helpInfo.descricao}</p>
-                
-                <div className="sb-context-meta-mobile">
-                  <div className="sb-meta-item-mobile">
-                    <MapPin size={14} />
-                    <span>{helpInfo.bairro}, {helpInfo.cidade}</span>
-                  </div>
-                </div>
+                )}
+                {showContext ? <ChevronUp size={20} className="sb-toggle-icon" /> : <ChevronDown size={20} className="sb-toggle-icon" />}
+              </button>
 
-                {helpInfo.contextType === 'pedido' && deliveryStatus === "andamento" && (
-                  <button 
-                    className="sb-finish-btn-mobile"
-                    onClick={() => setShowFinishModal(true)}
+              <AnimatePresence>
+                {showContext && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="sb-context-details-panel"
                   >
-                    <Heart size={18} fill="white" />
-                    Finalizar Colaboração
-                  </button>
-                )}
-              </div>
-            )}
+                    <div className="sb-context-panel-content">
+                      <p className="sb-panel-description">{helpInfo.descricao || "Sem descrição"}</p>
+                      
+                      <div className="sb-panel-meta-row">
+                        <div className="sb-panel-meta-item">
+                          <MapPin size={14} />
+                          <span>{helpInfo.bairro}</span>
+                        </div>
+                        <span className={`sb-urgency-badge-mobile sb-${helpInfo.urgency}`}>
+                          {helpInfo.urgency === "high" ? "Urgente" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
+                        </span>
+                      </div>
 
-            {/* Context Info Card Desktop - Hidden on Mobile */}
-            {(contextType === 'pedido' || contextType === 'achado-perdido') && (
-              <div className="sb-chat-context-card">
-                <div className="card-left-section">
-                  <div className="card-icon-box">
-                    {helpInfo.contextType === 'achado-perdido' ? (
-                      helpInfo.itemType === 'perdido' ? (
-                        <Search size={24} />
-                      ) : (
-                        <Package size={24} />
-                      )
-                    ) : (
-                      <Package size={24} />
-                    )}
-                  </div>
-                  <div className="card-info-text">
-                    <h4>{helpInfo.title}</h4>
-                    <p className="help-title">{helpInfo.type}</p>
-                    {helpInfo.descricao && (
-                      <p className="help-description">{helpInfo.descricao}</p>
-                    )}
-                    <div className="help-tags">
-                      {helpInfo.contextType === 'achado-perdido' ? (
-                        <>
-                          <span className={`type-pill ${helpInfo.itemType}`}>
-                            {helpInfo.itemType === 'perdido' ? '🔍 Perdido' : '📦 Encontrado'}
-                          </span>
-                          <span className={`status-pill ${helpInfo.status}`}>
-                            {helpInfo.status === 'resolvido' ? '✅ Resolvido' : '🔄 Ativo'}
-                          </span>
-                        </>
-                      ) : (
-                        <span className={`urgency-pill ${helpInfo.urgency}`}>
-                          Urgência {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
-                        </span>
+                      {helpInfo.contextType === 'pedido' && deliveryStatus === "andamento" && (
+                        <button 
+                          className="sb-finish-btn-mobile small"
+                          onClick={() => setShowFinishModal(true)}
+                        >
+                          <Heart size={16} fill="white" />
+                          Finalizar
+                        </button>
                       )}
-                      <span className="neighborhood-pill">
-                        {helpInfo.bairro}{helpInfo.cidade && `, ${helpInfo.cidade}`}
-                      </span>
-                      {helpInfo.categoria && helpInfo.categoria !== "Geral" && (
-                        <span className="category-pill">
-                          {helpInfo.categoria}
-                        </span>
+                      {helpInfo.contextType === 'achado-perdido' && helpInfo.status !== 'resolvido' && (
+                         <button 
+                          className="sb-finish-btn-mobile small"
+                          onClick={() => setShowFinishModal(true)}
+                        >
+                          <Check size={16} />
+                          Marcar Resolvido
+                        </button>
                       )}
                     </div>
-                  </div>
-                </div>
-                
-                {helpInfo.contextType === 'pedido' && (
-                  <div className="card-middle-section">
-                    <div className="status-progress-bar">
-                      <div className={`status-step ${['aguardando', 'andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("aguardando")}>1</div>
-                        <span className="step-label">Pendente</span>
-                      </div>
-                      <div className="progress-line" />
-                      <div className={`status-step ${['andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("andamento")}>2</div>
-                        <span className="step-label">Em curso</span>
-                      </div>
-                      <div className="progress-line" />
-                      <div className={`status-step ${deliveryStatus === "entregue" ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("entregue")}>3</div>
-                        <span className="step-label">Concluído</span>
-                      </div>
-                    </div>
-                  </div>
+                  </motion.div>
                 )}
-                
-                <div className="card-right-section">
-                  {helpInfo.contextType === 'pedido' ? (
-                    deliveryStatus === "andamento" ? (
-                      <button 
-                        className="finish-collaboration-btn"
-                        onClick={() => setShowFinishModal(true)}
-                      >
-                        <Heart size={16} fill="white" />
-                        Finalizar Ajuda
-                      </button>
-                    ) : (
-                      <button className="details-btn">
-                        Detalhes <ChevronRight size={16} />
-                      </button>
-                    )
-                  ) : (
-                    <button 
-                      className={`resolve-btn ${helpInfo.status === 'resolvido' ? 'resolved' : ''}`}
-                      onClick={() => {
-                        if (helpInfo.status !== 'resolvido') {
-                          // Lógica para marcar como resolvido
-                          setShowFinishModal(true);
-                        }
-                      }}
-                      disabled={helpInfo.status === 'resolvido'}
-                    >
-                      {helpInfo.status === 'resolvido' ? (
-                        <>✅ Resolvido</>
-                      ) : (
-                        <>🔄 Marcar como Resolvido</>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+              </AnimatePresence>
+            </div>
+          )}
 
+          <div className="sb-chat-content-scroll" onScroll={handleScroll}>
             {/* Messages Feed */}
             <div className="sb-messages-container">
               {loading ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', color: '#64748b', gap: '10px' }}>
+                <div className="sb-loading-container">
                   <div className="sb-mini-loader" />
                   <span>Carregando conversa...</span>
                 </div>
@@ -1597,7 +1608,7 @@ const Chat = () => {
                 }
 
                 return (
-                  <SwipeableMessage key={msg.id} message={msg} onReply={setReplyingTo} disabled={isConversationClosed}>
+                  <SwipeableMessage key={msg.id} message={msg} onReply={handleReply} disabled={isConversationClosed}>
                   <div className={`sb-msg-row ${isSent ? 'sent' : 'received'}`}>
                     {!isSent && (
                       <div className="sb-msg-sender-avatar" onClick={() => handleAvatarClick(false)}>
@@ -1774,6 +1785,7 @@ const Chat = () => {
                 </div>
                 <div className="sb-textarea-wrapper">
                   <textarea
+                    ref={textareaRef}
                     className="sb-chat-textarea"
                     placeholder="Digite sua mensagem..."
                     value={inputValue}
