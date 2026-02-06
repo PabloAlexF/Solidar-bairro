@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/layout/LandingHeader';
+import ReusableHeader from '../../components/layout/ReusableHeader';
 import { useAuth } from '../../contexts/AuthContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
+import { getSocket } from '../../services/socketService';
 import { 
   Heart, 
   Search, 
@@ -331,7 +332,14 @@ const Conversas = () => {
 
   return (
     <div className="conv-page-wrapper">
-      <Header scrolled={true} />
+      <ReusableHeader
+        navigationItems={[
+          { path: '/contato', label: 'Contato' }
+        ]}
+        showLoginButton={true}
+        showAdminButtons={true}
+        showPainelSocial={true}
+      />
       <main className="conv-main-content">
         <div className="conv-dashboard-grid">
           {/* Mobile Overlay */}

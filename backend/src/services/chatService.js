@@ -1,5 +1,6 @@
 const chatModel = require('../models/chatModel');
 const notificationService = require('./notificationService');
+const presenceService = require('./presenceService');
 const firebase = require('../config/firebase');
 const userService = require('./userService');
 
@@ -122,7 +123,10 @@ class ChatService {
 
       enrichedConversations.push({
         ...conv,
-        otherParticipant,
+        otherParticipant: {
+          ...otherParticipant,
+          id: otherParticipantIds[0] // Include user ID for proper status tracking
+        },
         unreadCount,
         lastMessage
       });

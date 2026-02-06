@@ -21,6 +21,7 @@ const botRoutes = require('./routes/botRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const cacheService = require('./services/cacheService');
 const socketService = require('./services/socketService');
+const presenceService = require('./services/presenceService');
 const logger = require('./services/loggerService');
 const { generalLimiter } = require('./middleware/rateLimiting');
 require('dotenv').config();

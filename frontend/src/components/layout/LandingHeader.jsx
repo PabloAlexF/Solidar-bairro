@@ -184,19 +184,8 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
         <div className="nav-menu">
           {showNavLinks && (
             <>
-              <a href="/#features" className="nav-link">
-                Funcionalidades
-                <span className="link-underline" />
-              </a>
-              <button className="nav-link" onClick={() => navigate('/quero-ajudar')}>
-                Quero Ajudar
-                <span className="link-underline" />
-              </button>
-              <button className="nav-link" onClick={() => navigate('/preciso-de-ajuda')}>
-                Preciso de Ajuda
-                <span className="link-underline" />
-              </button>
-              <button className="nav-link" onClick={() => navigate('/achados-perdidos')}>
+              <button className="nav-link" onClick={() => navigate('/contato')}>
+                Contato
                 <span className="link-underline" />
               </button>
             </>

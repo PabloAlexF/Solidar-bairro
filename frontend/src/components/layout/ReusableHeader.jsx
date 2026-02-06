@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { X, Bell, MessageCircle, Heart, CheckCircle2, AlertTriangle, Clock, Settings, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { useConnectivity } from '../../contexts/ConnectivityContext';
+
 import apiService from '../../services/apiService';
 import { getSocket } from '../../services/socketService';
 import toast from 'react-hot-toast';
@@ -18,7 +18,6 @@ const ReusableHeader = ({
 }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { isOnline } = useConnectivity();
   const {
     notifications,
     addChatNotification,
@@ -146,31 +145,12 @@ const ReusableHeader = ({
             </span>
           </div>
 
-          {/* Connectivity Status */}
-          <div className="connectivity-status" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginLeft: '20px',
-            fontSize: '14px',
-            color: isOnline ? '#10b981' : '#ef4444'
-          }}>
-            <div style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: isOnline ? '#10b981' : '#ef4444',
-              animation: isOnline ? 'pulse 2s infinite' : 'none'
-            }}></div>
-            <span style={{ fontWeight: '500' }}>
-              {isOnline ? 'Online' : 'Offline'}
-            </span>
-          </div>
+
 
           {/* Navigation Menu */}
           {navigationItems.length > 0 && (
             <nav className="nav-menu">
-              {navigationItems.map((item, index) => (
+              {navigationItems.filter(item => !item.path.includes('/contato')).map((item, index) => (
                 <Link key={index} to={item.path} className="nav-link">
                   {item.label}
                   <span className="link-underline" />

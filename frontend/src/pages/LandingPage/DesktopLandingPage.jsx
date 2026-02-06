@@ -394,10 +394,7 @@ export default function DesktopLandingPage() {
 
       <ReusableHeader
         navigationItems={[
-          { path: '/#features', label: 'Funcionalidades' },
-          { path: '/quero-ajudar', label: 'Quero Ajudar' },
-          { path: '/preciso-de-ajuda', label: 'Preciso de Ajuda' },
-          { path: '/achados-e-perdidos', label: 'Achados e Perdidos' }
+          { path: '/contato', label: 'Contato' }
         ]}
         showLoginButton={true}
         showAdminButtons={true}

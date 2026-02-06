@@ -4,6 +4,7 @@ import Header from '../../components/layout/Header';
 import { useAuth } from '../../contexts/AuthContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
+import { getSocket } from '../../services/socketService';
 import { 
   Heart, 
   ArrowLeft, 
@@ -186,6 +187,8 @@ const Chat = () => {
   const typingTimeoutRef = useRef(null);
   const [showMsgSearch, setShowMsgSearch] = useState(false);
   const [msgSearchTerm, setMsgSearchTerm] = useState("");
+  const [presenceStatus, setPresenceStatus] = useState({});
+  const [typingStatus, setTypingStatus] = useState({});
 
   const handleReactionClick = (msgId, emoji) => {
     setMessages(prev => prev.map(msg => {
@@ -264,11 +267,66 @@ const Chat = () => {
     });
   };
 
+  // Socket listeners for presence updates
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket && user?.uid) {
+      const handlePresenceUpdate = (data) => {
+        console.log('🟢 [Mobile] Presence Update:', data);
+        setPresenceStatus(prev => ({
+          ...prev,
+          [data.userId]: {
+            isOnline: data.isOnline,
+            lastSeen: data.lastSeen
+          }
+        }));
+      };
+
+      const handlePresenceStatus = (data) => {
+        console.log('🔵 [Mobile] Presence Status:', data);
+        setPresenceStatus(prev => ({
+          ...prev,
+          [data.userId]: {
+            isOnline: data.isOnline,
+            lastSeen: data.lastSeen
+          }
+        }));
+      };
+
+      const handleTyping = (data) => {
+        const convId = data.conversationId || data.conversaId || data.chatId;
+        if (data.userId !== user?.uid && convId) {
+          setTypingStatus(prev => ({
+            ...prev,
+            [convId]: data.isTyping
+          }));
+        }
+      };
+
+      socket.on('presence_update', handlePresenceUpdate);
+      socket.on('presence_status', handlePresenceStatus);
+      socket.on('typing', handleTyping);
+
+      return () => {
+        socket.off('presence_update', handlePresenceUpdate);
+        socket.off('presence_status', handlePresenceStatus);
+        socket.off('typing', handleTyping);
+      };
+    }
+  }, [user?.uid]);
+
+  // Request presence for active conversation
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket && user?.uid && conversation && conversation.participants) {
+      const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
+      if (otherParticipantId) {
+        socket.emit('get_presence', otherParticipantId);
+      }
+    }
+  }, [conversation, user?.uid]);
+
   const currentContact = useMemo(() => {
-    console.log('🔍 Determinando currentContact para conversa:', selectedChatId);
-    console.log('📊 Dados da conversa:', conversation);
-    console.log('👥 Participantes da conversa:', conversation?.participants);
-    console.log('👤 Usuário atual:', user?.uid);
 
     // 1. Tentar usar dados detalhados da conversa atual (mais confiável e atualizado)
     if (conversation && conversation.id === selectedChatId) {
@@ -277,25 +335,21 @@ const Chat = () => {
       // Tentar encontrar nos dados de participantes enriquecidos
       if (conversation.participantsData?.length > 0) {
         otherUser = conversation.participantsData.find(p => (p.uid || p.id) !== user?.uid);
-        console.log('✅ Encontrado em participantsData:', otherUser);
       }
 
       // Se não achou, tentar otherParticipant (mas garantir que não é o próprio usuário)
       if (!otherUser && conversation.otherParticipant && (conversation.otherParticipant.uid || conversation.otherParticipant.id) !== user?.uid) {
         otherUser = conversation.otherParticipant;
-        console.log('✅ Encontrado em otherParticipant:', otherUser);
       }
 
       // Se ainda não achou, tentar buscar diretamente pelos participantes
       if (!otherUser && conversation.participants?.length > 0) {
         const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
         if (otherParticipantId) {
-          console.log('🔄 Buscando dados do participante:', otherParticipantId);
           // Tentar buscar do cache dos contatos primeiro
           otherUser = chatContacts.find(c => c.id === otherParticipantId);
           if (!otherUser) {
             // Se não está no cache, buscar da API (síncrono para evitar re-renders)
-            console.log('🌐 Buscando dados do usuário na API...');
             // Nota: Esta busca será assíncrona, por enquanto retorna placeholder
           }
         }
@@ -304,31 +358,27 @@ const Chat = () => {
       if (otherUser) {
         // Priorizar nomeCompleto sobre nome para evitar fallbacks incorretos
         const name = otherUser.nomeCompleto || otherUser.nome || otherUser.razaoSocial || otherUser.name || 'Usuário';
-        console.log('🏷️ Nome determinado:', name, 'para usuário:', otherUser);
-        console.log('📊 Campos disponíveis:', {
-          nome: otherUser.nome,
-          nomeCompleto: otherUser.nomeCompleto,
-          razaoSocial: otherUser.razaoSocial,
-          name: otherUser.name
-        });
 
         // Verificar se o nome é válido (não é placeholder)
         if (name && name !== 'Usuário' && name !== 'Usuario' && name.trim() !== '') {
+          // Get the other participant ID for presence status
+          const otherParticipantId = conversation.participants?.find(p => p !== user?.uid);
+          const presenceData = presenceStatus[otherParticipantId];
+
           return {
             id: conversation.id,
             name: name,
             initials: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
             type: otherUser.tipo || 'cidadao',
             distance: '0m de você',
-            online: otherUser.online || false
+            online: presenceData?.isOnline || false,
+            lastSeen: presenceData?.lastSeen
           };
         } else {
-          console.log('⚠️ Nome ainda é placeholder, tentando buscar novamente...');
           // Forçar uma busca adicional se o nome ainda for placeholder
           const otherUid = conversation.participants?.find(p => p !== user?.uid);
           if (otherUid) {
             // Busca síncrona adicional (isso pode causar re-renders, mas é necessário)
-            console.log('🔄 Fazendo busca adicional para:', otherUid);
             // Nota: Em produção, isso deveria ser feito de forma assíncrona
           }
         }
@@ -337,9 +387,8 @@ const Chat = () => {
 
     // 2. Fallback para a lista de contatos
     const fallbackContact = chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
-    console.log('🔄 Usando fallback do contato:', fallbackContact);
     return fallbackContact;
-  }, [conversation, chatContacts, selectedChatId, user?.uid]);
+  }, [conversation, chatContacts, selectedChatId, user?.uid, presenceStatus]);
 
   // Função para obter informações do contexto (pedido ou achado/perdido)
   const getContextInfo = () => {
@@ -398,7 +447,6 @@ const Chat = () => {
       const response = await ApiService.getConversations();
       if (response.success && response.data) {
         const formattedContacts = response.data.map(async (conv) => {
-          console.log('Processando conversa:', JSON.stringify(conv, null, 2));
 
           // Garantir que sempre temos um nome válido
           let userName = 'Carregando...';
@@ -406,43 +454,33 @@ const Chat = () => {
           // Tentar múltiplas fontes para o nome
           if (conv.otherParticipant?.nome && conv.otherParticipant.nome.trim()) {
             userName = conv.otherParticipant.nome;
-            console.log('Nome encontrado em otherParticipant.nome:', userName);
           } else if (conv.otherParticipant?.nomeCompleto && conv.otherParticipant.nomeCompleto.trim()) {
             userName = conv.otherParticipant.nomeCompleto;
-            console.log('Nome encontrado em otherParticipant.nomeCompleto:', userName);
           } else if (conv.participantsData?.length > 0) {
             const otherParticipant = conv.participantsData.find(p => p.uid !== user?.uid);
-            console.log('Procurando em participantsData, otherParticipant:', otherParticipant);
             if (otherParticipant?.nome && otherParticipant.nome.trim()) {
               userName = otherParticipant.nome;
-              console.log('Nome encontrado em participantsData.nome:', userName);
             } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
               userName = otherParticipant.nomeCompleto;
-              console.log('Nome encontrado em participantsData.nomeCompleto:', userName);
             }
           } else if (conv.participants?.length > 0) {
             const otherParticipant = conv.participants.find(p => p.uid !== user?.uid);
-            console.log('Procurando em participants, otherParticipant:', otherParticipant);
             if (otherParticipant?.nome && otherParticipant.nome.trim()) {
               userName = otherParticipant.nome;
-              console.log('Nome encontrado em participants.nome:', userName);
             } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
               userName = otherParticipant.nomeCompleto;
-              console.log('Nome encontrado em participants.nomeCompleto:', userName);
             }
           }
 
+          // Extrair ID do participante para uso posterior (presença)
+          const participantUid = conv.otherParticipant?.id || conv.otherParticipant?.uid || conv.participants?.find(p => p !== user?.uid);
+
           // Se ainda não encontrou o nome ou é um placeholder, tentar buscar do banco de dados
-          console.log('Verificando se precisa buscar nome no banco. userName:', userName, 'user?.uid:', user?.uid);
+          /* COMENTADO PARA EVITAR QUOTA EXCEEDED (N+1 Requests)
           if (userName === 'Carregando...' || userName === 'Usuário' || userName === 'Administrador') {
-            const participantUid = conv.otherParticipant?.id || conv.otherParticipant?.uid || conv.participants?.find(p => p !== user?.uid);
-            console.log('participantUid extraído:', participantUid, 'comparação com user?.uid:', participantUid !== user?.uid);
             if (participantUid && participantUid !== user?.uid) {
               try {
-                console.log('Buscando nome do usuário no banco (placeholder detectado):', participantUid);
-                  const userResponse = await ApiService.getUserData(participantUid);
-                console.log('Resposta da API getUser:', userResponse);
-                console.log('Dados completos do usuário:', JSON.stringify(userResponse.data, null, 2));
+                const userResponse = await ApiService.getUserData(participantUid);
                 if (userResponse.success && userResponse.data) {
                   // Tentar múltiplas possibilidades de campos de nome
                   userName = userResponse.data.nome ||
@@ -453,25 +491,17 @@ const Chat = () => {
                             userResponse.data.displayName ||
                             userResponse.data.email ||
                             'Usuário';
-                  console.log('Nome encontrado no banco:', userName);
-                  console.log('Campos disponíveis no usuário:', Object.keys(userResponse.data));
-                } else {
-                  console.log('Resposta da API sem sucesso ou sem dados');
                 }
               } catch (error) {
                 console.error('Erro ao buscar nome do usuário:', error);
               }
-            } else {
-              console.log('Não vai buscar nome: participantUid inválido ou é o próprio usuário');
             }
-          } else {
-            console.log('Não precisa buscar nome no banco, userName válido:', userName);
           }
-
-          console.log('Nome final para conversa', conv.id, ':', userName);
+          */
 
           return {
             id: conv.id,
+            participantId: participantUid,
             name: userName,
             initials: userName !== 'Carregando...' && userName !== 'Usuário' ?
               userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'CV',
@@ -489,6 +519,9 @@ const Chat = () => {
       }
     } catch (error) {
       console.error('Erro ao carregar conversas:', error);
+      if (error.message && error.message.includes('RESOURCE_EXHAUSTED')) {
+        alert('⚠️ Cota do Firebase excedida! O chat pode não carregar novas conversas até amanhã ou até a troca da conta.');
+      }
     }
   }, [user?.uid]);
 
@@ -672,7 +705,11 @@ const Chat = () => {
       await ApiService.markConversationAsRead(conversaId);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
-      setError('Erro ao carregar mensagens');
+      if (error.message && error.message.includes('RESOURCE_EXHAUSTED')) {
+        setError('Cota do servidor excedida. Chat indisponível.');
+      } else {
+        setError('Erro ao carregar mensagens');
+      }
     } finally {
       setLoading(false);
       console.log('Estado final do contexto:', {
@@ -684,6 +721,10 @@ const Chat = () => {
   }, [conversaId, user?.uid]);
 
   useEffect(() => {
+    let socket;
+    let handleSocketMessage;
+    let unsubscribeTyping;
+
     if (conversaId) {
       ensureDependencies();
       setSelectedChatId(conversaId);
@@ -711,12 +752,44 @@ const Chat = () => {
         });
       });
 
+      // Listener direto do Socket.IO para mensagens em tempo real
+      socket = getSocket();
+      handleSocketMessage = (data) => {
+        console.log('📩 [Mobile] Mensagem recebida via Socket:', data);
+        const msg = data.message || data; // Garante que pegamos o objeto da mensagem
+        const msgConvId = msg.conversationId || msg.conversaId || msg.chatId;
+
+        // Só adiciona se for da conversa atual
+        if (msgConvId && msgConvId === conversaId) {
+          setMessages(prev => {
+            // Evita duplicatas
+            if (prev.some(m => m.id === msg.id)) return prev;
+
+            return [...prev, {
+              id: msg.id,
+              type: msg.type || 'text',
+              sender: msg.senderId === user?.uid ? 'sent' : 'received',
+              content: msg.content || msg.text,
+              timestamp: msg.createdAt ? (msg.createdAt.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(msg.createdAt)) : new Date(),
+              read: false,
+              location: msg.metadata?.location || msg.location,
+              metadata: msg.metadata,
+              mediaUrl: msg.mediaUrl
+            }];
+          });
+        }
+      };
+
+      if (socket) {
+        socket.on('receive_message', handleSocketMessage);
+        socket.on('new_message', handleSocketMessage); // Fallback para outro nome comum de evento
+      }
+
       // Iniciar escuta de "digitando..."
       if (chatNotificationService.subscribeToTyping) {
-        const unsubscribeTyping = chatNotificationService.subscribeToTyping(conversaId, (isTypingStatus) => {
+        unsubscribeTyping = chatNotificationService.subscribeToTyping(conversaId, (isTypingStatus) => {
           setIsTyping(isTypingStatus);
         });
-        return () => { unsubscribeTyping && unsubscribeTyping(); };
       }
     }
     
@@ -725,6 +798,13 @@ const Chat = () => {
     return () => {
       if (conversaId) {
         chatNotificationService.stopListening(conversaId);
+      }
+      if (socket && handleSocketMessage) {
+        socket.off('receive_message', handleSocketMessage);
+        socket.off('new_message', handleSocketMessage);
+      }
+      if (unsubscribeTyping) {
+        unsubscribeTyping();
       }
     };
   }, [conversaId, user?.uid, loadConversations, loadMessages]);
@@ -1066,6 +1146,15 @@ const Chat = () => {
         }
         .reply-quote-sender { font-weight: 700; color: #10b981; font-size: 0.75rem; display: block; margin-bottom: 2px; }
         .reply-quote-text { color: inherit; opacity: 0.8; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        @keyframes dot-animate {
+          0% { opacity: 0; }
+          50% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        .sb-dot-animate {
+          animation: dot-animate 1.5s infinite;
+        }
       `}</style>
       <div className="sb-chat-page-wrapper">
         <div className="sb-chat-layout">
@@ -1092,7 +1181,12 @@ const Chat = () => {
           </div>
           
           <div className="sb-contacts-list">
-            {sortedContacts.map((contact) => (
+            {sortedContacts.map((contact) => {
+              const presenceData = presenceStatus[contact.participantId];
+              const isOnline = presenceData?.isOnline ?? contact.online;
+              const lastSeen = presenceData?.lastSeen;
+              const isTyping = typingStatus[contact.id];
+              return (
               <div 
                 key={contact.id} 
                 className={`contact-item ${selectedChatId === contact.id ? 'active' : ''}`}
@@ -1111,7 +1205,7 @@ const Chat = () => {
                   {pinnedConversations.includes(contact.id) && (
                     <div style={{ position: 'absolute', top: -4, left: -4, background: '#fff', borderRadius: '50%', padding: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><Pin size={12} fill="#64748b" color="#64748b" /></div>
                   )}
-                  {contact.online && <span className="sb-online-status-dot" />}
+                  {isOnline && <span className="sb-online-status-dot" />}
                 </div>
                 <div className="sb-contact-meta">
                   <div className="sb-contact-name-row">
@@ -1119,7 +1213,20 @@ const Chat = () => {
                     <span className="sb-last-time">{contact.lastMessageTime}</span>
                   </div>
                   <div className="sb-contact-preview-row">
-                    <p className="sb-last-message">{contact.lastMessage}</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', overflow: 'hidden' }}>
+                      {isTyping ? (
+                        <p className="sb-last-message" style={{ color: '#10b981', fontWeight: '500', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          Digitando<span className="sb-dot-animate">...</span>
+                        </p>
+                      ) : (
+                        <p className="sb-last-message">{contact.lastMessage}</p>
+                      )}
+                      {!isOnline && lastSeen && (
+                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
+                          Visto {new Date(lastSeen).toLocaleDateString() === new Date().toLocaleDateString() ? 'hoje' : new Date(lastSeen).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})} às {new Date(lastSeen).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      )}
+                    </div>
                     {contact.unreadCount > 0 && selectedChatId !== contact.id && (
                       <span className="sb-unread-count-badge">{contact.unreadCount}</span>
                     )}
@@ -1133,7 +1240,8 @@ const Chat = () => {
                   {pinnedConversations.includes(contact.id) ? <PinOff size={16} /> : <Pin size={16} />}
                 </button>
               </div>
-            ))}
+            );
+            })}
           </div>
           
           <div className="sb-sidebar-footer">
@@ -1185,7 +1293,11 @@ const Chat = () => {
                     </span>
                     <span className={`status-pill state ${currentContact?.online ? 'online' : 'offline'}`}>
                       <span className="sb-pulse-dot" />
-                      {currentContact?.online ? 'Ativo Agora' : 'Offline'}
+                      {currentContact?.online 
+                        ? 'Ativo Agora' 
+                        : (currentContact?.lastSeen 
+                            ? `Visto às ${new Date(currentContact.lastSeen).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}` 
+                            : 'Offline')}
                     </span>
                   </div>
                 </div>
