@@ -81,7 +81,7 @@ export const NotificationProvider = ({ children }) => {
           // Converter formato do socket para formato local
           const newNotification = {
             id: notificationData.id,
-            timestamp: notificationData.createdAt?.seconds ? new Date(notificationData.createdAt.seconds * 1000).toISOString() : new Date().toISOString(),
+            timestamp: notificationData.createdAt?.seconds ? new Date(notificationData.createdAt.seconds * 1000).toISOString() : notificationData.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
             read: notificationData.read || false,
             type: notificationData.type || 'system',
             priority: 'normal',

@@ -9,7 +9,7 @@ import { ToastProvider } from './contexts/ToastContext';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <BrowserRouter basename={process.env.NODE_ENV === 'production' ? '/solidar-bairro' : ''}>
+    <BrowserRouter>
       <ConnectivityProvider>
         <AuthProvider>
           <ToastProvider>

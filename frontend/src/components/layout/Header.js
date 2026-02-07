@@ -191,12 +191,24 @@ const Header = ({ showLoginButton = false }) => {
                               const timeAgo = (() => {
                                 const now = new Date();
                                 let time;
-                                if (notification.timestamp && notification.timestamp.seconds) {
+
+                                // Verificar se é um timestamp do Firebase (objeto com seconds)
+                                if (notification.timestamp && typeof notification.timestamp === 'object' && notification.timestamp.seconds) {
                                   time = new Date(notification.timestamp.seconds * 1000);
-                                } else {
+                                }
+                                // Verificar se é uma string ISO
+                                else if (typeof notification.timestamp === 'string') {
                                   time = new Date(notification.timestamp);
                                 }
-                                
+                                // Verificar se é um método toDate (Firebase Timestamp)
+                                else if (notification.timestamp && notification.timestamp.toDate) {
+                                  time = notification.timestamp.toDate();
+                                }
+                                // Fallback para data atual
+                                else {
+                                  time = new Date();
+                                }
+
                                 if (isNaN(time.getTime())) return 'Data desconhecida';
 
                                 const diffInMinutes = Math.floor((now - time) / (1000 * 60));

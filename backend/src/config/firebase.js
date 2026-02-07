@@ -108,7 +108,9 @@ class FirebaseConnection {
   }
 
   getTimestamp() {
-    return this.isDevMode ? new Date() : this.admin.firestore.FieldValue.serverTimestamp();
+    // Sempre usar serverTimestamp para consistência, mesmo em desenvolvimento
+    // Isso garante que as datas sejam tratadas como UTC em ambos os ambientes
+    return this.admin.firestore.FieldValue.serverTimestamp();
   }
 }
 
