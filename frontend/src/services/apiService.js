@@ -270,7 +270,7 @@ const ApiService = {
       method: 'POST',
       body: JSON.stringify(data)
     });
-    
+
     // Criar notificação para nova conversa
     if (response.success) {
       const { NotificationManager } = await import('../utils/notifications');
@@ -279,8 +279,47 @@ const ApiService = {
         title: data.title || 'Nova conversa'
       });
     }
-    
+
     return response;
+  },
+
+  async startConversation(participantId, itemId, itemType, title = null) {
+    // Primeiro tentar encontrar conversa existente
+    try {
+      const existingResponse = await this.createOrGetConversation({
+        participantId,
+        itemId,
+        itemType,
+        title
+      });
+
+      if (existingResponse && existingResponse.success && existingResponse.data?.id) {
+        console.log('Conversa existente encontrada:', existingResponse.data.id);
+        return existingResponse;
+      }
+    } catch (existingError) {
+      console.log('Nenhuma conversa existente encontrada, criando nova...');
+    }
+
+    // Criar nova conversa
+    const currentUserId = JSON.parse(localStorage.getItem('solidar-user') || '{}').uid ||
+                         JSON.parse(localStorage.getItem('solidar-user') || '{}').id;
+
+    if (!currentUserId) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const conversationData = {
+      participants: [currentUserId, participantId],
+      itemId,
+      itemType,
+      title: title || `Conversa sobre ${itemType}`,
+      initialMessage: `Olá! Gostaria de conversar sobre este ${itemType === 'pedido' ? 'pedido' : 'item'}.`
+    };
+
+    console.log('Criando nova conversa:', conversationData);
+
+    return await this.createConversation(conversationData);
   },
 
   async createOrGetConversation(data) {

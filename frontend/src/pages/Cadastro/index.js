@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, Routes, Route, useLocation } from 'react-router-dom';
 import { Users, Building2, Heart, Sparkles, User, Store, ArrowRight, Zap, TrendingUp, ArrowUp } from 'lucide-react';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import LandingHeader from '../../components/layout/LandingHeader';
 import './styles.css';
 
@@ -9,6 +10,7 @@ import CadastroFamilia from './CadastroFamilia/CadastroFamilia';
 import CadastroCidadao from './CadastroCidadao/CadastroCidadao';
 import CadastroONG from './CadastroONG/CadastroONG';
 import CadastroComercio from './CadastroComercio/CadastroComercio';
+import CadastroMobile from './CadastroMobile';
 
 const scrollToCards = () => {
   const cardsSection = document.querySelector('.cards-grid');
@@ -409,6 +411,12 @@ function CadastroSelectionPage() {
 }
 
 export default function CadastroPage() {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <CadastroMobile />;
+  }
+
   return (
     <Routes>
       <Route path="/" element={<CadastroSelectionPage />} />

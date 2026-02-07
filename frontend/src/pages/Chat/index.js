@@ -31,7 +31,7 @@ const Chat = () => {
   // 1. Carregar lista de conversas (Sidebar) - Executa apenas quando o usuário muda
   useEffect(() => {
     const loadConversations = async () => {
-      if (!user) return;
+      if (!user?.uid) return;
       try {
         const convResponse = await ApiService.getConversations();
         if (convResponse.success) {
@@ -42,7 +42,7 @@ const Chat = () => {
       }
     };
     loadConversations();
-  }, [user]);
+  }, [user?.uid]);
 
   // 2. Atualizar info do chat atual quando a lista ou ID mudar
   useEffect(() => {
@@ -55,7 +55,7 @@ const Chat = () => {
   // 3. Carregar mensagens do chat atual
   useEffect(() => {
     const loadMessages = async () => {
-      if (!user || !id) return;
+      if (!user?.uid || !id) return;
       setLoading(true);
       try {
         const response = await ApiService.getMessages(id);
@@ -73,7 +73,7 @@ const Chat = () => {
     };
 
     loadMessages();
-  }, [id, user]);
+  }, [id, user?.uid]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

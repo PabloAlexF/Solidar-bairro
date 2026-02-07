@@ -1,17 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import CadastroONGMobile from './CadastroONGMobile';
 import CadastroONGDesktop from './CadastroONGDesktop';
 import './CadastroONG.css';
 
 export default function CadastroONG() {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 1024);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
+  const isMobile = useIsMobile();
 
   return isMobile ? <CadastroONGMobile /> : <CadastroONGDesktop />;
 }

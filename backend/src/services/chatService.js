@@ -58,13 +58,24 @@ class ChatService {
     try {
       // Buscar conversas do usuário atual
       const conversations = await chatModel.getConversationsByUser(currentUserId);
-      
+
       // Procurar conversa que contenha os dois participantes e o mesmo item
       return conversations.find(conv => {
-        const hasParticipants = conv.participants.includes(currentUserId) && 
+        const hasParticipants = conv.participants.includes(currentUserId) &&
                               conv.participants.includes(participantId);
-        const sameItem = conv.itemId === itemId && conv.itemType === itemType;
-        
+
+        // Verificar se o item corresponde (novo formato com itemId/itemType ou antigo com pedidoId)
+        let sameItem = false;
+        if (itemType === 'pedido') {
+          sameItem = (conv.itemId === itemId && conv.itemType === itemType) ||
+                    (conv.pedidoId === itemId);
+        } else if (itemType === 'achado_perdido') {
+          sameItem = (conv.itemId === itemId && conv.itemType === itemType) ||
+                    (conv.itemId === itemId); // Para achados/perdidos, usar itemId
+        } else {
+          sameItem = conv.itemId === itemId && conv.itemType === itemType;
+        }
+
         return hasParticipants && sameItem;
       });
     } catch (error) {

@@ -112,6 +112,8 @@ const Chat = () => {
   const { user } = useAuth();
   const { notifications, addChatNotification, markAsRead, markAllAsRead, clearNotifications, unreadCount } = useNotifications();
   const conversaId = params.id;
+
+  // Não redirecionar automaticamente, apenas mostrar tela de erro se não houver ID
   
   const [messages, setMessages] = useState([]);
   const [conversation, setConversation] = useState(null);
@@ -507,7 +509,10 @@ const Chat = () => {
 
   // Carregar mensagens da conversa
   const loadMessages = useCallback(async () => {
-    if (!conversaId) return;
+    if (!conversaId) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -516,9 +521,17 @@ const Chat = () => {
     setPedidoData(null);
     setAchadoPerdidoData(null);
 
+    // Timeout de segurança: se não carregar em 10 segundos, mostrar erro
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+      setError('Tempo limite excedido ao carregar conversa');
+    }, 10000);
+
     try {
       const conversationResponse = await ApiService.getConversation(conversaId);
       const messagesResponse = await ApiService.getMessages(conversaId);
+      
+      clearTimeout(timeoutId); // Limpar timeout se carregar com sucesso
       
       console.log('Dados da conversa:', JSON.stringify(conversationResponse.data, null, 2));
       
@@ -618,12 +631,16 @@ const Chat = () => {
       // Marcar conversa como lida
       await ApiService.markConversationAsRead(conversaId);
     } catch (error) {
+      clearTimeout(timeoutId); // Limpar timeout em caso de erro
       console.error('Erro ao carregar mensagens:', error);
       if (error.message && error.message.includes('RESOURCE_EXHAUSTED')) {
         setError('Cota do servidor excedida. Chat indisponível.');
+      } else if (error.message && error.message.includes('not found')) {
+        setError('Conversa não encontrada');
       } else {
-        setError('Erro ao carregar mensagens');
+        setError('Erro ao carregar mensagens: ' + (error.message || 'Erro desconhecido'));
       }
+      setLoading(false); // Garantir que loading seja false mesmo com erro
     } finally {
       setLoading(false);
       console.log('Estado final do contexto:', JSON.stringify({
@@ -839,6 +856,12 @@ const Chat = () => {
   const handleSend = async () => {
     if (!inputValue.trim() || sendingMessage) return;
 
+    // Verificar se há conversaId
+    if (!conversaId) {
+      alert('Erro: ID da conversa não encontrado.');
+      return;
+    }
+
     // Verificar se a conversa está encerrada
     if (isConversationClosed) {
       alert('Esta conversa foi encerrada e não aceita mais mensagens.');
@@ -973,6 +996,11 @@ const Chat = () => {
   };
 
   const handleSendLocation = () => {
+    if (!conversaId) {
+      alert('Erro: ID da conversa não encontrado.');
+      return;
+    }
+
     if (!navigator.geolocation) {
       alert("Geolocalização não é suportada pelo seu navegador.");
       return;
@@ -1044,6 +1072,11 @@ const Chat = () => {
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!conversaId) {
+      alert('Erro: ID da conversa não encontrado.');
+      return;
+    }
 
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
@@ -1125,6 +1158,19 @@ const Chat = () => {
 
   return (
     <div className="chat-page-wrapper chat-page-isolated">
+      {!conversaId ? (
+        <div className="error-container" style={{ width: '100%', height: '100vh' }}>
+          <AlertTriangle size={64} color="#ef4444" />
+          <h3>Nenhuma conversa selecionada</h3>
+          <p>Por favor, selecione uma conversa da lista ou volte para a página de conversas.</p>
+          <button 
+            className="btn-solid-success" 
+            onClick={() => navigate('/conversas')}
+          >
+            Ir para Conversas
+          </button>
+        </div>
+      ) : (
       <div className="chat-layout">
         {/* Sidebar */}
         <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
@@ -1490,6 +1536,21 @@ const Chat = () => {
                   <div className="mini-loader" />
                   <span>Carregando conversa...</span>
                 </div>
+              ) : error ? (
+                <div className="error-container">
+                  <AlertTriangle size={48} color="#ef4444" />
+                  <h3>Erro ao carregar conversa</h3>
+                  <p>{error}</p>
+                  <button 
+                    className="btn-solid-success" 
+                    onClick={() => {
+                      setError(null);
+                      loadMessages();
+                    }}
+                  >
+                    Tentar Novamente
+                  </button>
+                </div>
               ) : (
               <>
               {!msgSearchTerm && (
@@ -1785,6 +1846,7 @@ const Chat = () => {
           </footer>
         </main>
       </div>
+      )}
 
       {/* Modals */}
       {showReportModal && (
@@ -2035,6 +2097,7 @@ const Chat = () => {
             </div>
           </div>
         </div>
+      )}
       )}
     </div>
   );

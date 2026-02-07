@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Routes, Route } from 'react-router-dom';
 import LandingHeader from '../../components/layout/LandingHeader';
 import {
   Users, Building2, Heart, Sparkles, User, Store,
   ArrowRight, MessageCircle, Info, ShieldCheck, ArrowLeft
 } from 'lucide-react';
 import './CadastroMobile.css';
+
+// Import mobile components
+import CadastroFamiliaMobile from './CadastroFamilia/CadastroFamiliaMobile';
+import CadastroCidadaoMobile from './CadastroCidadao/CadastroCidadaoMobile';
+import CadastroONGMobile from './CadastroONG/CadastroONGMobile';
+import CadastroComercioMobile from './CadastroComercio/CadastroComercioMobile';
 
 const cadastroTypes = [
   {
@@ -108,7 +114,13 @@ export default function CadastroMobile() {
   }, []);
 
   return (
-    <div className="vlt-reg-wrapper" id="vlt-reg-root">
+    <Routes>
+      <Route path="/familia" element={<CadastroFamiliaMobile />} />
+      <Route path="/cidadao" element={<CadastroCidadaoMobile />} />
+      <Route path="/ong" element={<CadastroONGMobile />} />
+      <Route path="/comercio" element={<CadastroComercioMobile />} />
+      <Route path="/" element={
+        <div className="vlt-reg-wrapper" id="vlt-reg-root">
 
       {/* Custom Header Overlay */}
       <div className="cadastro-header-overlay" style={{
@@ -266,5 +278,7 @@ export default function CadastroMobile() {
         </div>
       </footer>
     </div>
+  } />
+    </Routes>
   );
 }

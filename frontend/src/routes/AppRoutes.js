@@ -12,7 +12,12 @@ import OngDashboard from '../pages/RegisterONG';
 import ComercioDashboard from '../pages/RegisterComercio';
 import CidadaoDashboard from '../pages/RegisterCidadao';
 import Chat from '../pages/Chat/index';
+import Conversas from '../pages/Conversas/index';
 import Perfil from '../pages/Perfil/index';
+import QueroAjudar from '../pages/QueroAjudar/ResponsiveQueroAjudar';
+import PrecisoDeAjuda from '../pages/PrecisoDeAjuda/ResponsivePrecisoDeAjuda';
+import AchadosEPerdidos from '../pages/AchadosEPerdidos/ResponsiveAchadosEPerdidos';
+import PainelSocial from '../pages/PainelSocial/PainelSocialWrapper';
 import TermosUso from '../pages/TermosUso';
 import PoliticaPrivacidade from '../pages/PoliticaPrivacidade';
 
@@ -79,10 +84,19 @@ function AppRoutes() {
       />
 
       <Route
-        path="/chat/*"
+        path="/chat/:id"
         element={
           <ProtectedRoute>
             <Chat />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/conversas"
+        element={
+          <ProtectedRoute>
+            <Conversas />
           </ProtectedRoute>
         }
       />
@@ -92,6 +106,42 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Perfil />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/quero-ajudar"
+        element={
+          <ProtectedRoute>
+            <QueroAjudar />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/preciso-de-ajuda"
+        element={
+          <ProtectedRoute>
+            <PrecisoDeAjuda />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/achados-e-perdidos"
+        element={
+          <ProtectedRoute>
+            <AchadosEPerdidos />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/painel-social"
+        element={
+          <ProtectedRoute>
+            <PainelSocial />
           </ProtectedRoute>
         }
       />

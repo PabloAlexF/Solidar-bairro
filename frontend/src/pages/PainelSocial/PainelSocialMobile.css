@@ -59,6 +59,13 @@
   cursor: pointer;
   position: relative;
   transition: 0.2s;
+  flex-shrink: 0;
+}
+
+.panel-mobile .icon-button svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .panel-mobile .icon-button:hover {
@@ -1079,4 +1086,154 @@
   100% {
     box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
   }
+}
+
+/* Painel de Notificações */
+.panel-mobile .notifications-panel {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 360px;
+  max-width: calc(100vw - 40px);
+  max-height: 500px;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-premium);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.panel-mobile .notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-mobile .notifications-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.panel-mobile .mark-all-read-btn {
+  padding: 6px 12px;
+  background: var(--primary-glow);
+  color: var(--primary);
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.panel-mobile .mark-all-read-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+.panel-mobile .notifications-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.panel-mobile .notification-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.panel-mobile .notification-item:hover {
+  background: #f8fafc;
+}
+
+.panel-mobile .notification-item.unread {
+  background: var(--primary-glow);
+}
+
+.panel-mobile .notification-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 20px;
+}
+
+.panel-mobile .notification-icon.chat { background: #dbeafe; }
+.panel-mobile .notification-icon.help { background: #fef3c7; }
+.panel-mobile .notification-icon.system { background: #f3e8ff; }
+
+.panel-mobile .notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-mobile .notification-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.panel-mobile .notification-message {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  display: block;
+}
+
+.panel-mobile .notification-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: block;
+}
+
+.panel-mobile .notification-unread-dot {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  background: var(--primary);
+  border-radius: 50%;
+}
+
+.panel-mobile .notifications-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.panel-mobile .notifications-empty-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 16px;
+  background: #f8fafc;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.panel-mobile .notifications-empty-text {
+  font-size: 14px;
+  font-weight: 600;
 }

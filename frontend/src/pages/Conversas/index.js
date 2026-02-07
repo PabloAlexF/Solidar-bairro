@@ -476,7 +476,15 @@ const Conversas = () => {
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                         key={conv.id} 
                         className={`conv-bento-card ${conv.unreadCount > 0 ? 'unread' : ''}`} 
-                        onClick={() => navigate(`/chat/${conv.id}`)}
+                        onClick={() => {
+                          console.log('Clicando na conversa:', conv.id, conv);
+                          if (!conv.id) {
+                            console.error('ERRO: Conversa sem ID!', conv);
+                            alert('Erro: Esta conversa não possui um ID válido.');
+                            return;
+                          }
+                          navigate(`/chat/${conv.id}`);
+                        }}
                       >
                         <div className="card-top">
                           <div 

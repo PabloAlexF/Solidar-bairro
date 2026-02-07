@@ -343,7 +343,7 @@
   max-width: 600px;
 }
 
-.field-icon {
+.cidadao-cadastro-container .field-icon {
   position: absolute;
   left: 8px;
   top: 50%;
@@ -380,7 +380,7 @@
 }
 
 /* Icon turning white on focus - User request */
-.form-input:focus ~ .field-icon {
+.cidadao-cadastro-container .form-input:focus ~ .field-icon {
   background: var(--theme-color);
   color: white !important;
   transform: translateY(-50%) scale(0.95);
@@ -1017,7 +1017,7 @@
   background-color: #f0fdf4;
 }
 
-.input-with-icon.searching .field-icon {
+.cidadao-cadastro-container .input-with-icon.searching .field-icon {
   color: var(--theme-color);
   animation: icon-spin 1s linear infinite;
 }

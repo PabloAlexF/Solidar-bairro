@@ -1727,49 +1727,21 @@ export default function QueroAjudarPage() {
     }
 
     try {
-      // Depois criar conversa
-      const conversationData = {
-        participants: [currentUserId, orderToHelp.userId],
-        senderId: currentUserId,
-        pedidoId: orderToHelp.id,
-        type: 'help_request'
-      };
+      // Usar o método startConversation do ApiService que já implementa a lógica de busca/criação
+      console.log('Iniciando conversa para pedido:', orderToHelp.id);
+      const response = await ApiService.startConversation(
+        orderToHelp.userId,
+        orderToHelp.id,
+        'pedido',
+        `Ajuda: ${orderToHelp.category}`
+      );
 
-      console.log('Criando conversa com dados:', {
-        currentUserId,
-        orderUserId: orderToHelp.userId,
-        conversationData
-      });
-
-      let response;
-      try {
-        // Tenta endpoint /chat/conversations (baseado nos logs do backend: /api/chat + /conversations)
-        response = await ApiService.post('/chat/conversations', conversationData);
-      } catch (err) {
-        console.warn('Falha ao criar conversa via /chat/conversations, tentando alternativas...', err);
-        try {
-             // Tenta endpoint /conversas (padrão antigo)
-             response = await ApiService.post('/conversas', conversationData);
-        } catch (err2) {
-             try {
-                // Tenta endpoint /conversations (fallback em inglês)
-                response = await ApiService.post('/conversations', conversationData);
-             } catch (err3) {
-                 // Tenta endpoint /chats (fallback comum)
-                 try {
-                    response = await ApiService.post('/chats', conversationData);
-                 } catch (err4) {
-                    console.error('Todas as tentativas de endpoint falharam', err4);
-                    throw new Error('Não foi possível iniciar o chat. Verifique sua conexão.');
-                 }
-             }
-        }
-      }
-
-      if (response && response.success) {
-        toast.success('Conversa iniciada!');
+      if (response && response.success && response.data?.id) {
+        console.log('Conversa iniciada com sucesso:', response.data.id);
+        toast.success('Conversa iniciada com sucesso!');
         navigate(`/chat/${response.data.id}`);
       } else {
+        console.error('Resposta inválida da criação da conversa:', response);
         throw new Error(response?.error || 'Erro ao criar conversa');
       }
     } catch (error) {

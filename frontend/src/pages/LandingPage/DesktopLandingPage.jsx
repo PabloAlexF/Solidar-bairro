@@ -57,7 +57,7 @@ const ActionCard = ({
   return (
     <motion.div
       ref={ref}
-      className={`action-card ${color}`}
+      className={`landing-action-card landing-card-${color}`}
       initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
       transition={{ duration: 0.8, delay: delay, ease: "easeOut" }}
@@ -65,31 +65,31 @@ const ActionCard = ({
       data-tooltip-id={`card-${color}`}
       data-tooltip-content={`Clique para ${buttonText.toLowerCase()}`}
     >
-      <div className="action-card-gradient" />
+      <div className="landing-card-gradient" />
 
-      <div className="action-card-body">
-        <div className="action-card-icon">
+      <div className="landing-card-body">
+        <div className="landing-card-icon">
           {icon}
         </div>
 
-        <h3 className="action-card-title">
+        <h3 className="landing-card-title">
           {title}
         </h3>
 
-        <p className="action-card-description">
+        <p className="landing-card-description">
           {description}
         </p>
 
         <button
           onClick={onClick}
-          className="action-card-button"
+          className="landing-card-button"
         >
           {buttonText}
-          <ChevronRight size={22} className="button-icon" />
+          <ChevronRight size={22} className="landing-button-icon" />
         </button>
       </div>
 
-      <div className="action-card-sparkle">
+      <div className="landing-card-sparkle">
         <Sparkles size={40} />
       </div>
 

@@ -9,11 +9,10 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
-import Toast from '../../../components/ui/Toast';
+import toast from 'react-hot-toast';
 import ApiService from '../../../services/apiService';
 import './CadastroFamiliaDesktop.css';
 import '../../../styles/components/PasswordField.css';
-import '../../../styles/components/Toast.css';
 import { useCEP } from '../../AdminDashboard/useCEP';
 import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 
@@ -21,7 +20,7 @@ export default function CadastroFamiliaDesktop() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+
   const [errors, setErrors] = useState({});
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
   const [showNeedModal, setShowNeedModal] = useState(false);
@@ -177,8 +176,13 @@ export default function CadastroFamiliaDesktop() {
   };
 
   const showToast = (message, type = 'error') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'error' }), 4000);
+    if (type === 'success') {
+      toast.success(message);
+    } else if (type === 'error') {
+      toast.error(message);
+    } else {
+      toast(message);
+    }
   };
 
   const formatCPF = (value) => {
@@ -398,7 +402,7 @@ export default function CadastroFamiliaDesktop() {
   }
 
   return (
-    <div className="fam-reg-container fam-reg-theme">
+    <div className="fam-reg-container fam-reg-theme familia-theme">
       <div className="fam-reg-bg-blobs">
         <div className="fam-reg-blob-1" />
         <div className="fam-reg-blob-2" />
@@ -472,10 +476,10 @@ export default function CadastroFamiliaDesktop() {
                     <label className="field-label">Nome Completo <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <User className="field-icon" size={20} />
-                      <input 
-                        required 
-                        type="text" 
-                        className="form-input" 
+                      <input
+                        required
+                        type="text"
+                        className="fam-form-input"
                         placeholder="Seu nome completo"
                         style={errors.nomeCompleto ? { borderColor: '#ef4444' } : {}}
                         value={formData.nomeCompleto}
@@ -904,13 +908,7 @@ export default function CadastroFamiliaDesktop() {
         </main>
       </div>
 
-      {/* Toast */}
-      <Toast 
-        show={toast.show}
-        message={toast.message}
-        type={toast.type}
-        onClose={() => setToast({ show: false, message: '', type: 'error' })}
-      />
+
 
       {showNeedModal && (
         <div className="fam-reg-modal-overlay" style={{
