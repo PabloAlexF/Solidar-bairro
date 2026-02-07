@@ -169,6 +169,8 @@ const Chat = () => {
   const [deliveryStatus, setDeliveryStatus] = useState("andamento");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const hasShownHintRef = useRef(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -196,6 +198,40 @@ const Chat = () => {
   const [hasContextUpdate, setHasContextUpdate] = useState(false);
   const prevStatusRef = useRef(null);
   const [typingStatus, setTypingStatus] = useState({});
+
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
+
+  useEffect(() => {
+    if (sidebarOpen && !hasShownHintRef.current) {
+      setShowSwipeHint(true);
+      hasShownHintRef.current = true;
+      const timer = setTimeout(() => {
+        setShowSwipeHint(false);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [sidebarOpen]);
+
+  const onTouchStart = (e) => {
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e) => {
+    touchEndRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+    const distance = touchStartRef.current - touchEndRef.current;
+    const isLeftSwipe = distance > 50;
+    
+    if (isLeftSwipe) {
+      setSidebarOpen(false);
+      if (navigator.vibrate) navigator.vibrate(50);
+    }
+  };
 
   const handleReactionClick = (msgId, emoji) => {
     setMessages(prev => prev.map(msg => {
@@ -1197,7 +1233,12 @@ const Chat = () => {
         <div className="sb-chat-layout">
         {/* Sidebar */}
         <div className={`sb-sidebar-overlay ${sidebarOpen ? 'sb-visible' : ''}`} onClick={() => setSidebarOpen(false)} />
-        <aside className={`sb-chat-sidebar ${sidebarOpen ? 'sb-open' : ''}`}>
+        <aside 
+          className={`sb-chat-sidebar ${sidebarOpen ? 'sb-open' : ''}`}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
           <div className="sb-sidebar-header sb-sidebar-header-custom">
             <div className="sb-sidebar-title-row">
               <h2>Conversas</h2>
@@ -1233,6 +1274,7 @@ const Chat = () => {
                     c.id === contact.id ? { ...c, unreadCount: 0 } : c
                   ));
                   navigate(`/chat/${contact.id}`);
+                  setSidebarOpen(false);
                 }}
               >
                 <div className="sb-avatar-wrapper">
@@ -1299,6 +1341,27 @@ const Chat = () => {
                <ChevronRight size={16} style={{ marginLeft: 'auto', color: '#94a3b8' }} />
              </div>
           </div>
+
+          {sidebarOpen && showSwipeHint && (
+            <div className="sb-swipe-hint" onClick={() => setSidebarOpen(false)}>
+              <span className="sb-hint-text">Deslize</span>
+              <ChevronRight size={20} className="sb-hint-arrow" />
+            </div>
+          )}
+          <AnimatePresence>
+            {sidebarOpen && showSwipeHint && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="sb-swipe-hint" 
+                onClick={() => setSidebarOpen(false)}
+              >
+                <span className="sb-hint-text">Deslize</span>
+                <ChevronRight size={20} className="sb-hint-arrow" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </aside>
 
         {/* Main Chat Area */}

@@ -399,6 +399,7 @@ export default function DesktopLandingPage() {
         showLoginButton={true}
         showAdminButtons={true}
         showPainelSocial={true}
+        currentPage="landing"
       />
 
       {/* Hero Section */}

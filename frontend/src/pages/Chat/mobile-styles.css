@@ -237,10 +237,10 @@
 .sb-home-btn, .sb-conversations-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  justify-content: flex-start;
+  gap: 12px;
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 12px 16px;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
@@ -1291,7 +1291,7 @@
 
 .sb-context-details-panel { background: white; border-top: 1px solid #e2e8f0; overflow: hidden; }
 .sb-context-panel-content { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.sb-panel-description { font-size: 0.85rem; color: #475569; line-height: 1.4; margin: 0; }
+.sb-panel-description { font-size: 0.85rem; color: #475569; line-height: 1.4; margin: 0; word-break: break-word; overflow-wrap: break-word; }
 .sb-panel-meta-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .sb-panel-meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #64748b; }
 .sb-finish-btn-mobile.small { padding: 8px 16px; font-size: 0.85rem; margin-top: 4px; }
@@ -1310,3 +1310,47 @@
 .sb-dropdown-item:active { background: #f1f5f9; }
 .sb-dropdown-item.danger { color: #ef4444; }
 .sb-dropdown-item.danger:active { background: #fef2f2; }
+
+/* Swipe Hint Animation & Styles */
+.sb-swipe-hint {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 12px 8px 12px 16px;
+  border-top-left-radius: 24px;
+  border-bottom-left-radius: 24px;
+  box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 100;
+  cursor: pointer;
+  border: 1px solid var(--sb-border-color);
+  border-right: none;
+  animation: sbHintBounce 2s infinite;
+}
+
+.sb-hint-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--sb-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sb-hint-arrow {
+  color: var(--sb-primary-teal);
+  animation: sbArrowSlide 1s infinite alternate;
+}
+
+@keyframes sbHintBounce {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-50%) translateX(-5px); }
+}
+
+@keyframes sbArrowSlide {
+  from { transform: translateX(0); }
+  to { transform: translateX(3px); }
+}

@@ -1811,6 +1811,7 @@ export default function QueroAjudarPage() {
         navigationItems={queroAjudarNavigationItems}
         showAdminButtons={true}
         showPainelSocial={true}
+        currentPage="quero-ajudar"
       />
 
       <div className="skip-links">

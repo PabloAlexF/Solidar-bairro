@@ -979,25 +979,14 @@ export default function MobileAchadosEPerdidos() {
                       )}
 
                       <div className="mobile-lf-details-description">
-                        <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', marginBottom: '0.5rem' }}>Descrição</h3>
-                        <p style={{ fontSize: '0.95rem', lineHeight: '1.5', color: '#1e293b', margin: 0 }}>
-                          {(selectedItem.description?.slice(0, 100) || '') + (selectedItem.description?.length > 100 ? '...' : '')}
+                        <h3>Descrição</h3>
+                        <p>
+                          {selectedItem.description}
                         </p>
                         {selectedItem.description?.length > 100 && (
                           <button 
                             onClick={() => setShowDescriptionModal(true)}
-                            style={{ 
-                              background: 'none', 
-                              border: 'none', 
-                              color: 'var(--sb-teal)', 
-                              fontWeight: '700', 
-                              padding: '0',
-                              marginTop: '0.5rem',
-                              fontSize: '0.85rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.25rem'
-                            }}
+                            className="mobile-lf-view-more-btn"
                           >
                             <FileText size={14} /> Visualizar descrição completa
                           </button>
@@ -1190,37 +1179,27 @@ export default function MobileAchadosEPerdidos() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              style={{ 
-                background: 'white', 
-                padding: '24px', 
-                borderRadius: '20px', 
-                width: '90%', 
-                maxWidth: '400px', 
-                maxHeight: '80vh',
-                display: 'flex',
-                flexDirection: 'column',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
-              }}
+              className="mobile-lf-desc-modal"
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="mobile-lf-desc-header">
+                <h3 className="mobile-lf-desc-title">
                   <FileText size={20} className="mobile-text-teal" /> Descrição Completa
                 </h3>
-                <button onClick={() => setShowDescriptionModal(false)} style={{ background: 'none', border: 'none', padding: '4px' }}>
+                <button onClick={() => setShowDescriptionModal(false)} className="mobile-lf-desc-close">
                   <X size={20} color="#64748b" />
                 </button>
               </div>
               
-              <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
-                <p style={{ color: '#334155', lineHeight: '1.6', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>
+              <div className="mobile-lf-desc-body">
+                <p className="mobile-lf-desc-text">
                   {selectedItem?.description}
                 </p>
               </div>
               
               <button 
                 onClick={() => setShowDescriptionModal(false)}
-                style={{ marginTop: '1.5rem', width: '100%', padding: '12px', background: '#0f172a', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none' }}
+                className="mobile-lf-desc-btn"
               >
                 Fechar
               </button>

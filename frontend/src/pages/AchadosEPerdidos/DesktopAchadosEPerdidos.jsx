@@ -1367,26 +1367,14 @@ export default function DesktopAchadosEPerdidos() {
                       )}
 
                       <div className="lf-details-description">
-                        <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', marginBottom: '0.5rem' }}>Descrição</h3>
-                        <p style={{ fontSize: '1.1rem', lineHeight: '1.6', color: '#1e293b', margin: 0 }}>
-                          {(selectedItem.description?.slice(0, 35) || '') + (selectedItem.description?.length > 35 ? '...' : '')}
+                        <h3>Descrição</h3>
+                        <p>
+                          {selectedItem.description}
                         </p>
-                        {selectedItem.description?.length > 35 && (
+                        {selectedItem.description?.length > 200 && (
                           <button 
                             onClick={() => setShowDescriptionModal(true)}
-                            style={{ 
-                              background: 'none', 
-                              border: 'none', 
-                              color: 'var(--sb-teal)', 
-                              fontWeight: '700', 
-                              cursor: 'pointer',
-                              padding: '0',
-                              marginTop: '0.5rem',
-                              fontSize: '0.9rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.25rem'
-                            }}
+                            className="lf-view-more-btn"
                           >
                             <FileText size={16} /> Visualizar descrição completa
                           </button>
@@ -1678,38 +1666,27 @@ export default function DesktopAchadosEPerdidos() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              style={{ 
-                background: 'white', 
-                padding: '2rem', 
-                borderRadius: '1.5rem', 
-                width: '90%', 
-                maxWidth: '500px', 
-                maxHeight: '80vh',
-                display: 'flex',
-                flexDirection: 'column',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                position: 'relative'
-              }}
+              className="lf-desc-modal-container"
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="lf-desc-modal-header">
+                <h3 className="lf-desc-modal-title">
                   <FileText size={24} style={{ color: 'var(--sb-teal)' }} /> Descrição Completa
                 </h3>
-                <button onClick={() => setShowDescriptionModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex' }}>
+                <button onClick={() => setShowDescriptionModal(false)} className="lf-desc-modal-close">
                   <X size={24} color="#64748b" />
                 </button>
               </div>
               
-              <div style={{ overflowY: 'auto', flex: 1, paddingRight: '8px' }}>
-                <p style={{ color: '#334155', lineHeight: '1.6', fontSize: '1rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              <div className="lf-desc-modal-body">
+                <p className="lf-desc-modal-text">
                   {selectedItem?.description}
                 </p>
               </div>
               
               <button 
                 onClick={() => setShowDescriptionModal(false)}
-                style={{ marginTop: '2rem', width: '100%', padding: '1rem', background: '#0f172a', color: 'white', borderRadius: '1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+                className="lf-desc-modal-btn"
               >
                 Fechar
               </button>

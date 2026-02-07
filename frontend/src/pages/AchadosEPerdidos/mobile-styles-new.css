@@ -777,16 +777,103 @@
 }
 
 .mobile-lf-details-description h3 {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: var(--sb-text);
+  color: var(--sb-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .mobile-lf-details-description p {
-  line-height: 1.6;
-  color: var(--sb-text-light);
+  line-height: 1.5;
+  color: var(--sb-text);
   font-size: 0.875rem;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.mobile-lf-view-more-btn {
+  background: none;
+  border: none;
+  color: var(--sb-teal);
+  font-weight: 700;
+  padding: 0;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Mobile Description Modal */
+.mobile-lf-desc-modal {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.mobile-lf-desc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.75rem;
+}
+
+.mobile-lf-desc-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mobile-lf-desc-close {
+  background: none;
+  border: none;
+  padding: 4px;
+}
+
+.mobile-lf-desc-body {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+
+.mobile-lf-desc-text {
+  color: #334155;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.mobile-lf-desc-btn {
+  margin-top: 1.5rem;
+  width: 100%;
+  padding: 12px;
+  background: #0f172a;
+  color: white;
+  border-radius: 12px;
+  font-weight: bold;
+  border: none;
 }
 
 .mobile-lf-details-reward {

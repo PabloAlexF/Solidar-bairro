@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
-import { getSocket } from '../../services/socketService';
+import { getSocket, connectSocket } from '../../services/socketService';
 import {
   Heart,
   ArrowLeft,
@@ -135,6 +135,35 @@ const Chat = () => {
   const [deliveryStatus, setDeliveryStatus] = useState("andamento");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const onTouchStart = (e) => {
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e) => {
+    touchEndRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+    const distance = touchStartRef.current - touchEndRef.current;
+    const isLeftSwipe = distance > 50;
+    
+    if (isLeftSwipe && isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -655,92 +684,91 @@ const Chat = () => {
     }
   }, [conversaId, user?.uid]);
 
+  // Conectar Socket.IO quando o usuário estiver autenticado
   useEffect(() => {
-    let socket;
-    let handleSocketMessage;
-    let unsubscribeTyping;
-
-    if (conversaId) {
-      ensureDependencies();
-      setSelectedChatId(conversaId);
-      loadMessages();
-
-      // Iniciar escuta de novas mensagens
-      chatNotificationService.startListening(conversaId, (newMessages) => {
-        setMessages(prev => {
-          const existingIds = new Set(prev.map(m => m.id));
-          const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
-
-          if (uniqueNewMessages.length === 0) return prev;
-
-          return [...prev, ...uniqueNewMessages.map(msg => ({
-            id: msg.id,
-            type: msg.type || 'text',
-            sender: msg.senderId === user?.uid ? 'sent' : 'received',
-            content: msg.content || msg.text,
-            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
-            read: msg.read || false,
-            location: msg.metadata?.location,
-            metadata: msg.metadata,
-            mediaUrl: msg.mediaUrl
-          }))];
-        });
-      });
-
-      // Listener direto do Socket.IO para mensagens em tempo real
-      socket = getSocket();
-      handleSocketMessage = (data) => {
-        console.log('📩 [Desktop] Mensagem recebida via Socket:', data);
-        const msg = data.message || data;
-        const msgConvId = msg.conversationId || msg.conversaId || msg.chatId;
-
-        if (msgConvId && msgConvId === conversaId) {
-          setMessages(prev => {
-            if (prev.some(m => m.id === msg.id)) return prev;
-
-            return [...prev, {
-              id: msg.id,
-              type: msg.type || 'text',
-              sender: msg.senderId === user?.uid ? 'sent' : 'received',
-              content: msg.content || msg.text,
-              timestamp: msg.createdAt ? (msg.createdAt.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(msg.createdAt)) : new Date(),
-              read: false,
-              location: msg.metadata?.location || msg.location,
-              metadata: msg.metadata,
-              mediaUrl: msg.mediaUrl
-            }];
-          });
-        }
-      };
-
+    if (user?.uid) {
+      console.log('🔌 Conectando socket para usuário:', user.uid);
+      const socket = connectSocket(user.uid);
+      
       if (socket) {
-        socket.on('receive_message', handleSocketMessage);
-        socket.on('new_message', handleSocketMessage);
-      }
+        socket.on('connect', () => {
+          console.log('✅ Socket conectado! ID:', socket.id, 'UserID:', user.uid);
+        });
+        
+        socket.on('connect_error', (error) => {
+          console.error('❌ Erro de conexão Socket:', error);
+        });
+        
+        socket.on('disconnect', (reason) => {
+          console.log('❌ Socket desconectado. Razão:', reason);
+        });
 
-      // Iniciar escuta de "digitando..." (Simulação se o serviço não tiver implementado)
-      if (chatNotificationService.subscribeToTyping) {
-        unsubscribeTyping = chatNotificationService.subscribeToTyping(conversaId, (isTypingStatus) => {
-          setIsTyping(isTypingStatus);
+        // Debug: Listener para qualquer evento
+        socket.onAny((eventName, ...args) => {
+          console.log('📡 Evento Socket recebido:', eventName, args);
         });
       }
     }
+  }, [user?.uid]);
 
+  useEffect(() => {
+    if (!conversaId || !user?.uid) return;
+
+    ensureDependencies();
+    setSelectedChatId(conversaId);
+    loadMessages();
     loadConversations();
 
-    return () => {
-      if (conversaId) {
-        chatNotificationService.stopListening(conversaId);
-      }
-      if (socket && handleSocketMessage) {
-        socket.off('receive_message', handleSocketMessage);
-        socket.off('new_message', handleSocketMessage);
-      }
-      if (unsubscribeTyping) {
-        unsubscribeTyping();
+    const socket = getSocket();
+    if (!socket) return;
+
+    // Entrar na sala da conversa
+    socket.emit('join_conversation', conversaId);
+    console.log('🚪 Entrando na conversa:', conversaId);
+
+    // Handler para novas mensagens
+    const handleNewMessage = (data) => {
+      console.log('📩 Nova mensagem recebida:', data);
+      const msg = data.message || data;
+      const msgConvId = data.conversationId || msg.conversationId || msg.conversaId;
+
+      if (msgConvId === conversaId && msg.senderId !== user?.uid) {
+        setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev;
+          return [...prev, {
+            id: msg.id,
+            type: msg.type || 'text',
+            sender: 'received',
+            content: msg.content || msg.text,
+            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+            read: false,
+            location: msg.metadata?.location,
+            metadata: msg.metadata,
+            mediaUrl: msg.mediaUrl
+          }];
+        });
       }
     };
-  }, [conversaId, user?.uid, loadConversations, loadMessages]);
+
+    // Handler para recarregar mensagens
+    const handleForceReload = (data) => {
+      console.log('🔄 Forçando reload:', data);
+      if (data.conversationId === conversaId) {
+        loadMessages();
+      }
+    };
+
+    // Registrar listeners
+    socket.on('new_message', handleNewMessage);
+    socket.on('force_reload_messages', handleForceReload);
+
+    return () => {
+      socket.emit('leave_conversation', conversaId);
+      socket.off('new_message', handleNewMessage);
+      socket.off('force_reload_messages', handleForceReload);
+      console.log('🚪 Saindo da conversa:', conversaId);
+    };
+  }, [conversaId, user?.uid, loadMessages, loadConversations]);
 
   // Socket listeners for presence updates
   useEffect(() => {
@@ -1173,7 +1201,12 @@ const Chat = () => {
       ) : (
       <div className="chat-layout">
         {/* Sidebar */}
-        <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+        <aside 
+          className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
           <div className="sidebar-header sidebar-header-custom">
             <div className="sidebar-title-row">
               <h2>Conversas</h2>
@@ -1209,6 +1242,7 @@ const Chat = () => {
                     c.id === contact.id ? { ...c, unreadCount: 0 } : c
                   ));
                   navigate(`/chat/${contact.id}`);
+                  if (isMobile) setSidebarOpen(false);
                 }}
               >
                 <div className="avatar-wrapper">
@@ -1274,6 +1308,13 @@ const Chat = () => {
                </div>
              </div>
           </div>
+
+          {isMobile && sidebarOpen && (
+            <div className="mobile-swipe-hint" onClick={() => setSidebarOpen(false)}>
+              <span className="hint-text">Ver Chat</span>
+              <ChevronRight size={20} className="hint-arrow" />
+            </div>
+          )}
         </aside>
 
         {/* Main Chat Area */}
@@ -2097,7 +2138,6 @@ const Chat = () => {
             </div>
           </div>
         </div>
-      )}
       )}
     </div>
   );

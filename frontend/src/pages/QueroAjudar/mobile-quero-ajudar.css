@@ -214,6 +214,19 @@
   cursor: pointer;
 }
 
+.sheet-content {
+  padding: 12px 4px;
+  overflow-y: auto;
+  max-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Fix text formatting */
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 .pills-grid-mobile {
   display: flex;
   flex-wrap: wrap;

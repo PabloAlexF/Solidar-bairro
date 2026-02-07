@@ -165,6 +165,19 @@ class ChatNotificationService {
 
     return globalInterval;
   }
+
+  // Método para criar notificação de mensagem (polyfill)
+  async createMessageNotification(conversationId, senderId, content) {
+    try {
+      // Este método é chamado pelo apiService, mas não precisa fazer nada
+      // pois as notificações são gerenciadas pelo polling
+      console.log('📬 Notificação de mensagem:', { conversationId, senderId, content });
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao criar notificação:', error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 export default new ChatNotificationService();

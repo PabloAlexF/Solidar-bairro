@@ -14,7 +14,8 @@ const ReusableHeader = ({
   navigationItems = [],
   showLoginButton = false,
   showAdminButtons = false,
-  showPainelSocial = false
+  showPainelSocial = false,
+  currentPage = ''
 }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -132,6 +133,46 @@ const ReusableHeader = ({
                   storedUser?.tipo === 'admin' ||
                   storedUser?.email === 'admin@solidarbairro.com';
 
+  // Render navigation links based on current page
+  const renderNavigationLinks = () => {
+    if (currentPage === 'landing') {
+      return (
+        <nav className="nav-menu">
+          <Link to="/quero-ajudar" className="nav-link">
+            Quero Ajudar
+            <span className="link-underline" />
+          </Link>
+          <Link to="/achados-e-perdidos" className="nav-link">
+            Achados e Perdidos
+            <span className="link-underline" />
+          </Link>
+          <Link to="/preciso-de-ajuda" className="nav-link">
+            Preciso de Ajuda
+            <span className="link-underline" />
+          </Link>
+        </nav>
+      );
+    } else if (currentPage === 'quero-ajudar') {
+      return (
+        <nav className="nav-menu">
+          <Link to="/preciso-de-ajuda" className="nav-link">
+            Preciso de Ajuda
+            <span className="link-underline" />
+          </Link>
+          <Link to="/perfil" className="nav-link">
+            Perfil
+            <span className="link-underline" />
+          </Link>
+          <Link to="/conversas" className="nav-link">
+            Conversas
+            <span className="link-underline" />
+          </Link>
+        </nav>
+      );
+    }
+    return null;
+  };
+
   return (
     <header className="reusable-header">
       <div className="container">
@@ -148,7 +189,7 @@ const ReusableHeader = ({
 
 
           {/* Navigation Menu */}
-          {navigationItems.length > 0 && (
+          {renderNavigationLinks() || (navigationItems.length > 0 && (
             <nav className="nav-menu">
               {navigationItems.filter(item => !item.path.includes('/contato')).map((item, index) => (
                 <Link key={index} to={item.path} className="nav-link">
@@ -157,7 +198,7 @@ const ReusableHeader = ({
                 </Link>
               ))}
             </nav>
-          )}
+          ))}
 
           {!isAuthenticated() && showLoginButton && (
             <div className="auth-buttons">

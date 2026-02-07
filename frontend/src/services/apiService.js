@@ -271,14 +271,8 @@ const ApiService = {
       body: JSON.stringify(data)
     });
 
-    // Criar notificação para nova conversa
-    if (response.success) {
-      const { NotificationManager } = await import('../utils/notifications');
-      NotificationManager.createChatNotification({
-        participantName: data.participantName || 'Alguém',
-        title: data.title || 'Nova conversa'
-      });
-    }
+    // Notificações são criadas automaticamente pelo backend via Socket.IO
+    // Não precisamos criar notificações aqui para evitar duplicação
 
     return response;
   },
@@ -348,15 +342,8 @@ const ApiService = {
       })
     });
     
-    // Criar notificação para nova mensagem
-    if (response.success) {
-      const { NotificationManager } = await import('../utils/notifications');
-      const user = JSON.parse(localStorage.getItem('solidar-user') || '{}');
-      NotificationManager.createMessageNotification({
-        senderName: user.nome || user.nomeCompleto || 'Alguém',
-        content: text
-      });
-    }
+    // Notificações são criadas automaticamente pelo backend via Socket.IO
+    // Não precisamos criar notificações aqui para evitar duplicação
     
     return response;
   },

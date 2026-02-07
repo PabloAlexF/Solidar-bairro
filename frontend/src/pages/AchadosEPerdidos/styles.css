@@ -1034,17 +1034,108 @@
 }
 
 .lf-details-description h3 {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 800;
-  margin-bottom: 1rem;
-  color: var(--sb-text);
+  margin-bottom: 0.5rem;
+  color: var(--sb-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .lf-details-description p {
-  line-height: 1.7;
-  color: var(--sb-text-light);
+  line-height: 1.6;
+  color: var(--sb-text);
   font-size: 1.1rem;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  overflow-wrap: break-word;
   white-space: pre-wrap;
+}
+
+.lf-view-more-btn {
+  background: none;
+  border: none;
+  color: var(--sb-teal);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Description Modal */
+.lf-desc-modal-container {
+  background: white;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+.lf-desc-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 1rem;
+}
+
+.lf-desc-modal-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lf-desc-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+}
+
+.lf-desc-modal-body {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.lf-desc-modal-text {
+  color: #334155;
+  line-height: 1.6;
+  font-size: 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.lf-desc-modal-btn {
+  margin-top: 2rem;
+  width: 100%;
+  padding: 1rem;
+  background: #0f172a;
+  color: white;
+  border-radius: 1rem;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
 }
 
 .lf-details-reward {

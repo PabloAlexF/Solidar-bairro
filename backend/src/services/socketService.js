@@ -1,6 +1,7 @@
 const socketIo = require('socket.io');
 const chatService = require('./chatService');
 const presenceService = require('./presenceService');
+const notificationService = require('./notificationService');
 const logger = require('./loggerService');
 
 let io;
@@ -68,6 +69,12 @@ const init = (httpServer) => {
         io.to(`conversation_${conversationId}`).emit('new_message', {
           conversationId,
           message
+        });
+
+        // Forçar recarregamento das mensagens para todos os participantes
+        io.to(`conversation_${conversationId}`).emit('force_reload_messages', {
+          conversationId,
+          reason: 'new_message_sent'
         });
 
         // Notificar outros participantes

@@ -90,13 +90,38 @@ class ChatController {
 
   async sendMessage(req, res) {
     try {
+      console.log('📨 Enviando mensagem - Conversa:', req.params.id, 'Usuário:', req.user.uid);
+      
       const message = await chatService.sendMessage(
         req.params.id, 
         req.user.uid, 
         req.body
       );
+      
+      console.log('✅ Mensagem salva:', message.id);
+      
+      // Emitir evento Socket.IO para tempo real
+      try {
+        const socketService = require('../services/socketService');
+        const io = socketService.getIo();
+        
+        console.log('📡 Tentando emitir evento Socket.IO...');
+        
+        // Emitir para todos na conversa
+        io.to(`conversation_${req.params.id}`).emit('new_message', {
+          conversationId: req.params.id,
+          message
+        });
+        
+        console.log('📤 Mensagem emitida via Socket.IO para conversa:', req.params.id);
+      } catch (socketError) {
+        console.error('❌ Erro ao emitir evento Socket.IO:', socketError);
+        // Não falhar a requisição por causa do socket
+      }
+      
       res.status(201).json({ success: true, data: message });
     } catch (error) {
+      console.error('❌ Erro ao enviar mensagem:', error);
       res.status(400).json({ success: false, error: error.message });
     }
   }

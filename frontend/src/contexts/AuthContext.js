@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 import { formatAddress } from '../utils/addressUtils';
+import { connectSocket, disconnectSocket } from '../services/socketService';
 
 const AuthContext = createContext();
 
@@ -38,8 +39,14 @@ export const AuthProvider = ({ children }) => {
               endereco: formatAddress(userData.endereco)
             };
           }
-          setUser(processedUserData);
-          setToken(cachedToken);
+        setUser(processedUserData);
+        setToken(cachedToken);
+
+        // Connect socket for authenticated user
+        if (processedUserData && (processedUserData.uid || processedUserData.id)) {
+          console.log('🔌 [Auth] Conectando socket para usuário:', processedUserData.uid || processedUserData.id);
+          connectSocket(processedUserData.uid || processedUserData.id);
+        }
         } catch (parseError) {
           console.error('Erro ao parsear dados do usuário:', parseError);
           // Clear invalid data
@@ -76,10 +83,16 @@ export const AuthProvider = ({ children }) => {
         
         setUser(processedUserData);
         setToken(userToken);
-        
+
         localStorage.setItem('solidar-user', JSON.stringify(processedUserData));
         localStorage.setItem('solidar-token', userToken);
-        
+
+        // Connect socket for authenticated user
+        if (processedUserData && (processedUserData.uid || processedUserData.id)) {
+          console.log('🔌 [Auth] Conectando socket para usuário:', processedUserData.uid || processedUserData.id);
+          connectSocket(processedUserData.uid || processedUserData.id);
+        }
+
         return { success: true, user: processedUserData };
       }
       
@@ -126,10 +139,15 @@ export const AuthProvider = ({ children }) => {
         
         setUser(processedUserData);
         setToken(newToken);
-        
+
         localStorage.setItem('solidar-user', JSON.stringify(processedUserData));
         localStorage.setItem('solidar-token', newToken);
-        
+
+        // Connect socket for authenticated user
+        if (processedUserData && (processedUserData.uid || processedUserData.id)) {
+          connectSocket(processedUserData.uid || processedUserData.id);
+        }
+
         return { success: true, user: processedUserData };
       }
       

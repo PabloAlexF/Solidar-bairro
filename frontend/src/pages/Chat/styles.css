@@ -1633,7 +1633,7 @@
 .panel-item { display: flex; flex-direction: column; gap: 4px; }
 .panel-item.full-width { grid-column: 1 / -1; }
 .panel-label { font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; }
-.panel-value { font-size: 0.9rem; color: #334155; margin: 0; line-height: 1.5; }
+.panel-value { font-size: 0.9rem; color: #334155; margin: 0; line-height: 1.5; word-break: break-word; overflow-wrap: break-word; }
 .urgency-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; width: fit-content; }
 .urgency-badge.high { background: #fee2e2; color: #ef4444; }
 .urgency-badge.medium { background: #ffedd5; color: #d97706; }
