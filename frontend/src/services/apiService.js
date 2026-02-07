@@ -18,7 +18,7 @@ const ApiService = {
     }
     
     // Pular validação de dados para endpoints de autenticação e principais
-    if (endpoint.includes('/auth/') || endpoint.includes('/login') || endpoint.includes('/cidadaos') || endpoint.includes('/comercios') || endpoint.includes('/ongs') || endpoint.includes('/familias') || endpoint.includes('/pedidos') || endpoint.includes('/chat/') || endpoint.includes('/conversas') || endpoint.includes('/conversations') || endpoint.includes('/chats') || endpoint.includes('/admin/')) {
+    if (endpoint.includes('/auth/') || endpoint.includes('/login') || endpoint.includes('/cidadaos') || endpoint.includes('/comercios') || endpoint.includes('/ongs') || endpoint.includes('/familias') || endpoint.includes('/pedidos') || endpoint.includes('/chat/') || endpoint.includes('/conversas') || endpoint.includes('/conversations') || endpoint.includes('/chats') || endpoint.includes('/admin/') || endpoint.includes('/achados-perdidos')) {
       return true;
     }
     

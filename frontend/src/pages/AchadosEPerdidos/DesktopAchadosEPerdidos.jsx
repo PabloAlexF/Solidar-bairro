@@ -31,7 +31,12 @@ import {
   Bell,
   User,
   LogOut,
-  Settings
+  Settings,
+  Trash2,
+  MessageCircle,
+  Send,
+  FileText,
+  Share2
 } from 'lucide-react';
 import ThreeScene from '../../components/ThreeScene';
 import ReusableHeader from '../../components/layout/ReusableHeader';
@@ -57,7 +62,9 @@ const STATS = [
 
 // --- Sub-components ---
 
-const ItemCard = ({ item, onOpenDetails, handleOpenChat, isPreview = false }) => {
+const ItemCard = ({ item, onOpenDetails, handleOpenChat, onDelete, onResolve, isOwner, isPreview = false }) => {
+  const isResolved = item.status === 'resolved';
+
   return (
     <motion.div 
       layout
@@ -73,6 +80,24 @@ const ItemCard = ({ item, onOpenDetails, handleOpenChat, isPreview = false }) =>
         ) : (
           <div className="lf-card-placeholder">
             <Camera size={48} strokeWidth={1} />
+          </div>
+        )}
+        {isResolved && (
+          <div style={{
+            position: 'absolute', 
+            inset: 0, 
+            background: 'rgba(255,255,255,0.3)', 
+            backdropFilter: 'blur(2px)',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 10
+          }}>
+            <span style={{
+              background: '#10b981', color: 'white', padding: '0.5rem 1.5rem', borderRadius: '2rem', fontWeight: '900', fontSize: '1rem', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', gap: '0.5rem', letterSpacing: '0.05em'
+            }}>
+              <CheckCircle2 size={20} /> RESOLVIDO
+            </span>
           </div>
         )}
         <div className={`lf-type-badge ${item.type}`}>
@@ -124,9 +149,32 @@ const ItemCard = ({ item, onOpenDetails, handleOpenChat, isPreview = false }) =>
         <button className="lf-details-btn" onClick={() => onOpenDetails && onOpenDetails(item)}>
           VER DETALHES
         </button>
-        <button className="lf-chat-btn" onClick={() => handleOpenChat && handleOpenChat(item)}>
-          ABRIR CHAT
-        </button>
+        {isOwner ? (
+          <>
+            {!isResolved && (
+              <button 
+                className="lf-chat-btn" 
+                onClick={() => onResolve && onResolve(item)}
+                style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', minWidth: '44px', padding: '0.7rem' }}
+                title="Marcar como Resolvido"
+              >
+                <CheckCircle2 size={18} />
+              </button>
+            )}
+            <button 
+              className="lf-chat-btn" 
+              onClick={() => onDelete && onDelete(item)}
+              style={{ background: '#fee2e2', color: '#ef4444', border: '1px solid #fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', minWidth: '44px', padding: '0.7rem' }}
+              title="Excluir"
+            >
+              <Trash2 size={18} />
+            </button>
+          </>
+        ) : (
+          <button className="lf-chat-btn" onClick={() => handleOpenChat && handleOpenChat(item)}>
+            ABRIR CHAT
+          </button>
+        )}
       </div>
     </motion.div>
   );
@@ -291,6 +339,7 @@ export default function DesktopAchadosEPerdidos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -300,6 +349,51 @@ export default function DesktopAchadosEPerdidos() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [locationScope, setLocationScope] = useState('city');
+  const [contactError, setContactError] = useState('');
+  const [showSelfChatAlert, setShowSelfChatAlert] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [itemToResolve, setItemToResolve] = useState(null);
+  const [isResolving, setIsResolving] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState('');
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState('sobre');
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [chatError, setChatError] = useState(null);
+
+  // Phone number formatting function
+  const formatPhoneNumber = (value) => {
+    // Remove all non-numeric characters
+    const phoneNumber = value.replace(/\D/g, '');
+
+    // Apply Brazilian phone number formatting
+    if (phoneNumber.length <= 2) {
+      return phoneNumber;
+    } else if (phoneNumber.length <= 6) {
+      return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
+    } else if (phoneNumber.length <= 10) {
+      return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2, 6)}-${phoneNumber.slice(6)}`;
+    } else {
+      return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2, 7)}-${phoneNumber.slice(7, 11)}`;
+    }
+  };
+
+  // Contact validation function
+  const validateContact = (value) => {
+    const cleanValue = value.replace(/\D/g, '');
+    if (cleanValue.length < 10) {
+      return 'Número de telefone deve ter pelo menos 10 dígitos';
+    }
+    if (cleanValue.length > 11) {
+      return 'Número de telefone deve ter no máximo 11 dígitos';
+    }
+    return '';
+  };
 
   // Form State
   const [formData, setFormData] = useState({
@@ -324,19 +418,7 @@ export default function DesktopAchadosEPerdidos() {
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchItems();
-    
-    // Auto-fill location from user data
-    if (user && !formData.location) {
-      const userAddr = user?.cidade && user?.estado ? `${user.cidade}, ${user.estado}` : 
-                      user?.bairro && user?.cidade ? `${user.bairro}, ${user.cidade}` :
-                      formatLocation(user?.endereco, user?.cidade, user?.estado) || 
-                      user?.bairro || 
-                      "";
-      if (userAddr) {
-        setFormData(prev => ({ ...prev, location: userAddr }));
-      }
-    }
-    
+
     const loadNotifications = () => {
       const saved = localStorage.getItem('solidar-notifications');
       if (saved) {
@@ -347,9 +429,9 @@ export default function DesktopAchadosEPerdidos() {
         }
       }
     };
-    
+
     loadNotifications();
-    
+
   }, [user]);
 
   const fetchItems = async () => {
@@ -382,6 +464,16 @@ export default function DesktopAchadosEPerdidos() {
         }
         
         setItems(itemsData);
+
+        // Filter by status (client-side enforcement)
+        if (statusFilter !== 'all') {
+          itemsData = itemsData.filter(item => {
+            if (statusFilter === 'active') return item.status !== 'resolved';
+            if (statusFilter === 'resolved') return item.status === 'resolved';
+            return true;
+          });
+          setItems(itemsData);
+        }
       } else {
         setItems([]);
       }
@@ -395,17 +487,30 @@ export default function DesktopAchadosEPerdidos() {
 
   const handleCreateItem = async () => {
     if (!formData.title || !formData.contact_info) return;
-    
+
     if (!formData.image_url) {
       setShowImageError(true);
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      const response = await apiService.createAchadoPerdido(formData);
+      // Add user ID to the form data to prevent self-chat
+      const itemData = {
+        ...formData,
+        user_id: user?.uid || user?.id || user?.userId,
+        created_by: user?.uid || user?.id || user?.userId
+      };
+
+      const response = await apiService.createAchadoPerdido(itemData);
       if (response.success) {
-        setItems(prev => [response.data, ...prev]);
+        // Ensure the returned item has the owner ID set
+        const createdItem = {
+          ...response.data,
+          user_id: user?.uid || user?.id || user?.userId,
+          created_by: user?.uid || user?.id || user?.userId
+        };
+        setItems(prev => [createdItem, ...prev]);
         setIsModalOpen(false);
         resetForm();
       } else {
@@ -478,9 +583,63 @@ export default function DesktopAchadosEPerdidos() {
       return;
     }
 
+    // Prevent users from chatting with their own items
+    const currentUserId = user?.uid || user?.id || user?.userId;
+    const itemOwnerId = item.user_id || item.created_by || item.owner_id || item.userId;
+
+    console.log('Chat validation:', {
+      currentUserId,
+      itemOwnerId,
+      item,
+      user
+    });
+
+    // More comprehensive check for self-chat prevention
+    if (currentUserId && itemOwnerId) {
+      const currentId = String(currentUserId).trim().toLowerCase();
+      const ownerId = String(itemOwnerId).trim().toLowerCase();
+
+      // Check for exact match
+      if (currentId === ownerId) {
+        setShowSelfChatAlert(true);
+        return;
+      }
+
+      // Check for partial match (e.g., Firebase UID vs document ID)
+      if (currentId.includes(ownerId) || ownerId.includes(currentId)) {
+        setShowSelfChatAlert(true);
+        return;
+      }
+
+      // Check if the item was recently created by this user (within last 5 minutes)
+      if (item.created_at || item.date_created) {
+        const itemCreatedAt = new Date(item.created_at || item.date_created);
+        const now = new Date();
+        const timeDiff = now - itemCreatedAt;
+
+        // If item was created within last 5 minutes and no explicit owner ID, assume it's the user's item
+        if (timeDiff < 5 * 60 * 1000 && !itemOwnerId) {
+          setShowSelfChatAlert(true);
+          return;
+        }
+      }
+    }
+
+    // Additional check: if item has no owner ID but was just added to the list, it's likely the user's item
+    if (!itemOwnerId && items.length > 0) {
+      const recentItems = items.slice(0, 5); // Check last 5 items
+      const isRecentItem = recentItems.some(recentItem => recentItem.id === item.id);
+      if (isRecentItem) {
+        setShowSelfChatAlert(true);
+        return;
+      }
+    }
+
     // Para demonstração, vamos usar um ID fictício se não houver user_id
-    const targetUserId = item.user_id || item.created_by || 'demo-user-' + item.id;
-    
+    const targetUserId = itemOwnerId || 'demo-user-' + item.id;
+
+    setIsCreatingChat(true);
+    setChatError(null);
     try {
       const response = await apiService.createOrGetConversation({
         participantId: targetUserId,
@@ -491,17 +650,140 @@ export default function DesktopAchadosEPerdidos() {
 
       if (response.success) {
         navigate(`/chat/${response.data.id}`);
+        setIsCreatingChat(false);
+      } else {
+        throw new Error(response.error || 'Falha ao iniciar conversa');
       }
     } catch (error) {
       console.error('Erro ao abrir chat:', error);
-      alert('Erro ao abrir chat. Tente novamente.');
+      setChatError('Não foi possível conectar ao chat no momento. Por favor, tente novamente.');
     }
   };
+
+  const checkIsOwner = (item) => {
+    if (!user) return false;
+    const currentUserId = user.uid || user.id || user.userId;
+    const itemOwnerId = item.user_id || item.created_by || item.owner_id || item.userId;
+    
+    if (!currentUserId || !itemOwnerId) return false;
+    
+    return String(currentUserId) === String(itemOwnerId) || String(itemOwnerId).includes(String(currentUserId));
+  };
+
+  const handleDeleteClick = (item) => {
+    setItemToDelete(item);
+    setDeleteReason('');
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete || !deleteReason.trim()) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await apiService.deleteAchadoPerdido(itemToDelete.id, { reason: deleteReason });
+      
+      if (response.success) {
+        setItems(prev => prev.filter(i => i.id !== itemToDelete.id));
+        setShowDeleteModal(false);
+        setItemToDelete(null);
+      } else {
+        alert('Erro ao excluir item: ' + (response.error || 'Erro desconhecido'));
+      }
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      alert('Erro ao excluir item.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleResolveClick = (item) => {
+    setItemToResolve(item);
+    setShowResolveModal(true);
+  };
+
+  const confirmResolve = async () => {
+    if (!itemToResolve) return;
+    setIsResolving(true);
+    try {
+      // Tenta chamar a API se existir, senão atualiza localmente
+      if (apiService.updateAchadoPerdido) {
+        await apiService.updateAchadoPerdido(itemToResolve.id, { status: 'resolved' });
+      }
+      setItems(prev => prev.map(i => i.id === itemToResolve.id ? { ...i, status: 'resolved' } : i));
+      setShowResolveModal(false);
+      setItemToResolve(null);
+    } catch (error) {
+      console.error('Erro ao resolver item:', error);
+      setItems(prev => prev.map(i => i.id === itemToResolve.id ? { ...i, status: 'resolved' } : i)); // Fallback local
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  const handleSendComment = () => {
+    if (!commentText.trim()) return;
+    
+    const newComment = {
+      id: Date.now(),
+      user: user?.nome || 'Você',
+      text: commentText,
+      date: 'Agora mesmo',
+      avatar: (user?.nome || 'V')[0].toUpperCase(),
+      likes: 0,
+      isLiked: false
+    };
+    
+    setComments([...comments, newComment]);
+    setCommentText('');
+  };
+
+  const handleLikeComment = (commentId) => {
+    setComments(prev => prev.map(c => {
+      if (c.id === commentId) {
+        return { ...c, likes: c.isLiked ? c.likes - 1 : c.likes + 1, isLiked: !c.isLiked };
+      }
+      return c;
+    }));
+  };
+
+  const handleShare = async (item) => {
+    const shareData = {
+      title: `SolidarBairro: ${item.title}`,
+      text: `Confira este item no SolidarBairro: ${item.title}`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+        alert('Link copiado para a área de transferência!');
+      } catch (err) {
+        console.error('Error copying to clipboard:', err);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (selectedItem) {
+      setComments([]);
+      setCommentText('');
+      setIsDescriptionExpanded(false);
+      setActiveTab('sobre');
+    }
+  }, [selectedItem]);
 
   // Refetch when filters change
   useEffect(() => {
     fetchItems();
-  }, [categoryFilter, typeFilter, searchTerm, locationScope, user]);
+  }, [categoryFilter, typeFilter, searchTerm, locationScope, user, statusFilter]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
@@ -598,18 +880,22 @@ export default function DesktopAchadosEPerdidos() {
             <div className="lf-form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
                 <label className="lf-label" style={{ marginBottom: 0 }}>Descrição Detalhada</label>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: formData.description.length >= 500 ? 'var(--sb-orange)' : 'var(--sb-text-light)' }}>
-                  {formData.description.length}/500 caracteres
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: formData.description.length >= 250 ? 'var(--sb-orange)' : 'var(--sb-text-light)' }}>
+                  {formData.description.length}/250
                 </span>
               </div>
-              <textarea 
+              <textarea
                 className="lf-textarea-premium"
                 placeholder="Ex: Contém RG em nome de João Silva, cartões e chaves..."
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                maxLength={500}
+                onChange={(e) => {
+                  if (e.target.value.length <= 250) {
+                    setFormData({ ...formData, description: e.target.value });
+                  }
+                }}
+                maxLength={250}
               />
-              {formData.description.length >= 500 && (
+              {formData.description.length >= 250 && (
                 <p style={{ fontSize: '0.7rem', color: 'var(--sb-orange)', fontWeight: 700, marginTop: '0.5rem' }}>
                   Você atingiu o limite máximo de caracteres.
                 </p>
@@ -653,12 +939,12 @@ export default function DesktopAchadosEPerdidos() {
             <div className="lf-form-group">
               <label className="lf-label">Localização Aproximada</label>
               <div style={{ position: 'relative' }}>
-                <MapPin size={20} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--sb-teal)' }} />
-                <input 
-                  type="text" 
+                <MapPin size={20} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--sb-teal)', pointerEvents: 'none' }} />
+                <input
+                  type="text"
                   className="lf-input-premium"
                   placeholder={userLocation || "Ex: Praça Central, próximo ao banco"}
-                  value={formData.location || userLocation}
+                  value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   style={{ paddingLeft: '3.5rem' }}
                 />
@@ -759,17 +1045,31 @@ export default function DesktopAchadosEPerdidos() {
 
             <div className="lf-form-group">
               <label className="lf-label">Seu Contato</label>
-              <div style={{ position: 'relative' }}>
-                <Phone size={20} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--sb-teal)' }} />
-                <input 
-                  type="text" 
-                  className="lf-input-premium"
-                  placeholder="WhatsApp ou Telefone"
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <Phone size={20} style={{ color: 'var(--sb-teal)', marginRight: '0.75rem', flexShrink: 0 }} />
+                <input
+                  type="text"
+                  className={`lf-input-premium ${contactError ? 'error' : ''}`}
+                  placeholder="(11) 99999-9999"
                   value={formData.contact_info}
-                  onChange={(e) => setFormData({ ...formData, contact_info: e.target.value })}
-                  style={{ paddingLeft: '3.5rem' }}
+                  onChange={(e) => {
+                    const formatted = formatPhoneNumber(e.target.value);
+                    setFormData({ ...formData, contact_info: formatted });
+                    // Clear error when user starts typing
+                    if (contactError) setContactError('');
+                  }}
+                  onBlur={() => {
+                    const error = validateContact(formData.contact_info);
+                    setContactError(error);
+                  }}
+                  style={{ flex: 1 }}
                 />
               </div>
+              {contactError && (
+                <p style={{ fontSize: '0.75rem', color: 'var(--sb-orange)', fontWeight: 700, marginTop: '0.5rem' }}>
+                  {contactError}
+                </p>
+              )}
             </div>
             {formData.type === 'lost' && (
               <div className="lf-form-group">
@@ -915,6 +1215,15 @@ export default function DesktopAchadosEPerdidos() {
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
+
+              <div className="lf-select-wrapper" style={{ minWidth: '150px' }}>
+                <CheckCircle2 size={18} />
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                  <option value="active">Em Aberto</option>
+                  <option value="resolved">Resolvidos</option>
+                  <option value="all">Todos</option>
+                </select>
+              </div>
               
               <div className="lf-type-filters">
                 <button 
@@ -958,6 +1267,9 @@ export default function DesktopAchadosEPerdidos() {
                     item={item} 
                     onOpenDetails={(item) => setSelectedItem(item)}
                     handleOpenChat={handleOpenChat}
+                    isOwner={checkIsOwner(item)}
+                    onDelete={handleDeleteClick}
+                    onResolve={handleResolveClick}
                   />
                 ))
               ) : (
@@ -995,6 +1307,7 @@ export default function DesktopAchadosEPerdidos() {
               exit={{ opacity: 0, scale: 0.9, y: 50 }}
               className="lf-details-modal"
               onClick={(e) => e.stopPropagation()}
+              style={{ height: '800px' }}
             >
               <div className="lf-details-grid">
                 <div className="lf-details-image">
@@ -1014,60 +1327,219 @@ export default function DesktopAchadosEPerdidos() {
                       <X size={20} />
                     </button>
                   </div>
-                  <h2 className="lf-details-title">{selectedItem.title}</h2>
-                  <div className="lf-details-meta-grid">
-                    <div className="lf-details-meta-box">
-                      <MapPin size={20} />
-                      <div>
-                        <label>Localização</label>
-                        <span>{selectedItem.location}</span>
-                      </div>
-                    </div>
-                    <div className="lf-details-meta-box">
-                      <Calendar size={20} />
-                      <div>
-                        <label>Data</label>
-                        <span>{new Date(selectedItem.date_occurrence).toLocaleDateString('pt-BR')}</span>
-                      </div>
-                    </div>
-                  </div>
                   
-                  <div className="lf-details-description">
-                    <h3>Descrição Completa</h3>
-                    <p>{selectedItem.description}</p>
-                  </div>
-
-                  {selectedItem.reward && selectedItem.type === 'lost' && (
-                    <div className="lf-details-reward">
-                      <Gift size={24} />
-                      <div>
-                        <label>Recompensa Oferecida</label>
-                        <span>{selectedItem.reward}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedItem.tags && selectedItem.tags.length > 0 && (
-                    <div className="lf-details-tags">
-                      {selectedItem.tags.map((tag, i) => (
-                        <span key={i} className="lf-tag">#{tag}</span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="lf-details-footer">
-                    <div className="lf-contact-box">
-                      <label>Informação de Contato</label>
-                      <div className="lf-contact-value">
-                        <Phone size={20} />
-                        <span>{selectedItem.contact_info}</span>
-                      </div>
-                    </div>
-                    <button className="lf-main-btn" style={{ width: '100%', marginTop: '1.5rem' }} onClick={() => handleOpenChat(selectedItem)}>
-                      <Sparkles size={20} />
-                      ABRIR CHAT AGORA
+                  <div className="lf-details-tabs">
+                    <button 
+                      className={`lf-tab-btn ${activeTab === 'sobre' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('sobre')}
+                    >
+                      Sobre
+                    </button>
+                    <button 
+                      className={`lf-tab-btn ${activeTab === 'detalhes' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('detalhes')}
+                    >
+                      Detalhes
+                    </button>
+                    <button 
+                      className={`lf-tab-btn ${activeTab === 'dicas' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('dicas')}
+                    >
+                      Dicas ({comments.length})
                     </button>
                   </div>
+                  
+                  {activeTab === 'sobre' && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      transition={{ duration: 0.2 }}
+                      className="lf-tab-content"
+                    >
+                      <h2 className="lf-details-title">{selectedItem.title}</h2>
+                      
+                      {selectedItem.tags && selectedItem.tags.length > 0 && (
+                        <div className="lf-details-tags" style={{ marginBottom: '1.5rem', marginTop: '-1rem' }}>
+                          {selectedItem.tags.map((tag, i) => (
+                            <span key={i} className="lf-tag">#{tag}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="lf-details-description">
+                        <h3 style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', marginBottom: '0.5rem' }}>Descrição</h3>
+                        <p style={{ fontSize: '1.1rem', lineHeight: '1.6', color: '#1e293b', margin: 0 }}>
+                          {(selectedItem.description?.slice(0, 35) || '') + (selectedItem.description?.length > 35 ? '...' : '')}
+                        </p>
+                        {selectedItem.description?.length > 35 && (
+                          <button 
+                            onClick={() => setShowDescriptionModal(true)}
+                            style={{ 
+                              background: 'none', 
+                              border: 'none', 
+                              color: 'var(--sb-teal)', 
+                              fontWeight: '700', 
+                              cursor: 'pointer',
+                              padding: '0',
+                              marginTop: '0.5rem',
+                              fontSize: '0.9rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                          >
+                            <FileText size={16} /> Visualizar descrição completa
+                          </button>
+                        )}
+                      </div>
+
+                      {selectedItem.reward && selectedItem.type === 'lost' && (
+                        <div className="lf-details-reward" style={{ marginTop: '2rem' }}>
+                          <Gift size={24} />
+                          <div>
+                            <label>Recompensa</label>
+                            <span>{selectedItem.reward}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="lf-details-footer">
+                        <div className="lf-contact-box">
+                          <label>Informação de Contato</label>
+                          <div className="lf-contact-value">
+                            <Phone size={20} />
+                            <span>{selectedItem.contact_info}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                          <button 
+                            className="lf-btn-secondary" 
+                            style={{ flex: 1, justifyContent: 'center' }}
+                            onClick={() => handleShare(selectedItem)}
+                          >
+                            <Share2 size={20} />
+                            Compartilhar
+                          </button>
+                          <button className="lf-main-btn" style={{ flex: 2 }} onClick={() => handleOpenChat(selectedItem)}>
+                            <Sparkles size={20} />
+                            ABRIR CHAT
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 'detalhes' && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      transition={{ duration: 0.2 }}
+                      className="lf-tab-content"
+                    >
+                      <div className="lf-details-meta-grid">
+                        <div className="lf-details-meta-box">
+                          <MapPin size={20} />
+                          <div>
+                            <label>Localização</label>
+                            <span>{selectedItem.location}</span>
+                          </div>
+                        </div>
+                        <div className="lf-details-meta-box">
+                          <Calendar size={20} />
+                          <div>
+                            <label>Data</label>
+                            <span>{new Date(selectedItem.date_occurrence).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        </div>
+                        <div className="lf-details-meta-box">
+                          <User size={20} />
+                          <div>
+                            <label>Publicado por</label>
+                            <span>{selectedItem.user_name || selectedItem.author || 'Usuário da Comunidade'}</span>
+                          </div>
+                        </div>
+                        <div className="lf-details-meta-box">
+                          <Clock size={20} />
+                          <div>
+                            <label>Data da Publicação</label>
+                            <span>{selectedItem.created_at ? new Date(selectedItem.created_at).toLocaleDateString('pt-BR') : 'Recentemente'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 'dicas' && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      transition={{ duration: 0.2 }}
+                      className="lf-comments-section"
+                    >
+                      <h3 className="lf-comments-title">
+                        <MessageCircle size={20} />
+                        Discussão da Comunidade
+                      </h3>
+                      
+                      <div className="lf-comments-list">
+                        {comments.length > 0 ? (
+                          comments.map(comment => (
+                            <div key={comment.id} className="lf-comment">
+                              <div className="lf-comment-avatar">
+                                {comment.avatar}
+                              </div>
+                              <div className="lf-comment-content">
+                                <div className="lf-comment-header">
+                                  <span className="lf-comment-author">{comment.user}</span>
+                                  <span className="lf-comment-date">{comment.date}</span>
+                                </div>
+                                <p className="lf-comment-text">{comment.text}</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                  <button 
+                                    onClick={() => handleLikeComment(comment.id)}
+                                    style={{ 
+                                      background: 'none', 
+                                      border: 'none', 
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      gap: '0.25rem', 
+                                      cursor: 'pointer',
+                                      color: comment.isLiked ? '#ef4444' : '#94a3b8',
+                                      fontSize: '0.8rem',
+                                      fontWeight: '600',
+                                      padding: 0,
+                                      transition: 'all 0.2s ease'
+                                    }}
+                                  >
+                                    <Heart size={14} fill={comment.isLiked ? '#ef4444' : 'none'} />
+                                    {comment.likes > 0 ? comment.likes : 'Curtir'}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                            Nenhuma dica ainda. Seja o primeiro a ajudar!
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="lf-comment-input-box">
+                        <input 
+                          type="text" 
+                          className="lf-comment-input" 
+                          placeholder="Escreva um comentário ou dica..."
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleSendComment()}
+                        />
+                        <button className="lf-comment-send-btn" onClick={handleSendComment}>
+                          <Send size={18} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -1148,6 +1620,233 @@ export default function DesktopAchadosEPerdidos() {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Creating Chat Modal */}
+      <AnimatePresence>
+        {isCreatingChat && (
+          <div className="lf-modal-backdrop" style={{ zIndex: 12000 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '2rem', 
+                borderRadius: '1.5rem', 
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1rem',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                maxWidth: '400px',
+                width: '90%',
+                textAlign: 'center'
+              }}
+            >
+              {chatError ? (
+                <>
+                  <div style={{ width: '60px', height: '60px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                    <X size={32} color="#ef4444" />
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b' }}>Erro ao iniciar chat</h3>
+                  <p style={{ color: '#64748b', marginBottom: '1rem' }}>{chatError}</p>
+                  <button onClick={() => { setIsCreatingChat(false); setChatError(null); }} style={{ padding: '0.75rem 1.5rem', background: '#0f172a', color: 'white', borderRadius: '1rem', fontWeight: '700', border: 'none', cursor: 'pointer' }}>
+                    Fechar
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Loader2 className="animate-spin" size={48} color="var(--sb-teal)" />
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b' }}>Iniciando conversa...</h3>
+                  <p style={{ color: '#64748b' }}>Aguarde um momento.</p>
+                </>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Description Modal */}
+      <AnimatePresence>
+        {showDescriptionModal && (
+          <div className="lf-modal-backdrop" style={{ zIndex: 11000 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '2rem', 
+                borderRadius: '1.5rem', 
+                width: '90%', 
+                maxWidth: '500px', 
+                maxHeight: '80vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                position: 'relative'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={24} style={{ color: 'var(--sb-teal)' }} /> Descrição Completa
+                </h3>
+                <button onClick={() => setShowDescriptionModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex' }}>
+                  <X size={24} color="#64748b" />
+                </button>
+              </div>
+              
+              <div style={{ overflowY: 'auto', flex: 1, paddingRight: '8px' }}>
+                <p style={{ color: '#334155', lineHeight: '1.6', fontSize: '1rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {selectedItem?.description}
+                </p>
+              </div>
+              
+              <button 
+                onClick={() => setShowDescriptionModal(false)}
+                style={{ marginTop: '2rem', width: '100%', padding: '1rem', background: '#0f172a', color: 'white', borderRadius: '1rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+              >
+                Fechar
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <div className="lf-modal-backdrop" style={{ zIndex: 10000 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '2.5rem', 
+                borderRadius: '1.5rem', 
+                maxWidth: '450px', 
+                width: '100%', 
+                textAlign: 'center',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                position: 'relative'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ width: '80px', height: '80px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
+                <Trash2 size={40} color="#ef4444" />
+              </div>
+              
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginBottom: '0.5rem' }}>Excluir Item</h3>
+              <p style={{ color: '#64748b', marginBottom: '1.5rem', fontSize: '1rem', lineHeight: '1.6' }}>
+                Tem certeza que deseja excluir este item? Por favor, nos conte o motivo da exclusão.
+              </p>
+              
+              <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: '#475569', marginBottom: '0.5rem' }}>Motivo da exclusão</label>
+                <textarea
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="Ex: Item recuperado, entregue ao dono, erro no cadastro..."
+                  style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0', fontSize: '0.95rem', minHeight: '100px', fontFamily: 'inherit', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button onClick={() => setShowDeleteModal(false)} style={{ flex: 1, padding: '1rem', background: 'white', color: '#64748b', borderRadius: '1rem', fontWeight: '700', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+                  Cancelar
+                </button>
+                <button onClick={confirmDelete} disabled={!deleteReason.trim() || isDeleting} style={{ flex: 1, padding: '1rem', background: '#ef4444', color: 'white', borderRadius: '1rem', fontWeight: '700', border: 'none', cursor: 'pointer', opacity: (!deleteReason.trim() || isDeleting) ? 0.7 : 1 }}>
+                  {isDeleting ? 'Excluindo...' : 'Excluir'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Resolve Confirmation Modal */}
+      <AnimatePresence>
+        {showResolveModal && (
+          <div className="lf-modal-backdrop" style={{ zIndex: 10000 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '2.5rem', 
+                borderRadius: '1.5rem', 
+                maxWidth: '450px', 
+                width: '100%', 
+                textAlign: 'center',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                position: 'relative'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ width: '80px', height: '80px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
+                <CheckCircle2 size={40} color="#16a34a" />
+              </div>
+              
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginBottom: '0.5rem' }}>Marcar como Resolvido?</h3>
+              <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '1rem', lineHeight: '1.6' }}>
+                Isso indicará que o item foi encontrado ou devolvido. Ele continuará visível no histórico como "Resolvido".
+              </p>
+              
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button onClick={() => setShowResolveModal(false)} style={{ flex: 1, padding: '1rem', background: 'white', color: '#64748b', borderRadius: '1rem', fontWeight: '700', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+                  Cancelar
+                </button>
+                <button onClick={confirmResolve} disabled={isResolving} style={{ flex: 1, padding: '1rem', background: '#16a34a', color: 'white', borderRadius: '1rem', fontWeight: '700', border: 'none', cursor: 'pointer', opacity: isResolving ? 0.7 : 1 }}>
+                  {isResolving ? 'Salvando...' : 'Confirmar'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Self Chat Alert Modal */}
+      <AnimatePresence>
+        {showSelfChatAlert && (
+          <div className="lf-modal-backdrop" style={{ zIndex: 9999 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '2.5rem', 
+                borderRadius: '1.5rem', 
+                maxWidth: '400px', 
+                width: '100%', 
+                textAlign: 'center',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                position: 'relative'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ width: '80px', height: '80px', background: '#fff7ed', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
+                <User size={40} color="#f97316" />
+              </div>
+              
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', marginBottom: '0.5rem' }}>Ação Inválida</h3>
+              <p style={{ color: '#64748b', marginBottom: '2rem', fontSize: '1rem', lineHeight: '1.6' }}>
+                Você não pode iniciar um chat com você mesmo. Este item foi registrado por você.
+              </p>
+              
+              <button 
+                onClick={() => setShowSelfChatAlert(false)}
+                style={{ width: '100%', padding: '1rem', background: '#0f172a', color: 'white', borderRadius: '1rem', fontWeight: '700', fontSize: '1rem', border: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
+              >
+                Entendi
+              </button>
             </motion.div>
           </div>
         )}

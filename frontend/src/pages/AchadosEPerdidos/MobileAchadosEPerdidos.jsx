@@ -25,6 +25,13 @@ import {
   Info,
   Image as ImageIcon,
   ArrowLeft,
+  User,
+  Trash2,
+  MessageCircle,
+  Send,
+  FileText,
+  Heart,
+  Share2,
 } from 'lucide-react';
 import './mobile-styles-new.css';
 
@@ -40,7 +47,9 @@ const CATEGORIES = [
   'Outros'
 ];
 
-const ItemCard = ({ item, onOpenDetails, handleOpenChat, isPreview = false }) => {
+const ItemCard = ({ item, onOpenDetails, handleOpenChat, onDelete, onResolve, isOwner, isPreview = false }) => {
+  const isResolved = item.status === 'resolved';
+
   return (
     <motion.div 
       layout
@@ -55,6 +64,24 @@ const ItemCard = ({ item, onOpenDetails, handleOpenChat, isPreview = false }) =>
         ) : (
           <div className="mobile-lf-card-placeholder">
             <Camera size={32} strokeWidth={1} />
+          </div>
+        )}
+        {isResolved && (
+          <div style={{
+            position: 'absolute', 
+            inset: 0, 
+            background: 'rgba(255,255,255,0.3)', 
+            backdropFilter: 'blur(2px)',
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 10
+          }}>
+            <span style={{
+              background: '#10b981', color: 'white', padding: '0.4rem 1rem', borderRadius: '2rem', fontWeight: '800', fontSize: '0.8rem', boxShadow: '0 4px 15px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: '0.3rem', letterSpacing: '0.05em'
+            }}>
+              <CheckCircle2 size={14} /> RESOLVIDO
+            </span>
           </div>
         )}
         <div className={`mobile-lf-type-badge ${item.type}`}>
@@ -106,9 +133,26 @@ const ItemCard = ({ item, onOpenDetails, handleOpenChat, isPreview = false }) =>
         <button className="mobile-lf-details-btn" onClick={() => onOpenDetails && onOpenDetails(item)}>
           VER DETALHES
         </button>
-        <button className="mobile-lf-chat-btn" onClick={() => handleOpenChat && handleOpenChat(item)}>
-          ABRIR CHAT
-        </button>
+        {isOwner ? (
+          <>
+            {!isResolved && (
+              <button 
+                className="mobile-lf-chat-btn" 
+                onClick={() => onResolve && onResolve(item)}
+                style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', flex: '0 0 auto', padding: '0.65rem' }}
+              >
+                <CheckCircle2 size={16} />
+              </button>
+            )}
+            <button className="mobile-lf-delete-btn" onClick={() => onDelete && onDelete(item)}>
+              <Trash2 size={14} /> EXCLUIR
+            </button>
+          </>
+        ) : (
+          <button className="mobile-lf-chat-btn" onClick={() => handleOpenChat && handleOpenChat(item)}>
+            ABRIR CHAT
+          </button>
+        )}
       </div>
     </motion.div>
   );
@@ -122,12 +166,28 @@ export default function MobileAchadosEPerdidos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [showImageError, setShowImageError] = useState(false);
   const [locationScope, setLocationScope] = useState('city');
+  const [showSelfChatAlert, setShowSelfChatAlert] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [itemToResolve, setItemToResolve] = useState(null);
+  const [isResolving, setIsResolving] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState('');
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState('sobre');
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
+  const [chatError, setChatError] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -260,7 +320,18 @@ export default function MobileAchadosEPerdidos() {
 
     // Para demonstração, vamos usar um ID fictício se não houver user_id
     const targetUserId = item.user_id || item.created_by || 'demo-user-' + item.id;
+    const currentUserId = user?.uid || user?.id || user?.userId;
+
+    // Prevent self-chat
+    if (currentUserId && targetUserId) {
+      if (String(currentUserId) === String(targetUserId) || String(targetUserId).includes(String(currentUserId))) {
+        setShowSelfChatAlert(true);
+        return;
+      }
+    }
     
+    setIsCreatingChat(true);
+    setChatError(null);
     try {
       const response = await apiService.createOrGetConversation({
         participantId: targetUserId,
@@ -271,23 +342,153 @@ export default function MobileAchadosEPerdidos() {
 
       if (response.success) {
         navigate(`/chat/${response.data.id}`);
+        setIsCreatingChat(false);
+      } else {
+        throw new Error(response.error || 'Falha ao iniciar conversa');
       }
     } catch (error) {
       console.error('Erro ao abrir chat:', error);
-      alert('Erro ao abrir chat. Tente novamente.');
+      setChatError('Não foi possível conectar ao chat. Verifique sua conexão e tente novamente.');
+    }
+  };
+
+  const checkIsOwner = (item) => {
+    if (!user) return false;
+    const currentUserId = user.uid || user.id || user.userId;
+    const itemOwnerId = item.user_id || item.created_by || item.owner_id || item.userId;
+    
+    if (!currentUserId || !itemOwnerId) return false;
+    
+    return String(currentUserId) === String(itemOwnerId) || String(itemOwnerId).includes(String(currentUserId));
+  };
+
+  const handleDeleteClick = (item) => {
+    setItemToDelete(item);
+    setDeleteReason('');
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete || !deleteReason.trim()) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await apiService.deleteAchadoPerdido(itemToDelete.id, { reason: deleteReason });
+      
+      if (response.success) {
+        setItems(prev => prev.filter(i => i.id !== itemToDelete.id));
+        setShowDeleteModal(false);
+        setItemToDelete(null);
+      } else {
+        alert('Erro ao excluir item: ' + (response.error || 'Erro desconhecido'));
+      }
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      alert('Erro ao excluir item.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleResolveClick = (item) => {
+    setItemToResolve(item);
+    setShowResolveModal(true);
+  };
+
+  const confirmResolve = async () => {
+    if (!itemToResolve) return;
+    setIsResolving(true);
+    try {
+      // Tenta chamar a API se existir, senão atualiza localmente
+      if (apiService.updateAchadoPerdido) {
+        await apiService.updateAchadoPerdido(itemToResolve.id, { status: 'resolved' });
+      }
+      setItems(prev => prev.map(i => i.id === itemToResolve.id ? { ...i, status: 'resolved' } : i));
+      setShowResolveModal(false);
+      setItemToResolve(null);
+    } catch (error) {
+      console.error('Erro ao resolver item:', error);
+      setItems(prev => prev.map(i => i.id === itemToResolve.id ? { ...i, status: 'resolved' } : i));
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  const handleSendComment = () => {
+    if (!commentText.trim()) return;
+    
+    const newComment = {
+      id: Date.now(),
+      user: user?.nome || 'Você',
+      text: commentText,
+      date: 'Agora mesmo',
+      avatar: (user?.nome || 'V')[0].toUpperCase(),
+      likes: 0,
+      isLiked: false
+    };
+    
+    setComments([...comments, newComment]);
+    setCommentText('');
+  };
+
+  const handleLikeComment = (commentId) => {
+    setComments(prev => prev.map(c => {
+      if (c.id === commentId) {
+        return { ...c, likes: c.isLiked ? c.likes - 1 : c.likes + 1, isLiked: !c.isLiked };
+      }
+      return c;
+    }));
+  };
+
+  const handleShare = async (item) => {
+    const shareData = {
+      title: `SolidarBairro: ${item.title}`,
+      text: `Confira este item no SolidarBairro: ${item.title}`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+        alert('Link copiado para a área de transferência!');
+      } catch (err) {
+        console.error('Error copying to clipboard:', err);
+      }
     }
   };
 
   useEffect(() => {
+    if (selectedItem) {
+      setComments([]);
+      setCommentText('');
+      setIsDescriptionExpanded(false);
+      setActiveTab('sobre');
+    }
+  }, [selectedItem]);
+
+  useEffect(() => {
     fetchItems();
-  }, [categoryFilter, typeFilter, searchTerm]);
+  }, [categoryFilter, typeFilter, searchTerm, statusFilter]);
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           item.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
     const matchesType = typeFilter === 'all' || item.type === typeFilter;
-    return matchesSearch && matchesCategory && matchesType;
+    
+    const matchesStatus = statusFilter === 'all' 
+      ? true 
+      : statusFilter === 'active' 
+        ? item.status !== 'resolved' 
+        : item.status === 'resolved';
+
+    return matchesSearch && matchesCategory && matchesType && matchesStatus;
   });
 
   const renderStep = () => {
@@ -630,12 +831,23 @@ export default function MobileAchadosEPerdidos() {
             </div>
             
             <div className="mobile-lf-filter-group">
-              <div className="mobile-lf-select-wrapper">
-                <Filter size={16} />
-                <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-                  <option value="all">Todas Categorias</option>
-                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div className="mobile-lf-select-wrapper" style={{ flex: 1 }}>
+                  <Filter size={16} />
+                  <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+                    <option value="all">Categorias</option>
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                
+                <div className="mobile-lf-select-wrapper" style={{ flex: 1 }}>
+                  <CheckCircle2 size={16} />
+                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                    <option value="active">Ativos</option>
+                    <option value="resolved">Resolvidos</option>
+                    <option value="all">Todos</option>
+                  </select>
+                </div>
               </div>
               
               <div className="mobile-lf-type-filters">
@@ -679,6 +891,9 @@ export default function MobileAchadosEPerdidos() {
                     item={item} 
                     onOpenDetails={(item) => setSelectedItem(item)}
                     handleOpenChat={handleOpenChat}
+                    isOwner={checkIsOwner(item)}
+                    onDelete={handleDeleteClick}
+                    onResolve={handleResolveClick}
                   />
                 ))
               ) : (
@@ -727,64 +942,389 @@ export default function MobileAchadosEPerdidos() {
                     <X size={20} />
                   </button>
                 </div>
-                <div className="mobile-lf-details-info">
-                  <span className="mobile-lf-category-tag">{selectedItem.category}</span>
-                  <h2 className="mobile-lf-details-title">{selectedItem.title}</h2>
-                  
-                  <div className="mobile-lf-details-meta-grid">
-                    <div className="mobile-lf-details-meta-box">
-                      <MapPin size={18} />
-                      <div>
-                        <label>Localização</label>
-                        <span>{selectedItem.location}</span>
-                      </div>
-                    </div>
-                    <div className="mobile-lf-details-meta-box">
-                      <Calendar size={18} />
-                      <div>
-                        <label>Data</label>
-                        <span>{new Date(selectedItem.date_occurrence).toLocaleDateString('pt-BR')}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mobile-lf-details-description">
-                    <h3>Descrição</h3>
-                    <p>{selectedItem.description}</p>
-                  </div>
-
-                  {selectedItem.reward && selectedItem.type === 'lost' && (
-                    <div className="mobile-lf-details-reward">
-                      <Gift size={20} />
-                      <div>
-                        <label>Recompensa</label>
-                        <span>{selectedItem.reward}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedItem.tags && selectedItem.tags.length > 0 && (
-                    <div className="mobile-lf-details-tags">
-                      {selectedItem.tags.map((tag, i) => (
-                        <span key={i} className="mobile-lf-tag">#{tag}</span>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="mobile-lf-details-footer">
-                    <div className="mobile-lf-contact-box">
-                      <label>Contato</label>
-                      <div className="mobile-lf-contact-value">
-                        <Phone size={18} />
-                        <span>{selectedItem.contact_info}</span>
-                      </div>
-                    </div>
-                    <button className="mobile-lf-main-btn full-width" onClick={() => handleOpenChat(selectedItem)}>
-                      <Sparkles size={18} />
-                      ABRIR CHAT
-                    </button>
-                  </div>
+                
+                <div className="mobile-lf-details-tabs">
+                  <button 
+                    className={`mobile-lf-tab-btn ${activeTab === 'sobre' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('sobre')}
+                  >
+                    Sobre
+                  </button>
+                  <button 
+                    className={`mobile-lf-tab-btn ${activeTab === 'detalhes' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('detalhes')}
+                  >
+                    Detalhes
+                  </button>
+                  <button 
+                    className={`mobile-lf-tab-btn ${activeTab === 'dicas' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('dicas')}
+                  >
+                    Dicas
+                  </button>
                 </div>
+
+                <div className="mobile-lf-details-info">
+                  {activeTab === 'sobre' && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+                      <span className="mobile-lf-category-tag">{selectedItem.category}</span>
+                      <h2 className="mobile-lf-details-title">{selectedItem.title}</h2>
+                      
+                      {selectedItem.tags && selectedItem.tags.length > 0 && (
+                        <div className="mobile-lf-details-tags" style={{ marginBottom: '1.25rem' }}>
+                          {selectedItem.tags.map((tag, i) => (
+                            <span key={i} className="mobile-lf-tag">#{tag}</span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="mobile-lf-details-description">
+                        <h3 style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', marginBottom: '0.5rem' }}>Descrição</h3>
+                        <p style={{ fontSize: '0.95rem', lineHeight: '1.5', color: '#1e293b', margin: 0 }}>
+                          {(selectedItem.description?.slice(0, 100) || '') + (selectedItem.description?.length > 100 ? '...' : '')}
+                        </p>
+                        {selectedItem.description?.length > 100 && (
+                          <button 
+                            onClick={() => setShowDescriptionModal(true)}
+                            style={{ 
+                              background: 'none', 
+                              border: 'none', 
+                              color: 'var(--sb-teal)', 
+                              fontWeight: '700', 
+                              padding: '0',
+                              marginTop: '0.5rem',
+                              fontSize: '0.85rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem'
+                            }}
+                          >
+                            <FileText size={14} /> Visualizar descrição completa
+                          </button>
+                        )}
+                      </div>
+
+                      {selectedItem.reward && selectedItem.type === 'lost' && (
+                        <div className="mobile-lf-details-meta-box" style={{ background: 'var(--sb-orange-soft)', borderColor: 'rgba(249, 115, 22, 0.3)', borderStyle: 'dashed', marginTop: '1rem' }}>
+                          <Gift size={18} color="var(--sb-orange)" />
+                          <div>
+                            <label style={{ color: 'var(--sb-orange)' }}>Recompensa</label>
+                            <span style={{ color: 'var(--sb-orange-hover)' }}>{selectedItem.reward}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mobile-lf-details-footer" style={{ marginTop: '1.5rem', borderTop: 'none', paddingTop: 0 }}>
+                        <div className="mobile-lf-contact-box">
+                          <label>Contato</label>
+                          <div className="mobile-lf-contact-value">
+                            <Phone size={18} />
+                            <span>{selectedItem.contact_info}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                          <button 
+                            className="mobile-lf-btn-secondary" 
+                            style={{ flex: 1, padding: '0.875rem' }}
+                            onClick={() => handleShare(selectedItem)}
+                          >
+                            <Share2 size={18} />
+                            Compartilhar
+                          </button>
+                          <button className="mobile-lf-main-btn" style={{ flex: 2, width: 'auto', marginTop: 0 }} onClick={() => handleOpenChat(selectedItem)}>
+                            <Sparkles size={18} />
+                            ABRIR CHAT
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 'detalhes' && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+                      <div className="mobile-lf-details-meta-grid" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="mobile-lf-details-meta-box">
+                          <MapPin size={20} />
+                          <div>
+                            <label>Localização Completa</label>
+                            <span>{selectedItem.location}</span>
+                          </div>
+                        </div>
+                        <div className="mobile-lf-details-meta-box">
+                          <Calendar size={20} />
+                          <div>
+                            <label>Data da Ocorrência</label>
+                            <span>{new Date(selectedItem.date_occurrence).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 'dicas' && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+                      <div className="mobile-lf-comments-section" style={{ marginTop: 0, borderTop: 'none', paddingTop: 0 }}>
+                        <div className="mobile-lf-comments-list">
+                          {comments.length > 0 ? (
+                            comments.map(comment => (
+                              <div key={comment.id} className="mobile-lf-comment">
+                                <div className="mobile-lf-comment-avatar">
+                                  {comment.avatar}
+                                </div>
+                                <div className="mobile-lf-comment-content">
+                                  <div className="mobile-lf-comment-header">
+                                    <span className="mobile-lf-comment-author">{comment.user}</span>
+                                    <span className="mobile-lf-comment-date">{comment.date}</span>
+                                  </div>
+                                  <p className="mobile-lf-comment-text">{comment.text}</p>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                    <button 
+                                      onClick={() => handleLikeComment(comment.id)}
+                                      style={{ 
+                                        background: 'none', 
+                                        border: 'none', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '0.25rem', 
+                                        cursor: 'pointer',
+                                        color: comment.isLiked ? '#ef4444' : '#94a3b8',
+                                        fontSize: '0.8rem',
+                                        fontWeight: '600',
+                                        padding: 0,
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                    >
+                                      <Heart size={14} fill={comment.isLiked ? '#ef4444' : 'none'} />
+                                      {comment.likes > 0 ? comment.likes : 'Curtir'}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div style={{ textAlign: 'center', padding: '2rem 1rem', color: '#94a3b8', fontSize: '0.9rem', fontStyle: 'italic', background: '#f8fafc', borderRadius: '1rem' }}>
+                              <MessageCircle size={32} style={{ margin: '0 auto 0.5rem auto', opacity: 0.5 }} />
+                              <p>Nenhuma dica ainda.</p>
+                              <p style={{ fontSize: '0.8rem' }}>Seja o primeiro a ajudar!</p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mobile-lf-comment-input-box">
+                          <input 
+                            type="text" 
+                            className="mobile-lf-comment-input"
+                            placeholder="Tem alguma dica?" 
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSendComment()}
+                          />
+                          <button 
+                            className="mobile-lf-comment-send-btn"
+                            onClick={handleSendComment}
+                            disabled={!commentText.trim()}
+                            style={{ opacity: commentText.trim() ? 1 : 0.5 }}
+                          >
+                            <Send size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isCreatingChat && (
+          <div className="mobile-lf-modal-backdrop" style={{ zIndex: 12000 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '2rem', 
+                borderRadius: '1.5rem', 
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1rem',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                width: '80%',
+                maxWidth: '300px'
+              }}
+            >
+              {chatError ? (
+                <>
+                  <div style={{ width: '50px', height: '50px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <X size={24} color="#ef4444" />
+                  </div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', textAlign: 'center' }}>Erro ao iniciar</h3>
+                  <p style={{ color: '#64748b', textAlign: 'center', fontSize: '0.9rem' }}>{chatError}</p>
+                  <button 
+                    onClick={() => { setIsCreatingChat(false); setChatError(null); }}
+                    style={{ width: '100%', padding: '12px', background: '#0f172a', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none', marginTop: '0.5rem' }}
+                  >
+                    Fechar
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="mobile-lf-spinner" style={{ width: '40px', height: '40px', border: '3px solid #f3f3f3', borderTop: '3px solid var(--sb-teal)' }}></div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', textAlign: 'center' }}>Iniciando conversa...</h3>
+                </>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDescriptionModal && (
+          <div className="mobile-lf-modal-backdrop" style={{ zIndex: 11000 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '24px', 
+                borderRadius: '20px', 
+                width: '90%', 
+                maxWidth: '400px', 
+                maxHeight: '80vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={20} className="mobile-text-teal" /> Descrição Completa
+                </h3>
+                <button onClick={() => setShowDescriptionModal(false)} style={{ background: 'none', border: 'none', padding: '4px' }}>
+                  <X size={20} color="#64748b" />
+                </button>
+              </div>
+              
+              <div style={{ overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+                <p style={{ color: '#334155', lineHeight: '1.6', fontSize: '0.95rem', whiteSpace: 'pre-wrap' }}>
+                  {selectedItem?.description}
+                </p>
+              </div>
+              
+              <button 
+                onClick={() => setShowDescriptionModal(false)}
+                style={{ marginTop: '1.5rem', width: '100%', padding: '12px', background: '#0f172a', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none' }}
+              >
+                Fechar
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDeleteModal && (
+          <div className="mobile-lf-modal-backdrop" style={{ zIndex: 10000 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '24px', 
+                borderRadius: '20px', 
+                width: '85%', 
+                maxWidth: '320px', 
+                textAlign: 'center',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ width: '60px', height: '60px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+                <Trash2 size={30} color="#ef4444" />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '8px' }}>Excluir Item</h3>
+              <p style={{ color: '#64748b', marginBottom: '16px', lineHeight: '1.5', fontSize: '0.9rem' }}>
+                Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.
+              </p>
+              
+              <div style={{ marginBottom: '20px', textAlign: 'left' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>Motivo da exclusão</label>
+                <textarea
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="Ex: Item recuperado, entregue ao dono..."
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem', minHeight: '80px', fontFamily: 'inherit' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  onClick={() => setShowDeleteModal(false)}
+                  style={{ flex: 1, padding: '12px', background: 'white', color: '#64748b', borderRadius: '12px', fontWeight: 'bold', border: '1px solid #e2e8f0' }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  disabled={!deleteReason.trim() || isDeleting}
+                  style={{ flex: 1, padding: '12px', background: '#ef4444', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none', opacity: (!deleteReason.trim() || isDeleting) ? 0.7 : 1 }}
+                >
+                  {isDeleting ? 'Excluindo...' : 'Excluir'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showResolveModal && (
+          <div className="mobile-lf-modal-backdrop" style={{ zIndex: 10000 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '24px', 
+                borderRadius: '20px', 
+                width: '85%', 
+                maxWidth: '320px', 
+                textAlign: 'center',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ width: '60px', height: '60px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+                <CheckCircle2 size={30} color="#16a34a" />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '8px' }}>Marcar como Resolvido?</h3>
+              <p style={{ color: '#64748b', marginBottom: '24px', lineHeight: '1.5', fontSize: '0.9rem' }}>
+                Isso indicará que o item foi encontrado ou devolvido.
+              </p>
+              
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  onClick={() => setShowResolveModal(false)}
+                  style={{ flex: 1, padding: '12px', background: 'white', color: '#64748b', borderRadius: '12px', fontWeight: 'bold', border: '1px solid #e2e8f0' }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={confirmResolve}
+                  disabled={isResolving}
+                  style={{ flex: 1, padding: '12px', background: '#16a34a', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none', opacity: isResolving ? 0.7 : 1 }}
+                >
+                  {isResolving ? 'Salvando...' : 'Confirmar'}
+                </button>
               </div>
             </motion.div>
           </div>
@@ -846,6 +1386,42 @@ export default function MobileAchadosEPerdidos() {
                   )}
                 </div>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSelfChatAlert && (
+          <div className="mobile-lf-modal-backdrop" style={{ zIndex: 9999 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              style={{ 
+                background: 'white', 
+                padding: '24px', 
+                borderRadius: '20px', 
+                width: '85%', 
+                maxWidth: '320px', 
+                textAlign: 'center',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ width: '60px', height: '60px', background: '#fff7ed', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px auto' }}>
+                <User size={30} color="#f97316" />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1e293b', marginBottom: '8px' }}>Ação Inválida</h3>
+              <p style={{ color: '#64748b', marginBottom: '24px', lineHeight: '1.5' }}>
+                Você não pode iniciar um chat com você mesmo.
+              </p>
+              <button 
+                onClick={() => setShowSelfChatAlert(false)}
+                style={{ width: '100%', padding: '14px', background: '#0f172a', color: 'white', borderRadius: '12px', fontWeight: 'bold', border: 'none' }}
+              >
+                Entendi
+              </button>
             </motion.div>
           </div>
         )}

@@ -39,6 +39,7 @@ class AchadosPerdidosService {
       reward: (data.reward && typeof data.reward === 'string') ? data.reward.trim() : (data.reward ? String(data.reward).trim() : ''),
       tags: Array.isArray(data.tags) ? data.tags.filter(tag => typeof tag === 'string' && tag.trim()) : [],
       user_id: userId,
+      created_by: userId, // Adicionar campo created_by para consistência
       city: data.city || '',
       state: data.state || '',
       neighborhood: data.neighborhood || ''
