@@ -206,25 +206,34 @@ export const MobileQueroAjudar = () => {
 
   // Efeito para carregar a localização e outros dados na inicialização
   useEffect(() => {
-    // Try to get current location first, fallback to registered address or default
     const loadLocation = async () => {
+      // Prioridade 1: Usar endereço cadastrado do usuário
+      if (user && user.endereco) {
+        const userCity = user.endereco.cidade || user.endereco.city || user.endereco.localidade || '';
+        const userState = user.endereco.estado || user.endereco.state || user.endereco.uf || '';
+        const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || '';
+        
+        if (userCity && userState) {
+          setUserLocation({ 
+            city: userCity, 
+            state: userState,
+            neighborhood: userNeighborhood 
+          });
+          console.log('✅ Localização definida pelo endereço cadastrado (Mobile):', { city: userCity, state: userState, neighborhood: userNeighborhood });
+          return;
+        }
+      }
+
+      // Prioridade 2: Tentar geolocalização
       try {
         const location = await getLocationWithFallback();
         setUserLocation(location);
-        console.log('Localização obtida automaticamente:', location);
+        console.log('✅ Localização obtida automaticamente (Mobile):', location);
       } catch (error) {
-        console.warn('Não foi possível obter localização automática, usando endereço cadastrado ou padrão:', error.message);
-        // Fallback to user's registered location or default
-        if (user && user.endereco) {
-          const userCity = user.endereco.cidade || user.endereco.city || 'São Paulo';
-          const userState = user.endereco.estado || user.endereco.state || 'SP';
-          setUserLocation({ city: userCity, state: userState });
-          console.log('Localização definida pelo endereço cadastrado:', { city: userCity, state: userState });
-        } else {
-          // Fallback to São Paulo if no user address
-          setUserLocation({ city: 'São Paulo', state: 'SP' });
-          console.log('Usando localização padrão (São Paulo) - usuário não logado ou sem endereço');
-        }
+        console.warn('⚠️ Não foi possível obter localização (Mobile):', error.message);
+        // Prioridade 3: Mostrar TODOS os pedidos (sem filtro de localização)
+        setUserLocation({ city: '', state: '', showAll: true });
+        console.log('ℹ️ Mostrando todos os pedidos (sem filtro de localização) (Mobile)');
       }
     };
 

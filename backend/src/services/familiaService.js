@@ -61,8 +61,12 @@ class FamiliaService {
       // Dados de endereço
       endereco: {
         logradouro: data.endereco || '',
+        numero: data.numero || '',
         bairro: data.bairro || data.endereco?.bairro || 'São Benedito',
-        pontoReferencia: data.pontoReferencia || '',
+        cidade: data.cidade || data.endereco?.cidade || '',
+        estado: data.estado || data.endereco?.estado || '',
+        cep: data.cep || '',
+        pontoReferencia: data.pontoReferencia || data.referencia || '',
         tipoMoradia: data.tipoMoradia || '',
         latitude: data.endereco?.latitude || -19.768,
         longitude: data.endereco?.longitude || -43.85

@@ -37,7 +37,15 @@ class CidadaoService {
       ocupacao: cidadao.ocupacao,
       cpf: cidadao.cpf,
       rg: cidadao.rg,
-      endereco: cidadao.endereco,
+      endereco: typeof cidadao.endereco === 'string' ? {
+        logradouro: cidadao.endereco,
+        numero: data.numero || '',
+        bairro: data.bairro || '',
+        cidade: data.cidade || '',
+        estado: data.estado || '',
+        cep: data.cep || '',
+        referencia: data.referencia || ''
+      } : cidadao.endereco,
       disponibilidade: cidadao.disponibilidade,
       interesses: cidadao.interesses,
       proposito: cidadao.proposito,

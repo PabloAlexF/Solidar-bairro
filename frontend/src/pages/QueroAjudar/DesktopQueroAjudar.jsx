@@ -1472,7 +1472,7 @@ export default function QueroAjudarPage() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalPosition, setModalPosition] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
   const [orderToHelp, setOrderToHelp] = useState(null);
-  const [selectedLocation, setSelectedLocation] = useState('minha_cidade');
+  const [selectedLocation, setSelectedLocation] = useState('brasil');
   const [onlyNew, setOnlyNew] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(true);
@@ -1665,25 +1665,35 @@ export default function QueroAjudarPage() {
   // UseEffect separado para carregar localização na inicialização
   useEffect(() => {
     const loadInitialLocation = async () => {
+      // Prioridade 1: Usar endereço cadastrado do usuário
+      if (user && user.endereco) {
+        const userCity = user.endereco.cidade || user.endereco.city || user.endereco.localidade || '';
+        const userState = user.endereco.estado || user.endereco.state || user.endereco.uf || '';
+        const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || '';
+        
+        if (userCity && userState) {
+          setUserLocation({ 
+            city: userCity, 
+            state: userState,
+            neighborhood: userNeighborhood 
+          });
+          console.log('✅ Localização definida pelo endereço cadastrado:', { city: userCity, state: userState, neighborhood: userNeighborhood });
+          setLocationLoading(false);
+          return;
+        }
+      }
+
+      // Prioridade 2: Tentar geolocalização do navegador
       try {
-        // Primeiro tentar obter localização atual
-        console.log('Tentando obter localização atual...');
+        console.log('Tentando obter localização do navegador...');
         const currentLocation = await getCurrentLocation();
         setUserLocation(currentLocation);
-        console.log('Localização atual obtida:', currentLocation);
+        console.log('✅ Localização obtida do navegador:', currentLocation);
       } catch (error) {
-        console.warn('Não foi possível obter localização atual:', error.message);
-        // Fallback para endereço cadastrado
-        if (user && user.endereco) {
-          const userCity = user.endereco.cidade || user.endereco.city || 'São Paulo';
-          const userState = user.endereco.estado || user.endereco.state || 'SP';
-          setUserLocation({ city: userCity, state: userState });
-          console.log('Localização definida pelo endereço cadastrado (Desktop):', { city: userCity, state: userState });
-        } else {
-          // Fallback to São Paulo if no user address
-          setUserLocation({ city: 'São Paulo', state: 'SP' });
-          console.log('Usando localização padrão (São Paulo) - usuário não logado ou sem endereço (Desktop)');
-        }
+        console.warn('⚠️ Não foi possível obter localização:', error.message);
+        // Prioridade 3: Mostrar TODOS os pedidos (sem filtro de localização)
+        setUserLocation({ city: '', state: '', showAll: true });
+        console.log('ℹ️ Mostrando todos os pedidos (sem filtro de localização)');
       }
       setLocationLoading(false);
     };

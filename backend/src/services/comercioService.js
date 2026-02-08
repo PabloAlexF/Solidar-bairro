@@ -48,7 +48,15 @@ class ComercioService {
       cnpj: comercio.cnpj,
       email: comercio.email,
       telefone: comercio.telefone,
-      endereco: comercio.endereco,
+      endereco: typeof comercio.endereco === 'string' ? {
+        logradouro: comercio.endereco,
+        numero: data.numero || '',
+        bairro: data.bairro || '',
+        cidade: data.cidade || '',
+        estado: data.estado || '',
+        cep: data.cep || '',
+        referencia: data.referencia || ''
+      } : comercio.endereco,
       categoria: comercio.categoria,
       descricao: comercio.descricao,
       horarioFuncionamento: comercio.horarioFuncionamento,
