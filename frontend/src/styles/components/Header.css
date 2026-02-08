@@ -14,17 +14,7 @@
   align-items: center;
 }
 
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 100%;
-  width: 100%;
-  padding: 0 2rem;
-  max-width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-}
+
 
 /* ===== LOGO ===== */
 .logo {
@@ -154,7 +144,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin-top: 8px;
-  z-index: 1001;
+  z-index: 1100 !important;
 }
 
 .notification-header {
@@ -422,7 +412,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin-top: 8px;
-  z-index: 1001;
+  z-index: 1100;
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;

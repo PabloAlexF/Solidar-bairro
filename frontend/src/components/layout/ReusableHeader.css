@@ -202,6 +202,10 @@
   background: rgba(13, 148, 136, 0.1);
 }
 
+.reusable-header .notification-btn svg {
+  flex-shrink: 0;
+}
+
 .reusable-header .notification-badge {
   position: absolute;
   top: 4px;
@@ -231,9 +235,12 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(20px);
-  z-index: 1001;
+  z-index: 1100 !important;
   margin-top: 8px;
   overflow: hidden;
+  right: 0 !important;
+  left: auto !important;
+  width: 380px !important;
 }
 
 .reusable-header .notification-header-improved {
@@ -474,7 +481,7 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(20px);
-  z-index: 1001;
+  z-index: 1100;
   margin-top: 8px;
   overflow: hidden;
 }
@@ -647,27 +654,33 @@
 
   .reusable-header .notification-dropdown-improved {
     position: fixed;
-    top: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    right: auto;
-    width: calc(100vw - 2rem);
-    max-width: 400px;
+    top: 80px;
+    left: 1rem !important;
+    right: 1rem !important;
+    transform: none;
+    width: auto !important;
+    max-width: 500px;
+    margin: 0 auto;
     max-height: calc(100vh - 90px);
+    display: flex;
+    flex-direction: column;
   }
 
   .reusable-header .user-dropdown {
     position: fixed;
-    top: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    right: auto;
-    width: calc(100vw - 2rem);
+    top: 80px;
+    left: 1rem;
+    right: 1rem;
+    transform: none;
+    width: auto;
+    margin: 0 auto;
     max-width: 320px;
   }
 
   .reusable-header .notification-list-improved {
-    max-height: calc(100vh - 250px);
+    max-height: none;
+    flex: 1;
+    overflow-y: auto;
   }
 }
 
@@ -721,7 +734,7 @@
     content: '';
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     z-index: -1;
     animation: fadeIn 0.2s ease;
   }
@@ -743,11 +756,11 @@
   @keyframes slideDown {
     from {
       opacity: 0;
-      transform: translateX(-50%) translateY(-10px);
+      transform: translateY(-10px);
     }
     to {
       opacity: 1;
-      transform: translateX(-50%) translateY(0);
+      transform: translateY(0);
     }
   }
 }

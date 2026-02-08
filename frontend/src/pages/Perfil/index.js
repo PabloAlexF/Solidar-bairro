@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   User,
   MapPin,
@@ -28,7 +28,9 @@ import {
   Mail,
   MessageCircle,
   AlertTriangle,
-  Clock
+  Clock,
+  Share2,
+  Copy
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -40,6 +42,44 @@ import apiService from '../../services/apiService';
 import ReusableHeader from '../../components/layout/ReusableHeader';
 import ProfileMobile from './ProfileMobile';
 import './profile.css';
+
+// Componente de Animação de Contagem
+const CountUp = ({ end, duration = 2000 }) => {
+  const [count, setCount] = useState(0);
+  const countRef = useRef(0);
+  
+  useEffect(() => {
+    let startTime = null;
+    let animationFrame;
+    const startValue = countRef.current;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const percentage = Math.min(progress / duration, 1);
+      
+      // Easing function (easeOutExpo) - Começa rápido e desacelera suavemente
+      const easeOut = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+      
+      const nextValue = Math.floor(startValue + (end - startValue) * easeOut(percentage));
+      setCount(nextValue);
+      countRef.current = nextValue;
+
+      if (progress < duration) {
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+        countRef.current = end;
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration]);
+
+  return <>{count}</>;
+};
 
 const ProfileComponent = () => {
   const { user, isAuthenticated, updateUser } = useAuth();
@@ -96,6 +136,7 @@ const ProfileComponent = () => {
   const [pontos, setPontos] = useState(0);
   const [pedidosCriados, setPedidosCriados] = useState(0);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -149,6 +190,22 @@ const ProfileComponent = () => {
     return StatsManager.calculateStats(user?.uid || user?.id);
   };
 
+  // Lógica de Completude do Perfil
+  const calculateProfileCompletion = () => {
+    let score = 0;
+    const total = 5;
+    
+    if (avatarUrl && !avatarUrl.includes('unsplash')) score++; // Foto personalizada
+    if (bio && bio.length > 20 && !bio.includes('Sou um cidadão')) score++; // Bio personalizada
+    if (isPhoneVerified) score++; // Telefone verificado
+    if (skills.length > 0) score++; // Habilidades adicionadas
+    if (user?.endereco) score++; // Endereço
+    
+    return Math.round((score / total) * 100);
+  };
+
+  const completionPercentage = calculateProfileCompletion();
+
   useEffect(() => {
     const profileContainer = document.querySelector('.profile-container');
     if (profileContainer) {
@@ -162,7 +219,7 @@ const ProfileComponent = () => {
   }, [accentColor]);
 
   useEffect(() => {
-    if (isSettingsOpen || isEditingBanner || isViewingHistory || isPhoneModalOpen || isEmailModalOpen) {
+    if (isSettingsOpen || isEditingBanner || isViewingHistory || isPhoneModalOpen || isEmailModalOpen || isShareModalOpen) {
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
       setTimeout(() => {
@@ -180,7 +237,7 @@ const ProfileComponent = () => {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
     };
-  }, [isSettingsOpen, isEditingBanner, isViewingHistory, isPhoneModalOpen, isEmailModalOpen]);
+  }, [isSettingsOpen, isEditingBanner, isViewingHistory, isPhoneModalOpen, isEmailModalOpen, isShareModalOpen]);
 
   if (!user) {
     return (
@@ -293,6 +350,15 @@ const ProfileComponent = () => {
     });
   };
 
+  const handleShareProfile = () => {
+    setIsShareModalOpen(true);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success('Link copiado para a área de transferência!');
+  };
+
   // Render mobile version if on mobile device
   if (isMobile) {
     return <ProfileMobile />;
@@ -338,6 +404,11 @@ const ProfileComponent = () => {
             Customizar Fundo
           </button>
         </div>
+        
+        <button className="share-btn" onClick={handleShareProfile} title="Compartilhar Perfil">
+          <Share2 size={18} />
+          <span>Compartilhar</span>
+        </button>
       </header>
 
       {isSettingsOpen && (
@@ -578,6 +649,25 @@ const ProfileComponent = () => {
             <h1 className="name-title">{user?.nome || user?.nomeCompleto || user?.nomeEstabelecimento || user?.nomeEntidade || 'Usuário'} <span style={{ fontSize: '18px', verticalAlign: 'middle', opacity: 0.8 }}>{mood === 'Empolgado' ? '🚀' : mood === 'Zen' ? '🧘' : mood === 'Focado' ? '🎯' : mood === 'Criativo' ? '🎨' : '🙏'}</span></h1>
             <div className="badge">{user?.tipo === 'comercio' ? 'Comércio Local' : user?.tipo === 'ong' ? 'ONG Parceira' : user?.tipo === 'familia' ? 'Família Cadastrada' : `Nível ${Math.floor(pontos / 100) + 1} • ${pontos < 100 ? 'Iniciante' : pontos < 300 ? 'Ajudante' : pontos < 500 ? 'Colaborador' : 'Expert'}`}</div>
 
+            {/* Widget de Completude do Perfil */}
+            {completionPercentage < 100 && (
+              <div className="card-padding" style={{ paddingBottom: 0 }}>
+                <div className="profile-completion-card card-padding" style={{ padding: '16px' }}>
+                  <div className="completion-header">
+                    <span className="completion-title">Perfil {completionPercentage}% Completo</span>
+                    <span className="completion-percentage">{completionPercentage}%</span>
+                  </div>
+                  <div className="completion-bar-bg">
+                    <div className="completion-bar-fill" style={{ width: `${completionPercentage}%` }}></div>
+                  </div>
+                  <div className="completion-next-step">
+                    <Sparkles size={12} color="var(--primary)" />
+                    <span>Dica: {skills.length === 0 ? "Adicione suas habilidades" : !isPhoneVerified ? "Verifique seu telefone" : "Personalize sua bio"}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="level-container">
               <div className="level-header">
                 <span>Progresso de Nível</span>
@@ -635,24 +725,10 @@ const ProfileComponent = () => {
               )}
               
               {/* Notificações */}
-              <div className="notification-wrapper" style={{ width: '100%', marginTop: '16px' }}>
+              <div className="notification-wrapper">
                 <button
                   className="notification-btn"
                   onClick={() => setShowNotifications(!showNotifications)}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '8px',
-                    background: 'var(--background)',
-                    color: 'var(--text-main)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    fontSize: '14px'
-                  }}
                 >
                   <Bell size={18} />
                   Notificações
@@ -675,64 +751,31 @@ const ProfileComponent = () => {
                 </button>
 
                 {showNotifications && (
-                  <div className="notification-dropdown-improved" style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: '0',
-                    right: '0',
-                    background: 'var(--card-bg)',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                    zIndex: 1000,
-                    marginTop: '8px',
-                    maxHeight: '400px',
-                    overflow: 'hidden'
-                  }}>
-                    <div className="notification-header-improved" style={{
-                      padding: '16px',
-                      borderBottom: '1px solid var(--border-color)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
+                  <div className="notification-dropdown-improved">
+                    <div className="notification-header-improved">
                       <div className="notification-title-section">
-                        <h3 style={{ margin: '0', fontSize: '16px', fontWeight: '700' }}>Notificações</h3>
+                        <h3>Notificações</h3>
                         {getUnreadCount() > 0 && (
-                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{getUnreadCount()} não lidas</span>
+                          <span>{getUnreadCount()} não lidas</span>
                         )}
                       </div>
                       <button
                         className="notification-close-btn"
                         onClick={() => setShowNotifications(false)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--text-muted)',
-                          cursor: 'pointer',
-                          padding: '4px'
-                        }}
                       >
                         <X size={16} />
                       </button>
                     </div>
 
                     {notifications.length === 0 ? (
-                      <div className="notification-empty-improved" style={{
-                        padding: '32px 16px',
-                        textAlign: 'center',
-                        color: 'var(--text-muted)'
-                      }}>
-                        <Bell size={32} style={{ margin: '0 auto 16px', opacity: 0.5 }} />
-                        <p style={{ margin: '8px 0', fontSize: '16px', fontWeight: '700' }}>Nenhuma notificação</p>
-                        <p style={{ margin: '0', fontSize: '14px' }}>Você receberá notificações sobre mensagens e atividades aqui</p>
+                      <div className="notification-empty-improved">
+                        <Bell size={32} />
+                        <p className="empty-title">Nenhuma notificação</p>
+                        <p className="empty-subtitle">Você receberá notificações sobre mensagens e atividades aqui</p>
                       </div>
                     ) : (
                       <>
-                        <div className="notification-list-improved" style={{
-                          maxHeight: '300px',
-                          overflowY: 'auto'
-                        }}>
+                        <div className="notification-list-improved">
                           {notifications.slice(0, 10).map((notification) => {
                             const timeAgo = (() => {
                               const now = new Date();
@@ -795,66 +838,38 @@ const ProfileComponent = () => {
                                     setShowNotifications(false);
                                   }
                                 }}
-                                style={{
-                                  padding: '12px 16px',
-                                  borderBottom: '1px solid var(--border-color)',
-                                  cursor: 'pointer',
-                                  background: !notification.read ? 'rgba(16, 185, 129, 0.05)' : 'transparent',
-                                  display: 'flex',
-                                  alignItems: 'flex-start',
-                                  gap: '12px'
-                                }}
                               >
                                 <div className="notification-icon-improved">
                                   {getNotificationIcon(notification.type)}
                                 </div>
-                                <div className="notification-content-improved" style={{ flex: 1 }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                                    <h4 style={{ margin: '0', fontSize: '14px', fontWeight: '700' }}>{notification.title}</h4>
-                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <div className="notification-content-improved">
+                                  <div className="notification-content-header">
+                                    <h4>{notification.title}</h4>
+                                    <span>
                                       <Clock size={12} />
                                       {timeAgo}
                                     </span>
                                   </div>
-                                  <p style={{ margin: '0', fontSize: '14px', color: 'var(--text-muted)' }}>{notification.message}</p>
+                                  <p>{notification.message}</p>
                                 </div>
-                                {!notification.read && <div style={{
-                                  width: '8px',
-                                  height: '8px',
-                                  background: 'var(--primary)',
-                                  borderRadius: '50%',
-                                  flexShrink: 0,
-                                  marginTop: '6px'
-                                }} />}
+                                {!notification.read && <div className="notification-unread-dot" />}
                               </div>
                             );
                           })}
                         </div>
 
-                        <div className="notification-footer-improved" style={{
-                          padding: '16px',
-                          borderTop: '1px solid var(--border-color)',
-                          display: 'flex',
-                          justifyContent: 'center'
-                        }}>
+                        <div className="notification-footer-improved">
                           <button
+                            className="notification-clear-btn"
                             onClick={() => {
                               clearNotifications();
                               setShowNotifications(false);
-                            }}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--primary)',
-                              cursor: 'pointer',
-                              fontSize: '14px',
-                              fontWeight: '600'
                             }}
                           >
                             Limpar todas
                           </button>
                           {notifications.length > 10 && (
-                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '16px' }}>
+                            <span className="notification-more-count">
                               +{notifications.length - 10} mais
                             </span>
                           )}
@@ -878,15 +893,15 @@ const ProfileComponent = () => {
               Conquistas
             </h3>
             <div className="achievements-grid">
-              <div className="achievement-badge unlocked">
+              <div className="achievement-badge unlocked" data-tooltip="Primeiro acesso realizado!">
                 <div className="badge-icon"><Zap size={24} /></div>
                 <span className="badge-name">Pioneiro</span>
               </div>
-              <div className="achievement-badge">
+              <div className="achievement-badge" data-tooltip="Complete 5 ajudas para desbloquear">
                 <div className="badge-icon"><Star size={24} /></div>
                 <span className="badge-name">Ajudante</span>
               </div>
-              <div className="achievement-badge">
+              <div className="achievement-badge" data-tooltip="Receba 10 avaliações positivas">
                 <div className="badge-icon"><Coffee size={24} /></div>
                 <span className="badge-name">Amigável</span>
               </div>
@@ -911,15 +926,15 @@ const ProfileComponent = () => {
             {!zenMode && (
               <div className="impact-stats-grid">
                 <div className="impact-stat-item">
-                  <span className="value">{ajudasConcluidas}</span>
+                  <span className="value"><CountUp end={ajudasConcluidas} /></span>
                   <span className="label">Ajudas Concluídas</span>
                 </div>
                 <div className="impact-stat-item">
-                  <span className="value">{pontos}</span>
+                  <span className="value"><CountUp end={pontos} /></span>
                   <span className="label">Pontos</span>
                 </div>
                 <div className="impact-stat-item">
-                  <span className="value">{pedidosCriados}</span>
+                  <span className="value"><CountUp end={pedidosCriados} /></span>
                   <span className="label">Pedidos</span>
                 </div>
               </div>
@@ -1202,6 +1217,42 @@ const ProfileComponent = () => {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isShareModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsShareModalOpen(false)}>
+          <div className="modal-content share-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Compartilhar Perfil</h3>
+              <button className="close-btn" onClick={() => setIsShareModalOpen(false)}><X size={24} /></button>
+            </div>
+            <div className="share-body">
+              <div className="qr-container">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}&color=${accentColor.replace('#', '')}&bgcolor=ffffff&margin=10`} 
+                  alt="QR Code do Perfil" 
+                  className="qr-image"
+                />
+                <p>Escaneie para conectar</p>
+              </div>
+              
+              <div className="share-link-container">
+                <input type="text" value={window.location.href} readOnly className="share-input" />
+                <button className="btn-copy" onClick={handleCopyLink} title="Copiar Link">
+                  <Copy size={18} />
+                </button>
+              </div>
+
+              <button 
+                className="btn btn-primary" 
+                style={{ width: '100%', justifyContent: 'center' }}
+                onClick={() => window.open(`https://wa.me/?text=Olha meu perfil no SolidarBairro: ${window.location.href}`, '_blank')}
+              >
+                <MessageCircle size={18} /> Compartilhar no WhatsApp
+              </button>
             </div>
           </div>
         </div>
