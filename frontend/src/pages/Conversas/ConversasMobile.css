@@ -1,0 +1,167 @@
+.conv-mobile-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+@media (min-width: 901px) {
+  .conv-mobile-container {
+    display: none;
+  }
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+.mobile-menu-close-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.mobile-menu-close-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.conv-mobile-sidebar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  z-index: 1000;
+  background: #f8fafc;
+  padding: 20px;
+  box-shadow: 4px 0 12px rgba(0,0,0,0.1);
+  overflow-y: auto;
+}
+
+.conv-mobile-sidebar.open {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.conv-mobile-feed {
+  width: 100%;
+}
+
+.mobile-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 8px;
+  border-radius: 8px;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.mobile-tabs-scroll {
+  display: flex;
+  overflow-x: auto;
+  padding: 4px 4px 12px 4px;
+  gap: 10px;
+  margin: 0 -4px 16px -4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.mobile-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-tab {
+  white-space: nowrap;
+  padding: 8px 20px;
+  border-radius: 100px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  cursor: pointer;
+}
+
+.mobile-tab.active {
+  background: #0f172a;
+  color: white;
+  border-color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+}
+
+@media (max-width: 480px) {
+  .conv-mobile-sidebar {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .feed-title {
+    font-size: 1.25rem;
+  }
+
+  .conv-actions-group {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .conv-sort-select {
+    flex: 1;
+    font-size: 0.85rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .mark-read-btn {
+    padding: 0.6rem;
+  }
+
+  .conv-bento-card {
+    padding: 1rem;
+  }
+
+  .card-avatar-box {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  .name-row h3 {
+    font-size: 1rem;
+  }
+
+  .urgency-pill {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .subject-text {
+    font-size: 0.85rem;
+  }
+
+  .card-meta-aside {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .time-tag {
+    font-size: 0.75rem;
+  }
+
+  .status-badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+}

@@ -338,19 +338,19 @@ function CadastroSelectionPage() {
         </div>
       </main>
 
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-logo">
-             <div className="footer-icon-wrapper">
-              <Heart className="footer-icon" />
+      <footer className="cadastro-footer-minimal">
+        <div className="cadastro-footer-container">
+          <div className="cadastro-footer-brand">
+             <div className="cadastro-footer-heart">
+              <Heart className="cadastro-heart-icon" />
             </div>
-            <p className="footer-copy">
+            <p className="cadastro-footer-text">
               © 2026 SolidarBairro. Made for impact.
             </p>
           </div>
-          <div className="footer-links">
+          <div className="cadastro-footer-nav">
             {['Privacidade', 'Termos', 'Suporte'].map((link) => (
-              <Link key={link} to="#" className="footer-link">
+              <Link key={link} to="#" className="cadastro-footer-navlink">
                 {link}
               </Link>
             ))}

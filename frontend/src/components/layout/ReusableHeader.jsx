@@ -15,7 +15,8 @@ const ReusableHeader = ({
   showLoginButton = false,
   showAdminButtons = false,
   showPainelSocial = false,
-  currentPage = ''
+  currentPage = '',
+  mobileLoginOnly = false
 }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -88,6 +89,12 @@ const ReusableHeader = ({
       const notificationElement = document.querySelector('.notification-wrapper');
       if (showNotifications && notificationElement && !notificationElement.contains(event.target)) {
         setShowNotifications(false);
+      }
+
+      const adminDropdown = document.querySelector('.admin-dropdown-wrapper');
+      if (adminDropdown && !adminDropdown.contains(event.target)) {
+        const dropdown = adminDropdown.querySelector('div[style*="position: absolute"]');
+        if (dropdown) dropdown.style.display = 'none';
       }
     };
 
@@ -202,25 +209,37 @@ const ReusableHeader = ({
 
           {!isAuthenticated() && showLoginButton && (
             <div className="auth-buttons">
-              <button
-                className="btn btn-secondary"
-                onClick={() => navigate('/login')}
-              >
-                Entrar
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={() => navigate('/cadastro')}
-              >
-                Cadastrar
-              </button>
+              {!mobileLoginOnly && (
+                <button
+                  className="btn btn-secondary btn-desktop-only"
+                  onClick={() => navigate('/login')}
+                >
+                  Entrar
+                </button>
+              )}
+              {!mobileLoginOnly && (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate('/cadastro')}
+                >
+                  Cadastrar
+                </button>
+              )}
+              {mobileLoginOnly && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => navigate('/login')}
+                >
+                  Entrar
+                </button>
+              )}
             </div>
           )}
 
           {isAuthenticated() && userName && (
             <div className="user-section">
               {showAdminButtons && isAdmin && (
-                <>
+                <div className="admin-dropdown-wrapper" style={{ position: 'relative', marginRight: '0.5rem' }}>
                   <button
                     style={{
                       background: 'linear-gradient(135deg, rgb(139, 92, 246), rgb(124, 58, 237))',
@@ -235,39 +254,94 @@ const ReusableHeader = ({
                       cursor: 'pointer',
                       transition: '0.3s',
                       boxShadow: 'rgba(139, 92, 246, 0.4) 0px 6px 20px',
-                      marginRight: '0.5rem',
                       transform: 'translateY(-2px)'
                     }}
-                    onClick={() => navigate('/admin')}
-                    title="Dashboard Admin"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const dropdown = e.currentTarget.nextElementSibling;
+                      if (dropdown.style.display === 'block') {
+                        dropdown.style.display = 'none';
+                      } else {
+                        dropdown.style.display = 'block';
+                        dropdown.style.opacity = '0';
+                        dropdown.style.transform = 'translateY(-10px)';
+                        setTimeout(() => {
+                          dropdown.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+                          dropdown.style.opacity = '1';
+                          dropdown.style.transform = 'translateY(0)';
+                        }, 10);
+                      }
+                    }}
+                    title="Menu Admin"
                   >
                     <Settings size={20} />
                   </button>
-                  {showPainelSocial && (
+                  <div
+                    style={{
+                      display: 'none',
+                      position: 'absolute',
+                      top: '52px',
+                      right: '0',
+                      background: 'white',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                      minWidth: '200px',
+                      zIndex: 1000,
+                      overflow: 'hidden'
+                    }}
+                  >
                     <button
-                      title="Painel Social"
+                      className="admin-dropdown-btn"
                       style={{
-                        background: 'linear-gradient(135deg, rgb(13, 148, 136), rgb(20, 184, 166))',
+                        width: '100%',
+                        padding: '12px 16px',
                         border: 'none',
-                        color: 'white',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
+                        background: 'white',
+                        textAlign: 'left',
+                        cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: '0.3s',
-                        boxShadow: 'rgba(13, 148, 136, 0.4) 0px 6px 20px',
-                        marginRight: '1rem',
-                        transform: 'translateY(-2px)'
+                        gap: '10px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#1e293b',
+                        transition: 'background 0.2s'
                       }}
-                      onClick={() => navigate('/painel-social')}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                      onClick={() => navigate('/admin')}
                     >
-                      <ShieldCheck size={20} />
+                      <Settings size={18} style={{ color: '#8b5cf6' }} />
+                      Dashboard Admin
                     </button>
-                  )}
-                </>
+                    {showPainelSocial && (
+                      <button
+                        className="admin-dropdown-btn"
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          border: 'none',
+                          background: 'white',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: '#1e293b',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                        onClick={() => navigate('/painel-social')}
+                      >
+                        <ShieldCheck size={18} style={{ color: '#0d9488' }} />
+                        Painel Social
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* Notificações */}
@@ -477,7 +551,8 @@ const ReusableHeader = ({
                           setShowUserMenu(false);
                         }}
                       >
-                        👤 Ver perfil
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        Ver perfil
                       </button>
 
                       <button
@@ -487,7 +562,8 @@ const ReusableHeader = ({
                           setShowUserMenu(false);
                         }}
                       >
-                        💬 Minhas conversas
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Minhas conversas
                         {unreadCount > 0 && (
                           <span className="menu-badge">{unreadCount}</span>
                         )}
@@ -501,7 +577,8 @@ const ReusableHeader = ({
                             setShowUserMenu(false);
                           }}
                         >
-                          ⚙️ Dashboard Admin
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m6-12l-4.5 4.5M10.5 13.5 6 18m12-6h-6m-6 0H1m17.5-4.5L14 12m-3.5 1.5L6 18"></path></svg>
+                          Dashboard Admin
                         </button>
                       )}
 
@@ -512,7 +589,8 @@ const ReusableHeader = ({
                           window.location.reload();
                         }}
                       >
-                        🚪 Sair
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Sair
                       </button>
                     </div>
                   </div>

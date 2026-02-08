@@ -1,10 +1,10 @@
 import React from 'react';
 import { useIsMobile } from '../../hooks/useIsMobile';
-import PainelSocial from './PainelSocial';
-import PainelSocialMobile from './PainelSocialMobile';
+import OnboardingDesktop from '../../components/Onboarding/OnboardingDesktop';
+import OnboardingMobile from '../../components/Onboarding/OnboardingMobile';
 
 export default function PainelSocialWrapper() {
   const isMobile = useIsMobile();
 
-  return isMobile ? <PainelSocialMobile /> : <PainelSocial />;
+  return isMobile ? <OnboardingMobile /> : <OnboardingDesktop />;
 }

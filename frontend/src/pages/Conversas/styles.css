@@ -979,3 +979,173 @@
     grid-template-columns: 1fr auto;
   }
 }
+
+
+/* Responsividade Global */
+@media (max-width: 900px) {
+  .conv-main-content {
+    padding: 90px 1rem 1rem;
+  }
+
+  .feed-header-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .header-left-group {
+    width: 100%;
+  }
+
+  .conv-actions-group {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .conv-sort-select {
+    flex: 1;
+  }
+
+  .conv-search-bar {
+    margin-top: 0.75rem;
+  }
+
+  .conv-bento-card {
+    padding: 1.25rem;
+  }
+
+  .card-top {
+    flex-wrap: wrap;
+  }
+
+  .card-user-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-meta-aside {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .pin-btn {
+    align-self: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .conv-main-content {
+    padding: 80px 0.5rem 1rem;
+  }
+
+  .conv-feed-header {
+    padding: 1rem;
+    border-radius: 1rem;
+  }
+
+  .feed-title {
+    font-size: 1.25rem;
+  }
+
+  .conv-search-bar input {
+    padding: 0.6rem 0.8rem 0.6rem 2.5rem;
+    font-size: 0.9rem;
+  }
+
+  .conv-search-bar .search-icon {
+    left: 0.8rem;
+  }
+
+  .conv-bento-card {
+    padding: 1rem;
+    border-radius: 1rem;
+  }
+
+  .card-avatar-box {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  .name-row h3 {
+    font-size: 0.95rem;
+  }
+
+  .urgency-pill {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .subject-text {
+    font-size: 0.85rem;
+  }
+
+  .last-msg-preview {
+    font-size: 0.85rem;
+  }
+
+  .location-tag {
+    font-size: 0.8rem;
+  }
+
+  .msg-count-pill {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .arrow-box {
+    width: 32px;
+    height: 32px;
+  }
+
+  .conv-empty-state-v2 {
+    padding: 3rem 1.5rem;
+  }
+
+  .conv-empty-state-v2 h3 {
+    font-size: 1.1rem;
+  }
+
+  .conv-empty-state-v2 p {
+    font-size: 0.9rem;
+  }
+
+  .btn-start-action {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 360px) {
+  .conv-main-content {
+    padding: 75px 0.25rem 0.75rem;
+  }
+
+  .feed-title {
+    font-size: 1.1rem;
+  }
+
+  .conv-bento-card {
+    padding: 0.85rem;
+  }
+
+  .card-avatar-box {
+    width: 44px;
+    height: 44px;
+    font-size: 0.9rem;
+  }
+
+  .name-row h3 {
+    font-size: 0.9rem;
+  }
+
+  .subject-text {
+    font-size: 0.8rem;
+  }
+}

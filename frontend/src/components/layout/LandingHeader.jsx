@@ -184,7 +184,12 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
         <div className="nav-menu">
           {showNavLinks && (
             <>
-              <button className="nav-link" onClick={() => navigate('/contato')}>
+              <button className="nav-link" onClick={() => {
+                const footer = document.querySelector('.footer');
+                if (footer) {
+                  footer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}>
                 Contato
                 <span className="link-underline" />
               </button>
