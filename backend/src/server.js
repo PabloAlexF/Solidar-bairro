@@ -83,7 +83,16 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "https://viacep.com.br/*", "https://nominatim.openstreetmap.org", "https://api.openstreetmap.org"],
+      connectSrc: [
+        "'self'", 
+        "https://viacep.com.br/*", 
+        "https://nominatim.openstreetmap.org", 
+        "https://api.openstreetmap.org",
+        "https://api.bigdatacloud.net",
+        "https://api.allorigins.win",
+        "wss://*.onrender.com",
+        "ws://*.onrender.com"
+      ],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn-uicons.flaticon.com"],
       imgSrc: ["'self'", "data:", "https:"],
