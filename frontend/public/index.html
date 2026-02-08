@@ -45,17 +45,6 @@
     -->
     <title>SolidarBrasil - Plataforma de Solidariedade Comunitária</title>
     
-    <!-- PWA Service Worker -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('%PUBLIC_URL%/service-worker.js')
-            .then(reg => console.log('SW registered'))
-            .catch(err => console.log('SW registration failed'));
-        });
-      }
-    </script>
-    
     <script type="text/javascript">
       (function(l) {
         if (l.search[1] === '/' ) {

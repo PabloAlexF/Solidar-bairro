@@ -10,12 +10,12 @@ export class SecurityMiddleware {
 
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Necessário para React
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: https:",
-      "connect-src 'self' http://localhost:3001 https://nominatim.openstreetmap.org https://api.openstreetmap.org https://viacep.com.br/*",
-      "frame-src 'none'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn-uicons.flaticon.com",
+      "font-src 'self' https://fonts.gstatic.com https://cdn-uicons.flaticon.com",
+      "img-src 'self' data: https: blob:",
+      "connect-src 'self' https://solidar-bairro-backend.onrender.com https://viacep.com.br https://nominatim.openstreetmap.org https://api.openstreetmap.org",
+      "frame-src 'self'",
       "object-src 'none'",
       "base-uri 'self'"
     ].join('; ');

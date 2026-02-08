@@ -14,7 +14,7 @@ async function createAdminUser() {
 
     const adminData = {
       nome: 'Administrador Sistema',
-      email: 'admin@solidarbairro.com',
+      email: 'solidarbrasil@gmail.com',
       senha: hashedPassword,
       tipo: 'admin',
       role: 'admin',
