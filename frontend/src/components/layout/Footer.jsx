@@ -1,6 +1,6 @@
 import React from 'react';
 import { Heart } from 'lucide-react';
-import logo from '../../assets/images/marca.png';
+import marca from '../../assets/images/marca.png';
 import './Footer.css';
 
 const Footer = () => {
@@ -10,8 +10,10 @@ const Footer = () => {
         <div className="footer-main">
           <div className="footer-brand">
             <div className="logo-wrapper">
-              <img src={logo} alt="SolidarBrasil" style={{ width: '48px', height: '48px' }} />
-              <span className="logo-name">SolidarBrasil</span>
+              <div className="logo-icon" style={{ width: '48px', height: '48px', position: 'relative', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+              </div>
+              <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
             </div>
             <p className="footer-tagline">
               Plataforma de solidariedade comunitária que conecta pessoas que precisam de ajuda com aquelas que podem ajudar.

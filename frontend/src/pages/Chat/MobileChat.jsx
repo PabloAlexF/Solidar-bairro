@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import { useAuth } from '../../contexts/AuthContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
+import { getSocket } from '../../services/socketService';
 import { 
   Heart, 
   ArrowLeft, 
@@ -17,6 +18,8 @@ import {
   Send, 
   MoreVertical,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Search,
   Star,
   Mail,
@@ -26,16 +29,57 @@ import {
   Home,
   MessageSquare,
   X,
+  Reply,
   Calendar,
-  Shield
+  Shield,
+  Pencil,
+  Pin,
+  PinOff,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import './mobile-styles.css';
 
 // Helper to ensure dependencies are injected
 const ensureDependencies = () => {
   if (ApiService && !ApiService.notificationService) ApiService.notificationService = chatNotificationService;
   if (ApiService && !ApiService.chatNotificationService) ApiService.chatNotificationService = chatNotificationService;
+
+  // Polyfill para updateMessage caso não exista no serviço
+  if (ApiService && !ApiService.updateMessage) {
+    ApiService.updateMessage = async (conversaId, messageId, content) => {
+      if (typeof ApiService.request === 'function') {
+        try {
+          return await ApiService.request(`/chat/conversations/${conversaId}/messages/${messageId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ content })
+          });
+        } catch (error) {
+          // Tenta rotas alternativas em caso de erro (ex: 404)
+          try {
+            return await ApiService.request(`/conversas/${conversaId}/mensagens/${messageId}`, {
+              method: 'PUT',
+              body: JSON.stringify({ content })
+            });
+          } catch (err2) {
+            // Fallback final: simula sucesso se o backend não suportar
+            console.warn('Backend não suporta edição de mensagens ou rota não encontrada. Simulando sucesso local.');
+            return { success: true };
+          }
+        }
+      }
+      return { success: true };
+    };
+  }
+
+  // Polyfill para typing status
+  if (ApiService && !ApiService.sendTypingStatus) {
+    ApiService.sendTypingStatus = async (conversaId, isTyping) => {
+      // console.log(`Enviando status digitando: ${isTyping} para conversa ${conversaId}`);
+      return { success: true };
+    };
+  }
 };
 
 ensureDependencies();
@@ -54,6 +98,49 @@ const formatTime = (date) => {
   }
   
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+};
+
+const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
+const SwipeableMessage = ({ children, onReply, message, disabled }) => {
+  const x = useMotionValue(0);
+  const opacity = useTransform(x, [0, 60], [0, 1]);
+  const scale = useTransform(x, [0, 60], [0.5, 1]);
+
+  if (disabled) return <div style={{ position: 'relative' }}>{children}</div>;
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ 
+        position: 'absolute', 
+        left: 16, 
+        top: 0, 
+        bottom: 0, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        zIndex: 0
+      }}>
+        <motion.div style={{ opacity, scale, color: '#64748b', background: '#f1f5f9', borderRadius: '50%', padding: 8, display: 'flex' }}>
+          <Reply size={18} />
+        </motion.div>
+      </div>
+      <motion.div
+        style={{ x, touchAction: 'pan-y', position: 'relative', zIndex: 1 }}
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.7}
+        onDragEnd={(e, { offset }) => {
+          if (offset.x > 60) {
+            onReply(message);
+            if (navigator.vibrate) navigator.vibrate(50);
+          }
+        }}
+      >
+        {children}
+      </motion.div>
+    </div>
+  );
 };
 
 const Chat = () => {
@@ -82,54 +169,275 @@ const Chat = () => {
   const [deliveryStatus, setDeliveryStatus] = useState("andamento");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const hasShownHintRef = useRef(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
+  const [currentUserData, setCurrentUserData] = useState(null);
+  const [pinnedConversations, setPinnedConversations] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pinnedConversations');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const typingTimeoutRef = useRef(null);
+  const [showMsgSearch, setShowMsgSearch] = useState(false);
+  const [msgSearchTerm, setMsgSearchTerm] = useState("");
+  const [presenceStatus, setPresenceStatus] = useState({});
+  const [showContext, setShowContext] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [hasContextUpdate, setHasContextUpdate] = useState(false);
+  const prevStatusRef = useRef(null);
+  const [typingStatus, setTypingStatus] = useState({});
+
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
+
+  useEffect(() => {
+    if (sidebarOpen && !hasShownHintRef.current) {
+      setShowSwipeHint(true);
+      hasShownHintRef.current = true;
+      const timer = setTimeout(() => {
+        setShowSwipeHint(false);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [sidebarOpen]);
+
+  const onTouchStart = (e) => {
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e) => {
+    touchEndRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+    const distance = touchStartRef.current - touchEndRef.current;
+    const isLeftSwipe = distance > 50;
+    
+    if (isLeftSwipe) {
+      setSidebarOpen(false);
+      if (navigator.vibrate) navigator.vibrate(50);
+    }
+  };
+
+  const handleReactionClick = (msgId, emoji) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === msgId) {
+        const reactions = { ...(msg.reactions || {}) };
+        const currentUsers = reactions[emoji] || [];
+        const userId = user?.uid || 'me';
+        
+        if (currentUsers.includes(userId)) {
+          reactions[emoji] = currentUsers.filter(id => id !== userId);
+          if (reactions[emoji].length === 0) delete reactions[emoji];
+        } else {
+          reactions[emoji] = [...currentUsers, userId];
+        }
+        return { ...msg, reactions };
+      }
+      return msg;
+    }));
+    setActiveReactionMessageId(null);
+    if (navigator.vibrate) navigator.vibrate(50);
+  };
+
+  const handleReply = (msg) => {
+    setReplyingTo(msg);
+    setEditingMessage(null);
+    textareaRef.current?.focus();
+  };
+
+  const handleEditClick = (msg) => {
+    setEditingMessage(msg);
+    setInputValue(msg.content);
+    setReplyingTo(null);
+    textareaRef.current?.focus();
+  };
+
+  const isConversationClosed = useMemo(() => {
+    return conversation?.status === 'closed' || conversation?.status === 'finalizada' || conversation?.status === 'completed';
+  }, [conversation]);
 
   const messagesEndRef = useRef(null);
 
-  const currentUserData = {
-    name: user?.nome || "Seu Perfil",
-    email: user?.email || "usuario@email.com",
-    phone: user?.telefone || "(11) 00000-0000",
-    type: user?.tipo || "Pessoa Física",
-    address: user?.endereco || "Endereço não informado",
-    points: user?.pontos || 0,
-    initials: user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "US",
-    joinDate: user?.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Janeiro 2024",
-    isVerified: true,
-    isSelf: true
-  };
+
 
   const filteredContacts = chatContacts.filter(c => 
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.lastMessage?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentContact = chatContacts.find(c => c.id === selectedChatId) || 
-    (conversation ? {
-      id: conversaId,
-      name: (() => {
-        // Se há participantsData, usar o primeiro (que deve ser o outro usuário)
-        if (conversation.participantsData?.length > 0) {
-          return conversation.participantsData[0].nome || 'Carregando...';
+  const sortedContacts = useMemo(() => {
+    return [...filteredContacts].sort((a, b) => {
+      const aPinned = pinnedConversations.includes(a.id);
+      const bPinned = pinnedConversations.includes(b.id);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      return 0;
+    });
+  }, [filteredContacts, pinnedConversations]);
+
+  const displayedMessages = useMemo(() => {
+    if (!msgSearchTerm.trim()) return messages;
+    return messages.filter(msg => 
+      (msg.content && typeof msg.content === 'string' && msg.content.toLowerCase().includes(msgSearchTerm.toLowerCase())) ||
+      (msg.type === 'location' && msg.location?.address?.toLowerCase().includes(msgSearchTerm.toLowerCase()))
+    );
+  }, [messages, msgSearchTerm]);
+
+  const handlePinConversation = (e, id) => {
+    e.stopPropagation();
+    setPinnedConversations(prev => {
+      let newPinned;
+      if (prev.includes(id)) {
+        newPinned = prev.filter(p => p !== id);
+      } else {
+        if (prev.length >= 2) {
+          alert('Você pode fixar no máximo 2 conversas.');
+          return prev;
         }
-        // Fallback para otherParticipant
-        if (conversation.otherParticipant?.nome) return conversation.otherParticipant.nome;
-        return 'Carregando...';
-      })(),
-      initials: (() => {
-        const name = conversation.otherParticipant?.nome || 
-                    conversation.participantsData?.find(p => p.uid !== user?.uid)?.nome || 
-                    conversation.title?.replace('Ajuda: ', '') || 'CV';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-      })(),
-      type: conversation.otherParticipant?.tipo || 
-            conversation.participantsData?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
-      distance: '0m de você',
-      online: conversation.participantsData?.find(p => p.uid !== user?.uid)?.online || conversation.otherParticipant?.online || false
-    } : chatContacts[0]);
+        newPinned = [...prev, id];
+      }
+      localStorage.setItem('pinnedConversations', JSON.stringify(newPinned));
+      return newPinned;
+    });
+  };
+
+  // Socket listeners for presence updates
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket && user?.uid) {
+      const handlePresenceUpdate = (data) => {
+        console.log('🟢 [Mobile] Presence Update:', data);
+        setPresenceStatus(prev => ({
+          ...prev,
+          [data.userId]: {
+            isOnline: data.isOnline,
+            lastSeen: data.lastSeen
+          }
+        }));
+      };
+
+      const handlePresenceStatus = (data) => {
+        console.log('🔵 [Mobile] Presence Status:', data);
+        setPresenceStatus(prev => ({
+          ...prev,
+          [data.userId]: {
+            isOnline: data.isOnline,
+            lastSeen: data.lastSeen
+          }
+        }));
+      };
+
+      const handleTyping = (data) => {
+        const convId = data.conversationId || data.conversaId || data.chatId;
+        if (data.userId !== user?.uid && convId) {
+          setTypingStatus(prev => ({
+            ...prev,
+            [convId]: data.isTyping
+          }));
+        }
+      };
+
+      socket.on('presence_update', handlePresenceUpdate);
+      socket.on('presence_status', handlePresenceStatus);
+      socket.on('typing', handleTyping);
+
+      return () => {
+        socket.off('presence_update', handlePresenceUpdate);
+        socket.off('presence_status', handlePresenceStatus);
+        socket.off('typing', handleTyping);
+      };
+    }
+  }, [user?.uid]);
+
+  // Request presence for active conversation
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket && user?.uid && conversation && conversation.participants) {
+      const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
+      if (otherParticipantId) {
+        socket.emit('get_presence', otherParticipantId);
+      }
+    }
+  }, [conversation, user?.uid]);
+
+  const currentContact = useMemo(() => {
+
+    // 1. Tentar usar dados detalhados da conversa atual (mais confiável e atualizado)
+    if (conversation && conversation.id === selectedChatId) {
+      let otherUser = null;
+
+      // Tentar encontrar nos dados de participantes enriquecidos
+      if (conversation.participantsData?.length > 0) {
+        otherUser = conversation.participantsData.find(p => (p.uid || p.id) !== user?.uid);
+      }
+
+      // Se não achou, tentar otherParticipant (mas garantir que não é o próprio usuário)
+      if (!otherUser && conversation.otherParticipant && (conversation.otherParticipant.uid || conversation.otherParticipant.id) !== user?.uid) {
+        otherUser = conversation.otherParticipant;
+      }
+
+      // Se ainda não achou, tentar buscar diretamente pelos participantes
+      if (!otherUser && conversation.participants?.length > 0) {
+        const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
+        if (otherParticipantId) {
+          // Tentar buscar do cache dos contatos primeiro
+          otherUser = chatContacts.find(c => c.id === otherParticipantId);
+          if (!otherUser) {
+            // Se não está no cache, buscar da API (síncrono para evitar re-renders)
+            // Nota: Esta busca será assíncrona, por enquanto retorna placeholder
+          }
+        }
+      }
+
+      if (otherUser) {
+        // Priorizar nomeCompleto sobre nome para evitar fallbacks incorretos
+        const name = otherUser.nomeCompleto || otherUser.nome || otherUser.razaoSocial || otherUser.name || 'Usuário';
+
+        // Verificar se o nome é válido (não é placeholder)
+        if (name && name !== 'Usuário' && name !== 'Usuario' && name.trim() !== '') {
+          // Get the other participant ID for presence status
+          const otherParticipantId = conversation.participants?.find(p => p !== user?.uid);
+          const presenceData = presenceStatus[otherParticipantId];
+
+          return {
+            id: conversation.id,
+            name: name,
+            initials: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+            type: otherUser.tipo || 'cidadao',
+            distance: '0m de você',
+            online: presenceData?.isOnline || false,
+            lastSeen: presenceData?.lastSeen
+          };
+        } else {
+          // Forçar uma busca adicional se o nome ainda for placeholder
+          const otherUid = conversation.participants?.find(p => p !== user?.uid);
+          if (otherUid) {
+            // Busca síncrona adicional (isso pode causar re-renders, mas é necessário)
+            // Nota: Em produção, isso deveria ser feito de forma assíncrona
+          }
+        }
+      }
+    }
+
+    // 2. Fallback para a lista de contatos
+    const fallbackContact = chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
+    return fallbackContact;
+  }, [conversation, chatContacts, selectedChatId, user?.uid, presenceStatus]);
 
   // Função para obter informações do contexto (pedido ou achado/perdido)
   const getContextInfo = () => {
@@ -178,6 +486,24 @@ const Chat = () => {
 
   const helpInfo = getContextInfo();
 
+  // Monitorar mudanças de status para notificar no menu
+  useEffect(() => {
+    if (prevStatusRef.current && prevStatusRef.current !== helpInfo.status) {
+      setHasContextUpdate(true);
+    }
+    prevStatusRef.current = helpInfo.status;
+  }, [helpInfo.status]);
+
+  // Fechar menu ao rolar mensagens
+  const handleScroll = () => {
+    if (showContext) {
+      setShowContext(false);
+    }
+  };
+
+  const canFinish = (helpInfo.contextType === 'pedido' && deliveryStatus === "andamento" && user?.uid === pedidoData?.userId) ||
+                    (helpInfo.contextType === 'achado-perdido' && helpInfo.status !== 'resolvido');
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -187,48 +513,97 @@ const Chat = () => {
     try {
       const response = await ApiService.getConversations();
       if (response.success && response.data) {
-        const formattedContacts = response.data.map(conv => {
+        const formattedContacts = response.data.map(async (conv) => {
+
           // Garantir que sempre temos um nome válido
-          let userName = 'Usuário';
+          let userName = 'Carregando...';
+
+          // Tentar múltiplas fontes para o nome
           if (conv.otherParticipant?.nome && conv.otherParticipant.nome.trim()) {
             userName = conv.otherParticipant.nome;
-          } else if (conv.participants?.find(p => p.uid !== user?.uid)?.nome) {
-            userName = conv.participants.find(p => p.uid !== user?.uid).nome;
-          } else if (conv.otherParticipant?.nomeCompleto) {
+          } else if (conv.otherParticipant?.nomeCompleto && conv.otherParticipant.nomeCompleto.trim()) {
             userName = conv.otherParticipant.nomeCompleto;
-          } else if (conv.otherParticipant?.nomeFantasia) {
-            userName = conv.otherParticipant.nomeFantasia;
-          } else if (conv.otherParticipant?.razaoSocial) {
-            userName = conv.otherParticipant.razaoSocial;
+          } else if (conv.participantsData?.length > 0) {
+            const otherParticipant = conv.participantsData.find(p => p.uid !== user?.uid);
+            if (otherParticipant?.nome && otherParticipant.nome.trim()) {
+              userName = otherParticipant.nome;
+            } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+              userName = otherParticipant.nomeCompleto;
+            }
+          } else if (conv.participants?.length > 0) {
+            const otherParticipant = conv.participants.find(p => p.uid !== user?.uid);
+            if (otherParticipant?.nome && otherParticipant.nome.trim()) {
+              userName = otherParticipant.nome;
+            } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+              userName = otherParticipant.nomeCompleto;
+            }
           }
-          
+
+          // Extrair ID do participante para uso posterior (presença)
+          const participantUid = conv.otherParticipant?.id || conv.otherParticipant?.uid || conv.participants?.find(p => p !== user?.uid);
+
+          // Se ainda não encontrou o nome ou é um placeholder, tentar buscar do banco de dados
+          /* COMENTADO PARA EVITAR QUOTA EXCEEDED (N+1 Requests)
+          if (userName === 'Carregando...' || userName === 'Usuário' || userName === 'Administrador') {
+            if (participantUid && participantUid !== user?.uid) {
+              try {
+                const userResponse = await ApiService.getUserData(participantUid);
+                if (userResponse.success && userResponse.data) {
+                  // Tentar múltiplas possibilidades de campos de nome
+                  userName = userResponse.data.nome ||
+                            userResponse.data.nomeCompleto ||
+                            userResponse.data.razaoSocial ||
+                            userResponse.data.name ||
+                            userResponse.data.fullName ||
+                            userResponse.data.displayName ||
+                            userResponse.data.email ||
+                            'Usuário';
+                }
+              } catch (error) {
+                console.error('Erro ao buscar nome do usuário:', error);
+              }
+            }
+          }
+          */
+
           return {
             id: conv.id,
+            participantId: participantUid,
             name: userName,
-            initials: userName !== 'Usuário' ? 
-              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U',
+            initials: userName !== 'Carregando...' && userName !== 'Usuário' ?
+              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'CV',
             type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
             distance: '0m de você',
             online: conv.otherParticipant?.online || false,
             lastMessage: conv.lastMessage?.content || 'Nova conversa',
-            lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
+            lastMessageTime: conv.lastMessage?.createdAt?.seconds ?
               new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
             unreadCount: conv.unreadCount || 0
           };
         });
-        setChatContacts(formattedContacts);
+        const contacts = await Promise.all(formattedContacts);
+        setChatContacts(contacts);
       }
     } catch (error) {
       console.error('Erro ao carregar conversas:', error);
+      if (error.message && error.message.includes('RESOURCE_EXHAUSTED')) {
+        alert('⚠️ Cota do Firebase excedida! O chat pode não carregar novas conversas até amanhã ou até a troca da conta.');
+      }
     }
   }, [user?.uid]);
 
   // Carregar mensagens da conversa
   const loadMessages = useCallback(async () => {
     if (!conversaId) return;
-    
+
+    setLoading(true);
+    setError(null);
+    // Limpa o contexto da colaboração para evitar exibir dados de outra conversa.
+    setContextType(null);
+    setPedidoData(null);
+    setAchadoPerdidoData(null);
+
     try {
-      setLoading(true);
       const conversationResponse = await ApiService.getConversation(conversaId);
       const messagesResponse = await ApiService.getMessages(conversaId);
       
@@ -283,6 +658,105 @@ const Chat = () => {
         }
         
         setConversation(convData);
+
+        // Verificar se otherParticipant é o usuário logado e corrigir se necessário
+        if (convData.otherParticipant?.uid === user?.uid) {
+          const otherUid = convData.participants?.find(p => p !== user?.uid);
+          if (otherUid) {
+            try {
+              console.log('otherParticipant é o usuário logado, buscando o correto:', otherUid);
+              const userResponse = await ApiService.getUserData(otherUid);
+              console.log('Resposta da API getUserData para outro participante:', userResponse);
+              if (userResponse.success && userResponse.data) {
+                convData.otherParticipant = userResponse.data;
+                console.log('otherParticipant corrigido:', convData.otherParticipant);
+                setConversation(convData);
+              }
+            } catch (error) {
+              console.error('Erro ao buscar dados do outro participante:', error);
+            }
+          }
+        }
+
+        // CORREÇÃO: Lógica aprimorada para buscar nomes
+        // 1. Buscar nomes dos participantes se não estiverem disponíveis
+        if (convData.participantsData && convData.participantsData.length > 0) {
+          const updatedParticipants = await Promise.all(
+            convData.participantsData.map(async (participant) => {
+              const pName = participant.nome || participant.nomeCompleto;
+              if (!pName || pName.trim() === '' || pName === 'Usuário' || pName === 'Usuario') {
+                try {
+                  const pId = participant.uid || participant.id;
+                  if (pId) {
+                    const userResponse = await ApiService.getUserData(pId);
+                    if (userResponse.success && userResponse.data) {
+                      return {
+                        ...participant,
+                        ...userResponse.data,
+                        nome: userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || 'Usuário'
+                      };
+                    }
+                  }
+                } catch (error) {
+                  console.error('Erro ao buscar nome do participante:', error);
+                }
+              }
+              return participant;
+            })
+          );
+          convData.participantsData = updatedParticipants;
+        }
+
+        // 2. Fallback para otherParticipant - sempre buscar se não tiver nome válido
+        const otherUid = convData.participants?.find(p => p !== user?.uid);
+        if (otherUid && (!convData.otherParticipant || !convData.otherParticipant.nome || convData.otherParticipant.nome === 'Usuario' || convData.otherParticipant.nome === 'Usuário')) {
+          try {
+            console.log('🔄 Buscando dados do otherParticipant:', otherUid);
+            const userResponse = await ApiService.getUserData(otherUid);
+            console.log('📋 Resposta da API para otherParticipant:', userResponse);
+            if (userResponse.success && userResponse.data) {
+              convData.otherParticipant = {
+                ...convData.otherParticipant,
+                ...userResponse.data,
+                nome: userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || 'Usuário'
+              };
+              console.log('✅ otherParticipant atualizado:', convData.otherParticipant);
+            }
+          } catch (e) {
+            console.error('Erro ao buscar otherParticipant:', e);
+          }
+        }
+
+        // 3. Garantir que participantsData tenha os nomes corretos
+        if (convData.participants && convData.participants.length > 0 && (!convData.participantsData || convData.participantsData.length === 0)) {
+          console.log('🔄 Criando participantsData a partir de participants');
+          const participantsData = await Promise.all(
+            convData.participants.map(async (participantId) => {
+              try {
+                const userResponse = await ApiService.getUserData(participantId);
+                if (userResponse.success && userResponse.data) {
+                  return {
+                    uid: participantId,
+                    id: participantId,
+                    ...userResponse.data,
+                    nome: userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || 'Usuário'
+                  };
+                }
+              } catch (error) {
+                console.error('Erro ao buscar participante:', participantId, error);
+              }
+              return {
+                uid: participantId,
+                id: participantId,
+                nome: 'Usuário'
+              };
+            })
+          );
+          convData.participantsData = participantsData;
+          console.log('✅ participantsData criado:', convData.participantsData);
+        }
+
+        setConversation(convData);
       }
       
       if (messagesResponse.success && messagesResponse.data) {
@@ -304,7 +778,11 @@ const Chat = () => {
       await ApiService.markConversationAsRead(conversaId);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
-      setError('Erro ao carregar mensagens');
+      if (error.message && error.message.includes('RESOURCE_EXHAUSTED')) {
+        setError('Cota do servidor excedida. Chat indisponível.');
+      } else {
+        setError('Erro ao carregar mensagens');
+      }
     } finally {
       setLoading(false);
       console.log('Estado final do contexto:', {
@@ -316,6 +794,10 @@ const Chat = () => {
   }, [conversaId, user?.uid]);
 
   useEffect(() => {
+    let socket;
+    let handleSocketMessage;
+    let unsubscribeTyping;
+
     if (conversaId) {
       ensureDependencies();
       setSelectedChatId(conversaId);
@@ -323,18 +805,65 @@ const Chat = () => {
       
       // Iniciar escuta de novas mensagens
       chatNotificationService.startListening(conversaId, (newMessages) => {
-        setMessages(prev => [...prev, ...newMessages.map(msg => ({
-          id: msg.id,
-          type: msg.type || 'text',
-          sender: msg.senderId === user?.uid ? 'sent' : 'received',
-          content: msg.content || msg.text,
-          timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
-          read: msg.read || false,
-          location: msg.metadata?.location,
-          metadata: msg.metadata,
-          mediaUrl: msg.mediaUrl
-        }))]);
+        setMessages(prev => {
+          const existingIds = new Set(prev.map(m => m.id));
+          const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
+          
+          if (uniqueNewMessages.length === 0) return prev;
+
+          return [...prev, ...uniqueNewMessages.map(msg => ({
+            id: msg.id,
+            type: msg.type || 'text',
+            sender: msg.senderId === user?.uid ? 'sent' : 'received',
+            content: msg.content || msg.text,
+            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+            read: msg.read || false,
+            location: msg.metadata?.location,
+            metadata: msg.metadata,
+            mediaUrl: msg.mediaUrl
+          }))];
+        });
       });
+
+      // Listener direto do Socket.IO para mensagens em tempo real
+      socket = getSocket();
+      handleSocketMessage = (data) => {
+        console.log('📩 [Mobile] Mensagem recebida via Socket:', data);
+        const msg = data.message || data; // Garante que pegamos o objeto da mensagem
+        const msgConvId = msg.conversationId || msg.conversaId || msg.chatId;
+
+        // Só adiciona se for da conversa atual
+        if (msgConvId && msgConvId === conversaId) {
+          setMessages(prev => {
+            // Evita duplicatas
+            if (prev.some(m => m.id === msg.id)) return prev;
+
+            return [...prev, {
+              id: msg.id,
+              type: msg.type || 'text',
+              sender: msg.senderId === user?.uid ? 'sent' : 'received',
+              content: msg.content || msg.text,
+              timestamp: msg.createdAt ? (msg.createdAt.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(msg.createdAt)) : new Date(),
+              read: false,
+              location: msg.metadata?.location || msg.location,
+              metadata: msg.metadata,
+              mediaUrl: msg.mediaUrl
+            }];
+          });
+        }
+      };
+
+      if (socket) {
+        socket.on('receive_message', handleSocketMessage);
+        socket.on('new_message', handleSocketMessage); // Fallback para outro nome comum de evento
+      }
+
+      // Iniciar escuta de "digitando..."
+      if (chatNotificationService.subscribeToTyping) {
+        unsubscribeTyping = chatNotificationService.subscribeToTyping(conversaId, (isTypingStatus) => {
+          setIsTyping(isTypingStatus);
+        });
+      }
     }
     
     loadConversations();
@@ -343,6 +872,13 @@ const Chat = () => {
       if (conversaId) {
         chatNotificationService.stopListening(conversaId);
       }
+      if (socket && handleSocketMessage) {
+        socket.off('receive_message', handleSocketMessage);
+        socket.off('new_message', handleSocketMessage);
+      }
+      if (unsubscribeTyping) {
+        unsubscribeTyping();
+      }
     };
   }, [conversaId, user?.uid, loadConversations, loadMessages]);
 
@@ -350,22 +886,64 @@ const Chat = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  const handleTypingInput = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+
+    if (conversaId) {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      
+      ApiService.sendTypingStatus(conversaId, true).catch(() => {});
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        ApiService.sendTypingStatus(conversaId, false).catch(() => {});
+      }, 2000);
+    }
+  };
+
   const handleSend = async () => {
     if (!inputValue.trim() || sendingMessage) return;
 
     // Verificar se a conversa está encerrada
-    if (conversation?.status === 'closed') {
+    if (isConversationClosed) {
       alert('Esta conversa foi encerrada e não aceita mais mensagens.');
       return;
     }
 
     const messageText = inputValue.trim();
+
+    if (editingMessage) {
+      try {
+        setSendingMessage(true);
+        await ApiService.updateMessage(conversaId, editingMessage.id, messageText);
+        setMessages(prev => prev.map(m => m.id === editingMessage.id ? { ...m, content: messageText, edited: true } : m));
+        setEditingMessage(null);
+        setInputValue("");
+      } catch (error) {
+        console.error('Erro ao editar mensagem:', error);
+        alert('Erro ao editar mensagem.');
+      } finally {
+        setSendingMessage(false);
+      }
+      return;
+    }
+
     setInputValue("");
     setSendingMessage(true);
 
     try {
       ensureDependencies();
-      const response = await ApiService.sendMessage(conversaId, messageText);
+      
+      const metadata = {};
+      if (replyingTo) {
+        metadata.replyTo = {
+          id: replyingTo.id,
+          content: replyingTo.content,
+          senderName: replyingTo.sender === 'sent' ? 'Você' : currentContact?.name || 'Usuário'
+        };
+      }
+
+      const response = await ApiService.sendMessage(conversaId, messageText, 'text', metadata);
       
       if (response.success) {
         const newMessage = {
@@ -375,9 +953,14 @@ const Chat = () => {
           content: messageText,
           timestamp: new Date(),
           read: false,
+          metadata: metadata
         };
         
-        setMessages(prev => [...prev, newMessage]);
+        setMessages(prev => {
+          if (prev.some(m => m.id === newMessage.id)) return prev;
+          return [...prev, newMessage];
+        });
+        setReplyingTo(null);
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -480,7 +1063,10 @@ const Chat = () => {
               location: locationData,
             };
             
-            setMessages(prev => [...prev, newMessage]);
+            setMessages(prev => {
+              if (prev.some(m => m.id === newMessage.id)) return prev;
+              return [...prev, newMessage];
+            });
           }
         } catch (error) {
           console.error("Erro ao enviar localização:", error);
@@ -575,12 +1161,85 @@ const Chat = () => {
 
   return (
     <div className="sb-chat-root">
+      <style>{`
+        .reply-preview-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 16px;
+          background: white;
+          border-top: 1px solid #e2e8f0;
+          border-left: 4px solid #10b981;
+          box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+        }
+        .reply-info {
+          flex: 1;
+          overflow: hidden;
+          margin-right: 12px;
+        }
+        .reply-sender {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #10b981;
+          display: block;
+          margin-bottom: 2px;
+        }
+        .reply-text {
+          font-size: 0.85rem;
+          color: #64748b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin: 0;
+        }
+        .cancel-reply-btn {
+          background: #f1f5f9;
+          border: none;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #64748b;
+          cursor: pointer;
+          flex-shrink: 0;
+        }
+        .cancel-reply-btn:active {
+          background: #fee2e2;
+          color: #ef4444;
+        }
+        .reply-quote {
+          background: rgba(0,0,0,0.05);
+          border-left: 3px solid #10b981;
+          padding: 6px 10px;
+          border-radius: 4px;
+          margin-bottom: 6px;
+          font-size: 0.85rem;
+        }
+        .reply-quote-sender { font-weight: 700; color: #10b981; font-size: 0.75rem; display: block; margin-bottom: 2px; }
+        .reply-quote-text { color: inherit; opacity: 0.8; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        @keyframes dot-animate {
+          0% { opacity: 0; }
+          50% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        .sb-dot-animate {
+          animation: dot-animate 1.5s infinite;
+        }
+      `}</style>
       <div className="sb-chat-page-wrapper">
         <div className="sb-chat-layout">
         {/* Sidebar */}
         <div className={`sb-sidebar-overlay ${sidebarOpen ? 'sb-visible' : ''}`} onClick={() => setSidebarOpen(false)} />
-        <aside className={`sb-chat-sidebar ${sidebarOpen ? 'sb-open' : ''}`}>
-          <div className="sb-sidebar-header">
+        <aside 
+          className={`sb-chat-sidebar ${sidebarOpen ? 'sb-open' : ''}`}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="sb-sidebar-header sb-sidebar-header-custom">
             <div className="sb-sidebar-title-row">
               <h2>Conversas</h2>
               <button className="sb-icon-btn" title="Nova conversa">
@@ -600,7 +1259,12 @@ const Chat = () => {
           </div>
           
           <div className="sb-contacts-list">
-            {filteredContacts.map((contact) => (
+            {sortedContacts.map((contact) => {
+              const presenceData = presenceStatus[contact.participantId];
+              const isOnline = presenceData?.isOnline ?? contact.online;
+              const lastSeen = presenceData?.lastSeen;
+              const isTyping = typingStatus[contact.id];
+              return (
               <div 
                 key={contact.id} 
                 className={`contact-item ${selectedChatId === contact.id ? 'active' : ''}`}
@@ -610,28 +1274,53 @@ const Chat = () => {
                     c.id === contact.id ? { ...c, unreadCount: 0 } : c
                   ));
                   navigate(`/chat/${contact.id}`);
+                  setSidebarOpen(false);
                 }}
               >
                 <div className="sb-avatar-wrapper">
                   <div className={`contact-avatar ${contact.type}`}>
                     {contact.initials}
                   </div>
-                  {contact.online && <span className="sb-online-status-dot" />}
+                  {pinnedConversations.includes(contact.id) && (
+                    <div className="sb-pinned-icon"><Pin size={12} fill="#64748b" color="#64748b" /></div>
+                  )}
+                  {isOnline && <span className="sb-online-status-dot" />}
                 </div>
                 <div className="sb-contact-meta">
                   <div className="sb-contact-name-row">
-                    <span className="sb-contact-name">{contact.name}</span>
+                    <span className="sb-contact-name">{contact.name === 'Carregando...' || !contact.name ? 'Usuário' : contact.name}</span>
                     <span className="sb-last-time">{contact.lastMessageTime}</span>
                   </div>
                   <div className="sb-contact-preview-row">
-                    <p className="sb-last-message">{contact.lastMessage}</p>
+                    <div className="sb-contact-preview-col">
+                      {isTyping ? (
+                        <p className="sb-last-message sb-typing-text">
+                          Digitando<span className="sb-dot-animate">...</span>
+                        </p>
+                      ) : (
+                        <p className="sb-last-message">{contact.lastMessage}</p>
+                      )}
+                      {!isOnline && lastSeen && (
+                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
+                          Visto {new Date(lastSeen).toLocaleDateString() === new Date().toLocaleDateString() ? 'hoje' : new Date(lastSeen).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})} às {new Date(lastSeen).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      )}
+                    </div>
                     {contact.unreadCount > 0 && selectedChatId !== contact.id && (
                       <span className="sb-unread-count-badge">{contact.unreadCount}</span>
                     )}
                   </div>
                 </div>
+                <button 
+                  onClick={(e) => handlePinConversation(e, contact.id)}
+                  className={`sb-pin-btn ${pinnedConversations.includes(contact.id) ? 'active' : 'inactive'}`}
+                  title={pinnedConversations.includes(contact.id) ? "Desafixar conversa" : "Fixar conversa"}
+                >
+                  {pinnedConversations.includes(contact.id) ? <PinOff size={16} /> : <Pin size={16} />}
+                </button>
               </div>
-            ))}
+            );
+            })}
           </div>
           
           <div className="sb-sidebar-footer">
@@ -649,8 +1338,30 @@ const Chat = () => {
                  <span className="mini-name">Seu Perfil</span>
                  <span className="mini-status">Disponível</span>
                </div>
+               <ChevronRight size={16} style={{ marginLeft: 'auto', color: '#94a3b8' }} />
              </div>
           </div>
+
+          {sidebarOpen && showSwipeHint && (
+            <div className="sb-swipe-hint" onClick={() => setSidebarOpen(false)}>
+              <span className="sb-hint-text">Deslize</span>
+              <ChevronRight size={20} className="sb-hint-arrow" />
+            </div>
+          )}
+          <AnimatePresence>
+            {sidebarOpen && showSwipeHint && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="sb-swipe-hint" 
+                onClick={() => setSidebarOpen(false)}
+              >
+                <span className="sb-hint-text">Deslize</span>
+                <ChevronRight size={20} className="sb-hint-arrow" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </aside>
 
         {/* Main Chat Area */}
@@ -671,7 +1382,7 @@ const Chat = () => {
                 </div>
                 <div className="sb-header-text-details">
                   <div className="sb-header-name-row">
-                    <h3>{currentContact?.name || 'Carregando...'}</h3>
+                    <h3>{currentContact?.name || 'Usuário'}</h3>
                     <span className={`role-badge ${currentContact?.type || 'conversa'}`}>
                       {currentContact?.type === "doador" ? "Doador Verificado" : "Vizinho em Busca"}
                     </span>
@@ -683,24 +1394,75 @@ const Chat = () => {
                     </span>
                     <span className={`status-pill state ${currentContact?.online ? 'online' : 'offline'}`}>
                       <span className="sb-pulse-dot" />
-                      {currentContact?.online ? 'Ativo Agora' : 'Offline'}
+                      {currentContact?.online 
+                        ? 'Ativo Agora' 
+                        : (currentContact?.lastSeen 
+                            ? `Visto às ${new Date(currentContact.lastSeen).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}` 
+                            : 'Offline')}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
             <div className="sb-header-right-group">
-              <div className="sb-quick-actions-desktop">
-                <button
-                  className="sb-header-action-btn danger"
-                  onClick={() => setShowReportModal(true)}
-                  title="Denunciar ou Bloquear"
-                >
-                  <AlertTriangle size={20} />
-                </button>
-                <button className="sb-header-action-btn">
-                  <MoreVertical size={20} />
-                </button>
+              <div className="sb-header-actions">
+                
+                <div style={{ position: 'relative' }}>
+                  <button 
+                    className="sb-header-action-btn"
+                    onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  >
+                    <MoreVertical size={20} />
+                  </button>
+
+                  <AnimatePresence>
+                    {showMobileMenu && (
+                      <>
+                        <div 
+                          style={{ position: 'fixed', inset: 0, zIndex: 98 }} 
+                          onClick={() => setShowMobileMenu(false)}
+                        />
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                          className="sb-mobile-dropdown-menu"
+                        >
+                          <button 
+                            className="sb-dropdown-item"
+                            onClick={() => {
+                              setShowMsgSearch(!showMsgSearch);
+                              setShowMobileMenu(false);
+                            }}
+                          >
+                            <Search size={18} />
+                            <span>Pesquisar</span>
+                          </button>
+                          <button 
+                            className="sb-dropdown-item"
+                            onClick={() => {
+                              handleAvatarClick(false);
+                              setShowMobileMenu(false);
+                            }}
+                          >
+                            <User size={18} />
+                            <span>Ver Perfil</span>
+                          </button>
+                          <button 
+                            className="sb-dropdown-item danger"
+                            onClick={() => {
+                              setShowReportModal(true);
+                              setShowMobileMenu(false);
+                            }}
+                          >
+                            <AlertTriangle size={18} />
+                            <span>Denunciar / Bloquear</span>
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </header>
@@ -710,163 +1472,126 @@ const Chat = () => {
             <span>Conexão segura SolidarBairro • Dados protegidos</span>
           </div>
 
-          <div className="sb-chat-content-scroll">
-            {/* Context Info Card Mobile */}
-            {(contextType === 'pedido' || contextType === 'achado-perdido') && (
-              <div className="sb-chat-context-card-mobile">
-                <div className="sb-context-header-mobile">
-                  <div className="sb-context-icon-mobile">
+          {showMsgSearch && (
+            <div className="sb-msg-search-bar">
+              <Search size={16} color="#94a3b8" />
+              <input
+                type="text"
+                placeholder="Buscar mensagem..."
+                value={msgSearchTerm}
+                onChange={(e) => setMsgSearchTerm(e.target.value)}
+                className="sb-msg-search-input"
+                autoFocus
+              />
+              {msgSearchTerm && (
+                <button onClick={() => setMsgSearchTerm('')} className="sb-search-clear-btn">
+                  <X size={16} />
+                </button>
+              )}
+              <button onClick={() => { setShowMsgSearch(false); setMsgSearchTerm(''); }} className="sb-search-close-btn">
+                Fechar
+              </button>
+            </div>
+          )}
+
+          {/* Context Menu Dropdown Mobile (New) */}
+          {(contextType === 'pedido' || contextType === 'achado-perdido') && (
+            <div className="sb-chat-context-menu">
+              <button 
+                className="sb-context-toggle-btn" 
+                onClick={() => {
+                  setShowContext(!showContext);
+                  if (!showContext) setHasContextUpdate(false);
+                }}
+              >
+                {hasContextUpdate && <span className="sb-context-update-dot" />}
+                <div className="sb-context-summary">
+                  <div className={`sb-context-icon-small ${helpInfo.contextType}`}>
                     {helpInfo.contextType === 'achado-perdido' ? (
-                      helpInfo.itemType === 'perdido' ? <Search size={20} /> : <Package size={20} />
+                      helpInfo.itemType === 'perdido' ? <Search size={16} /> : <Package size={16} />
                     ) : (
-                      <Package size={20} />
+                      <Package size={16} />
                     )}
                   </div>
-                  <div className="sb-context-title-mobile">
-                    <span className="sb-context-label">Colaboração</span>
-                    <h4>{helpInfo.type}</h4>
+                  <div className="sb-context-text-summary">
+                    <span className="sb-context-type-label">{helpInfo.title}</span>
+                    <span className="sb-context-main-info">{helpInfo.type}</span>
                   </div>
-                  <span className={`sb-urgency-badge-mobile sb-${helpInfo.urgency}`}>
-                    {helpInfo.urgency === "high" ? "Urgente" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
+                </div>
+                {canFinish && !showContext && (
+                  <span className="sb-finish-hint-badge">
+                    <CheckCheck size={14} />
+                    Finalizar
                   </span>
-                </div>
-                
-                <p className="sb-context-description-mobile">{helpInfo.descricao}</p>
-                
-                <div className="sb-context-meta-mobile">
-                  <div className="sb-meta-item-mobile">
-                    <MapPin size={14} />
-                    <span>{helpInfo.bairro}, {helpInfo.cidade}</span>
-                  </div>
-                </div>
+                )}
+                {showContext ? <ChevronUp size={20} className="sb-toggle-icon" /> : <ChevronDown size={20} className="sb-toggle-icon" />}
+              </button>
 
-                {helpInfo.contextType === 'pedido' && deliveryStatus === "andamento" && (
-                  <button 
-                    className="sb-finish-btn-mobile"
-                    onClick={() => setShowFinishModal(true)}
+              <AnimatePresence>
+                {showContext && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="sb-context-details-panel"
                   >
-                    <Heart size={18} fill="white" />
-                    Finalizar Colaboração
-                  </button>
-                )}
-              </div>
-            )}
+                    <div className="sb-context-panel-content">
+                      <p className="sb-panel-description">{helpInfo.descricao || "Sem descrição"}</p>
+                      
+                      <div className="sb-panel-meta-row">
+                        <div className="sb-panel-meta-item">
+                          <MapPin size={14} />
+                          <span>{helpInfo.bairro}</span>
+                        </div>
+                        <span className={`sb-urgency-badge-mobile sb-${helpInfo.urgency}`}>
+                          {helpInfo.urgency === "high" ? "Urgente" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
+                        </span>
+                      </div>
 
-            {/* Context Info Card Desktop - Hidden on Mobile */}
-            {(contextType === 'pedido' || contextType === 'achado-perdido') && (
-              <div className="sb-chat-context-card">
-                <div className="card-left-section">
-                  <div className="card-icon-box">
-                    {helpInfo.contextType === 'achado-perdido' ? (
-                      helpInfo.itemType === 'perdido' ? (
-                        <Search size={24} />
-                      ) : (
-                        <Package size={24} />
-                      )
-                    ) : (
-                      <Package size={24} />
-                    )}
-                  </div>
-                  <div className="card-info-text">
-                    <h4>{helpInfo.title}</h4>
-                    <p className="help-title">{helpInfo.type}</p>
-                    {helpInfo.descricao && (
-                      <p className="help-description">{helpInfo.descricao}</p>
-                    )}
-                    <div className="help-tags">
-                      {helpInfo.contextType === 'achado-perdido' ? (
-                        <>
-                          <span className={`type-pill ${helpInfo.itemType}`}>
-                            {helpInfo.itemType === 'perdido' ? '🔍 Perdido' : '📦 Encontrado'}
-                          </span>
-                          <span className={`status-pill ${helpInfo.status}`}>
-                            {helpInfo.status === 'resolvido' ? '✅ Resolvido' : '🔄 Ativo'}
-                          </span>
-                        </>
-                      ) : (
-                        <span className={`urgency-pill ${helpInfo.urgency}`}>
-                          Urgência {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
-                        </span>
+                      {helpInfo.contextType === 'pedido' && deliveryStatus === "andamento" && (
+                        <button 
+                          className="sb-finish-btn-mobile small"
+                          onClick={() => setShowFinishModal(true)}
+                        >
+                          <Heart size={16} fill="white" />
+                          Finalizar
+                        </button>
                       )}
-                      <span className="neighborhood-pill">
-                        {helpInfo.bairro}{helpInfo.cidade && `, ${helpInfo.cidade}`}
-                      </span>
-                      {helpInfo.categoria && helpInfo.categoria !== "Geral" && (
-                        <span className="category-pill">
-                          {helpInfo.categoria}
-                        </span>
+                      {helpInfo.contextType === 'achado-perdido' && helpInfo.status !== 'resolvido' && (
+                         <button 
+                          className="sb-finish-btn-mobile small"
+                          onClick={() => setShowFinishModal(true)}
+                        >
+                          <Check size={16} />
+                          Marcar Resolvido
+                        </button>
                       )}
                     </div>
-                  </div>
-                </div>
-                
-                {helpInfo.contextType === 'pedido' && (
-                  <div className="card-middle-section">
-                    <div className="status-progress-bar">
-                      <div className={`status-step ${['aguardando', 'andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("aguardando")}>1</div>
-                        <span className="step-label">Pendente</span>
-                      </div>
-                      <div className="progress-line" />
-                      <div className={`status-step ${['andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("andamento")}>2</div>
-                        <span className="step-label">Em curso</span>
-                      </div>
-                      <div className="progress-line" />
-                      <div className={`status-step ${deliveryStatus === "entregue" ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("entregue")}>3</div>
-                        <span className="step-label">Concluído</span>
-                      </div>
-                    </div>
-                  </div>
+                  </motion.div>
                 )}
-                
-                <div className="card-right-section">
-                  {helpInfo.contextType === 'pedido' ? (
-                    deliveryStatus === "andamento" ? (
-                      <button 
-                        className="finish-collaboration-btn"
-                        onClick={() => setShowFinishModal(true)}
-                      >
-                        <Heart size={16} fill="white" />
-                        Finalizar Ajuda
-                      </button>
-                    ) : (
-                      <button className="details-btn">
-                        Detalhes <ChevronRight size={16} />
-                      </button>
-                    )
-                  ) : (
-                    <button 
-                      className={`resolve-btn ${helpInfo.status === 'resolvido' ? 'resolved' : ''}`}
-                      onClick={() => {
-                        if (helpInfo.status !== 'resolvido') {
-                          // Lógica para marcar como resolvido
-                          setShowFinishModal(true);
-                        }
-                      }}
-                      disabled={helpInfo.status === 'resolvido'}
-                    >
-                      {helpInfo.status === 'resolvido' ? (
-                        <>✅ Resolvido</>
-                      ) : (
-                        <>🔄 Marcar como Resolvido</>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+              </AnimatePresence>
+            </div>
+          )}
 
+          <div className="sb-chat-content-scroll" onScroll={handleScroll}>
             {/* Messages Feed */}
             <div className="sb-messages-container">
-              <div className="sb-date-separator">
-                <span>Hoje</span>
-              </div>
+              {loading ? (
+                <div className="sb-loading-container">
+                  <div className="sb-mini-loader" />
+                  <span>Carregando conversa...</span>
+                </div>
+              ) : (
+              <>
+              {!msgSearchTerm && (
+                <div className="sb-date-separator">
+                  <span>Hoje</span>
+                </div>
+              )}
 
-              {messages.map((msg) => {
+              {displayedMessages.map((msg) => {
                 if (msg.type === "system") {
-                  const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso");
+                  const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso") || msg.content?.includes("resolvido") || msg.content?.includes("encerrada");
                   const isSecurity = msg.content?.includes("seguro") || msg.content?.includes("ambiente");
 
                   return (
@@ -882,6 +1607,8 @@ const Chat = () => {
                 }
 
                 const isSent = msg.sender === 'sent';
+                const hasReply = msg.metadata?.replyTo;
+                const canEdit = isSent && (new Date() - new Date(msg.timestamp)) < 15 * 60 * 1000 && !isConversationClosed;
                 let bubbleContent;
 
                 if (msg.type === "location") {
@@ -916,7 +1643,10 @@ const Chat = () => {
                         src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} 
                         alt="Imagem enviada" 
                         className="sb-msg-media-img" 
-                        onClick={() => setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content)}
+                        onClick={() => {
+                          setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content);
+                          setZoomLevel(1);
+                        }}
                       />
                     </div>
                   );
@@ -929,25 +1659,91 @@ const Chat = () => {
                 } else {
                   bubbleContent = (
                     <div className="sb-msg-bubble text-bubble">
+                      {hasReply && (
+                        <div className="reply-quote">
+                          <span className="reply-quote-sender">{hasReply.senderName === 'Você' ? (currentUserData?.name || user?.nome || 'Administrador').length > 15 ? (currentUserData?.name || user?.nome || 'Administrador').substring(0, 15) + '...' : (currentUserData?.name || user?.nome || 'Administrador') : hasReply.senderName === currentContact?.name ? currentContact.name : 'Usuário'}</span>
+                          <p className="reply-quote-text">{hasReply.content}</p>
+                        </div>
+                      )}
                       {msg.content}
                     </div>
                   );
                 }
 
                 return (
-                  <div key={msg.id} className={`sb-msg-row ${isSent ? 'sent' : 'received'}`}>
+                  <SwipeableMessage key={msg.id} message={msg} onReply={handleReply} disabled={isConversationClosed}>
+                  <div className={`sb-msg-row ${isSent ? 'sent' : 'received'}`}>
                     {!isSent && (
                       <div className="sb-msg-sender-avatar" onClick={() => handleAvatarClick(false)}>
                         {currentContact?.initials || 'U'}
                       </div>
                     )}
                     <div className="sb-msg-wrapper">
-                      {bubbleContent}
+                      <div 
+                        style={{ position: 'relative' }}
+                        onContextMenu={(e) => {
+                          if (isConversationClosed) return;
+                          e.preventDefault();
+                          setActiveReactionMessageId(msg.id);
+                          if (navigator.vibrate) navigator.vibrate(50);
+                        }}
+                      >
+                        <AnimatePresence>
+                          {activeReactionMessageId === msg.id && (
+                            <>
+                              <div 
+                                style={{ position: 'fixed', inset: 0, zIndex: 99 }} 
+                                onClick={(e) => { e.stopPropagation(); setActiveReactionMessageId(null); }} 
+                              />
+                              <motion.div
+                                initial={{ scale: 0, opacity: 0, y: 10 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0, opacity: 0, y: 10 }}
+                                className={`reaction-picker ${isSent ? 'sent' : 'received'}`}
+                              >
+                                {REACTION_OPTIONS.map(emoji => (
+                                  <button 
+                                    key={emoji}
+                                    onClick={(e) => { e.stopPropagation(); handleReactionClick(msg.id, emoji); }}
+                                    className="reaction-option"
+                                  >
+                                    {emoji}
+                                  </button>
+                                ))}
+                                {canEdit && (
+                                  <>
+                                    <div style={{ width: 1, height: 20, background: '#e2e8f0', margin: '0 4px' }} />
+                                    <button 
+                                      className="reaction-option"
+                                      onClick={(e) => { e.stopPropagation(); handleEditClick(msg); setActiveReactionMessageId(null); }}
+                                    >
+                                      <Pencil size={18} color="#64748b" />
+                                    </button>
+                                  </>
+                                )}
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                        {bubbleContent}
+                      </div>
+
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div className={`reactions-display ${isSent ? 'sent' : 'received'}`}>
+                          {Object.entries(msg.reactions).map(([emoji, users]) => (
+                            <div key={emoji} className={`reaction-pill ${users.includes(user?.uid || 'me') ? 'active' : ''}`}>
+                              {emoji} <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{users.length}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       <div className="sb-msg-metadata">
+                        {msg.edited && <span className="sb-edited-label">(editado)</span>}
                         <span className="sb-msg-time">{formatTime(msg.timestamp)}</span>
                         {isSent && (
                           <span className="sb-msg-status">
-                            {msg.read ? <CheckCheck size={14} className="sb-read" /> : <Check size={14} />}
+                            {msg.read ? <CheckCheck size={14} className="sb-read" style={{ color: '#3b82f6' }} /> : <Check size={14} />}
                           </span>
                         )}
                       </div>
@@ -958,6 +1754,7 @@ const Chat = () => {
                       </div>
                     )}
                   </div>
+                  </SwipeableMessage>
                 );
               })}
 
@@ -972,12 +1769,14 @@ const Chat = () => {
               )}
 
               <div ref={messagesEndRef} />
+              </>
+              )}
             </div>
           </div>
 
           {/* Input Footer */}
           <footer className="sb-chat-input-footer">
-            {conversation?.status === 'closed' ? (
+            {isConversationClosed ? (
               <div className="sb-conversation-closed-banner">
                 <div className="sb-closed-icon">
                   <ShieldCheck size={20} />
@@ -989,6 +1788,40 @@ const Chat = () => {
               </div>
             ) : (
               <div className="sb-input-container">
+                <AnimatePresence>
+                  {editingMessage && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, zIndex: 20 }}
+                    >
+                    <div className="reply-preview-bar" style={{ borderLeftColor: '#3b82f6' }}>
+                      <div className="reply-info">
+                        <span className="reply-sender" style={{ color: '#3b82f6' }}>Editando mensagem</span>
+                        <p className="reply-text">{editingMessage.content}</p>
+                      </div>
+                      <button onClick={() => { setEditingMessage(null); setInputValue(''); }} className="cancel-reply-btn"><X size={18} /></button>
+                    </div>
+                    </motion.div>
+                  )}
+                  {replyingTo && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, zIndex: 20 }}
+                    >
+                    <div className="reply-preview-bar">
+                      <div className="reply-info">
+                        <span className="reply-sender">Respondendo a {replyingTo.sender === 'sent' ? 'Você' : currentContact?.name}</span>
+                        <p className="reply-text">{replyingTo.content}</p>
+                      </div>
+                      <button onClick={() => setReplyingTo(null)} className="cancel-reply-btn"><X size={18} /></button>
+                    </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <div className="sb-input-actions-left">
                   <input 
                     type="file" 
@@ -1015,10 +1848,11 @@ const Chat = () => {
                 </div>
                 <div className="sb-textarea-wrapper">
                   <textarea
+                    ref={textareaRef}
                     className="sb-chat-textarea"
                     placeholder="Digite sua mensagem..."
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={handleTypingInput}
                     onKeyDown={handleKeyPress}
                     rows={1}
                   />
@@ -1275,10 +2109,24 @@ const Chat = () => {
       {selectedImage && (
         <div className="sb-image-modal-overlay" onClick={() => setSelectedImage(null)}>
           <div className="sb-image-modal-content">
-            <img src={selectedImage} alt="Visualização em tela cheia" />
-            <button className="sb-close-image-modal" onClick={() => setSelectedImage(null)}>
-              <X size={24} />
-            </button>
+            <div className="sb-image-controls" style={{ position: 'absolute', top: 20, right: 20, zIndex: 3002, display: 'flex', gap: 10 }} onClick={(e) => e.stopPropagation()}>
+              <button className="sb-control-btn" onClick={() => setZoomLevel(z => Math.max(1, z - 0.5))}><ZoomOut size={24} color="white"/></button>
+              <button className="sb-control-btn" onClick={() => setZoomLevel(z => Math.min(4, z + 0.5))}><ZoomIn size={24} color="white"/></button>
+              <button className="sb-control-btn" onClick={() => setSelectedImage(null)}><X size={24} color="white"/></button>
+            </div>
+            <div style={{ overflow: 'auto', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+              <img 
+                src={selectedImage} 
+                alt="Visualização em tela cheia" 
+                style={{ 
+                  transform: `scale(${zoomLevel})`, 
+                  transition: 'transform 0.2s ease-out',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain'
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

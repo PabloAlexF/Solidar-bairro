@@ -275,7 +275,7 @@
   outline: none;
   border-color: var(--cmr-prm-primary);
   background: white;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
 }
 
 select.cmr-prm-form-input {
@@ -451,6 +451,10 @@ select.cmr-prm-form-input {
   border-color: #cbd5e1;
 }
 
+.cmr-prm-btn-prev:active, .cmr-prm-btn-cancel:active {
+  background: #f1f5f9;
+}
+
 .cmr-prm-nav-actions {
   display: flex;
   flex-direction: column;
@@ -467,6 +471,10 @@ select.cmr-prm-form-input {
   background: #1e293b;
 }
 
+.cmr-prm-btn-next:active {
+  transform: scale(0.98);
+}
+
 .cmr-prm-btn-finish {
   background: linear-gradient(135deg, var(--cmr-prm-primary), var(--cmr-prm-secondary));
   color: white;
@@ -474,6 +482,10 @@ select.cmr-prm-form-input {
 
 .cmr-prm-btn-finish:hover {
   box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3);
+}
+
+.cmr-prm-btn-finish:active {
+  transform: scale(0.98);
 }
 
 /* Success Page */

@@ -1,26 +1,27 @@
-import React, { useState } from 'react';
-import { 
-  Users, ArrowLeft, User, Home, Users2, DollarSign, 
-  ListChecks, MapPin, CheckCircle2, ChevronRight, 
-  ChevronLeft, Fingerprint, IdCard, Calendar, 
-  Phone, Mail, ShieldCheck, Trophy, 
+import React, { useState, useEffect } from 'react';
+import {
+  Users, ArrowLeft, User, Home, Users2, DollarSign,
+  ListChecks, MapPin, CheckCircle2, ChevronRight,
+  ChevronLeft, Fingerprint, IdCard, Calendar,
+  Phone, Mail, ShieldCheck, Trophy,
   Zap, Info, Heart, Sparkles, Target, Sun, Moon, CloudSun, AlertTriangle, Coffee, X,
   Apple, BookOpen, Stethoscope, Hammer, Smile, Truck, Share2, Rocket
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
-import Toast from '../../../components/ui/Toast';
-import AddressInput from '../../../components/ui/AddressInput';
+import toast from 'react-hot-toast';
 import ApiService from '../../../services/apiService';
 import './CadastroFamiliaDesktop.css';
 import '../../../styles/components/PasswordField.css';
-import '../../../styles/components/Toast.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 
 export default function CadastroFamiliaDesktop() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+
+  const [errors, setErrors] = useState({});
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [currentNeed, setCurrentNeed] = useState(null);
@@ -54,10 +55,10 @@ export default function CadastroFamiliaDesktop() {
     jovens: 0,
     adultos: 1,
     idosos: 0,
-    necessidades: []
+    necessidades: [],
+    termosAceitos: false
   });
-
-  const totalSteps = 6;
+  const { loadingCep, formatCEP, searchCEP } = useCEP();
   
   const steps = [
     { id: 1, title: "Responsável", icon: <User size={22} /> },
@@ -67,6 +68,8 @@ export default function CadastroFamiliaDesktop() {
     { id: 5, title: "Família", icon: <Users2 size={22} /> },
     { id: 6, title: "Necessidades", icon: <ListChecks size={22} /> },
   ];
+
+  const totalSteps = steps.length;
   
   const familyTypes = [
     { label: 'Crianças (0-12)', icon: '👶', key: 'criancas' },
@@ -84,6 +87,23 @@ export default function CadastroFamiliaDesktop() {
     { label: "Transporte", icon: <Truck size={24} /> },
   ];
 
+  const isValidCPF = (cpf) => {
+    if (typeof cpf !== 'string') return false;
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
+    const cpfDigits = cpf.split('').map(el => +el);
+    const rest = (count) => (cpfDigits.slice(0, count - 12).reduce((soma, el, index) => soma + el * (count - index), 0) * 10) % 11 % 10;
+    return rest(10) === cpfDigits[9] && rest(11) === cpfDigits[10];
+  };
+
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { label: '', color: '#e2e8f0', width: '0%' };
+    const isValid = pass.length >= 6 && /[a-zA-Z]/.test(pass) && /\d/.test(pass);
+    if (!isValid) return { label: 'Fraca', color: '#ef4444', width: '33%' };
+    if (pass.length >= 8) return { label: 'Forte', color: '#10b981', width: '100%' };
+    return { label: 'Média', color: '#f59e0b', width: '66%' };
+  };
+
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
   
@@ -92,38 +112,77 @@ export default function CadastroFamiliaDesktop() {
       case 1:
         return formData.nomeCompleto.trim() && formData.dataNascimento && formData.estadoCivil && formData.profissao.trim();
       case 2:
-        return formData.cpf.trim() && formData.rg.trim() && formData.rendaFamiliar;
+        return isValidCPF(formData.cpf) && formData.rg.trim() && formData.rendaFamiliar;
       case 3:
-        return formData.telefone.trim() && formData.email.trim() && formData.password.length >= 6 && formData.password === formData.confirmPassword;
+        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim() && formData.password.length >= 6 && /[a-zA-Z]/.test(formData.password) && /\d/.test(formData.password) && formData.password === formData.confirmPassword;
       case 4:
-        return (formData.cep && formData.endereco && formData.bairro && formData.tipoMoradia) || (formData.endereco.trim() && formData.bairro.trim() && formData.tipoMoradia);
+        return formData.cep.replace(/\D/g, '').length === 8 &&
+               formData.endereco.trim() !== '' &&
+               formData.numero.trim() !== '' &&
+               formData.bairro.trim() !== '' &&
+               formData.cidade.trim() !== '' &&
+               formData.estado.trim() !== '' &&
+               formData.tipoMoradia !== '';
       default:
         return true;
     }
   };
 
-  const handleNextStep = () => {
-    if (step === 3) {
-      if (formData.password.length < 6) {
-        showToast('A senha deve ter pelo menos 6 caracteres', 'error');
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        showToast('As senhas não coincidem', 'error');
-        return;
-      }
+  const getStepValidationErrors = (stepNumber) => {
+    const newErrors = {};
+    switch (stepNumber) {
+      case 1:
+        if (!formData.nomeCompleto.trim()) newErrors.nomeCompleto = true;
+        if (!formData.dataNascimento) newErrors.dataNascimento = true;
+        if (!formData.estadoCivil) newErrors.estadoCivil = true;
+        if (!formData.profissao.trim()) newErrors.profissao = true;
+        break;
+      case 2:
+        if (!isValidCPF(formData.cpf)) newErrors.cpf = true;
+        if (!formData.rg.trim()) newErrors.rg = true;
+        if (!formData.rendaFamiliar) newErrors.rendaFamiliar = true;
+        break;
+      case 3:
+        if (!formData.telefone.trim() || formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        if (formData.password.length < 6 || !/[a-zA-Z]/.test(formData.password) || !/\d/.test(formData.password)) newErrors.password = true;
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = true;
+        break;
+      case 4:
+        if (formData.cep.replace(/\D/g, '').length !== 8) newErrors.cep = true;
+        if (formData.endereco.trim() === '') newErrors.endereco = true;
+        if (formData.numero.trim() === '') newErrors.numero = true;
+        if (formData.bairro.trim() === '') newErrors.bairro = true;
+        if (formData.cidade.trim() === '') newErrors.cidade = true;
+        if (formData.estado.trim() === '') newErrors.estado = true;
+        if (formData.tipoMoradia === '') newErrors.tipoMoradia = true;
+        break;
+      case 6:
+        if (formData.necessidades.length === 0) newErrors.necessidades = true;
+        break;
     }
-    
-    if (validateStep(step)) {
+    return newErrors;
+  };
+
+  const handleNextStep = () => {
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
   const showToast = (message, type = 'error') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false, message: '', type: 'error' }), 4000);
+    if (type === 'success') {
+      toast.success(message);
+    } else if (type === 'error') {
+      toast.error(message);
+    } else {
+      toast(message);
+    }
   };
 
   const formatCPF = (value) => {
@@ -171,9 +230,36 @@ export default function CadastroFamiliaDesktop() {
       updateFormData('telefone', formatPhone(value));
     }
   };
+
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        updateFormData('endereco', '');
+        updateFormData('bairro', '');
+        updateFormData('cidade', '');
+        updateFormData('estado', '');
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        updateFormData('endereco', logradouro || '');
+        updateFormData('bairro', bairro || '');
+        updateFormData('cidade', localidade || '');
+        updateFormData('estado', uf || '');
+      }
+    }
+  };
   
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCheckboxChange = (field, value, checked) => {
@@ -182,26 +268,18 @@ export default function CadastroFamiliaDesktop() {
         setCurrentNeed(value);
         setTempDetail(needDetails[value] || '');
         setShowNeedModal(true);
-        setFormData(prev => ({
-          ...prev,
-          [field]: [...prev[field], value]
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [field]: prev[field].filter(item => item !== value)
-        }));
-        const newDetails = { ...needDetails };
-        delete newDetails[value];
-        setNeedDetails(newDetails);
       }
-    } else {
       setFormData(prev => ({
         ...prev,
         [field]: checked 
           ? [...prev[field], value]
           : prev[field].filter(item => item !== value)
       }));
+      if (!checked) {
+        const newDetails = { ...needDetails };
+        delete newDetails[value];
+        setNeedDetails(newDetails);
+      }
     }
   };
   
@@ -220,27 +298,39 @@ export default function CadastroFamiliaDesktop() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      showToast('Por favor, selecione pelo menos uma necessidade.', 'error');
+      return;
+    }
+
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       showToast('As senhas não coincidem', 'error');
       return;
     }
-    
-    if (formData.password.length < 6) {
-      showToast('A senha deve ter pelo menos 6 caracteres', 'error');
+
+    if (formData.password.length < 6 || !/[a-zA-Z]/.test(formData.password) || !/\d/.test(formData.password)) {
+      showToast('A senha deve ter pelo menos 6 caracteres, letras e números', 'error');
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const { confirmPassword, ...dataToSend } = formData;
       dataToSend.subQuestionAnswers = needDetails;
       console.log('Dados sendo enviados para família:', dataToSend);
-      
+
       const response = await ApiService.createFamilia(dataToSend);
       console.log('Resposta da API:', response);
-      
+
       setIsSubmitted(true);
       showToast('Família cadastrada com sucesso! O administrador precisa liberar seu acesso.', 'success');
     } catch (error) {
@@ -250,6 +340,8 @@ export default function CadastroFamiliaDesktop() {
       setIsLoading(false);
     }
   };
+
+  const strength = getPasswordStrength(formData.password);
 
   if (isSubmitted) {
     return (
@@ -286,7 +378,7 @@ export default function CadastroFamiliaDesktop() {
                   <p style={{ fontSize: '0.85rem', opacity: 0.9, marginTop: '4px' }}>Seu perfil está visível para ONGs locais.</p>
                 </div>
               </div>
-              <Link to="/" className="btn-go-home-orange" style={{ padding: '1rem 2rem', fontSize: '1rem', width: '100%', justifyContent: 'center', marginTop: '1.5rem' }}>
+              <Link to="/login" className="btn-go-home-orange" style={{ padding: '1rem 2rem', fontSize: '1rem', width: '100%', justifyContent: 'center', marginTop: '1.5rem' }}>
                 Acessar Painel
               </Link>
             </div>
@@ -310,7 +402,7 @@ export default function CadastroFamiliaDesktop() {
   }
 
   return (
-    <div className="fam-reg-container fam-reg-theme">
+    <div className="fam-reg-container fam-reg-theme familia-theme">
       <div className="fam-reg-bg-blobs">
         <div className="fam-reg-blob-1" />
         <div className="fam-reg-blob-2" />
@@ -384,11 +476,12 @@ export default function CadastroFamiliaDesktop() {
                     <label className="field-label">Nome Completo <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="input-with-icon">
                       <User className="field-icon" size={20} />
-                      <input 
-                        required 
-                        type="text" 
-                        className="form-input" 
+                      <input
+                        required
+                        type="text"
+                        className="fam-form-input"
                         placeholder="Seu nome completo"
+                        style={errors.nomeCompleto ? { borderColor: '#ef4444' } : {}}
                         value={formData.nomeCompleto}
                         onChange={(e) => updateFormData('nomeCompleto', e.target.value)}
                       />
@@ -402,6 +495,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="date" 
                         className="form-input"
+                        style={errors.dataNascimento ? { borderColor: '#ef4444' } : {}}
                         value={formData.dataNascimento}
                         onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                       />
@@ -412,9 +506,9 @@ export default function CadastroFamiliaDesktop() {
                     <select 
                       required 
                       className="form-input" 
+                      style={{ paddingLeft: '1rem', ...(errors.estadoCivil && { borderColor: '#ef4444' }) }}
                       value={formData.estadoCivil}
                       onChange={(e) => updateFormData('estadoCivil', e.target.value)}
-                      style={{ paddingLeft: '1rem' }}
                     >
                       <option value="">Selecione</option>
                       <option value="solteiro">Solteiro(a)</option>
@@ -429,10 +523,10 @@ export default function CadastroFamiliaDesktop() {
                       required 
                       type="text" 
                       className="form-input" 
+                      style={{ paddingLeft: '1rem', ...(errors.profissao && { borderColor: '#ef4444' }) }}
                       placeholder="Ex: Diarista, Vendedor, Desempregado, etc."
                       value={formData.profissao}
                       onChange={(e) => updateFormData('profissao', e.target.value)}
-                      style={{ paddingLeft: '1rem' }}
                     />
                   </div>
                 </div>
@@ -448,6 +542,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="text" 
                         className="form-input" 
+                        style={errors.cpf ? { borderColor: '#ef4444' } : {}}
                         placeholder="000.000.000-00"
                         value={formData.cpf}
                         onChange={handleCPFChange}
@@ -463,6 +558,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="text" 
                         className="form-input" 
+                        style={errors.rg ? { borderColor: '#ef4444' } : {}}
                         placeholder="00.000.000-0"
                         value={formData.rg}
                         onChange={handleRGChange}
@@ -488,6 +584,7 @@ export default function CadastroFamiliaDesktop() {
                       <select 
                         required 
                         className="form-input"
+                        style={errors.rendaFamiliar ? { borderColor: '#ef4444' } : {}}
                         value={formData.rendaFamiliar}
                         onChange={(e) => updateFormData('rendaFamiliar', e.target.value)}
                       >
@@ -522,6 +619,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="tel" 
                         className="form-input" 
+                        style={errors.telefone ? { borderColor: '#ef4444' } : {}}
                         placeholder="(00) 00000-0000"
                         value={formData.telefone}
                         onChange={handlePhoneChange}
@@ -537,6 +635,7 @@ export default function CadastroFamiliaDesktop() {
                         required 
                         type="email" 
                         className="form-input" 
+                        style={errors.email ? { borderColor: '#ef4444' } : {}}
                         placeholder="seu@email.com"
                         value={formData.email}
                         onChange={(e) => updateFormData('email', e.target.value)}
@@ -549,14 +648,29 @@ export default function CadastroFamiliaDesktop() {
                     value={formData.password}
                     onChange={(e) => updateFormData('password', e.target.value)}
                     required
+                    error={errors.password}
                   />
+                  {formData.password && (
+                    <div style={{ marginTop: '-10px', marginBottom: '15px', padding: '0 4px' }}>
+                      <div style={{ height: '4px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: strength.width, backgroundColor: strength.color, transition: 'all 0.3s ease' }} />
+                      </div>
+                      <span style={{ fontSize: '11px', color: strength.color, marginTop: '4px', display: 'block', textAlign: 'right', fontWeight: '600' }}>{strength.label}</span>
+                    </div>
+                  )}
                   <PasswordField 
                     label="Confirmar Senha"
                     placeholder="Digite a senha novamente"
                     value={formData.confirmPassword}
                     onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                    error={errors.confirmPassword}
                     required
                   />
+                  {formData.confirmPassword && (
+                    <div style={{ marginTop: '-10px', marginBottom: '15px', fontSize: '0.8rem', textAlign: 'right', fontWeight: '600', color: formData.password === formData.confirmPassword ? '#10b981' : '#ef4444' }}>
+                      {formData.password === formData.confirmPassword ? 'Senhas conferem' : 'Senhas não conferem'}
+                    </div>
+                  )}
                   <div className="form-group span-2">
                     <label className="field-label">Melhor horário para contato</label>
                     <select 
@@ -577,21 +691,104 @@ export default function CadastroFamiliaDesktop() {
 
               {step === 4 && (
                 <div className="form-grid">
+                  <div className="form-group">
+                    <label className="field-label">CEP <span style={{ color: '#ef4444' }}>*</span></label>
+                    <div className="input-with-icon">
+                      <MapPin className="field-icon" size={20} />
+                      <input
+                        required
+                        type="text"
+                        className="form-input"
+                        style={errors.cep ? { borderColor: '#ef4444' } : {}}
+                        placeholder="00000-000"
+                        value={formData.cep}
+                        onChange={(e) => updateFormData('cep', formatCEP(e.target.value))}
+                        onBlur={handleCepBlur}
+                        maxLength={9}
+                      />
+                      {loadingCep && <div className="spinner" />}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Endereço (Rua, Av.) <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="form-input"
+                      style={errors.endereco ? { borderColor: '#ef4444' } : {}}
+                      placeholder="Sua rua ou avenida"
+                      value={formData.endereco}
+                      onChange={(e) => updateFormData('endereco', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Número <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="form-input"
+                      style={errors.numero ? { borderColor: '#ef4444' } : {}}
+                      placeholder="Nº"
+                      value={formData.numero}
+                      onChange={(e) => updateFormData('numero', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Bairro <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="form-input"
+                      style={errors.bairro ? { borderColor: '#ef4444' } : {}}
+                      placeholder="Seu bairro"
+                      value={formData.bairro}
+                      onChange={(e) => updateFormData('bairro', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Cidade <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      className="form-input"
+                      style={errors.cidade ? { borderColor: '#ef4444' } : {}}
+                      placeholder="Sua cidade"
+                      value={formData.cidade}
+                      onChange={(e) => updateFormData('cidade', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="field-label">Estado <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="form-input"
+                      style={errors.estado ? { borderColor: '#ef4444' } : {}}
+                      placeholder="UF"
+                      value={formData.estado}
+                      onChange={(e) => updateFormData('estado', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
                   <div className="form-group span-2">
-                    <AddressInput 
-                      addressData={formData}
-                      setAddressData={setFormData}
-                      required={true}
+                    <label className="field-label">Complemento / Ponto de Referência</label>
+                    <input
+                      type="text"
+                      placeholder="Apto, bloco, próximo a..."
+                      value={formData.referencia}
+                      onChange={(e) => updateFormData('referencia', e.target.value)}
                     />
                   </div>
                   <div className="form-group span-2">
                     <label className="field-label">Tipo de Moradia <span style={{ color: '#ef4444' }}>*</span></label>
                     <select 
                       required 
-                      className="form-input"
+                      className="form-input" 
+                      style={{ paddingLeft: '1rem', ...(errors.tipoMoradia && { borderColor: '#ef4444' }) }}
                       value={formData.tipoMoradia}
                       onChange={(e) => updateFormData('tipoMoradia', e.target.value)}
-                      style={{ paddingLeft: '1rem' }}
                     >
                       <option value="">Selecione</option>
                       <option value="casa-propria">Casa própria</option>
@@ -604,12 +801,11 @@ export default function CadastroFamiliaDesktop() {
                   </div>
                 </div>
               )}
-
               {step === 5 && (
                 <div className="form-grid">
                   <div className="form-group span-2">
                     <label className="field-label">Quantas pessoas moram na casa?</label>
-                    <div className="selectable-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginTop: '1rem' }}>
+                    <div className="selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
                       {familyTypes.map((item) => (
                         <div key={item.key} className="family-counter-card">
                           <div className="family-card-header">
@@ -645,7 +841,7 @@ export default function CadastroFamiliaDesktop() {
                 <div className="form-grid">
                   <div className="form-group span-2">
                     <label className="field-label">Quais são suas principais necessidades?</label>
-                    <div className="selectable-grid">
+                    <div className="selectable-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
                       {necessidadesOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
                           <input 
@@ -662,6 +858,13 @@ export default function CadastroFamiliaDesktop() {
                         </label>
                       ))}
                     </div>
+                  </div>
+                  <div className="form-group span-2">
+                    <TermsCheckbox 
+                      checked={formData.termosAceitos}
+                      onChange={(checked) => updateFormData('termosAceitos', checked)}
+                      color="#f97316"
+                    />
                   </div>
                   <div className="form-final-box span-2">
                     <Heart size={48} className="final-icon" />
@@ -689,10 +892,14 @@ export default function CadastroFamiliaDesktop() {
                       <ChevronRight size={20} />
                     </button>
                   ) : (
-                    <button type="submit" className="fam-reg-btn-finish" disabled={isLoading}>
-                      <span>{isLoading ? 'Cadastrando...' : 'Finalizar Cadastro'}</span>
-                      <CheckCircle2 size={20} />
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <button type="submit" className="fam-reg-btn-finish" disabled={isLoading || !formData.termosAceitos}>
+                          <span>{isLoading ? 'Cadastrando...' : 'Finalizar Cadastro'}</span>
+                          <CheckCircle2 size={20} />
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -701,13 +908,7 @@ export default function CadastroFamiliaDesktop() {
         </main>
       </div>
 
-      {/* Toast */}
-      <Toast 
-        show={toast.show}
-        message={toast.message}
-        type={toast.type}
-        onClose={() => setToast({ show: false, message: '', type: 'error' })}
-      />
+
 
       {showNeedModal && (
         <div className="fam-reg-modal-overlay" style={{

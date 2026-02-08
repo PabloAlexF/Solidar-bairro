@@ -1,15 +1,14 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { NotificationDropdown } from '../../components/NotificationDropdown';
+import { useNotifications } from '../../contexts/NotificationContext';
+import chatNotificationService from '../../services/chatNotificationService';
+import ReusableHeader from '../../components/layout/ReusableHeader';
 import {
   Heart,
   HandHelping,
-  Search,
   MapPin,
   Navigation,
-  Bell,
-  User,
   ArrowRight,
   ChevronRight,
   Zap,
@@ -17,31 +16,47 @@ import {
   Home,
   PlusCircle,
   MessageSquare,
+  User,
   Coffee,
   Key,
   Instagram,
   Twitter,
-  Facebook,
-  Settings,
-  Shield
+  Facebook
 } from 'lucide-react';
 
 import './mobile.css';
 
-const NeighborhoodRadar = ({ size = "normal" }) => {
+const NeighborhoodRadar = ({ size = "normal", locationName }) => {
+  const [isVisible, setIsVisible] = useState(typeof document !== 'undefined' ? !document.hidden : true);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  const animationPlayState = isVisible ? 'running' : 'paused';
+
   return (
     <div className={`radar-container ${size}`}>
       <div className="radar-circle">
         <div
           className="radar-ping"
           style={{
-            animation: 'radarPing 4s infinite ease-out'
+            animation: 'radarPing 4s infinite ease-out',
+            animationPlayState
           }}
         />
         <div
           className="radar-ping"
           style={{
-            animation: 'radarPing 4s infinite ease-out 2s'
+            animation: 'radarPing 4s infinite ease-out 2s',
+            animationPlayState
           }}
         />
         <div className="radar-center">
@@ -61,7 +76,8 @@ const NeighborhoodRadar = ({ size = "normal" }) => {
             style={{
               top: pos.top,
               left: pos.left,
-              animation: `neighborDot 3s infinite ease-in-out ${pos.delay}s`
+              animation: `neighborDot 3s infinite ease-in-out ${pos.delay}s`,
+              animationPlayState
             }}
           >
             <div className="dot-core" />
@@ -73,9 +89,8 @@ const NeighborhoodRadar = ({ size = "normal" }) => {
         <div className="radar-info">
           <div className="info-badge">
             <MapPin size={12} />
-            <span>Bairro de Pinheiros</span>
+            <span>{locationName || "Sua Vizinhança"}</span>
           </div>
-          <h4>12 Vizinhos online</h4>
         </div>
       )}
     </div>
@@ -153,135 +168,99 @@ const MobileNav = () => {
 
 export default function MobileLandingPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
+  const { addChatNotification } = useNotifications();
+  const [locationName, setLocationName] = useState("Localizando...");
 
-  // Verificar se é administrador
-  const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
+  useEffect(() => {
+    if (user?.bairro) {
+      setLocationName(user.bairro);
+      return;
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            const address = data.address;
+            const neighborhood = address?.suburb || address?.neighbourhood || address?.quarter || address?.city_district || address?.town || "Sua Vizinhança";
+            setLocationName(neighborhood);
+          } catch (error) {
+            setLocationName("Sua Vizinhança");
+          }
+        },
+        () => {
+          setLocationName("Sua Vizinhança");
+        }
+      );
+    } else {
+      setLocationName("Sua Vizinhança");
+    }
+  }, [user]);
+
+  // Monitoramento de notificações e som
+  useEffect(() => {
+    let monitoringInterval = null;
+
+    const startChatMonitoring = () => {
+      if (isAuthenticated() && (user?.uid || user?.id)) {
+        const userId = user.uid || user.id;
+        
+        const handleNewChatMessage = (conversationId, senderName, message) => {
+          addChatNotification(conversationId, senderName, message);
+          
+          // Feedback sonoro e tátil
+          try {
+            // Tenta tocar o som (certifique-se de ter um arquivo notification.mp3 na pasta public)
+            const audio = new Audio('/notification.mp3');
+            audio.volume = 0.5;
+            audio.play().catch(e => console.log('Reprodução de áudio bloqueada pelo navegador', e));
+            
+            // Vibração (funciona na maioria dos Androids via Chrome/Firefox)
+            if (navigator.vibrate) {
+              navigator.vibrate(200);
+            }
+          } catch (error) {
+            console.error('Erro ao notificar:', error);
+          }
+        };
+        
+        monitoringInterval = chatNotificationService.startGlobalMessageMonitoring(
+          userId, 
+          handleNewChatMessage
+        );
+      }
+    };
+    
+    if (isAuthenticated()) {
+      startChatMonitoring();
+    }
+
+    return () => {
+      if (monitoringInterval) clearInterval(monitoringInterval);
+      chatNotificationService.cleanup();
+    };
+  }, [isAuthenticated, user, addChatNotification]);
+
   const isAdmin = user?.role === 'admin' ||
                   user?.isAdmin ||
                   user?.tipo === 'admin' ||
-                  user?.email === 'admin@solidarbairro.com' ||
-                  storedUser?.role === 'admin' ||
-                  storedUser?.isAdmin ||
-                  storedUser?.tipo === 'admin' ||
-                  storedUser?.email === 'admin@solidarbairro.com';
+                  user?.email === 'admin@solidarbairro.com';
 
   return (
     <div className="mobile-landing-exclusive">
-      <header className="mobile-hero">
-        <div className="mobile-header-top">
-          <div className="logo-small">
-            <Heart fill="var(--sb-teal)" size={20} />
-            <span>Solidar<b>Brasil</b></span>
-          </div>
-          <div className="header-actions">
-            {isAdmin && (
-              <>
-                <button
-                  onClick={() => navigate('/admin')}
-                  style={{
-                    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-                    border: 'none',
-                    color: 'white',
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    marginRight: '8px',
-                    boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
-                  }}
-                >
-                  <Settings size={18} />
-                </button>
-                <button
-                  onClick={() => navigate('/painel-social')}
-                  style={{
-                    background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
-                    border: 'none',
-                    color: 'white',
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    marginRight: '8px',
-                    boxShadow: '0 2px 8px rgba(13, 148, 136, 0.3)'
-                  }}
-                >
-                  <Shield size={18} />
-                </button>
-              </>
-            )}
-            {!isAuthenticated() ? (
-              <div className="auth-buttons">
-                <button
-                  className="header-login"
-                  onClick={() => navigate('/login')}
-                  style={{
-                    background: 'linear-gradient(135deg, #64748b, #475569)',
-                    border: 'none',
-                    color: 'white',
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    marginRight: '8px',
-                    boxShadow: '0 2px 8px rgba(100, 116, 139, 0.3)'
-                  }}
-                >
-                  Entrar
-                </button>
-                <button
-                  className="header-cta"
-                  onClick={() => navigate('/cadastro')}
-                  style={{
-                    background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
-                    border: 'none',
-                    color: 'white',
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(13, 148, 136, 0.3)'
-                  }}
-                >
-                  Cadastrar
-                </button>
-              </div>
-            ) : (
-              <div className="user-actions">
-                <NotificationDropdown />
-                <button
-                  className="user-avatar-btn"
-                  onClick={() => navigate('/perfil')}
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
-                    border: 'none',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 8px rgba(13, 148, 136, 0.3)'
-                  }}
-                >
-                  {(user?.nome || user?.nomeCompleto || 'U').substring(0, 2).toUpperCase()}
-                </button>
-              </div>
-            )}
-          </div>
-
-        </div>
+      <ReusableHeader 
+        currentPage="landing"
+        showLoginButton={true}
+        showAdminButtons={true}
+        showPainelSocial={true}
+        mobileLoginOnly={true}
+      />
+      
+      <header className="mobile-hero" style={{ paddingTop: '80px' }}>
 
         <div className="hero-content">
           <div
@@ -353,7 +332,7 @@ export default function MobileLandingPage() {
       </header>
 
       <section className="mobile-radar-section">
-        <NeighborhoodRadar size="normal" />
+        <NeighborhoodRadar size="normal" locationName={locationName} />
       </section>
 
       <section className="mobile-pulse-section">
@@ -396,49 +375,116 @@ export default function MobileLandingPage() {
           )}
         </section>
 
-        <footer className="landing-footer mobile-footer">
-          <div className="section-container">
-            <div className="footer-grid">
-              <div className="footer-brand">
-                <div className="logo-wrapper" onClick={() => navigate('/')}>
-                  <div className="logo-icon">
-                    <Heart fill="white" size={20} />
+        <footer className="landing-footer mobile-footer" style={{
+          background: '#0f172a',
+          color: '#f8fafc',
+          padding: '48px 24px 120px',
+          marginTop: '40px',
+          borderTopLeftRadius: '32px',
+          borderTopRightRadius: '32px',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Decorative elements */}
+          <div style={{
+            position: 'absolute',
+            top: '-50px',
+            left: '-50px',
+            width: '150px',
+            height: '150px',
+            background: 'radial-gradient(circle, rgba(13,148,136,0.15) 0%, rgba(0,0,0,0) 70%)',
+            borderRadius: '50%'
+          }} />
+          
+          <div className="section-container" style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '32px' }}>
+              
+              {/* Brand Section */}
+              <div className="footer-brand" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                <div className="logo-wrapper" onClick={() => navigate('/')} style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <div className="logo-icon" style={{ 
+                    width: '40px', 
+                    height: '40px', 
+                    background: 'rgba(255,255,255,0.05)', 
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}>
+                    <Heart fill="#0d9488" color="#0d9488" size={20} />
                   </div>
-                  <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
+                  <span className="logo-text" style={{ fontSize: '1.5rem', fontWeight: '700', color: 'white', letterSpacing: '-0.5px' }}>
+                    Solidar<span style={{ color: '#0d9488' }}>Brasil</span>
+                  </span>
                 </div>
-                <p className="footer-tagline">
-                  Transformando vizinhanças através da colaboração local.
+                <p className="footer-tagline" style={{ color: '#94a3b8', fontSize: '0.95rem', maxWidth: '300px', lineHeight: '1.6' }}>
+                  Conectando vizinhos, fortalecendo comunidades e transformando vidas através da solidariedade local.
                 </p>
-                <div className="footer-contact">
-                  <p style={{fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem'}}>
-                    📧 <a href="mailto:solidarbrasil@gmail.com" style={{color: '#0d9488', textDecoration: 'none'}}>solidarbrasil@gmail.com</a>
-                  </p>
-                  <p style={{fontSize: '0.8rem', color: '#94a3b8', marginBottom: '1rem'}}>
-                    📱 <a href="tel:+5531925383871" style={{color: '#0d9488', textDecoration: 'none'}}>(31) 9253-8371</a>
-                  </p>
+              </div>
+
+              {/* Social Icons */}
+              <div className="footer-social-group" style={{ display: 'flex', gap: '20px' }}>
+                {[Instagram, Twitter, Facebook].map((Icon, i) => (
+                  <a key={i} href="#" className="social-btn" style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#cbd5e1',
+                    transition: 'all 0.2s',
+                    border: '1px solid rgba(255,255,255,0.05)'
+                  }}>
+                    <Icon size={22} />
+                  </a>
+                ))}
+              </div>
+
+              {/* Quick Links Grid */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr', 
+                gap: '20px', 
+                width: '100%', 
+                maxWidth: '300px',
+                textAlign: 'left'
+              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <h4 style={{ color: 'white', fontSize: '1rem', fontWeight: '600', marginBottom: '4px' }}>Plataforma</h4>
+                  <a href="#" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem' }}>Como funciona</a>
+                  <a href="#" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem' }}>Segurança</a>
+                  <a href="#" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem' }}>Ajuda</a>
                 </div>
-                <div className="footer-social-group">
-                  <a href="#" className="social-btn"><Instagram size={18} /></a>
-                  <a href="#" className="social-btn"><Twitter size={18} /></a>
-                  <a href="#" className="social-btn"><Facebook size={18} /></a>
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <h4 style={{ color: 'white', fontSize: '1rem', fontWeight: '600', marginBottom: '4px' }}>Contato</h4>
+                  <a href="mailto:contato@solidarbrasil.com" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem' }}>Email</a>
+                  <a href="tel:+5531925383871" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem' }}>WhatsApp</a>
+                  <a href="#" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem' }}>Imprensa</a>
                 </div>
               </div>
 
-              <div className="footer-bottom">
-              <div className="footer-bottom-container">
-                <p className="copyright">&copy; 2024 SolidarBrasil.</p>
-                <div className="footer-bottom-links">
-                  <a href="#" className="footer-bottom-link">Privacidade</a>
-                  <a href="#" className="footer-bottom-link">Termos</a>
+              {/* Divider */}
+              <div style={{ width: '100%', height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
+
+              {/* Bottom Section */}
+              <div className="footer-bottom" style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                <p className="copyright" style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                  &copy; {new Date().getFullYear()} SolidarBrasil. Feito com 💚 para todos.
+                </p>
+                <div className="footer-bottom-links" style={{ display: 'flex', justifyContent: 'center', gap: '24px' }}>
+                  <Link to="/politica-privacidade" className="footer-bottom-link" style={{ color: '#475569', textDecoration: 'none', fontSize: '0.8rem' }}>Privacidade</Link>
+                  <Link to="/termos-uso" className="footer-bottom-link" style={{ color: '#475569', textDecoration: 'none', fontSize: '0.8rem' }}>Termos de Uso</Link>
                 </div>
               </div>
+
             </div>
           </div>
         </footer>
 
         <MobileNav />
-
     </div>
   );
 };

@@ -25,6 +25,7 @@ import {
   AlertCircle,
   Calendar,
   Zap,
+  Bell,
   Search,
   CheckCircle2,
   ChevronDown,
@@ -38,7 +39,8 @@ import {
   SUB_QUESTION_LABELS
 } from './constants';
 import ApiService from '../../services/apiService';
-import { getCurrentLocation } from '../../utils/geolocation';
+import { getCurrentLocation, getLocationWithFallback } from '../../utils/geolocation';
+import { getSocket } from '../../services/socketService';
 
 export const MobileQueroAjudar = () => {
   const navigate = useNavigate();
@@ -50,25 +52,71 @@ export const MobileQueroAjudar = () => {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
-  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationRequested, setLocationRequested] = useState(false);
   const [fontSize, setFontSize] = useState('normal');
   const [highContrast, setHighContrast] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [pedidos, setPedidos] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [loadingPedidos, setLoadingPedidos] = useState(true);
   const [error, setError] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+
+  const [selectedLocation, setSelectedLocation] = useState('brasil');
+  const [selectedTimeframe, setSelectedTimeframe] = useState('todos');
+  const [activeTab, setActiveTab] = useState('relato');
+  const [expandedItem, setExpandedItem] = useState(null);
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
 
   const loadPedidos = async () => {
     try {
       setLoadingPedidos(true);
       setError(null);
-      
+
       // Simular delay mínimo para mostrar o skeleton
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
+      // Preparar filtros para a API (igual ao desktop)
+      const apiFilters = {};
+
+      // Filtro de categoria
+      if (selectedCat !== 'Todas') {
+        apiFilters.category = selectedCat;
+      }
+
+      // Filtro de urgência
+      if (selectedUrgency) {
+        apiFilters.urgency = selectedUrgency;
+      }
+
+      // Filtros de localização
+      if (selectedLocation === 'minha_cidade' && userLocation) {
+        apiFilters.city = userLocation.city;
+        apiFilters.state = userLocation.state;
+      } else if (selectedLocation === 'meu_estado' && userLocation) {
+        apiFilters.state = userLocation.state;
+      } else if (selectedLocation === 'meu_bairro' && userLocation) {
+        apiFilters.neighborhood = userLocation.neighborhood;
+      }
+
+      // Localização do usuário para ordenação por proximidade
+      if (userLocation) {
+        apiFilters.userCity = userLocation.city;
+        apiFilters.userState = userLocation.state;
+        console.log('Buscando pedidos próximos à localização:', userLocation);
+      } else {
+        console.warn('Localização do usuário não disponível para ordenação por proximidade');
+      }
+
+      // Filtro "apenas novos"
+      if (selectedTimeframe === 'hoje') {
+        apiFilters.onlyNew = true;
+      }
+
       // Verificar se a API está disponível
-      const response = await ApiService.getPedidos();
-      
+      const response = await ApiService.getPedidos(apiFilters);
+
       if (response.success && response.data) {
         const transformedPedidos = response.data.map(pedido => ({
           id: pedido.id,
@@ -88,7 +136,7 @@ export const MobileQueroAjudar = () => {
           isNew: isNewPedido(pedido.createdAt),
           createdAt: pedido.createdAt
         }));
-        
+
         setPedidos(transformedPedidos);
       } else {
         throw new Error('Erro ao carregar pedidos');
@@ -96,7 +144,7 @@ export const MobileQueroAjudar = () => {
     } catch (error) {
       console.error('Erro ao carregar pedidos:', error);
       setError(error.message);
-      
+
       // Se for erro de conexão, mostrar dados mock para desenvolvimento
       if (error.message.includes('conectar com a API')) {
         console.warn('Usando dados mock para desenvolvimento');
@@ -148,68 +196,115 @@ export const MobileQueroAjudar = () => {
     return created > yesterday;
   };
 
+  // Efeito para carregar configurações de acessibilidade na inicialização
   useEffect(() => {
     const savedFontSize = localStorage.getItem('fontSize') || 'normal';
     const savedContrast = localStorage.getItem('highContrast') === 'true';
     setFontSize(savedFontSize);
     setHighContrast(savedContrast);
-    document.documentElement.className = `font-${savedFontSize} ${savedContrast ? 'high-contrast' : ''}`;
-    
-    loadPedidos();
-    
-  const loadLocation = async () => {
-    try {
-      // Verificar se geolocalização está disponível
-      if (!navigator.geolocation) {
-        throw new Error('Geolocalização não suportada');
-      }
-      
-      // Solicitar localização apenas se o usuário interagir
-      const location = await getCurrentLocation();
-      console.log('Localização obtida:', location);
-      setUserLocation(location);
-    } catch (error) {
-      console.warn('Erro ao obter localização:', error);
-      // Usar localização genérica apenas se realmente não conseguir obter
-      setUserLocation({ city: 'Sua Cidade', state: 'Seu Estado' });
-    } finally {
-      setLocationLoading(false);
-    }
-  };
-    
-    loadLocation();
-    
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
   }, []);
 
-  const [selectedLocation, setSelectedLocation] = useState('brasil');
-  const [selectedTimeframe, setSelectedTimeframe] = useState('todos');
-  const [activeTab, setActiveTab] = useState('relato');
-  const [expandedItem, setExpandedItem] = useState(null);
-
-  const filteredOrders = useMemo(() => {
-    return pedidos.filter((order) => {
-      const catMatch = selectedCat === 'Todas' || order.category === selectedCat;
-      const urgMatch = !selectedUrgency || order.urgency === selectedUrgency;
-      
-      let locationMatch = true;
-      if (selectedLocation === 'meu_estado') {
-        locationMatch = order.state === userLocation.state;
-      } else if (selectedLocation === 'minha_cidade') {
-        locationMatch = order.city === userLocation.city && order.state === userLocation.state;
+  // Efeito para carregar a localização e outros dados na inicialização
+  useEffect(() => {
+    const loadLocation = async () => {
+      // Prioridade 1: Usar endereço cadastrado do usuário
+      if (user && user.endereco) {
+        const userCity = user.endereco.cidade || user.endereco.city || user.endereco.localidade || '';
+        const userState = user.endereco.estado || user.endereco.state || user.endereco.uf || '';
+        const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || '';
+        
+        if (userCity && userState) {
+          setUserLocation({ 
+            city: userCity, 
+            state: userState,
+            neighborhood: userNeighborhood 
+          });
+          console.log('✅ Localização definida pelo endereço cadastrado (Mobile):', { city: userCity, state: userState, neighborhood: userNeighborhood });
+          return;
+        }
       }
 
-      const timeMatch = selectedTimeframe === 'todos' || (selectedTimeframe === 'hoje' && order.isNew);
-      
-      return catMatch && urgMatch && locationMatch && timeMatch;
-    });
-  }, [pedidos, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe, userLocation, user]);
+      // Prioridade 2: Tentar geolocalização
+      try {
+        const location = await getLocationWithFallback();
+        setUserLocation(location);
+        console.log('✅ Localização obtida automaticamente (Mobile):', location);
+      } catch (error) {
+        console.warn('⚠️ Não foi possível obter localização (Mobile):', error.message);
+        // Prioridade 3: Mostrar TODOS os pedidos (sem filtro de localização)
+        setUserLocation({ city: '', state: '', showAll: true });
+        console.log('ℹ️ Mostrando todos os pedidos (sem filtro de localização) (Mobile)');
+      }
+    };
+
+    loadLocation();
+
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
+  }, [user]);
+
+  // Efeito para gerenciar classes de acessibilidade no elemento <html>
+  useEffect(() => {
+    const root = document.documentElement;
+    // Limpa classes de acessibilidade anteriores para evitar conflitos
+    root.classList.remove('font-small', 'font-normal', 'font-large', 'high-contrast');
+
+    // Adiciona as classes atuais
+    root.classList.add(`font-${fontSize}`);
+    if (highContrast) {
+      root.classList.add('high-contrast');
+    }
+  }, [fontSize, highContrast]);
+
+  // Recarregar pedidos quando a localização ou os filtros mudarem
+  useEffect(() => {
+    if (userLocation) {
+      loadPedidos();
+    }
+  }, [userLocation, selectedCat, selectedUrgency, selectedLocation, selectedTimeframe]);
+
+  // WebSocket para notificações em tempo real (Mobile)
+  useEffect(() => {
+    if (!user) return;
+
+    // Carregar notificações iniciais
+    const fetchNotifications = async () => {
+      try {
+        const response = await ApiService.get('/notifications');
+        if (response.success) {
+          setNotifications(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNewNotification = (notification) => {
+      setNotifications(prev => [notification, ...prev]);
+    };
+
+    socket.on('notification', handleNewNotification);
+
+    return () => {
+      socket.off('notification', handleNewNotification);
+    };
+  }, [user, navigate]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const filteredOrders = useMemo(() => {
+    // Como os filtros agora são aplicados no backend, apenas retornamos os pedidos
+    return pedidos;
+  }, [pedidos]);
 
   const changeFontSize = (size) => {
     setFontSize(size);
     localStorage.setItem('fontSize', size);
-    document.documentElement.className = `font-${size} ${highContrast ? 'high-contrast' : ''}`;
     toast.success(`Fonte: ${size === 'large' ? 'Grande' : size === 'small' ? 'Pequena' : 'Normal'}`);
   };
 
@@ -217,7 +312,7 @@ export const MobileQueroAjudar = () => {
     const newContrast = !highContrast;
     setHighContrast(newContrast);
     localStorage.setItem('highContrast', newContrast.toString());
-    document.documentElement.classList.toggle('high-contrast', newContrast);
+    toast.success(newContrast ? 'Alto contraste ativado' : 'Alto contraste desativado');
   };
 
   const handleHelpClick = (order) => {
@@ -229,12 +324,35 @@ export const MobileQueroAjudar = () => {
     setOrderToHelp(order);
   };
 
+  const requestLocation = async () => {
+    if (locationRequested) return; // Prevent multiple requests
+
+    setLocationRequested(true);
+    setLocationLoading(true);
+
+    try {
+      const location = await getCurrentLocation();
+      console.log('Localização obtida:', location);
+      setUserLocation(location);
+      toast.success(`Localização atualizada: ${location.city}, ${location.state}`);
+    } catch (error) {
+      console.warn('Erro ao obter localização:', error);
+      toast.error('Não foi possível obter sua localização. Usando São Paulo como padrão.');
+      setUserLocation({ city: 'São Paulo', state: 'SP' });
+    } finally {
+      setLocationLoading(false);
+      setLocationRequested(false);
+    }
+  };
+
   const { ref } = useInView({ threshold: 0.1, triggerOnce: true });
 
   const renderModalContent = () => {
     if (!selectedOrder) return null;
     
     const catMeta = CATEGORY_METADATA[selectedOrder.category] || { color: '#64748b', details: {} };
+    const description = selectedOrder.description || '';
+    const isLongDescription = description.length > 45;
     
     return (
       <motion.div
@@ -272,16 +390,37 @@ export const MobileQueroAjudar = () => {
                 Relato do Pedido
               </h3>
               
-              <p style={{ 
-                fontSize: '1.05rem', 
-                lineHeight: '1.7', 
-                color: '#475569', 
-                whiteSpace: 'pre-wrap',
-                position: 'relative',
-                zIndex: 1
-              }}>
-                {selectedOrder.description}
-              </p>
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <p style={{ 
+                  fontSize: '1.05rem', 
+                  lineHeight: '1.7', 
+                  color: '#475569', 
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}>
+                  {isLongDescription
+                    ? `${description.substring(0, 45)}...`
+                    : description
+                  }
+                </p>
+
+                {isLongDescription && (
+                  <button 
+                    onClick={() => setShowDescriptionModal(true)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#3b82f6',
+                      fontWeight: '700',
+                      padding: '8px 0',
+                      cursor: 'pointer',
+                      marginTop: '8px'
+                    }}
+                  >
+                    Visualizar descrição
+                  </button>
+                )}
+              </div>
 
               <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: catMeta.color, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: 'bold' }}>
@@ -388,45 +527,6 @@ export const MobileQueroAjudar = () => {
           </div>
         )}
 
-        {activeTab === 'tecnico' && (
-          <div className="detail-section-mobile" style={{ gap: '16px' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Wrench size={20} />
-              </div>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#1e293b' }}>Ficha Técnica</h3>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>Detalhes específicos</p>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              {Object.entries({ ...(selectedOrder.details || {}), ...(selectedOrder.subQuestionAnswers || {}) })
-                .filter(([key]) => key !== 'ponto_referencia' && !selectedOrder.subCategories?.includes(key))
-                .map(([key, val], idx) => (
-                <motion.div 
-                  key={key} 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  style={{ background: 'white', padding: '16px', borderRadius: '16px', border: '1px solid #f1f5f9' }}
-                >
-                  <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#94a3b8', fontWeight: '700', marginBottom: '4px' }}>
-                    {SUB_QUESTION_LABELS[key] || key.replace(/_/g, ' ')}
-                  </div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: '600', color: '#1e293b' }}>
-                    {Array.isArray(val) ? (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                        {val.map(v => <span key={v} style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>{v}</span>)}
-                      </div>
-                    ) : val}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {activeTab === 'local' && (
           <div className="detail-section-mobile" style={{ gap: '16px' }}>
             <div style={{ height: '200px', background: '#f1f5f9', borderRadius: '24px', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}>
@@ -488,17 +588,60 @@ export const MobileQueroAjudar = () => {
               </p>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-               <button 
+              <button
                 onClick={() => setShowAccessibility(true)}
                 style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
               >
                 <span style={{ fontSize: '1.2rem' }}>Aa</span>
               </button>
-              <button 
+              <button
+                onClick={() => setShowNotifications(true)}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  background: 'white',
+                  color: '#64748b',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  position: 'relative'
+                }}
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span style={{ position: 'absolute', top: '8px', right: '8px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }} />
+                )}
+              </button>
+              <button
+                onClick={requestLocation}
+                disabled={locationLoading}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  background: locationLoading ? '#f1f5f9' : 'white',
+                  color: locationLoading ? '#94a3b8' : '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: locationLoading ? 'not-allowed' : 'pointer'
+                }}
+                title="Atualizar localização"
+              >
+                {locationLoading ? (
+                  <div style={{ width: '16px', height: '16px', border: '2px solid #94a3b8', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                ) : (
+                  <Navigation size={20} />
+                )}
+              </button>
+              <button
                 onClick={() => setShowFiltersModal(true)}
-                style={{ 
-                  width: '40px', height: '40px', borderRadius: '12px', 
-                  border: '1px solid #e2e8f0', 
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
                   background: (selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil') ? '#eff6ff' : 'white',
                   color: (selectedCat !== 'Todas' || selectedUrgency || selectedLocation !== 'brasil') ? '#3b82f6' : '#64748b',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -585,7 +728,7 @@ export const MobileQueroAjudar = () => {
               </div>
 
               {[1, 2, 3].map((i) => (
-                <div key={i} style={{
+                <div key={i} className="mobile-skeleton-card" style={{
                   background: 'white',
                   borderRadius: '20px',
                   padding: '16px',
@@ -638,6 +781,7 @@ export const MobileQueroAjudar = () => {
               return (
                 <motion.div
                   key={order.id}
+                  className="mobile-order-card"
                   layout
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -715,7 +859,11 @@ export const MobileQueroAjudar = () => {
 
                   <div style={{ display: 'flex', gap: '8px', paddingLeft: '8px' }}>
                     <button 
-                      onClick={() => { setSelectedOrder(order); setActiveTab('relato'); }}
+                      onClick={() => { 
+                        setSelectedOrder(order); 
+                        setActiveTab('relato'); 
+                        setShowDescriptionModal(false); 
+                      }}
                       style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', color: '#475569', fontWeight: '600', fontSize: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                     >
                       <Eye size={16} />
@@ -775,10 +923,17 @@ export const MobileQueroAjudar = () => {
                   <h4>Localização</h4>
                   <div className="pills-grid-mobile">
                     <button className={`pill-mobile ${selectedLocation === 'brasil' ? 'active' : ''}`} onClick={() => setSelectedLocation('brasil')}>Brasil</button>
-                    {userLocation && userLocation.city !== 'Sua Cidade' ? (
+                    {userLocation ? (
                       <>
                         <button className={`pill-mobile ${selectedLocation === 'meu_estado' ? 'active' : ''}`} onClick={() => setSelectedLocation('meu_estado')}>{userLocation.state}</button>
-                        <button className={`pill-mobile ${selectedLocation === 'minha_cidade' ? 'active' : ''}`} onClick={() => setSelectedLocation('minha_cidade')}>{userLocation.city}</button>
+                        {userLocation.city !== userLocation.state && (
+                          <button className={`pill-mobile ${selectedLocation === 'minha_cidade' ? 'active' : ''}`} onClick={() => setSelectedLocation('minha_cidade')}>{userLocation.city}</button>
+                        )}
+                        {userLocation.neighborhood && (
+                          <button className={`pill-mobile ${selectedLocation === 'meu_bairro' ? 'active' : ''}`} onClick={() => setSelectedLocation('meu_bairro')}>
+                            {userLocation.neighborhood}
+                          </button>
+                        )}
                       </>
                     ) : (
                       <button className="pill-mobile" disabled style={{ opacity: 0.5 }}>Localização indisponível</button>
@@ -818,6 +973,85 @@ export const MobileQueroAjudar = () => {
                 <button className="btn-apply-mobile" onClick={() => setShowFiltersModal(false)}>
                   Aplicar Filtros
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNotifications && (
+          <motion.div 
+            className="bottom-sheet-overlay" 
+            onClick={() => setShowNotifications(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{ zIndex: 2000 }}
+          >
+            <motion.div 
+              className="bottom-sheet" 
+              onClick={e => e.stopPropagation()}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            >
+              <div className="sheet-header">
+                <div className="sheet-handle" />
+                <div className="sheet-title-row">
+                  <h2>Notificações</h2>
+                  <button onClick={() => setShowNotifications(false)}><X size={20} /></button>
+                </div>
+              </div>
+              <div className="sheet-content" style={{ padding: '0 16px' }}>
+                {notifications.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+                    <Bell size={40} style={{ marginBottom: '16px' }} />
+                    <p>Nenhuma notificação por aqui.</p>
+                  </div>
+                ) : (
+                  notifications.map(n => {
+                    const time = new Date(n.timestamp || n.createdAt);
+                    const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    const getIcon = (type) => {
+                      switch(type) {
+                        case 'chat': return <MessageCircle size={20} color="#3b82f6" />;
+                        case 'pedido': return <Heart size={20} color="#ef4444" />;
+                        default: return <Bell size={20} color="#64748b" />;
+                      }
+                    }
+
+                    return (
+                      <div 
+                        key={n.id} 
+                        style={{ 
+                          display: 'flex', 
+                          gap: '12px', 
+                          padding: '12px 0', 
+                          borderBottom: '1px solid #f1f5f9',
+                          background: n.read ? 'transparent' : '#eff6ff'
+                        }}
+                        onClick={() => {
+                          if (n.type === 'chat' && n.data?.conversationId) {
+                            navigate(`/chat/${n.data.conversationId}`);
+                            setShowNotifications(false);
+                          }
+                        }}
+                      >
+                        <div style={{ flexShrink: 0, marginTop: '4px' }}>{getIcon(n.type)}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h4 style={{ margin: 0, fontWeight: '600', fontSize: '0.9rem', color: '#1e293b' }}>{n.title}</h4>
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{timeString}</span>
+                          </div>
+                          <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>{n.message}</p>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -918,7 +1152,6 @@ export const MobileQueroAjudar = () => {
                 {[
                   { id: 'relato', label: 'Relato', icon: <FileText size={18} /> },
                   { id: 'itens', label: 'Itens', icon: <ClipboardList size={18} /> },
-                  { id: 'tecnico', label: 'Técnico', icon: <Wrench size={18} /> },
                   { id: 'local', label: 'Local', icon: <Navigation size={18} /> },
                 ].map(tab => (
                   <button 
@@ -1014,6 +1247,7 @@ export const MobileQueroAjudar = () => {
                         // Depois criar conversa
                         const conversationData = {
                           participants: [user.uid || user.id, orderToHelp.userId], // Inclui ambos os participantes
+                          senderId: user.uid || user.id,
                           pedidoId: orderToHelp.id,
                           type: 'ajuda',
                           title: `Ajuda: ${orderToHelp.title || orderToHelp.category}`,
@@ -1069,7 +1303,85 @@ export const MobileQueroAjudar = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      <Toaster position="bottom-center" />
+
+      <AnimatePresence>
+        {showDescriptionModal && selectedOrder && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.5)',
+              zIndex: 2100,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px'
+            }}
+            onClick={() => setShowDescriptionModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                background: 'white',
+                borderRadius: '24px',
+                padding: '24px',
+                width: '100%',
+                maxWidth: '400px',
+                maxHeight: '80vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700', color: '#1e293b' }}>Relato Completo</h3>
+                <button 
+                  onClick={() => setShowDescriptionModal(false)}
+                  style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              
+              <div style={{ overflowY: 'auto', paddingRight: '4px' }}>
+                <p style={{ 
+                  fontSize: '1rem', 
+                  lineHeight: '1.6', 
+                  color: '#334155', 
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  margin: 0
+                }}>
+                  {selectedOrder.description}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowDescriptionModal(false)}
+                style={{
+                  marginTop: '20px',
+                  width: '100%',
+                  padding: '12px',
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: '600',
+                  fontSize: '1rem'
+                }}
+              >
+                Fechar
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

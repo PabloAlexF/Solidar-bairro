@@ -28,7 +28,15 @@ class ONGService {
       cnpj: ong.cnpj,
       email: ong.email,
       telefone: ong.telefone,
-      endereco: ong.endereco,
+      endereco: typeof ong.endereco === 'string' ? {
+        logradouro: ong.endereco,
+        numero: data.numero || '',
+        bairro: data.bairro || '',
+        cidade: data.cidade || '',
+        estado: data.estado || '',
+        cep: data.cep || '',
+        referencia: data.referencia || ''
+      } : ong.endereco,
       areasAtuacao: ong.areasAtuacao,
       descricao: ong.descricao,
       responsavel: ong.responsavel,

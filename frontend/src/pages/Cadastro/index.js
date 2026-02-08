@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Routes, Route, useLocation } from 'react-router-dom';
 import { Users, Building2, Heart, Sparkles, User, Store, ArrowRight, Zap, TrendingUp, ArrowUp } from 'lucide-react';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import LandingHeader from '../../components/layout/LandingHeader';
 import './styles.css';
+
+// Import the specific registration components
+import CadastroFamilia from './CadastroFamilia/CadastroFamilia';
+import CadastroCidadao from './CadastroCidadao/CadastroCidadao';
+import CadastroONG from './CadastroONG/CadastroONG';
+import CadastroComercio from './CadastroComercio/CadastroComercio';
+import CadastroMobile from './CadastroMobile';
 
 const scrollToCards = () => {
   const cardsSection = document.querySelector('.cards-grid');
@@ -66,9 +74,9 @@ const cadastroTypes = [
 function CadastroCard({ type, index }) {
   const Icon = type.icon;
   const [isHovered, setIsHovered] = useState(false);
-  
+
   return (
-    <div 
+    <div
       className={`card-outer stagger-${index + 1}`}
       style={{ opacity: 0 }}
     >
@@ -83,18 +91,18 @@ function CadastroCard({ type, index }) {
           <Zap size={12} />
           <span>{type.badge}</span>
         </div>
-        
-        <div 
-          className="card-gradient-overlay" 
+
+        <div
+          className="card-gradient-overlay"
           style={{ backgroundImage: type.gradient }}
         />
-        
+
         <div className="card-bg-icon">
           <Icon size={180} strokeWidth={1} />
         </div>
 
         <div className="card-content">
-          <div 
+          <div
             className="card-icon-wrapper"
             style={{ backgroundImage: type.gradient }}
           >
@@ -104,7 +112,7 @@ function CadastroCard({ type, index }) {
           <h3 className="card-title" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
             {type.title}
           </h3>
-          
+
           <p className="card-description" style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
             {type.description}
           </p>
@@ -207,7 +215,7 @@ function SkeletonCard() {
   );
 }
 
-export default function CadastroPage() {
+function CadastroSelectionPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isBackToTopHovered, setIsBackToTopHovered] = useState(false);
@@ -222,7 +230,7 @@ export default function CadastroPage() {
 
   useEffect(() => {
     const circles = document.querySelectorAll('.floating-circle');
-    
+
     const handleMouseMove = (e) => {
       const mouseX = e.clientX;
       const mouseY = e.clientY;
@@ -328,23 +336,21 @@ export default function CadastroPage() {
             ))
           )}
         </div>
-
-
       </main>
 
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-logo">
-             <div className="footer-icon-wrapper">
-              <Heart className="footer-icon" />
+      <footer className="cadastro-footer-minimal">
+        <div className="cadastro-footer-container">
+          <div className="cadastro-footer-brand">
+             <div className="cadastro-footer-heart">
+              <Heart className="cadastro-heart-icon" />
             </div>
-            <p className="footer-copy">
+            <p className="cadastro-footer-text">
               © 2026 SolidarBairro. Made for impact.
             </p>
           </div>
-          <div className="footer-links">
+          <div className="cadastro-footer-nav">
             {['Privacidade', 'Termos', 'Suporte'].map((link) => (
-              <Link key={link} to="#" className="footer-link">
+              <Link key={link} to="#" className="cadastro-footer-navlink">
                 {link}
               </Link>
             ))}
@@ -401,5 +407,23 @@ export default function CadastroPage() {
         </span>
       </button>
     </div>
+  );
+}
+
+export default function CadastroPage() {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <CadastroMobile />;
+  }
+
+  return (
+    <Routes>
+      <Route path="/" element={<CadastroSelectionPage />} />
+      <Route path="/familia" element={<CadastroFamilia />} />
+      <Route path="/cidadao" element={<CadastroCidadao />} />
+      <Route path="/ong" element={<CadastroONG />} />
+      <Route path="/comercio" element={<CadastroComercio />} />
+    </Routes>
   );
 }

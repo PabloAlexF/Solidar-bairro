@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Socket.IO</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Teste de Conexão Socket.IO</h1>
+    <div id="status">Conectando...</div>
+    <div id="logs"></div>
+    
+    <script>
+        const log = (msg) => {
+            const logs = document.getElementById('logs');
+            logs.innerHTML += `<p>${new Date().toLocaleTimeString()}: ${msg}</p>`;
+            console.log(msg);
+        };
+
+        // Conectar ao socket
+        const socket = io('http://localhost:3001', {
+            query: { userId: 'test-user-123' },
+            transports: ['websocket', 'polling']
+        });
+
+        socket.on('connect', () => {
+            document.getElementById('status').innerHTML = '✅ CONECTADO! Socket ID: ' + socket.id;
+            log('✅ Socket conectado com sucesso!');
+            
+            // Entrar em uma sala de teste
+            socket.emit('join_conversation', 'test-conversation');
+            log('📨 Enviado: join_conversation');
+        });
+
+        socket.on('connect_error', (error) => {
+            document.getElementById('status').innerHTML = '❌ ERRO DE CONEXÃO';
+            log('❌ Erro de conexão: ' + error.message);
+        });
+
+        socket.on('disconnect', (reason) => {
+            document.getElementById('status').innerHTML = '⚠️ DESCONECTADO';
+            log('⚠️ Desconectado: ' + reason);
+        });
+
+        // Listener para qualquer evento
+        socket.onAny((eventName, ...args) => {
+            log(`📡 Evento recebido: ${eventName} - ${JSON.stringify(args)}`);
+        });
+
+        // Teste: enviar mensagem após 2 segundos
+        setTimeout(() => {
+            log('📤 Tentando enviar mensagem de teste...');
+            socket.emit('send_message', {
+                conversationId: 'test-conversation',
+                messageData: {
+                    content: 'Teste de mensagem',
+                    type: 'text'
+                }
+            });
+        }, 2000);
+    </script>
+</body>
+</html>

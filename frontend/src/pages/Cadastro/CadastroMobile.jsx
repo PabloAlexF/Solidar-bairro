@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Routes, Route } from 'react-router-dom';
 import LandingHeader from '../../components/layout/LandingHeader';
 import {
   Users, Building2, Heart, Sparkles, User, Store,
   ArrowRight, MessageCircle, Info, ShieldCheck, ArrowLeft
 } from 'lucide-react';
 import './CadastroMobile.css';
+
+// Import mobile components
+import CadastroFamiliaMobile from './CadastroFamilia/CadastroFamiliaMobile';
+import CadastroCidadaoMobile from './CadastroCidadao/CadastroCidadaoMobile';
+import CadastroONGMobile from './CadastroONG/CadastroONGMobile';
+import CadastroComercioMobile from './CadastroComercio/CadastroComercioMobile';
 
 const cadastroTypes = [
   {
@@ -108,7 +114,13 @@ export default function CadastroMobile() {
   }, []);
 
   return (
-    <div className="vlt-reg-wrapper" id="vlt-reg-root">
+    <Routes>
+      <Route path="/familia" element={<CadastroFamiliaMobile />} />
+      <Route path="/cidadao" element={<CadastroCidadaoMobile />} />
+      <Route path="/ong" element={<CadastroONGMobile />} />
+      <Route path="/comercio" element={<CadastroComercioMobile />} />
+      <Route path="/" element={
+        <div className="vlt-reg-wrapper" id="vlt-reg-root">
 
       {/* Custom Header Overlay */}
       <div className="cadastro-header-overlay" style={{
@@ -165,7 +177,7 @@ export default function CadastroMobile() {
         </button>
       </div>
 
-      <main id="vlt-reg-main-content" style={{ paddingTop: '120px' }}>
+      <main id="vlt-reg-main-content">
         <div className="vlt-reg-hero">
           <div className="vlt-reg-badge-sparkles">
             <Sparkles />
@@ -253,17 +265,20 @@ export default function CadastroMobile() {
 
       <footer className="vlt-reg-footer">
         <div className="vlt-reg-footer-content">
+          <div className="vlt-reg-footer-links">
+            <Link to="/termos-uso" className="vlt-reg-footer-link">Termos de Uso</Link>
+            <Link to="/politica-privacidade" className="vlt-reg-footer-link">Privacidade</Link>
+            <Link to="#" className="vlt-reg-footer-link">Ajuda</Link>
+          </div>
           <div className="vlt-reg-footer-logo">
             <p className="vlt-reg-footer-copy">
-              © 2024 Bairro
+              © {new Date().getFullYear()} SolidarBairro. Todos os direitos reservados.
             </p>
-          </div>
-          <div className="vlt-reg-footer-links">
-            <Link to="#" className="vlt-reg-footer-link">Termos</Link>
-            <Link to="#" className="vlt-reg-footer-link">Suporte</Link>
           </div>
         </div>
       </footer>
     </div>
+  } />
+    </Routes>
   );
 }

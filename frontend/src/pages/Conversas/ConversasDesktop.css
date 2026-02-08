@@ -1,0 +1,35 @@
+.conv-desktop-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 2rem;
+  align-items: start;
+}
+
+.conv-desktop-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: sticky;
+  top: 100px;
+}
+
+.conv-desktop-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1200px) {
+  .conv-desktop-grid {
+    grid-template-columns: 240px 1fr;
+  }
+  .conv-desktop-sidebar.right {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .conv-desktop-grid {
+    display: none;
+  }
+}

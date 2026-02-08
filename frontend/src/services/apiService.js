@@ -17,8 +17,8 @@ const ApiService = {
       throw new Error('Endpoint contém caracteres suspeitos');
     }
     
-    // Pular validação de dados para endpoints de autenticação
-    if (endpoint.includes('/auth/') || endpoint.includes('/login') || endpoint.includes('/cidadaos') || endpoint.includes('/comercios') || endpoint.includes('/ongs') || endpoint.includes('/familias')) {
+    // Pular validação de dados para endpoints de autenticação e principais
+    if (endpoint.includes('/auth/') || endpoint.includes('/login') || endpoint.includes('/cidadaos') || endpoint.includes('/comercios') || endpoint.includes('/ongs') || endpoint.includes('/familias') || endpoint.includes('/pedidos') || endpoint.includes('/chat/') || endpoint.includes('/conversas') || endpoint.includes('/conversations') || endpoint.includes('/chats') || endpoint.includes('/admin/') || endpoint.includes('/achados-perdidos')) {
       return true;
     }
     
@@ -270,17 +270,50 @@ const ApiService = {
       method: 'POST',
       body: JSON.stringify(data)
     });
-    
-    // Criar notificação para nova conversa
-    if (response.success) {
-      const { NotificationManager } = await import('../utils/notifications');
-      NotificationManager.createChatNotification({
-        participantName: data.participantName || 'Alguém',
-        title: data.title || 'Nova conversa'
-      });
-    }
-    
+
+    // Notificações são criadas automaticamente pelo backend via Socket.IO
+    // Não precisamos criar notificações aqui para evitar duplicação
+
     return response;
+  },
+
+  async startConversation(participantId, itemId, itemType, title = null) {
+    // Primeiro tentar encontrar conversa existente
+    try {
+      const existingResponse = await this.createOrGetConversation({
+        participantId,
+        itemId,
+        itemType,
+        title
+      });
+
+      if (existingResponse && existingResponse.success && existingResponse.data?.id) {
+        console.log('Conversa existente encontrada:', existingResponse.data.id);
+        return existingResponse;
+      }
+    } catch (existingError) {
+      console.log('Nenhuma conversa existente encontrada, criando nova...');
+    }
+
+    // Criar nova conversa
+    const currentUserId = JSON.parse(localStorage.getItem('solidar-user') || '{}').uid ||
+                         JSON.parse(localStorage.getItem('solidar-user') || '{}').id;
+
+    if (!currentUserId) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const conversationData = {
+      participants: [currentUserId, participantId],
+      itemId,
+      itemType,
+      title: title || `Conversa sobre ${itemType}`,
+      initialMessage: `Olá! Gostaria de conversar sobre este ${itemType === 'pedido' ? 'pedido' : 'item'}.`
+    };
+
+    console.log('Criando nova conversa:', conversationData);
+
+    return await this.createConversation(conversationData);
   },
 
   async createOrGetConversation(data) {
@@ -309,15 +342,8 @@ const ApiService = {
       })
     });
     
-    // Criar notificação para nova mensagem
-    if (response.success) {
-      const { NotificationManager } = await import('../utils/notifications');
-      const user = JSON.parse(localStorage.getItem('solidar-user') || '{}');
-      NotificationManager.createMessageNotification({
-        senderName: user.nome || user.nomeCompleto || 'Alguém',
-        content: text
-      });
-    }
+    // Notificações são criadas automaticamente pelo backend via Socket.IO
+    // Não precisamos criar notificações aqui para evitar duplicação
     
     return response;
   },
@@ -494,6 +520,14 @@ const ApiService = {
     return this.request(`/cidadaos/${userId}/ajudas-concluidas`);
   },
 
+  async getUserStats(userId) {
+    return this.request(`/users/${userId}/stats`);
+  },
+
+  async getMyStats() {
+    return this.request('/users/me/stats');
+  },
+
   async getNeighborhoodStats() {
     return this.request('/stats/neighborhood');
   },
@@ -564,6 +598,25 @@ const ApiService = {
 
   async getPainelOngs(bairro) {
     return this.request(`/painel-social/ongs?bairro=${encodeURIComponent(bairro)}`);
+  },
+
+  // Admin endpoints para limpeza do banco
+  async clearAllConversations() {
+    return this.request('/admin/clear-conversations', {
+      method: 'DELETE'
+    });
+  },
+
+  async clearAllPedidos() {
+    return this.request('/admin/clear-pedidos', {
+      method: 'DELETE'
+    });
+  },
+
+  async clearAllMessages() {
+    return this.request('/admin/clear-messages', {
+      method: 'DELETE'
+    });
   }
 };
 

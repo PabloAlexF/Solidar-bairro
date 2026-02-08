@@ -1,13 +1,17 @@
-# Email Confirmation Implementation
+# TODO: Implementar Dicas e Dados Reais no Modal de Achados e Perdidos
 
-## Tasks
-- [x] Add nodemailer dependency to package.json
-- [x] Create emailService.js for handling email sending
-- [x] Add confirmation code generation, sending, and verification methods to authService.js
-- [x] Add controller methods for sending confirmation code and verifying it in authController.js
-- [x] Add new routes for email confirmation in userRoutes.js
-- [x] Store confirmation codes temporarily in Firestore with expiration
-- [x] Install new dependencies
-- [x] Test email sending functionality
-- [x] Verify code expiration and security
-- [x] Integrate welcome email sending in all registration controllers (cidadao, familia, ong, comercio)
+## Backend Changes
+- [ ] Criar modelo tipsModel.js para armazenar dicas na coleção 'tips' (campos: item_id, user_id, text, created_at)
+- [ ] Atualizar achadosPerdidosController.js para incluir nome do usuário ao buscar detalhes do item (join com coleção de usuários)
+- [ ] Adicionar endpoints para buscar e postar dicas no achadosPerdidosController.js
+
+## Frontend Changes
+- [ ] Atualizar DetailsModal.jsx para exibir nome real do usuário e horário de publicação do DB
+- [ ] Mudar aba "Comentários" para "Dicas" no DetailsModal.jsx
+- [ ] Substituir comentários simulados por dicas reais buscadas do backend no DetailsModal.jsx
+- [ ] Implementar postagem de novas dicas no backend no DetailsModal.jsx
+
+## Testing
+- [ ] Testar modal para garantir que dados reais sejam exibidos
+- [ ] Verificar que dicas sejam salvas e buscadas corretamente
+- [ ] Verificar integração com banco de dados

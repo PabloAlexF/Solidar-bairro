@@ -7,14 +7,17 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import './CadastroONGMobile.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
 
 export default function CadastroONGMobile() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     nomeFantasia: '',
     razaoSocial: '',
@@ -22,10 +25,13 @@ export default function CadastroONGMobile() {
     dataFundacao: '',
     telefone: '',
     email: '',
+    confirmarSenha: '',
     senha: '',
     website: '',
-    causas: []
+    causas: [],
+    termosAceitos: false
   });
+  const { searchCEP, formatCEP } = useCEP();
 
   const totalSteps = 3;
 
@@ -54,6 +60,32 @@ export default function CadastroONGMobile() {
     }
   };
 
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        setFormData(prev => ({
+          ...prev,
+          endereco: '',
+          bairro: '',
+          cidade: '',
+          estado: ''
+        }));
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setFormData(prev => ({
+          ...prev,
+          endereco: logradouro || '',
+          bairro: bairro || '',
+          cidade: localidade || '',
+          estado: uf || ''
+        }));
+      }
+    }
+  };
+
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
@@ -64,22 +96,38 @@ export default function CadastroONGMobile() {
 
   const validateStep = (stepNumber) => {
     switch (stepNumber) {
-      case 1:
-        return formData.nomeFantasia.trim() && formData.razaoSocial.trim();
-      case 2:
-        return formData.cnpj.replace(/\D/g, '').length === 14 && formData.dataFundacao;
-      case 3:
-        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim() && formData.senha.length >= 6;
-      default:
-        return true;
+      case 1: {
+        const newErrors = {};
+        if (!formData.nomeFantasia.trim()) newErrors.nomeFantasia = true;
+        if (!formData.razaoSocial.trim()) newErrors.razaoSocial = true;
+        return newErrors;
+      }
+      case 2: {
+        const newErrors = {};
+        if (formData.cnpj.replace(/\D/g, '').length !== 14) newErrors.cnpj = true;
+        if (!formData.dataFundacao) newErrors.dataFundacao = true;
+        return newErrors;
+      }
+      case 3: {
+        const newErrors = {};
+        if (formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        if (formData.senha.length < 6) newErrors.senha = true;
+        if (formData.senha !== formData.confirmarSenha) newErrors.confirmarSenha = true;
+        return newErrors;
+      }
     }
+    return {};
   };
 
   const handleNextStep = () => {
-    if (validateStep(step)) {
+    const validationErrors = validateStep(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      showToast('Por favor, preencha todos os campos obrigatórios', 'error');
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -90,16 +138,31 @@ export default function CadastroONGMobile() {
       return;
     }
 
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
+
     setIsLoading(true);
     try {
       await ApiService.createONG(formData);
       setIsSubmitted(true);
-      setTimeout(() => setShowAnalysisAlert(true), 2000);
     } catch (error) {
       console.error('Erro ao cadastrar ONG:', error);
       showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
   };
 
@@ -182,23 +245,7 @@ export default function CadastroONGMobile() {
           </div>
         </div>
 
-        {showAnalysisAlert && (
-          <div className="ong-reg-modal-overlay">
-            <div className="ong-reg-alert-modal">
-              <div className="ong-reg-alert-icon-box">
-                <ShieldCheck size={48} />
-              </div>
-              <h3>Cadastro em Análise</h3>
-              <p>Seu cadastro está sendo analisado por nossa equipe. Você receberá uma notificação em até 24 horas.</p>
-              <button 
-                className="ong-reg-alert-btn" 
-                onClick={() => setShowAnalysisAlert(false)}
-              >
-                Entendi
-              </button>
-            </div>
-          </div>
-        )}
+
       </div>
     );
   }
@@ -277,10 +324,11 @@ export default function CadastroONGMobile() {
                   <input 
                     required 
                     type="text" 
-                    className="ong-mob-input" 
+                    className="ong-mob-input"
+                    style={errors.nomeFantasia ? { borderColor: '#ef4444' } : {}}
                     placeholder="Nome da organização"
                     value={formData.nomeFantasia}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nomeFantasia: e.target.value }))}
+                    onChange={(e) => updateFormData('nomeFantasia', e.target.value)}
                   />
                 </div>
               </div>
@@ -288,11 +336,12 @@ export default function CadastroONGMobile() {
                 <label className="ong-mob-input-label">Razão Social <span style={{ color: '#ef4444' }}>*</span></label>
                 <input 
                   required 
-                  type="text" 
-                  className="ong-mob-input" 
+                  type="text"
+                  className="ong-mob-input"
+                  style={errors.razaoSocial ? { borderColor: '#ef4444' } : {}}
                   placeholder="Razão social completa"
                   value={formData.razaoSocial}
-                  onChange={(e) => setFormData(prev => ({ ...prev, razaoSocial: e.target.value }))}
+                  onChange={(e) => updateFormData('razaoSocial', e.target.value)}
                 />
               </div>
             </>
@@ -307,7 +356,8 @@ export default function CadastroONGMobile() {
                   <input 
                     required 
                     type="text" 
-                    className="ong-mob-input" 
+                    className="ong-mob-input"
+                    style={errors.cnpj ? { borderColor: '#ef4444' } : {}}
                     placeholder="00.000.000/0000-00"
                     value={formData.cnpj}
                     onChange={handleCNPJChange}
@@ -323,8 +373,9 @@ export default function CadastroONGMobile() {
                     required 
                     type="date" 
                     className="ong-mob-input"
+                    style={errors.dataFundacao ? { borderColor: '#ef4444' } : {}}
                     value={formData.dataFundacao}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dataFundacao: e.target.value }))}
+                    onChange={(e) => updateFormData('dataFundacao', e.target.value)}
                   />
                 </div>
               </div>
@@ -340,7 +391,8 @@ export default function CadastroONGMobile() {
                   <input 
                     required 
                     type="tel" 
-                    className="ong-mob-input" 
+                    className="ong-mob-input"
+                    style={errors.telefone ? { borderColor: '#ef4444' } : {}}
                     placeholder="(00) 00000-0000"
                     value={formData.telefone}
                     onChange={handlePhoneChange}
@@ -355,20 +407,39 @@ export default function CadastroONGMobile() {
                   <input 
                     required 
                     type="email" 
-                    className="ong-mob-input" 
+                    className="ong-mob-input"
+                    style={errors.email ? { borderColor: '#ef4444' } : {}}
                     placeholder="contato@ong.org"
                     value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) => updateFormData('email', e.target.value)}
                   />
                 </div>
               </div>
               <PasswordField 
                 label="Senha de Acesso"
                 placeholder="Crie uma senha segura"
+                error={errors.senha}
                 required
                 value={formData.senha}
-                onChange={(e) => setFormData(prev => ({ ...prev, senha: e.target.value }))}
+                onChange={(e) => updateFormData('senha', e.target.value)}
               />
+              <PasswordField
+                label="Confirmar Senha"
+                placeholder="Digite a senha novamente"
+                error={errors.confirmarSenha}
+                required
+                value={formData.confirmarSenha}
+                onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
+              />
+              <div className="ong-mob-input-group" style={{ marginTop: '1rem' }}>
+                <TermsCheckbox 
+                  checked={formData.termosAceitos}
+                  onChange={(checked) => updateFormData('termosAceitos', checked)}
+                  mobile={true}
+                  color="#8b5cf6"
+                  id="termos-ong-mobile"
+                />
+              </div>
             </>
           )}
 
@@ -388,7 +459,7 @@ export default function CadastroONGMobile() {
                 <ChevronRight size={20} />
               </button>
             ) : (
-              <button type="submit" className="ong-mob-btn ong-mob-btn-primary ong-mob-btn-full" disabled={isLoading}>
+              <button type="submit" className="ong-mob-btn ong-mob-btn-primary ong-mob-btn-full" disabled={isLoading || !formData.termosAceitos}>
                 <span>{isLoading ? 'Finalizando...' : 'Finalizar Registro'}</span>
                 <CheckCircle2 size={20} />
               </button>

@@ -12,16 +12,19 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import './CadastroCidadaoMobile.css';
 import '../../../styles/components/PasswordField.css';
 import '../../../styles/components/Toast.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
 
 export default function CadastroCidadaoMobile() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     nome: '',
     dataNascimento: '',
@@ -30,12 +33,22 @@ export default function CadastroCidadaoMobile() {
     rg: '',
     telefone: '',
     email: '',
-    endereco: '',
+    password: '',
+    confirmPassword: '',
+    cep: '',
+    endereco: '', // rua
+    numero: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    referencia: '',
     disponibilidade: [],
     interesses: [],
-    proposito: ''
+    proposito: '',
+    termosAceitos: false
   });
   const totalSteps = 6;
+  const { loadingCep, formatCEP, searchCEP } = useCEP();
 
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -47,9 +60,17 @@ export default function CadastroCidadaoMobile() {
       case 2:
         return formData.cpf.replace(/\D/g, '').length >= 11 && formData.rg.replace(/\D/g, '').length >= 7;
       case 3:
-        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim();
+        return formData.telefone.replace(/\D/g, '').length >= 10 &&
+               formData.email.trim() &&
+               formData.password.length >= 6 &&
+               formData.password === formData.confirmPassword;
       case 4:
-        return formData.endereco.trim();
+        return formData.cep.replace(/\D/g, '').length === 8 &&
+               formData.endereco.trim() !== '' &&
+               formData.numero.trim() !== '' &&
+               formData.bairro.trim() !== '' &&
+               formData.cidade.trim() !== '' &&
+               formData.estado.trim() !== '';
       case 5:
         return formData.interesses.length > 0;
       default:
@@ -57,34 +78,49 @@ export default function CadastroCidadaoMobile() {
     }
   };
 
+  const getStepValidationErrors = (stepNumber) => {
+    const newErrors = {};
+    switch (stepNumber) {
+      case 1:
+        if (!formData.nome.trim()) newErrors.nome = true;
+        if (!formData.dataNascimento) newErrors.dataNascimento = true;
+        if (!formData.ocupacao.trim()) newErrors.ocupacao = true;
+        break;
+      case 2:
+        if (formData.cpf.replace(/\D/g, '').length < 11) newErrors.cpf = true;
+        if (formData.rg.replace(/\D/g, '').length < 7) newErrors.rg = true;
+        break;
+      case 3:
+        if (formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        if (formData.password.length < 6) newErrors.password = true;
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = true;
+        break;
+      case 4:
+        if (formData.cep.replace(/\D/g, '').length !== 8) newErrors.cep = true;
+        if (formData.endereco.trim() === '') newErrors.endereco = true;
+        if (formData.numero.trim() === '') newErrors.numero = true;
+        if (formData.bairro.trim() === '') newErrors.bairro = true;
+        if (formData.cidade.trim() === '') newErrors.cidade = true;
+        if (formData.estado.trim() === '') newErrors.estado = true;
+        break;
+      case 5:
+        if (formData.interesses.length === 0) newErrors.interesses = true;
+        break;
+      default:
+        break;
+    }
+    return newErrors;
+  };
+
   const handleNextStep = () => {
-    if (validateStep(step)) {
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      // Show specific error messages
-      switch (step) {
-        case 1:
-          if (!formData.nome.trim()) showToast('Por favor, informe seu nome completo.', 'error');
-          else if (!formData.dataNascimento) showToast('Por favor, informe sua data de nascimento.', 'error');
-          else if (!formData.ocupacao.trim()) showToast('Por favor, informe sua ocupação ou habilidade.', 'error');
-          break;
-        case 2:
-          if (formData.cpf.replace(/\D/g, '').length < 11) showToast('Por favor, informe um CPF válido.', 'error');
-          else if (formData.rg.replace(/\D/g, '').length < 7) showToast('Por favor, informe um RG válido.', 'error');
-          break;
-        case 3:
-          if (formData.telefone.replace(/\D/g, '').length < 10) showToast('Por favor, informe um telefone válido.', 'error');
-          else if (!formData.email.trim()) showToast('Por favor, informe um e-mail válido.', 'error');
-          break;
-        case 4:
-          if (formData.endereco.trim() === '') showToast('Por favor, informe seu endereço de referência.', 'error');
-          break;
-        case 5:
-          if (formData.interesses.length === 0) showToast('Por favor, selecione pelo menos um interesse.', 'error');
-          break;
-        default:
-          showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
-      }
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -95,6 +131,13 @@ export default function CadastroCidadaoMobile() {
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCheckboxChange = (field, value, checked) => {
@@ -152,6 +195,26 @@ export default function CadastroCidadaoMobile() {
     }
   };
 
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        setFormData(prev => ({ ...prev, endereco: '', bairro: '', cidade: '', estado: '' }));
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setFormData(prev => ({
+          ...prev,
+          endereco: logradouro || '',
+          bairro: bairro || '',
+          cidade: localidade || '',
+          estado: uf || '',
+        }));
+      }
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       if (e.target.tagName === 'TEXTAREA') {
@@ -167,14 +230,30 @@ export default function CadastroCidadaoMobile() {
   const handleSubmit = async () => {
     if (step !== totalSteps) return;
 
+    if (formData.password !== formData.confirmPassword) {
+      showToast('As senhas não coincidem.', 'error');
+      return;
+    }
+    if (formData.password.length < 6) {
+      showToast('A senha deve ter pelo menos 6 caracteres.', 'error');
+      return;
+    }
+
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await ApiService.createCidadao(formData);
+      const { confirmPassword, password, ...dataToSend } = formData;
+      const dataWithSenha = { ...dataToSend, senha: password };
+
+      await ApiService.createCidadao(dataWithSenha);
       setIsSubmitted(true);
-      setTimeout(() => setShowAnalysisAlert(true), 2000);
     } catch (error) {
       console.error('Erro ao cadastrar cidadão:', error);
-      showToast('Erro ao realizar cadastro. Tente novamente.', 'error');
+      showToast(error.message || 'Erro ao realizar cadastro. Tente novamente.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -261,7 +340,8 @@ export default function CadastroCidadaoMobile() {
                         required 
                         type="text" 
                         className="mobile-vlt-input" 
-                        placeholder="Seu nome completo"
+                        placeholder="Seu nome completo" 
+                        style={errors.nome ? { borderColor: '#ef4444' } : {}}
                         value={formData.nome}
                         onChange={(e) => updateFormData('nome', e.target.value)}
                       />
@@ -275,6 +355,7 @@ export default function CadastroCidadaoMobile() {
                         required 
                         type="date" 
                         className="mobile-vlt-input"
+                        style={errors.dataNascimento ? { borderColor: '#ef4444' } : {}}
                         value={formData.dataNascimento}
                         onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                       />
@@ -286,7 +367,7 @@ export default function CadastroCidadaoMobile() {
                       required 
                       type="text" 
                       className="mobile-vlt-input" 
-                      style={{ paddingLeft: '1rem' }}
+                      style={{ paddingLeft: '1rem', ...(errors.ocupacao && { borderColor: '#ef4444' }) }}
                       placeholder="Ex: Professor, Médico, etc."
                       value={formData.ocupacao}
                       onChange={(e) => updateFormData('ocupacao', e.target.value)}
@@ -298,14 +379,14 @@ export default function CadastroCidadaoMobile() {
               {step === 2 && (
                 <div className="mobile-vlt-form-grid">
                   <div>
-                    <label className="mobile-vlt-label">CPF <span style={{ color: '#ef4444' }}>*</span></label>
+                    <label className="mobile-vlt-label">CPF <span className="mobile-vlt-required">*</span></label>
                     <div className="mobile-vlt-input-wrapper">
                       <Fingerprint className="mobile-vlt-input-icon" size={20} />
                       <input 
                         required 
                         type="text" 
-                        className="mobile-vlt-input" 
-                        placeholder="000.000.000-00"
+                        className={`mobile-vlt-input ${errors.cpf ? 'mobile-vlt-input-error' : ''}`}
+                        placeholder="000.000.000-00" 
                         value={formData.cpf}
                         onChange={handleCPFChange}
                         maxLength={14}
@@ -313,12 +394,11 @@ export default function CadastroCidadaoMobile() {
                     </div>
                   </div>
                   <div>
-                    <label className="mobile-vlt-label">RG <span style={{ color: '#ef4444' }}>*</span></label>
+                    <label className="mobile-vlt-label">RG <span className="mobile-vlt-required">*</span></label>
                     <input 
                       required 
                       type="text" 
-                      className="mobile-vlt-input" 
-                      style={{ paddingLeft: '1rem' }}
+                      className={`mobile-vlt-input mobile-vlt-pl-4 ${errors.rg ? 'mobile-vlt-input-error' : ''}`}
                       placeholder="00.000.000-0 ou 000.000.000-00"
                       value={formData.rg}
                       onChange={handleRGChange}
@@ -340,14 +420,14 @@ export default function CadastroCidadaoMobile() {
               {step === 3 && (
                 <div className="mobile-vlt-form-grid">
                   <div>
-                    <label className="mobile-vlt-label">WhatsApp <span style={{ color: '#ef4444' }}>*</span></label>
+                    <label className="mobile-vlt-label">WhatsApp <span className="mobile-vlt-required">*</span></label>
                     <div className="mobile-vlt-input-wrapper">
                       <Phone className="mobile-vlt-input-icon" size={20} />
                       <input 
                         required 
                         type="tel" 
-                        className="mobile-vlt-input" 
-                        placeholder="(00) 00000-0000"
+                        className={`mobile-vlt-input ${errors.telefone ? 'mobile-vlt-input-error' : ''}`}
+                        placeholder="(00) 00000-0000" 
                         value={formData.telefone}
                         onChange={handlePhoneChange}
                         maxLength={15}
@@ -355,14 +435,14 @@ export default function CadastroCidadaoMobile() {
                     </div>
                   </div>
                   <div>
-                    <label className="mobile-vlt-label">E-mail <span style={{ color: '#ef4444' }}>*</span></label>
+                    <label className="mobile-vlt-label">E-mail <span className="mobile-vlt-required">*</span></label>
                     <div className="mobile-vlt-input-wrapper">
                       <Mail className="mobile-vlt-input-icon" size={20} />
                       <input 
                         required 
                         type="email" 
-                        className="mobile-vlt-input" 
-                        placeholder="seu@email.com"
+                        className={`mobile-vlt-input ${errors.email ? 'mobile-vlt-input-error' : ''}`}
+                        placeholder="seu@email.com" 
                         value={formData.email}
                         onChange={(e) => updateFormData('email', e.target.value)}
                       />
@@ -371,35 +451,120 @@ export default function CadastroCidadaoMobile() {
                   <PasswordField 
                     label="Senha de Acesso"
                     placeholder="Crie uma senha segura"
+                    value={formData.password}
+                    onChange={(e) => updateFormData('password', e.target.value)}
+                    error={errors.password}
                     required
                   />
                   <PasswordField 
                     label="Confirmar Senha"
                     placeholder="Digite a senha novamente"
+                    value={formData.confirmPassword}
+                    onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                    error={errors.confirmPassword}
                     required
                   />
                 </div>
               )}
 
               {step === 4 && (
-                <div className="mobile-vlt-form-grid">
+                <div className="mobile-vlt-form-grid" style={{ rowGap: '1rem' }}>
                   <div className="mobile-vlt-span-2">
-                    <label className="mobile-vlt-label">Endereço de Referência <span style={{ color: '#ef4444' }}>*</span></label>
+                    <label className="mobile-vlt-label">CEP <span style={{ color: '#ef4444' }}>*</span></label>
                     <div className="mobile-vlt-input-wrapper">
                       <Home className="mobile-vlt-input-icon" size={20} />
                       <input 
                         required 
                         type="text" 
                         className="mobile-vlt-input" 
-                        placeholder="Rua, Bairro, Cidade"
-                        value={formData.endereco}
-                        onChange={(e) => updateFormData('endereco', e.target.value)}
+                        placeholder="00000-000" 
+                        style={errors.cep ? { borderColor: '#ef4444' } : {}}
+                        value={formData.cep}
+                        onChange={(e) => updateFormData('cep', formatCEP(e.target.value))}
+                        onBlur={handleCepBlur}
+                        maxLength={9}
                       />
+                      {loadingCep && <div className="mobile-vlt-spinner" />}
                     </div>
                   </div>
                   <div className="mobile-vlt-span-2">
+                    <label className="mobile-vlt-label">Endereço (Rua, Av.) <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="mobile-vlt-input"
+                      style={{ paddingLeft: '1rem', ...(errors.endereco && { borderColor: '#ef4444' }) }}
+                      placeholder="Sua rua ou avenida"
+                      value={formData.endereco}
+                      onChange={(e) => updateFormData('endereco', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div>
+                    <label className="mobile-vlt-label">Número <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="mobile-vlt-input"
+                      style={{ paddingLeft: '1rem', ...(errors.numero && { borderColor: '#ef4444' }) }}
+                      placeholder="Nº"
+                      value={formData.numero}
+                      onChange={(e) => updateFormData('numero', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="mobile-vlt-label">Bairro <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="mobile-vlt-input"
+                      style={{ paddingLeft: '1rem', ...(errors.bairro && { borderColor: '#ef4444' }) }}
+                      placeholder="Seu bairro"
+                      value={formData.bairro}
+                      onChange={(e) => updateFormData('bairro', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div>
+                    <label className="mobile-vlt-label">Cidade <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="mobile-vlt-input"
+                      style={{ paddingLeft: '1rem', ...(errors.cidade && { borderColor: '#ef4444' }) }}
+                      placeholder="Sua cidade"
+                      value={formData.cidade}
+                      onChange={(e) => updateFormData('cidade', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div>
+                    <label className="mobile-vlt-label">Estado <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className="mobile-vlt-input"
+                      style={{ paddingLeft: '1rem', ...(errors.estado && { borderColor: '#ef4444' }) }}
+                      placeholder="UF"
+                      value={formData.estado}
+                      onChange={(e) => updateFormData('estado', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="mobile-vlt-span-2">
+                    <label className="mobile-vlt-label">Complemento / Referência</label>
+                    <input
+                      type="text"
+                      className="mobile-vlt-input"
+                      style={{ paddingLeft: '1rem' }}
+                      placeholder="Apto, bloco, etc."
+                      value={formData.referencia}
+                      onChange={(e) => updateFormData('referencia', e.target.value)}
+                    />
+                  </div>
+                  <div className="mobile-vlt-span-2" style={{ marginTop: '1rem' }}>
                     <label className="mobile-vlt-label">Disponibilidade</label>
-                    <div className="mobile-vlt-selectable-grid">
+                    <div className="mobile-vlt-selectable-grid mobile-vlt-grid-2">
                       {availabilityOptions.map((opt) => (
                         <label key={opt.label} className="mobile-vlt-selectable-item">
                           <input 
@@ -423,8 +588,8 @@ export default function CadastroCidadaoMobile() {
               {step === 5 && (
                 <div className="mobile-vlt-form-grid">
                   <div className="mobile-vlt-span-2">
-                    <label className="mobile-vlt-label">Como você quer ajudar? <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="mobile-vlt-selectable-grid">
+                    <label className={`mobile-vlt-label ${errors.interesses ? 'mobile-vlt-text-error' : ''}`}>Como você quer ajudar? <span className="mobile-vlt-required">*</span></label>
+                    <div className={`mobile-vlt-selectable-grid mobile-vlt-grid-2 ${errors.interesses ? 'mobile-vlt-border-error' : ''}`}>
                       {helpOptions.map((opt) => (
                         <label key={opt.label} className="mobile-vlt-selectable-item">
                           <input 
@@ -457,6 +622,15 @@ export default function CadastroCidadaoMobile() {
                       onChange={(e) => updateFormData('proposito', e.target.value)}
                     ></textarea>
                   </div>
+                  <div className="mobile-vlt-span-2">
+                    <TermsCheckbox 
+                      checked={formData.termosAceitos}
+                      onChange={(checked) => updateFormData('termosAceitos', checked)}
+                      mobile={true}
+                      color="var(--theme-v-primary)"
+                      id="termos-mobile"
+                    />
+                  </div>
                   <div className="mobile-vlt-final-box mobile-vlt-span-2">
                     <Award size={48} className="mobile-vlt-final-icon" />
                     <p>Ao se tornar um voluntário, você ganha acesso a missões exclusivas e badges de reconhecimento na comunidade.</p>
@@ -483,7 +657,7 @@ export default function CadastroCidadaoMobile() {
                       <ChevronRight size={20} />
                     </button>
                   ) : (
-                    <button type="button" onClick={handleSubmit} className="mobile-vlt-btn mobile-vlt-btn-finish" disabled={isLoading}>
+                    <button type="button" onClick={handleSubmit} className="mobile-vlt-btn mobile-vlt-btn-finish" disabled={isLoading || !formData.termosAceitos}>
                       <span>{isLoading ? 'Cadastrando...' : 'Finalizar Cadastro'}</span>
                       <CheckCircle2 size={20} />
                     </button>
@@ -510,14 +684,14 @@ export default function CadastroCidadaoMobile() {
             </div>
 
             <div className="mobile-vlt-success-card-main">
-              <Rocket size={48} style={{ color: 'var(--theme-v-primary)', marginBottom: '1.5rem' }} />
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--v-slate-900)', marginBottom: '1rem' }}>
+              <Rocket size={48} className="mobile-vlt-success-icon-large" />
+              <h3 className="mobile-vlt-success-subtitle">
                 Próximos Passos
               </h3>
-              <p style={{ color: 'var(--v-slate-500)', marginBottom: '2rem' }}>
+              <p className="mobile-vlt-success-text">
                 Agora nossa equipe validará seus dados. Você receberá uma notificação em breve.
               </p>
-              <Link to="/" className="mobile-vlt-btn mobile-vlt-btn-finish" style={{ width: '100%' }}>
+              <Link to="/" className="mobile-vlt-btn mobile-vlt-btn-finish mobile-vlt-w-full">
                 Voltar para Início
               </Link>
             </div>
@@ -525,55 +699,7 @@ export default function CadastroCidadaoMobile() {
         </div>
       )}
 
-      {/* ANALYSIS MODAL */}
-      {showAnalysisAlert && (
-        <div className="mobile-vlt-analysis-overlay mobile-vlt-animate-fade">
-          <div className="mobile-vlt-analysis-card mobile-vlt-animate-up">
-            <div className="mobile-vlt-analysis-accent"></div>
-            
-            <div className="mobile-vlt-analysis-content">
-              <div className="mobile-vlt-analysis-icon-container">
-                <div className="mobile-vlt-analysis-icon-halo"></div>
-                <div className="mobile-vlt-analysis-icon-box">
-                  <Search size={44} strokeWidth={2.5} />
-                </div>
-              </div>
 
-              <h2 className="mobile-vlt-analysis-title">Análise de Segurança</h2>
-              <p className="mobile-vlt-analysis-desc">
-                Para manter nossa comunidade segura, realizamos uma revisão manual de cada perfil voluntário.
-              </p>
-
-              <div className="mobile-vlt-analysis-timeline">
-                <div className="mobile-vlt-timeline-item mobile-vlt-done">
-                  <div className="mobile-vlt-timeline-check"><Check size={14} /></div>
-                  <span className="mobile-vlt-timeline-text">Recebimento dos dados</span>
-                </div>
-                <div className="mobile-vlt-timeline-item mobile-vlt-curr">
-                  <div className="mobile-vlt-timeline-check"></div>
-                  <span className="mobile-vlt-timeline-text">Validação de documentos</span>
-                </div>
-                <div className="mobile-vlt-timeline-item">
-                  <div className="mobile-vlt-timeline-check"></div>
-                  <span className="mobile-vlt-timeline-text">Antecedentes e referências</span>
-                </div>
-                <div className="mobile-vlt-timeline-item">
-                  <div className="mobile-vlt-timeline-check"></div>
-                  <span className="mobile-vlt-timeline-text">Liberação de acesso</span>
-                </div>
-              </div>
-
-              <button 
-                className="mobile-vlt-analysis-btn" 
-                onClick={() => setShowAnalysisAlert(false)}
-              >
-                <span>Entendi, vou aguardar</span>
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Toast */}
       {toast.show && (
@@ -586,6 +712,17 @@ export default function CadastroCidadaoMobile() {
             >
               ×
             </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Loading Modal */}
+      {loadingCep && (
+        <div className="mobile-vlt-modal-overlay">
+          <div className="mobile-vlt-modal-content">
+            <div className="mobile-vlt-spinner-large"></div>
+            <h3 className="mobile-vlt-modal-title">Buscando endereço...</h3>
+            <p className="mobile-vlt-modal-desc">Aguarde enquanto localizamos o CEP.</p>
           </div>
         </div>
       )}

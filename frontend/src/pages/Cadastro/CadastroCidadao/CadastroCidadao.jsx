@@ -12,17 +12,19 @@ import {
 import { Link } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import Toast from '../../../components/ui/Toast';
-import AddressInput from '../../../components/ui/AddressInput';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import ApiService from '../../../services/apiService';
 import './CadastroCidadao.css';
 import '../../../styles/components/PasswordField.css';
 import '../../../styles/components/Toast.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
 
 export default function CadastroCidadao() {
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     nome: '',
     dataNascimento: '',
@@ -42,9 +44,11 @@ export default function CadastroCidadao() {
     referencia: '',
     disponibilidade: [],
     interesses: [],
-    proposito: ''
+    proposito: '',
+    termosAceitos: false
   });
   const totalSteps = 6;
+  const { loadingCep, formatCEP, searchCEP } = useCEP();
 
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -61,7 +65,12 @@ export default function CadastroCidadao() {
                formData.password.length >= 6 &&
                formData.password === formData.confirmPassword;
       case 4:
-        return (formData.cep && formData.endereco && formData.bairro) || formData.endereco.trim() !== '';
+        return formData.cep.replace(/\D/g, '').length === 8 &&
+               formData.endereco.trim() !== '' &&
+               formData.numero.trim() !== '' &&
+               formData.bairro.trim() !== '' &&
+               formData.cidade.trim() !== '' &&
+               formData.estado.trim() !== '';
       case 5:
         return formData.interesses.length > 0;
       default:
@@ -69,36 +78,49 @@ export default function CadastroCidadao() {
     }
   };
 
+  const getStepValidationErrors = (stepNumber) => {
+    const newErrors = {};
+    switch (stepNumber) {
+      case 1:
+        if (!formData.nome.trim()) newErrors.nome = true;
+        if (!formData.dataNascimento) newErrors.dataNascimento = true;
+        if (!formData.ocupacao.trim()) newErrors.ocupacao = true;
+        break;
+      case 2:
+        if (formData.cpf.replace(/\D/g, '').length < 11) newErrors.cpf = true;
+        if (formData.rg.replace(/\D/g, '').length < 7) newErrors.rg = true;
+        break;
+      case 3:
+        if (formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        if (formData.password.length < 6) newErrors.password = true;
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = true;
+        break;
+      case 4:
+        if (formData.cep.replace(/\D/g, '').length !== 8) newErrors.cep = true;
+        if (formData.endereco.trim() === '') newErrors.endereco = true;
+        if (formData.numero.trim() === '') newErrors.numero = true;
+        if (formData.bairro.trim() === '') newErrors.bairro = true;
+        if (formData.cidade.trim() === '') newErrors.cidade = true;
+        if (formData.estado.trim() === '') newErrors.estado = true;
+        break;
+      case 5:
+        if (formData.interesses.length === 0) newErrors.interesses = true;
+        break;
+      default:
+        break;
+    }
+    return newErrors;
+  };
+
   const handleNextStep = () => {
-    if (validateStep(step)) {
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      // Show specific error messages
-      switch (step) {
-        case 1:
-          if (!formData.nome.trim()) showToast('Por favor, informe seu nome completo.', 'error');
-          else if (!formData.dataNascimento) showToast('Por favor, informe sua data de nascimento.', 'error');
-          else if (!formData.ocupacao.trim()) showToast('Por favor, informe sua ocupação ou habilidade.', 'error');
-          break;
-        case 2:
-          if (formData.cpf.replace(/\D/g, '').length < 11) showToast('Por favor, informe um CPF válido.', 'error');
-          else if (formData.rg.replace(/\D/g, '').length < 7) showToast('Por favor, informe um RG válido.', 'error');
-          break;
-        case 3:
-          if (formData.telefone.replace(/\D/g, '').length < 10) showToast('Por favor, informe um telefone válido.', 'error');
-          else if (!formData.email.trim()) showToast('Por favor, informe um e-mail válido.', 'error');
-          else if (formData.password.length < 6) showToast('A senha deve ter pelo menos 6 caracteres.', 'error');
-          else if (formData.password !== formData.confirmPassword) showToast('As senhas não coincidem.', 'error');
-          break;
-        case 4:
-          if (formData.endereco.trim() === '') showToast('Por favor, informe seu endereço de referência.', 'error');
-          break;
-        case 5:
-          if (formData.interesses.length === 0) showToast('Por favor, selecione pelo menos um interesse.', 'error');
-          break;
-        default:
-          showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
-      }
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -109,6 +131,13 @@ export default function CadastroCidadao() {
 
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCheckboxChange = (field, value, checked) => {
@@ -166,6 +195,28 @@ export default function CadastroCidadao() {
     }
   };
 
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        setFormData(prev => ({
+          ...prev, endereco: '', bairro: '', cidade: '', estado: '',
+        }));
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setFormData(prev => ({
+          ...prev,
+          endereco: logradouro || '',
+          bairro: bairro || '',
+          cidade: localidade || '',
+          estado: uf || '',
+        }));
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -177,6 +228,11 @@ export default function CadastroCidadao() {
     
     if (formData.password.length < 6) {
       showToast('A senha deve ter pelo menos 6 caracteres', 'error');
+      return;
+    }
+
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
       return;
     }
     
@@ -302,14 +358,14 @@ export default function CadastroCidadao() {
           <div className="cidadao-brand-icon-box">
             <Heart size={24} />
           </div>
-          <span className="cidadao-brand-text">SolidarBairro <span style={{ color: '#10b981', fontSize: '0.8rem' }}>VOLUNTÁRIO</span></span>
+          <span className="cidadao-brand-text">SolidarBairro <span className="brand-highlight">VOLUNTÁRIO</span></span>
         </div>
       </nav>
 
-      <div className="cidadao-main-layout" style={{ marginTop: '3rem', maxWidth: '1280px', marginInline: 'auto' }}>
+      <div className="cidadao-main-layout">
         <aside className="sidebar-stepper">
-          <div className="stepper-card" style={{ padding: '2rem' }}>
-            <h2 className="stepper-title" style={{ fontSize: '1rem', marginBottom: '1.5rem' }}>CADASTRO DE VOLUNTÁRIO</h2>
+          <div className="stepper-card">
+            <h2 className="stepper-title">CADASTRO DE VOLUNTÁRIO</h2>
             <div className="stepper-list">
               {steps.map((s, i) => (
                 <div key={s.id} className={`stepper-item ${step === s.id ? 'active' : step > s.id ? 'completed' : ''}`}>
@@ -317,8 +373,8 @@ export default function CadastroCidadao() {
                     {step > s.id ? <CheckCircle2 size={22} /> : s.icon}
                   </div>
                   <div className="stepper-info">
-                    <span className="stepper-step-num" style={{ fontSize: '0.75rem' }}>PASSO 0{s.id}</span>
-                    <span className="stepper-step-name" style={{ fontSize: '1rem' }}>{s.title}</span>
+                    <span className="stepper-step-num">PASSO 0{s.id}</span>
+                    <span className="stepper-step-name">{s.title}</span>
                   </div>
                   {i < steps.length - 1 && <div className="stepper-line" />}
                 </div>
@@ -328,15 +384,15 @@ export default function CadastroCidadao() {
         </aside>
 
         <main className="form-main">
-          <div className="form-container-card animate-slide-up" style={{ padding: '2.5rem' }}>
-            <div className="form-header-section" style={{ marginBottom: '2rem' }}>
+          <div className="form-container-card animate-slide-up">
+            <div className="form-header-section">
               <div className="header-top">
-                <span className="step-badge" style={{ fontSize: '0.85rem', padding: '0.35rem 1rem' }}>{steps.find(s => s.id === step)?.title}</span>
+                <span className="step-badge">{steps.find(s => s.id === step)?.title}</span>
                 <div className="progress-bar-container">
                   <div className="progress-bar-fill" style={{ width: `${(step / totalSteps) * 100}%` }} />
                 </div>
               </div>
-              <h1 className="form-main-title" style={{ fontSize: '2rem', marginTop: '1rem', marginBottom: '0.5rem' }}>
+              <h1 className="form-main-title">
                 {step === 1 && <>Qual o seu <span className="text-highlight">perfil</span>?</>}
                 {step === 2 && <>Sua <span className="text-highlight">identidade</span></>}
                 {step === 3 && <>Canais de <span className="text-highlight">contato</span></>}
@@ -344,7 +400,7 @@ export default function CadastroCidadao() {
                 {step === 5 && <>Seus <span className="text-highlight">interesses</span></>}
                 {step === 6 && <>Seu <span className="text-highlight">propósito</span></>}
               </h1>
-              <p className="form-subtitle" style={{ fontSize: '1.1rem' }}>
+              <p className="form-subtitle">
                 {step === 1 && "Conte-nos quem você é para começarmos sua jornada voluntária."}
                 {step === 2 && "A segurança é prioridade. Validamos todos os voluntários da nossa rede."}
                 {step === 3 && "Como podemos falar com você sobre oportunidades de ajuda?"}
@@ -357,39 +413,39 @@ export default function CadastroCidadao() {
             <form onSubmit={step === totalSteps ? handleSubmit : (e) => e.preventDefault()} className="form-content">
               {step === 1 && (
                 <div className="form-grid">
-                  <div className="form-group span-2">
-                    <label className="field-label">Nome Completo <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-12">
+                    <label className="field-label">Nome Completo <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <User className="field-icon" size={20} />
                       <input 
                         required 
                         type="text" 
-                        className="form-input" 
+                        className={`form-input ${errors.nome ? 'input-error' : ''}`}
                         placeholder="Seu nome completo"
                         value={formData.nome}
                         onChange={(e) => updateFormData('nome', e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">Data de Nascimento <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">Data de Nascimento <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <Calendar className="field-icon" size={20} />
                       <input 
                         required 
                         type="date" 
-                        className="form-input"
+                        className={`form-input ${errors.dataNascimento ? 'input-error' : ''}`}
                         value={formData.dataNascimento}
                         onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">Ocupação / Habilidade <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">Ocupação / Habilidade <span className="required-asterisk">*</span></label>
                     <input 
                       required 
                       type="text" 
-                      className="form-input" 
+                      className={`form-input ${errors.ocupacao ? 'input-error' : ''}`}
                       placeholder="Ex: Professor, Médico, etc."
                       value={formData.ocupacao}
                       onChange={(e) => updateFormData('ocupacao', e.target.value)}
@@ -400,14 +456,14 @@ export default function CadastroCidadao() {
 
               {step === 2 && (
                 <div className="form-grid">
-                  <div className="form-group">
-                    <label className="field-label">CPF <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">CPF <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <Fingerprint className="field-icon" size={20} />
                       <input 
                         required 
                         type="text" 
-                        className="form-input" 
+                        className={`form-input ${errors.cpf ? 'input-error' : ''}`}
                         placeholder="000.000.000-00"
                         value={formData.cpf}
                         onChange={handleCPFChange}
@@ -415,19 +471,19 @@ export default function CadastroCidadao() {
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">RG <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">RG <span className="required-asterisk">*</span></label>
                     <input 
                       required 
                       type="text" 
-                      className="form-input" 
+                      className={`form-input ${errors.rg ? 'input-error' : ''}`}
                       placeholder="00.000.000-0 ou 000.000.000-00"
                       value={formData.rg}
                       onChange={handleRGChange}
                       maxLength={14}
                     />
                   </div>
-                  <div className="form-info-box span-2">
+                  <div className="form-info-box col-span-12">
                     <div className="info-icon-box">
                       <ShieldCheck size={32} />
                     </div>
@@ -441,14 +497,14 @@ export default function CadastroCidadao() {
 
               {step === 3 && (
                 <div className="form-grid">
-                  <div className="form-group">
-                    <label className="field-label">WhatsApp <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">WhatsApp <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <Phone className="field-icon" size={20} />
                       <input 
                         required 
                         type="tel" 
-                        className="form-input" 
+                        className={`form-input ${errors.telefone ? 'input-error' : ''}`}
                         placeholder="(00) 00000-0000"
                         value={formData.telefone}
                         onChange={handlePhoneChange}
@@ -456,49 +512,140 @@ export default function CadastroCidadao() {
                       />
                     </div>
                   </div>
-                  <div className="form-group">
-                    <label className="field-label">E-mail <span style={{ color: '#ef4444' }}>*</span></label>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">E-mail <span className="required-asterisk">*</span></label>
                     <div className="input-with-icon">
                       <Mail className="field-icon" size={20} />
                       <input 
                         required 
                         type="email" 
-                        className="form-input" 
+                        className={`form-input ${errors.email ? 'input-error' : ''}`}
                         placeholder="seu@email.com"
                         value={formData.email}
                         onChange={(e) => updateFormData('email', e.target.value)}
                       />
                     </div>
                   </div>
+                  <div className="form-group col-span-6">
                   <PasswordField 
                     label="Senha de Acesso"
                     placeholder="Crie uma senha segura"
                     value={formData.password}
                     onChange={(e) => updateFormData('password', e.target.value)}
                     required
+                    error={errors.password}
                   />
+                  </div>
+                  <div className="form-group col-span-6">
                   <PasswordField 
                     label="Confirmar Senha"
                     placeholder="Digite a senha novamente"
                     value={formData.confirmPassword}
                     onChange={(e) => updateFormData('confirmPassword', e.target.value)}
+                    error={errors.confirmPassword}
                     required
                   />
+                  </div>
                 </div>
               )}
 
               {step === 4 && (
                 <div className="form-grid">
-                  <div className="form-group span-2">
-                    <AddressInput 
-                      addressData={formData}
-                      setAddressData={setFormData}
-                      required={true}
+                  <div className="form-group col-span-3">
+                    <label className="field-label">CEP <span className="required-asterisk">*</span></label>
+                    <div className={`input-with-icon ${loadingCep ? 'searching' : ''}`}>
+                      <MapPin className="field-icon" size={20} />
+                      <input
+                        required
+                        type="text"
+                        className={`form-input ${errors.cep ? 'input-error' : ''}`}
+                        placeholder="00000-000"
+                        value={formData.cep}
+                        onChange={(e) => {
+                          const value = formatCEP(e.target.value);
+                          updateFormData('cep', value);
+                          if (value.length === 9) {
+                            handleCepBlur({ target: { value } });
+                          }
+                        }}
+                        onBlur={handleCepBlur}
+                        maxLength={9}
+                      />
+                      <div className="search-badge">Procurando...</div>
+                    </div>
+                  </div>
+                  <div className="form-group col-span-6">
+                    <label className="field-label">Endereço (Rua, Av.) <span className="required-asterisk">*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className={`form-input ${errors.endereco ? 'input-error' : ''}`}
+                      placeholder="Sua rua ou avenida"
+                      value={formData.endereco}
+                      onChange={(e) => updateFormData('endereco', e.target.value)}
+                      disabled={loadingCep}
                     />
                   </div>
-                  <div className="form-group span-2">
+                  <div className="form-group col-span-3">
+                    <label className="field-label">Número <span className="required-asterisk">*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className={`form-input ${errors.numero ? 'input-error' : ''}`}
+                      placeholder="Nº"
+                      value={formData.numero}
+                      onChange={(e) => updateFormData('numero', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group col-span-4">
+                    <label className="field-label">Bairro <span className="required-asterisk">*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className={`form-input ${errors.bairro ? 'input-error' : ''}`}
+                      placeholder="Seu bairro"
+                      value={formData.bairro}
+                      onChange={(e) => updateFormData('bairro', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="form-group col-span-5">
+                    <label className="field-label">Cidade <span className="required-asterisk">*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className={`form-input ${errors.cidade ? 'input-error' : ''}`}
+                      placeholder="Sua cidade"
+                      value={formData.cidade}
+                      onChange={(e) => updateFormData('cidade', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="form-group col-span-3">
+                    <label className="field-label">Estado <span className="required-asterisk">*</span></label>
+                    <input
+                      required
+                      type="text"
+                      className={`form-input ${errors.estado ? 'input-error' : ''}`}
+                      placeholder="UF"
+                      value={formData.estado}
+                      onChange={(e) => updateFormData('estado', e.target.value)}
+                      disabled={loadingCep}
+                    />
+                  </div>
+                  <div className="form-group col-span-12">
+                    <label className="field-label">Complemento / Ponto de Referência</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Apto, bloco, casa, etc."
+                      value={formData.referencia}
+                      onChange={(e) => updateFormData('referencia', e.target.value)}
+                    />
+                  </div>
+                  <div className="form-group col-span-12">
                     <label className="field-label">Disponibilidade</label>
-                    <div className="selectable-grid" id="availability-grid">
+                    <div className="selectable-grid-container">
                       {availabilityOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
                           <input 
@@ -521,9 +668,9 @@ export default function CadastroCidadao() {
 
               {step === 5 && (
                 <div className="form-grid">
-                  <div className="form-group span-2">
-                    <label className="field-label">Como você quer ajudar? <span style={{ color: '#ef4444' }}>*</span></label>
-                    <div className="selectable-grid">
+                  <div className="form-group col-span-12">
+                    <label className={`field-label ${errors.interesses ? 'text-error' : ''}`}>Como você quer ajudar? <span className="required-asterisk">*</span></label>
+                    <div className={`selectable-grid-container ${errors.interesses ? 'grid-error' : ''}`}>
                       {helpOptions.map((opt) => (
                         <label key={opt.label} className="selectable-item">
                           <input 
@@ -546,7 +693,7 @@ export default function CadastroCidadao() {
 
               {step === 6 && (
                 <div className="form-grid">
-                  <div className="form-group span-2">
+                  <div className="form-group col-span-12">
                     <label className="field-label">Conte seu propósito (Opcional)</label>
                     <textarea 
                       className="form-input" 
@@ -556,7 +703,13 @@ export default function CadastroCidadao() {
                       onChange={(e) => updateFormData('proposito', e.target.value)}
                     ></textarea>
                   </div>
-                  <div className="form-final-box span-2">
+                  <div className="form-group col-span-12">
+                    <TermsCheckbox 
+                      checked={formData.termosAceitos}
+                      onChange={(checked) => updateFormData('termosAceitos', checked)}
+                    />
+                  </div>
+                  <div className="form-final-box col-span-12">
                     <Award size={48} className="final-icon" />
                     <p>Ao se tornar um voluntário, você ganha acesso a missões exclusivas e badges de reconhecimento na comunidade.</p>
                   </div>
@@ -573,19 +726,13 @@ export default function CadastroCidadao() {
                   <div />
                 )}
 
-                <div className="nav-actions" style={{ display: 'flex', gap: '1rem' }}>
+                <div className="nav-actions">
                   {step === 1 && <Link to="/" className="btn-cancel">Cancelar</Link>}
 
                   {step < totalSteps ? (
                     <>
                       {!validateStep(step) && (
-                        <div className="validation-message" style={{
-                          fontSize: '0.85rem',
-                          color: '#ef4444',
-                          marginRight: '1rem',
-                          alignSelf: 'center',
-                          fontWeight: '500'
-                        }}>
+                        <div className="validation-message">
                           Preencha todos os campos obrigatórios para continuar
                         </div>
                       )}
@@ -600,7 +747,7 @@ export default function CadastroCidadao() {
                       </button>
                     </>
                   ) : (
-                    <button type="submit" className="btn-finish" disabled={isLoading}>
+                    <button type="submit" className="btn-finish" disabled={isLoading || !formData.termosAceitos}>
                       <span>{isLoading ? 'Cadastrando...' : 'Confirmar Compromisso'}</span>
                       <CheckCircle2 size={20} />
                     </button>
@@ -619,6 +766,17 @@ export default function CadastroCidadao() {
         type={toast.type}
         onClose={() => setToast({ show: false, message: '', type: 'error' })}
       />
+      
+      {/* Loading Modal */}
+      {loadingCep && (
+        <div className="modal-overlay-loading">
+          <div className="modal-loading-content">
+            <div className="spinner-large"></div>
+            <h3>Buscando endereço...</h3>
+            <p>Aguarde enquanto localizamos o CEP.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

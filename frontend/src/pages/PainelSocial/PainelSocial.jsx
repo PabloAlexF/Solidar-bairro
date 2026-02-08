@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import ApiService from '../../services/apiService';
+import { useNotifications } from '../../contexts/NotificationContext';
 import {
   ChevronDown,
   Search,
@@ -26,6 +27,7 @@ import {
   Shield,
   UserCheck,
   Baby,
+  Bell,
 } from "lucide-react";
 import "./painel-social.css";
 import Toast from '../../components/ui/Toast';
@@ -40,6 +42,9 @@ const BAIRROS = ["São Benedito", "Palmital", "Palmital A", "Palmital B", "Boa E
 
 export default function PainelSocial() {
   const navigate = useNavigate();
+  const { notifications, markAsRead, markAllAsRead, getUnreadCount } = useNotifications();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationsRef = useRef(null);
   const [bairro, setBairro] = useState("São Benedito");
   const [bairroOpen, setBairroOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +81,7 @@ export default function PainelSocial() {
 
   const dropdownRef = useRef(null);
   const menuRef = useRef(null);
+  const unreadCount = getUnreadCount();
 
   useEffect(() => {
     loadFamilias();
@@ -277,6 +283,9 @@ export default function PainelSocial() {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setOpenMenu(null);
       }
+      if (notificationsRef.current && !notificationsRef.current.contains(e.target)) {
+        setShowNotifications(false);
+      }
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -468,6 +477,71 @@ export default function PainelSocial() {
         </div>
 
         <div className="header-right">
+          <div className="dropdown-container" ref={notificationsRef}>
+            <button 
+              className="icon-button" 
+              onClick={() => setShowNotifications(!showNotifications)}
+              title="Notificações"
+            >
+              <Bell size={20} />
+              {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+            </button>
+            {showNotifications && (
+              <div className="notifications-panel">
+                <div className="notifications-header">
+                  <h3 className="notifications-title">Notificações</h3>
+                  {unreadCount > 0 && (
+                    <button 
+                      className="mark-all-read-btn"
+                      onClick={() => markAllAsRead()}
+                    >
+                      Marcar todas como lidas
+                    </button>
+                  )}
+                </div>
+                <div className="notifications-list">
+                  {notifications.length > 0 ? (
+                    notifications.map(notif => (
+                      <div 
+                        key={notif.id}
+                        className={`notification-item ${!notif.read ? 'unread' : ''}`}
+                        onClick={() => {
+                          markAsRead(notif.id);
+                          if (notif.conversationId) {
+                            navigate(`/chat/${notif.conversationId}`);
+                          }
+                        }}
+                      >
+                        <div className={`notification-icon ${notif.type}`}>
+                          {notif.type === 'chat' ? '💬' : notif.type === 'help_request' ? '🆘' : '📢'}
+                        </div>
+                        <div className="notification-content">
+                          <span className="notification-title">{notif.title}</span>
+                          <span className="notification-message">{notif.message}</span>
+                          <span className="notification-time">
+                            {new Date(notif.timestamp).toLocaleString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                        {!notif.read && <span className="notification-unread-dot" />}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="notifications-empty">
+                      <div className="notifications-empty-icon">
+                        <Bell size={24} />
+                      </div>
+                      <p className="notifications-empty-text">Nenhuma notificação</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

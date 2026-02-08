@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 import { formatAddress } from '../utils/addressUtils';
+import { connectSocket, disconnectSocket } from '../services/socketService';
 
 const AuthContext = createContext();
 
@@ -23,26 +24,38 @@ export const AuthProvider = ({ children }) => {
 
   const initializeAuth = async () => {
     try {
-      const savedToken = localStorage.getItem('solidar-token');
-      const savedUser = localStorage.getItem('solidar-user');
+      // Load cached authentication data to persist login
+      const cachedUser = localStorage.getItem('solidar-user');
+      const cachedToken = localStorage.getItem('solidar-token');
 
-      if (savedToken && savedUser) {
-        setToken(savedToken);
-        
-        // Parse and process user data
-        let userData = JSON.parse(savedUser);
-        if (userData && typeof userData.endereco === 'object') {
-          userData = {
-            ...userData,
-            endereco: formatAddress(userData.endereco)
-          };
+      if (cachedUser && cachedToken) {
+        try {
+          const userData = JSON.parse(cachedUser);
+          // Ensure address data is properly formatted
+          let processedUserData = userData;
+          if (userData && typeof userData.endereco === 'object') {
+            processedUserData = {
+              ...userData,
+              endereco: formatAddress(userData.endereco)
+            };
+          }
+        setUser(processedUserData);
+        setToken(cachedToken);
+
+        // Connect socket for authenticated user
+        if (processedUserData && (processedUserData.uid || processedUserData.id)) {
+          console.log('🔌 [Auth] Conectando socket para usuário:', processedUserData.uid || processedUserData.id);
+          connectSocket(processedUserData.uid || processedUserData.id);
         }
-        
-        setUser(userData);
+        } catch (parseError) {
+          console.error('Erro ao parsear dados do usuário:', parseError);
+          // Clear invalid data
+          localStorage.removeItem('solidar-user');
+          localStorage.removeItem('solidar-token');
+        }
       }
     } catch (error) {
       console.error('Erro ao inicializar auth:', error);
-      logout();
     } finally {
       setLoading(false);
     }
@@ -70,10 +83,16 @@ export const AuthProvider = ({ children }) => {
         
         setUser(processedUserData);
         setToken(userToken);
-        
+
         localStorage.setItem('solidar-user', JSON.stringify(processedUserData));
         localStorage.setItem('solidar-token', userToken);
-        
+
+        // Connect socket for authenticated user
+        if (processedUserData && (processedUserData.uid || processedUserData.id)) {
+          console.log('🔌 [Auth] Conectando socket para usuário:', processedUserData.uid || processedUserData.id);
+          connectSocket(processedUserData.uid || processedUserData.id);
+        }
+
         return { success: true, user: processedUserData };
       }
       
@@ -120,10 +139,15 @@ export const AuthProvider = ({ children }) => {
         
         setUser(processedUserData);
         setToken(newToken);
-        
+
         localStorage.setItem('solidar-user', JSON.stringify(processedUserData));
         localStorage.setItem('solidar-token', newToken);
-        
+
+        // Connect socket for authenticated user
+        if (processedUserData && (processedUserData.uid || processedUserData.id)) {
+          connectSocket(processedUserData.uid || processedUserData.id);
+        }
+
         return { success: true, user: processedUserData };
       }
       

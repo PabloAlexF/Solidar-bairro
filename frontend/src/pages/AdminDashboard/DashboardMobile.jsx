@@ -463,6 +463,10 @@ export default function DashboardMobile() {
           </button>
         </nav>
 
+        <button className="adm-nav-btn" onClick={() => navigate('/')} style={{ marginBottom: '0.5rem' }}>
+          <Eye size={20} />
+          <span>Voltar ao Site</span>
+        </button>
         <button className="adm-logout-btn" onClick={handleLogout}>
           <LogOut size={20} />
           <span>Encerrar Sessão</span>

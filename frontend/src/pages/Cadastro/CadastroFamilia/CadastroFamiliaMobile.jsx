@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Users, ArrowLeft, User, Home, Users2, DollarSign, 
   ListChecks, MapPin, CheckCircle2, ChevronRight, 
@@ -6,10 +6,12 @@ import {
   Phone, Mail, ShieldCheck, Trophy, 
   Zap, Info, X
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PasswordField from '../../../components/ui/PasswordField';
 import ApiService from '../../../services/apiService';
+import TermsCheckbox from '../../../components/ui/TermsCheckbox';
 import './CadastroFamiliaMobile.css';
+import { useCEP } from '../../AdminDashboard/useCEP';
 
 const FamilyCounter = ({ item, count, onUpdate }) => (
   <div className="fam-mob-family-card-input">
@@ -60,14 +62,16 @@ const MapLocationButton = ({ isLocating, onClick }) => (
 );
 
 export default function CadastroFamiliaMobile() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(true);
   const [showAnalysisAlert, setShowAnalysisAlert] = useState(false);
-  const [addressData, setAddressData] = useState({ endereco: '', bairro: '', referencia: '' });
+  const [addressData, setAddressData] = useState({ endereco: '', bairro: '', referencia: '', cep: '', numero: '', cidade: '', estado: '' });
   const [isLocating, setIsLocating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'error' });
+  const [errors, setErrors] = useState({});
   const [familyCount, setFamilyCount] = useState({ criancas: 0, jovens: 0, adultos: 1, idosos: 0 });
   const [showNeedModal, setShowNeedModal] = useState(false);
   const [currentNeed, setCurrentNeed] = useState(null);
@@ -96,10 +100,12 @@ export default function CadastroFamiliaMobile() {
     jovens: 0,
     adultos: 1,
     idosos: 0,
-    necessidades: []
+    necessidades: [],
+    termosAceitos: false
   });
   
   const totalSteps = 6;
+  const { loadingCep, formatCEP, searchCEP } = useCEP();
   
   const steps = [
     { id: 1, title: "Responsável", icon: <User size={20} /> },
@@ -117,6 +123,23 @@ export default function CadastroFamiliaMobile() {
     { label: 'Idosos (60+)', icon: '👴', key: 'idosos' }
   ];
 
+  const isValidCPF = (cpf) => {
+    if (typeof cpf !== 'string') return false;
+    cpf = cpf.replace(/[^\d]+/g, '');
+    if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
+    const cpfDigits = cpf.split('').map(el => +el);
+    const rest = (count) => (cpfDigits.slice(0, count - 12).reduce((soma, el, index) => soma + el * (count - index), 0) * 10) % 11 % 10;
+    return rest(10) === cpfDigits[9] && rest(11) === cpfDigits[10];
+  };
+
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { label: '', color: '#e2e8f0', width: '0%' };
+    const isValid = pass.length >= 6 && /[a-zA-Z]/.test(pass) && /\d/.test(pass);
+    if (!isValid) return { label: 'Fraca', color: '#ef4444', width: '33%' };
+    if (pass.length >= 8) return { label: 'Forte', color: '#10b981', width: '100%' };
+    return { label: 'Média', color: '#f59e0b', width: '66%' };
+  };
+
   const nextStep = () => setStep((s) => Math.min(s + 1, totalSteps));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
   
@@ -125,21 +148,58 @@ export default function CadastroFamiliaMobile() {
       case 1:
         return formData.nomeCompleto.trim() && formData.dataNascimento && formData.estadoCivil && formData.profissao.trim();
       case 2:
-        return formData.cpf.trim() && formData.rg.trim() && formData.rendaFamiliar;
+        return isValidCPF(formData.cpf) && formData.rg.trim() && formData.rendaFamiliar;
       case 3:
-        return formData.telefone.trim() && formData.horarioContato;
+        return formData.telefone.replace(/\D/g, '').length >= 10 && formData.email.trim() && formData.senha && formData.senha.length >= 6 && /[a-zA-Z]/.test(formData.senha) && /\d/.test(formData.senha) && formData.senha === formData.confirmarSenha;
       case 4:
-        return (addressData.endereco.trim() || formData.endereco.trim()) && (addressData.bairro.trim() || formData.bairro.trim()) && formData.tipoMoradia;
+        return (addressData.endereco.trim() || formData.endereco.trim()) && (addressData.numero?.trim() || formData.numero?.trim()) && (addressData.bairro.trim() || formData.bairro.trim()) && formData.tipoMoradia;
       default:
         return true;
     }
   };
 
+  const getStepValidationErrors = (stepNumber) => {
+    const newErrors = {};
+    switch (stepNumber) {
+      case 1:
+        if (!formData.nomeCompleto.trim()) newErrors.nomeCompleto = true;
+        if (!formData.dataNascimento) newErrors.dataNascimento = true;
+        if (!formData.estadoCivil) newErrors.estadoCivil = true;
+        if (!formData.profissao.trim()) newErrors.profissao = true;
+        break;
+      case 2:
+        if (!isValidCPF(formData.cpf)) newErrors.cpf = true;
+        if (!formData.rg.trim()) newErrors.rg = true;
+        if (!formData.rendaFamiliar) newErrors.rendaFamiliar = true;
+        break;
+      case 3:
+        if (!formData.telefone.trim() || formData.telefone.replace(/\D/g, '').length < 10) newErrors.telefone = true;
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = true;
+        if (!formData.horarioContato) newErrors.horarioContato = true;
+        if (!formData.senha || formData.senha.length < 6 || !/[a-zA-Z]/.test(formData.senha) || !/\d/.test(formData.senha)) newErrors.senha = true;
+        if (formData.senha !== formData.confirmarSenha) newErrors.confirmarSenha = true;
+        break;
+      case 4:
+        if (!addressData.endereco && !formData.endereco) newErrors.endereco = true;
+        if (!addressData.numero && !formData.numero) newErrors.numero = true;
+        if (!addressData.bairro && !formData.bairro) newErrors.bairro = true;
+        if (!formData.tipoMoradia) newErrors.tipoMoradia = true;
+        break;
+      case 6:
+        if (formData.necessidades.length === 0) newErrors.necessidades = true;
+        break;
+    }
+    return newErrors;
+  };
+
   const handleNextStep = () => {
-    if (validateStep(step)) {
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length === 0) {
+      setErrors({});
       nextStep();
     } else {
-      showToast('Por favor, preencha todos os campos obrigatórios antes de continuar.', 'error');
+      setErrors(validationErrors);
+      showToast('Por favor, preencha os campos destacados.', 'error');
     }
   };
 
@@ -168,6 +228,27 @@ export default function CadastroFamiliaMobile() {
       return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
     } else {
       return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    }
+  };
+
+  const handleCepBlur = async (e) => {
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        showToast(result.error, 'error');
+        setAddressData(prev => ({ ...prev, endereco: '', bairro: '', cidade: '', estado: '' }));
+      } else {
+        showToast('Endereço encontrado!', 'success');
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setAddressData(prev => ({
+          ...prev,
+          endereco: logradouro || '',
+          bairro: bairro || '',
+          cidade: localidade || '',
+          estado: uf || '',
+          cep: result.data.cep || ''
+        }));
+      }
     }
   };
 
@@ -201,6 +282,13 @@ export default function CadastroFamiliaMobile() {
   
   const updateFormData = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prevErrors => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleCheckboxChange = (field, value, checked) => {
@@ -247,13 +335,36 @@ export default function CadastroFamiliaMobile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validationErrors = getStepValidationErrors(step);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      showToast('Por favor, selecione pelo menos uma necessidade.', 'error');
+      return;
+    }
+
+    if (!formData.termosAceitos) {
+      showToast('Você deve aceitar os Termos de Uso e Política de Privacidade.', 'error');
+      return;
+    }
+
     setIsLoading(true);
+
+    if (formData.senha !== formData.confirmarSenha) {
+      showToast('As senhas não coincidem', 'error');
+      setIsLoading(false);
+      return;
+    }
     
     try {
       const submitData = {
         ...formData,
         endereco: addressData.endereco || formData.endereco,
+        numero: addressData.numero || formData.numero,
         bairro: addressData.bairro || formData.bairro,
+        cidade: addressData.cidade || formData.cidade,
+        estado: addressData.estado || formData.estado,
+        cep: addressData.cep || formData.cep,
         pontoReferencia: addressData.referencia || formData.pontoReferencia,
         subQuestionAnswers: needDetails
       };
@@ -346,6 +457,8 @@ export default function CadastroFamiliaMobile() {
     );
   };
 
+  const strength = getPasswordStrength(formData.senha);
+
   if (isSubmitted) {
     return (
       <div className="fam-mob-container fam-mob-theme fam-mob-success-view">
@@ -398,8 +511,8 @@ export default function CadastroFamiliaMobile() {
                 </div>
               </div>
               <div className="fam-mob-success-actions">
-                <Link href="/" className="fam-mob-btn-base fam-mob-btn-primary">Início</Link>
-                <button className="fam-mob-btn-base fam-mob-btn-secondary">Acessar Painel</button>
+                <Link to="/login" className="fam-mob-btn-base fam-mob-btn-primary">Início</Link>
+                <button className="fam-mob-btn-base fam-mob-btn-secondary" onClick={() => navigate('/login')}>Acessar Painel</button>
               </div>
             </div>
           </div>
@@ -474,7 +587,8 @@ export default function CadastroFamiliaMobile() {
                         <User className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.nomeCompleto ? { borderColor: '#ef4444' } : {}}
                           placeholder="Digite seu nome completo"
                           value={formData.nomeCompleto}
                           onChange={(e) => updateFormData('nomeCompleto', e.target.value)}
@@ -490,6 +604,7 @@ export default function CadastroFamiliaMobile() {
                         <input 
                           type="date" 
                           className="fam-mob-form-input"
+                          style={errors.dataNascimento ? { borderColor: '#ef4444' } : {}}
                           value={formData.dataNascimento}
                           onChange={(e) => updateFormData('dataNascimento', e.target.value)}
                           required 
@@ -499,7 +614,7 @@ export default function CadastroFamiliaMobile() {
                     
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Estado Civil <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-mob-radio-grid">
+                      <div className="fam-mob-radio-grid" style={errors.estadoCivil ? { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' } : {}}>
                         {['Solteiro(a)', 'Casado(a)', 'Divorciado(a)', 'Viúvo(a)'].map((estado) => (
                           <label key={estado} className="fam-mob-radio-label">
                             <input 
@@ -522,7 +637,8 @@ export default function CadastroFamiliaMobile() {
                         <User className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.profissao ? { borderColor: '#ef4444' } : {}}
                           placeholder="Qual sua profissão?"
                           value={formData.profissao}
                           onChange={(e) => updateFormData('profissao', e.target.value)}
@@ -541,7 +657,8 @@ export default function CadastroFamiliaMobile() {
                         <IdCard className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.cpf ? { borderColor: '#ef4444' } : {}}
                           placeholder="000.000.000-00"
                           value={formData.cpf}
                           onChange={handleCPFChange}
@@ -557,7 +674,8 @@ export default function CadastroFamiliaMobile() {
                         <Fingerprint className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.rg ? { borderColor: '#ef4444' } : {}}
                           placeholder="00.000.000-0 ou 000.000.000-00"
                           value={formData.rg}
                           onChange={handleRGChange}
@@ -583,7 +701,7 @@ export default function CadastroFamiliaMobile() {
                     
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Renda Familiar Mensal <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-mob-card-radio-grid">
+                      <div className="fam-mob-card-radio-grid" style={errors.rendaFamiliar ? { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' } : {}}>
                         {[
                           { label: 'Até R$ 500', value: 'ate_500', icon: <DollarSign size={20} />, desc: 'Renda baixa' },
                           { label: 'R$ 501 - R$ 1.000', value: '501_1000', icon: <DollarSign size={20} />, desc: 'Renda moderada' },
@@ -626,7 +744,8 @@ export default function CadastroFamiliaMobile() {
                         <Phone className="fam-mob-input-icon" />
                         <input 
                           type="tel" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.telefone ? { borderColor: '#ef4444' } : {}}
                           placeholder="(00) 00000-0000"
                           value={formData.telefone}
                           onChange={handlePhoneChange}
@@ -652,22 +771,24 @@ export default function CadastroFamiliaMobile() {
                     </div>
                     
                     <div className="fam-mob-input-group">
-                      <label className="fam-mob-input-label">E-mail (opcional)</label>
+                      <label className="fam-mob-input-label">E-mail <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="fam-mob-input-wrapper">
                         <Mail className="fam-mob-input-icon" />
                         <input 
                           type="email" 
                           className="fam-mob-form-input" 
                           placeholder="seu@email.com"
+                          style={errors.email ? { borderColor: '#ef4444' } : {}}
                           value={formData.email}
                           onChange={(e) => updateFormData('email', e.target.value)}
+                          required
                         />
                       </div>
                     </div>
                     
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Melhor horário para contato <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-mob-radio-grid">
+                      <div className="fam-mob-radio-grid" style={errors.horarioContato ? { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' } : {}}>
                         {['Manhã', 'Tarde', 'Noite', 'Qualquer'].map((horario) => (
                           <label key={horario} className="fam-mob-radio-label">
                             <input 
@@ -688,38 +809,94 @@ export default function CadastroFamiliaMobile() {
                       label="Senha de Acesso"
                       placeholder="Crie uma senha segura"
                       required
+                      error={errors.senha}
                       value={formData.senha}
                       onChange={(e) => updateFormData('senha', e.target.value)}
                     />
+                    {formData.senha && (
+                      <div style={{ marginTop: '-10px', marginBottom: '15px', padding: '0 4px' }}>
+                        <div style={{ height: '4px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: strength.width, backgroundColor: strength.color, transition: 'all 0.3s ease' }} />
+                        </div>
+                        <span style={{ fontSize: '11px', color: strength.color, marginTop: '4px', display: 'block', textAlign: 'right', fontWeight: '600' }}>{strength.label}</span>
+                      </div>
+                    )}
                     
                     <PasswordField 
                       label="Confirmar Senha"
+                      error={errors.confirmarSenha}
                       placeholder="Digite a senha novamente"
                       required
                       value={formData.confirmarSenha}
                       onChange={(e) => updateFormData('confirmarSenha', e.target.value)}
                     />
+                    {formData.confirmarSenha && (
+                      <div style={{ marginTop: '-10px', marginBottom: '15px', padding: '0 4px', fontSize: '11px', textAlign: 'right', fontWeight: '600', color: formData.senha === formData.confirmarSenha ? '#10b981' : '#ef4444' }}>
+                        {formData.senha === formData.confirmarSenha ? 'Senhas conferem' : 'Senhas não conferem'}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {step === 4 && (
                   <div className="fam-mob-form-grid">
-                    <MapLocationButton 
-                      isLocating={isLocating} 
-                      onClick={handleMapLocation} 
+                    <MapLocationButton
+                      isLocating={isLocating}
+                      onClick={handleMapLocation}
                     />
-                    
+
+                    <div className="fam-mob-input-group">
+                      <label className="fam-mob-input-label">CEP <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="fam-mob-input-wrapper">
+                        <Home className="fam-mob-input-icon" />
+                        <input
+                          type="text"
+                          className="fam-mob-form-input"
+                          style={errors.cep ? { borderColor: '#ef4444' } : {}}
+                          placeholder="00000-000"
+                          value={addressData.cep}
+                          onChange={(e) => setAddressData(prev => ({ ...prev, cep: formatCEP(e.target.value) }))}
+                          onBlur={handleCepBlur}
+                          maxLength={9}
+                          disabled={loadingCep}
+                        />
+                        {loadingCep && <div className="fam-mob-spinner" />}
+                      </div>
+                    </div>
+
+                    <div className="fam-mob-input-group">
+                      <label className="fam-mob-input-label">Número <span style={{ color: '#ef4444' }}>*</span></label>
+                      <div className="fam-mob-input-wrapper">
+                        <MapPin className="fam-mob-input-icon" />
+                        <input
+                          type="text"
+                          className="fam-mob-form-input"
+                          style={errors.numero ? { borderColor: '#ef4444' } : {}}
+                          placeholder="Nº"
+                          value={addressData.numero || formData.numero || ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setAddressData(prev => ({ ...prev, numero: val }));
+                            updateFormData('numero', val);
+                          }}
+                          required
+                        />
+                      </div>
+                    </div>
+
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Endereço <span style={{ color: '#ef4444' }}>*</span></label>
                       <div className="fam-mob-input-wrapper">
                         <Home className="fam-mob-input-icon" />
-                        <input 
-                          type="text" 
-                          className="fam-mob-form-input" 
+                        <input
+                          type="text"
+                          className="fam-mob-form-input"
+                          style={errors.endereco ? { borderColor: '#ef4444' } : {}}
                           placeholder="Rua, Avenida, etc."
                           value={addressData.endereco}
                           onChange={(e) => setAddressData(prev => ({ ...prev, endereco: e.target.value }))}
-                          required 
+                          disabled={loadingCep}
+                          required
                         />
                       </div>
                     </div>
@@ -730,7 +907,8 @@ export default function CadastroFamiliaMobile() {
                         <MapPin className="fam-mob-input-icon" />
                         <input 
                           type="text" 
-                          className="fam-mob-form-input" 
+                          className="fam-mob-form-input"
+                          style={errors.bairro ? { borderColor: '#ef4444' } : {}}
                           placeholder="Nome do bairro"
                           value={addressData.bairro}
                           onChange={(e) => setAddressData(prev => ({ ...prev, bairro: e.target.value }))}
@@ -755,7 +933,7 @@ export default function CadastroFamiliaMobile() {
                     
                     <div className="fam-mob-input-group">
                       <label className="fam-mob-input-label">Tipo de Moradia <span style={{ color: '#ef4444' }}>*</span></label>
-                      <div className="fam-mob-card-radio-grid">
+                      <div className="fam-mob-card-radio-grid" style={errors.tipoMoradia ? { border: '1px solid #ef4444', borderRadius: '12px', padding: '0.5rem' } : {}}>
                         {[
                           { label: 'Casa Própria', icon: <Home size={20} /> },
                           { label: 'Casa Alugada', icon: <Home size={20} /> },
@@ -823,7 +1001,7 @@ export default function CadastroFamiliaMobile() {
                       Principais Necessidades
                     </h3>
                     
-                    <div className="fam-mob-needs-grid">
+                    <div className="fam-mob-needs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                       {[
                         'Alimentação', 'Roupas', 'Medicamentos', 'Material Escolar',
                         'Móveis', 'Eletrodomésticos', 'Consultas Médicas', 'Cursos Profissionalizantes'
@@ -847,6 +1025,15 @@ export default function CadastroFamiliaMobile() {
                       ))}
                     </div>
                     
+                    <div className="fam-mob-span-2" style={{ marginTop: '1rem' }}>
+                      <TermsCheckbox 
+                        checked={formData.termosAceitos}
+                        onChange={(checked) => updateFormData('termosAceitos', checked)}
+                        mobile={true}
+                        color="#f97316"
+                        id="termos-familia-mobile"
+                      />
+                    </div>
                     <div className="fam-mob-final-step-section">
                       <div className="fam-mob-final-card">
                         <h3 className="fam-mob-final-title">Quase Pronto!</h3>
@@ -881,7 +1068,7 @@ export default function CadastroFamiliaMobile() {
                     <ChevronRight size={20} />
                   </button>
                 ) : (
-                  <button type="submit" className="fam-mob-btn-finish" disabled={isLoading}>
+                  <button type="submit" className="fam-mob-btn-finish" disabled={isLoading || !formData.termosAceitos}>
                     {isLoading ? 'Finalizando...' : 'Finalizar Cadastro'}
                     <CheckCircle2 size={20} />
                   </button>

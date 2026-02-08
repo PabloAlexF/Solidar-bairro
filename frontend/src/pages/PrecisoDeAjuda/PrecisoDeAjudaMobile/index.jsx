@@ -2,10 +2,11 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnalyzingModal, InconsistentModal, SuccessModal } from '../modals';
-import { MapaAlcance } from '../PrecisoDeAjudaDesktop/MapaAlcance';
+import { ValidationModal } from './AIComponents'; // Agora usará o novo componente
 import AnimatedParticles from '../AnimatedParticles';
-import LandingHeader from '../../../components/layout/LandingHeader';
 import MobileHeader from '../../../components/layout/MobileHeader';
+import { validateRequest } from './AIAssistant';
+import { validateRequiredFields } from './SmartValidator'; // Mantido para validação básica
 import { useNotifications } from '../../../contexts/NotificationContext';
 import './styles.css';
 import { 
@@ -41,7 +42,8 @@ import {
   Mic,
   MicOff,
   Globe,
-  Rocket
+  Rocket,
+  Loader2
 } from 'lucide-react';
 import { SecurityUtils, geocodingRateLimiter } from '../../../utils/security';
 
@@ -246,10 +248,13 @@ export function PrecisoDeAjudaMobile() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStage, setAnalysisStage] = useState(0);
   const [isPublished, setIsPublished] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [validationResult, setValidationResult] = useState(null);
+  const [shakeReviewButton, setShakeReviewButton] = useState(false);
   const [isInconsistent, setIsInconsistent] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   
-  const stages = ['Verificando dados', 'Analisando urgência', 'Validando', 'Finalizando'];
+  const stages = ['Iniciando validação...', 'Comunicando com assistente IA...', 'Analisando seu pedido...', 'Finalizando...'];
 
   const [formData, setFormData] = useState({
     category: '',
@@ -462,20 +467,11 @@ export function PrecisoDeAjudaMobile() {
     }
   }, [step, formData, isDescriptionValid]);
 
-  const handlePublish = useCallback(async () => {
+  const publishRequest = useCallback(async () => {
+    // This function contains the actual API call logic
     setIsSubmitting(true);
-    setIsAnalyzing(true);
-    setAnalysisStage(0);
     
     try {
-      // Simulate analysis stages
-      for (let i = 0; i < stages.length; i++) {
-        setAnalysisStage(i);
-        await new Promise(resolve => setTimeout(resolve, 1200));
-      }
-      
-      setIsAnalyzing(false);
-      
       // Prepare data for API
       const pedidoData = {
         category: formData.category,
@@ -484,41 +480,21 @@ export function PrecisoDeAjudaMobile() {
         urgency: formData.urgency,
         visibility: formData.visibility,
         radius: formData.radius,
-        location: {
-          coordinates: formData.userLocation,
-          address: formData.locationString,
-          city: formData.city,
-          neighborhood: formData.neighborhood
-        },
+        location: formData.userLocation,
+        locationString: formData.locationString,
+        city: formData.city,
+        neighborhood: formData.neighborhood,
         isPublic: formData.isPublic
       };
       
-      // Import ApiService dynamically
       const { default: ApiService } = await import('../../../services/apiService');
-      
-      // Call API to create pedido
       const response = await ApiService.createPedido(pedidoData);
       
+      setIsAnalyzing(false);
       if (response.success) {
-        // Criar notificação para nova ajuda
-        try {
-          const { notificationManager } = await import('../../../utils/notifications');
-          await notificationManager.createHelpNotification({
-            userName: 'Alguém',
-            category: formData.category,
-            neighborhood: formData.neighborhood || 'Região próxima',
-            urgency: formData.urgency
-          });
-        } catch (notifError) {
-          console.warn('Erro ao criar notificação:', notifError);
-        }
-        
         addNotification({
           title: 'Pedido criado com sucesso!',
           message: `Seu pedido de "${formData.category}" foi publicado e já está visível para a comunidade.`
-        });
-        setAnalysis({ 
-          reason: 'Pedido criado com sucesso! Sua solicitação já está visível na rede Solidar.' 
         });
         setIsPublished(true);
       } else {
@@ -527,18 +503,73 @@ export function PrecisoDeAjudaMobile() {
     } catch (error) {
       console.error('Erro ao publicar pedido:', error);
       setIsAnalyzing(false);
-      
-      // Check if it's a validation error
-      if (error.message.includes('validação') || error.message.includes('inconsistent')) {
-        setIsInconsistent(true);
-      } else {
-        // Show generic error
-        alert('Erro ao publicar pedido: ' + error.message);
-      }
+      alert('Erro ao publicar pedido: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, stages.length]);
+  }, [formData, addNotification]);
+
+  const handlePublish = useCallback(async () => {
+    // 1. Validação básica de campos obrigatórios
+    const requiredFieldsErrors = validateRequiredFields(formData);
+    if (requiredFieldsErrors.length > 0) {
+      setValidationResult({
+        canPublish: false,
+        analysis: 'Campos obrigatórios não foram preenchidos.',
+        confidence: 0,
+        suggestions: requiredFieldsErrors.map(error => ({
+          type: 'error',
+          message: error.message,
+        })),
+        validations: {}
+      });
+      setShowValidationModal(true);
+      return;
+    }
+
+    // 2. Exibe o modal de "Analisando..." e chama o bot
+    setIsSubmitting(true);
+    setIsAnalyzing(true);
+
+    // Simula etapas da análise para feedback visual
+    for (let i = 0; i < stages.length; i++) {
+      setAnalysisStage(i);
+      await new Promise(resolve => setTimeout(resolve, 750));
+    }
+
+    // 3. Chama o bot de validação real
+    const analysisResult = await validateRequest(formData);
+    setValidationResult(analysisResult);
+    
+    // 4. Esconde o modal de "Analisando..." e exibe o resultado da validação
+    setIsAnalyzing(false);
+    setIsSubmitting(false);
+    setShowValidationModal(true);
+
+  }, [formData, stages]);
+
+  const handleReview = () => {
+    setShowValidationModal(false);
+    setValidationResult(null);
+    setStep(3); // Volta para a etapa da história para revisão
+  };
+
+  const handleAcceptAndPublish = () => {
+    // Se a validação falhou, o usuário está clicando em "Publicar Mesmo Assim".
+    // Acionamos a animação no botão "Revisar" e publicamos após um pequeno atraso.
+    if (validationResult && !validationResult.canPublish) {
+      setShakeReviewButton(true);
+      setTimeout(() => {
+        setShowValidationModal(false);
+        publishRequest();
+        setShakeReviewButton(false); // Reseta o estado da animação
+      }, 600); // Duração da animação
+    } else {
+      // Se a validação passou, publica imediatamente.
+      setShowValidationModal(false);
+      publishRequest();
+    }
+  };
 
   const selectedCategory = useMemo(() => CATEGORIES.find(c => c.id === formData.category), [formData.category]);
   const selectedUrgency = useMemo(() => URGENCY_OPTIONS.find(o => o.id === formData.urgency), [formData.urgency]);
@@ -546,6 +577,15 @@ export function PrecisoDeAjudaMobile() {
   const toggleArrayItem = useCallback((array, item) => {
     return array.includes(item) ? array.filter(i => i !== item) : [...array, item];
   }, []);
+
+  const descriptionQuality = useMemo(() => {
+    const len = formData.description.length;
+    if (len === 0) return { label: '', color: '#e5e7eb' };
+    if (len < 50) return { label: 'Fraca', color: '#ef4444' };
+    if (len < 150) return { label: 'Razoável', color: '#f59e0b' };
+    if (len < 250) return { label: 'Boa', color: '#3b82f6' };
+    return { label: 'Excelente', color: '#10b981' };
+  }, [formData.description]);
 
   const renderCategoryStep = () => (
     <motion.div className="pdam-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
@@ -655,7 +695,14 @@ export function PrecisoDeAjudaMobile() {
     <motion.div className="pdam-step" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
       <div className="pdam-step-header">
         <span className="pdam-step-badge pdam-story-badge">3 de 6</span>
-        <h2>Conte sua história</h2>
+        <h2>
+          Conte sua história
+          {descriptionQuality.label && (
+            <span className="pdam-quality-badge" style={{ backgroundColor: descriptionQuality.color }}>
+              {descriptionQuality.label}
+            </span>
+          )}
+        </h2>
         <p className="pdam-step-subtitle">A ajuda vem mais rápido quando as pessoas entendem o seu motivo.</p>
       </div>
       
@@ -665,12 +712,7 @@ export function PrecisoDeAjudaMobile() {
             placeholder="Descreva sua necessidade aqui com o máximo de detalhes possível..."
             value={formData.description}
             onChange={(e) => {
-              const validation = SecurityUtils.validateFormInput(e.target.value, 'description');
-              if (validation.valid) {
-                updateData({ description: validation.value });
-              } else {
-                updateData({ description: e.target.value.slice(0, 500) });
-              }
+              updateData({ description: e.target.value.slice(0, 300) });
             }}
             className={`pdam-textarea-v4 ${templateUsed && !isDescriptionValid ? 'warning' : ''}`}
           />
@@ -694,12 +736,12 @@ export function PrecisoDeAjudaMobile() {
                 <div 
                   className="pdam-progress-fill-v4" 
                   style={{ 
-                    width: `${(formData.description.length / 500) * 100}%`,
-                    background: formData.description.length > 450 ? '#ef4444' : '#f97316'
-                  }} 
+                    width: `${(formData.description.length / 300) * 100}%`,
+                    backgroundColor: descriptionQuality.color
+                  }}
                 />
               </div>
-              <span>{formData.description.length}/500</span>
+              <span>{formData.description.length}/300</span>
             </div>
           </div>
         </div>
@@ -833,13 +875,7 @@ export function PrecisoDeAjudaMobile() {
       </div>
 
       <div className="pdam-map-section-v2">
-        <div style={{
-          position: 'relative',
-          height: '100%',
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-          borderRadius: '20px',
-          overflow: 'hidden'
-        }}>
+        <div className="pdam-map-inner">
           {/* Animated Background Particles */}
           <AnimatedParticles radius={formData.radius} isActive={true} />
           
@@ -849,227 +885,150 @@ export function PrecisoDeAjudaMobile() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: `
-              radial-gradient(circle at 20% 20%, rgba(249, 115, 22, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 40% 60%, rgba(59, 130, 246, 0.1) 0%, transparent 50%)
-            `,
             animation: 'backgroundShift 8s ease-in-out infinite'
           }} />
-          
-          {/* Header with Stats */}
-          <div style={{
-            position: 'absolute',
-            top: '16px',
-            left: '16px',
-            right: '16px',
-            zIndex: 10,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              style={{
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(12px)',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                color: '#374151',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)'
-              }}
-            >
-              <motion.div 
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: '#f97316'
-                }} 
-              />
-              Alcance: {formData.radius}km
-            </motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-              style={{
-                background: 'rgba(16, 185, 129, 0.1)',
-                backdropFilter: 'blur(12px)',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                color: '#10b981',
-                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
-              }}
-            >
-              <Users size={14} />
-              {Math.floor(formData.radius / 2) + 2} pessoas
-            </motion.div>
-          </div>
-          
-          <MapaAlcance 
-            radius={formData.radius} 
-            onRadiusChange={(r) => updateData({ radius: r })}
-            userLocation={formData.userLocation}
-          />
-          
-          {/* Interactive Radius Indicator */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            style={{
-              position: 'absolute',
-              bottom: '20px',
-              left: '20px',
-              right: '20px',
-              zIndex: 10,
-              background: 'rgba(15, 23, 42, 0.95)',
-              backdropFilter: 'blur(16px)',
-              padding: '20px',
-              borderRadius: '16px',
-              border: '1px solid rgba(255,255,255,0.1)'
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '16px'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                color: 'white'
-              }}>
-                <Globe size={16} color="#f97316" />
-                <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Ajustar Visibilidade</span>
-              </div>
-              
-              <motion.div 
-                key={formData.radius}
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                style={{
-                  background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                  padding: '6px 12px',
-                  borderRadius: '12px',
-                  fontSize: '0.875rem',
-                  fontWeight: '700',
-                  color: 'white',
-                  boxShadow: '0 2px 8px rgba(249, 115, 22, 0.3)'
+
+          {/* Visual Map Elements */}
+          <div className="pdam-map-visuals">
+             {/* Radar Circles */}
+             {[1, 2, 3].map(i => (
+                 <motion.div 
+                    key={i}
+                    animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0.1, 0.3, 0.1],
+                    }}
+                    transition={{ duration: 3, delay: i * 0.8, repeat: Infinity, ease: "easeInOut" }}
+                    className="pdam-radar-circle"
+                    style={{
+                        width: `${Math.min(formData.radius * 10 + (i * 60), 280)}px`,
+                        height: `${Math.min(formData.radius * 10 + (i * 60), 280)}px`,
+                    }}
+                 />
+             ))}
+             
+             {/* Active Radius */}
+             <motion.div 
+                className="pdam-active-radius"
+                animate={{ 
+                    width: `${Math.min(Math.max(formData.radius * 15, 100), 260)}px`,
+                    height: `${Math.min(Math.max(formData.radius * 15, 100), 260)}px`,
                 }}
-              >
-                {formData.radius}km
-              </motion.div>
-            </div>
-            
-            <input
-              type="range"
-              min="1"
-              max="50"
-              value={formData.radius}
-              onChange={(e) => updateData({ radius: Number(e.target.value) })}
-              style={{
-                width: '100%',
-                height: '8px',
-                borderRadius: '4px',
-                background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.3) 0%, rgba(249, 115, 22, 0.3) 50%, rgba(239, 68, 68, 0.3) 100%)',
-                outline: 'none',
-                WebkitAppearance: 'none',
-                cursor: 'pointer'
-              }}
-            />
-            
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginTop: '8px',
-              fontSize: '0.7rem',
-              color: 'rgba(255,255,255,0.6)'
-            }}>
-              <span>Bairro</span>
-              <span>Região</span>
-              <span>Cidade</span>
-            </div>
-            
-            {/* Impact Indicator */}
-            <motion.div 
-              key={`impact-${Math.floor(formData.radius / 10)}`}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                marginTop: '16px',
-                padding: '12px',
-                background: 'rgba(255,255,255,0.05)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255,255,255,0.1)'
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '8px'
-              }}>
-                <motion.div 
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  style={{
-                    width: '6px',
-                    height: '6px',
-                    borderRadius: '50%',
-                    background: formData.radius <= 5 ? '#10b981' : formData.radius <= 15 ? '#f59e0b' : '#ef4444'
-                  }} 
-                />
-                <span style={{
-                  fontSize: '0.75rem',
-                  fontWeight: '600',
-                  color: 'white'
-                }}>
-                  Impacto: {
-                    formData.radius <= 5 ? 'Focado no Bairro' :
-                    formData.radius <= 15 ? 'Alcance Regional' :
-                    'Visibilidade Ampla'
-                  }
-                </span>
-              </div>
-              <p style={{
-                fontSize: '0.7rem',
-                color: 'rgba(255,255,255,0.7)',
-                margin: 0,
-                lineHeight: '1.4'
-              }}>
-                {
-                  formData.radius <= 5 ? 'Ideal para necessidades locais e construção de vínculos comunitários.' :
-                  formData.radius <= 15 ? 'Equilibra alcance e proximidade, ótimo para a maioria dos casos.' :
-                  'Máxima visibilidade, recomendado para urgências críticas.'
-                }
-              </p>
-            </motion.div>
-          </motion.div>
+             />
+
+             {/* Marker */}
+             <div className="pdam-map-marker-container">
+                <div className="pdam-map-marker">
+                   <MapPin size={24} className="text-white" />
+                </div>
+                <div className="pdam-map-marker-pulse" />
+             </div>
+             
+             {/* Location Label */}
+             <div className="pdam-map-location-label">
+                 <MapPin size={14} className="text-orange-500" />
+                 <span className="truncate max-w-[200px]">{formData.neighborhood || formData.city || 'Localização'}</span>
+             </div>
+          </div>
         </div>
       </div>
+
+      {/* Interactive Radius Indicator */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="pdam-map-controls-overlay"
+      >
+        <div className="pdam-controls-header">
+          <div className="pdam-radius-display">
+            <span className="pdam-radius-label">Raio de Alcance</span>
+            <span className="pdam-radius-value">{formData.radius} km</span>
+          </div>
+          <div className="pdam-people-estimate">
+            <Users size={16} />
+            <span>~{Math.floor(formData.radius / 2) + 2} pessoas</span>
+          </div>
+        </div>
+        
+        <input
+          type="range"
+          min="1"
+          max="50"
+          value={formData.radius}
+          onChange={(e) => updateData({ radius: Number(e.target.value) })}
+          style={{
+            width: '100%',
+            height: '8px',
+            borderRadius: '4px',
+            background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.3) 0%, rgba(249, 115, 22, 0.3) 50%, rgba(239, 68, 68, 0.3) 100%)',
+            outline: 'none',
+            WebkitAppearance: 'none',
+            cursor: 'pointer'
+          }}
+        />
+        
+        <div className="pdam-slider-labels">
+          <span>Bairro</span>
+          <span>Região</span>
+          <span>Cidade</span>
+        </div>
+        
+        {/* Impact Indicator */}
+        <motion.div 
+          key={`impact-${Math.floor(formData.radius / 10)}`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            padding: '12px',
+            background: 'rgba(255,255,255,0.05)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '8px'
+          }}>
+            <motion.div 
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: formData.radius <= 5 ? '#10b981' : formData.radius <= 15 ? '#f59e0b' : '#ef4444'
+              }} 
+            />
+            <span style={{
+              fontSize: '0.75rem',
+              fontWeight: '600',
+              color: 'white'
+            }}>
+              Impacto: {
+                formData.radius <= 5 ? 'Focado no Bairro' :
+                formData.radius <= 15 ? 'Alcance Regional' :
+                'Visibilidade Ampla'
+              }
+            </span>
+          </div>
+          <p style={{
+            fontSize: '0.7rem',
+            color: 'rgba(255,255,255,0.7)',
+            margin: 0,
+            lineHeight: '1.4'
+          }}>
+            {
+              formData.radius <= 5 ? 'Ideal para necessidades locais e construção de vínculos comunitários.' :
+              formData.radius <= 15 ? 'Equilibra alcance e proximidade, ótimo para a maioria dos casos.' :
+              'Máxima visibilidade, recomendado para urgências críticas.'
+            }
+          </p>
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
 
@@ -1106,17 +1065,27 @@ export function PrecisoDeAjudaMobile() {
               <MapPin size={14} /> {formData.locationString} • {formData.radius}km
             </p>
           )}
-          <label className="pdam-public-switch">
-            <input 
-              type="checkbox" 
-              checked={formData.isPublic} 
-              onChange={(e) => updateData({ isPublic: e.target.checked })} 
-            />
-            <span className="pdam-switch-slider"></span>
-            <span className="pdam-switch-label">
-              {formData.isPublic ? <><Globe size={14} /> Público</> : <><ShieldCheck size={14} /> Privado</>}
-            </span>
-          </label>
+          
+          <div className="pdam-privacy-section">
+            <label className="pdam-public-switch">
+              <input 
+                type="checkbox" 
+                checked={formData.isPublic} 
+                onChange={(e) => updateData({ isPublic: e.target.checked })} 
+              />
+              <span className="pdam-switch-slider"></span>
+              <div className="pdam-switch-content">
+                <span className="pdam-switch-label">
+                  {formData.isPublic ? <><Globe size={16} /> Pedido Público</> : <><ShieldCheck size={16} /> Pedido Anônimo</>}
+                </span>
+                <span className="pdam-switch-desc">
+                  {formData.isPublic 
+                    ? 'Seu nome aparecerá para todos na plataforma.' 
+                    : 'Seu nome será ocultado (ex: "Usuário Anônimo").'}
+                </span>
+              </div>
+            </label>
+          </div>
         </div>
       </motion.div>
     );
@@ -1151,6 +1120,16 @@ export function PrecisoDeAjudaMobile() {
         <InconsistentModal 
           onEdit={() => { setIsInconsistent(false); setStep(3); }}
           onClose={() => navigate('/')}
+        />
+      )}
+      {showValidationModal && (
+        <ValidationModal
+          isOpen={showValidationModal}
+          onClose={() => setShowValidationModal(false)}
+          validationResult={validationResult}
+          onReview={handleReview}
+          onAccept={handleAcceptAndPublish}
+          shakeReviewButton={shakeReviewButton}
         />
       )}
 
@@ -1210,7 +1189,16 @@ export function PrecisoDeAjudaMobile() {
             disabled={isSubmitting} 
             className="pdam-btn-publish"
           >
-            {isSubmitting ? 'Enviando...' : 'Publicar'} {!isSubmitting && <Check size={18} />}
+            {isSubmitting ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Analisando...
+              </>
+            ) : (
+              <>
+                Concluir <Check size={18} />
+              </>
+            )}
           </button>
         )}
       </footer>

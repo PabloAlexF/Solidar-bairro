@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import ApiService from '../../services/apiService';
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import {
   Bell,
   User,
@@ -34,6 +36,8 @@ import {
   Filter,
   RefreshCw,
   Package,
+  Heart,
+  MessageSquare
 } from "lucide-react";
 import "./PainelSocialMobile.css";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
@@ -48,12 +52,15 @@ const MapaInterativo = lazy(() => import("./MapaInterativo"));
 
 export default function PainelSocialMobile() {
   const navigate = useNavigate();
+  const { logout, user } = useAuth();
+  const { notifications, markAsRead, markAllAsRead, clearNotifications, getUnreadCount } = useNotifications();
   const [searchQuery, setSearchQuery] = useState("");
   const [families, setFamilies] = useState([]);
   const [pedidosData, setPedidosData] = useState([]);
   const [comerciosData, setComerciosData] = useState([]);
   const [ongsData, setOngsData] = useState([]);
   const [selectedFamily, setSelectedFamily] = useState(null);
+  const [selectedPedido, setSelectedPedido] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingFamily, setEditingFamily] = useState(null);
   const [activeFilter, setActiveFilter] = useState("todos");
@@ -72,8 +79,8 @@ export default function PainelSocialMobile() {
       members: 1,
       children: 0,
       elderly: 0,
-      income: "Sem renda",
-      vulnerability: "Média",
+      income: "", // Alterado de valor padrão para vazio para forçar escolha
+      vulnerability: "", // Alterado de valor padrão para vazio
       phone: "",
       address: "",
     });
@@ -90,6 +97,7 @@ export default function PainelSocialMobile() {
     const [pullStartY, setPullStartY] = useState(0);
     const [pullMoveY, setPullMoveY] = useState(0);
     const [isPulling, setIsPulling] = useState(false);
+    const unreadCount = getUnreadCount();
     
     useEffect(() => {
       loadFamilias();
@@ -223,6 +231,13 @@ export default function PainelSocialMobile() {
 
   const saveFamily = async () => {
     if (!formData.name) return setToast({ show: true, message: 'Nome é obrigatório', type: 'error' });
+    
+    // Validações adicionais solicitadas para garantir integridade dos dados
+    if (!formData.income) return setToast({ show: true, message: 'Por favor, informe a Renda Familiar', type: 'warning' });
+    if (!formData.vulnerability) return setToast({ show: true, message: 'Informe o nível de Vulnerabilidade', type: 'warning' });
+    if (!formData.address) return setToast({ show: true, message: 'Endereço é obrigatório para o mapa', type: 'error' });
+    if (!formData.phone) return setToast({ show: true, message: 'Telefone é obrigatório para contato', type: 'error' });
+
     try {
       const familyData = {
         nomeCompleto: formData.name,
@@ -265,7 +280,7 @@ export default function PainelSocialMobile() {
   const resetForm = () => {
     setShowForm(false);
     setEditingFamily(null);
-    setFormData({ name: "", members: 1, children: 0, elderly: 0, income: "Sem renda", vulnerability: "Média", phone: "", address: "" });
+    setFormData({ name: "", members: 1, children: 0, elderly: 0, income: "", vulnerability: "", phone: "", address: "" });
   };
 
   const openEdit = (f) => {
@@ -286,6 +301,19 @@ export default function PainelSocialMobile() {
     } catch (error) {
       setToast({ show: true, message: 'Erro ao atualizar', type: 'error' });
     }
+  };
+
+  const exportCSV = () => {
+    const headers = ["Nome", "Vulnerabilidade", "Membros", "Crianças", "Idosos", "Renda", "Telefone", "Endereço", "Status"];
+    const rows = filteredFamilies.map((f) => [f.name, f.vulnerability, f.members, f.children, f.elderly, f.income, f.phone || "", f.address || "", f.status]);
+    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `familias-mobile-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    setToast({ show: true, message: 'Relatório exportado com sucesso!', type: 'success' });
   };
 
   // Pull to Refresh Handlers
@@ -346,7 +374,9 @@ export default function PainelSocialMobile() {
               onClick={() => setShowNotifications(!showNotifications)}
             >
               <Bell size={20} />
-              <span className="notification-badge" />
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
             </button>
             
             <AnimatePresence>
@@ -376,7 +406,7 @@ export default function PainelSocialMobile() {
               className="user-profile-trigger" 
               onClick={() => setShowUserDropdown(!showUserDropdown)}
             >
-              <div className="user-avatar">AD</div>
+              <div className="user-avatar">{(user?.nome || 'U').substring(0, 2).toUpperCase()}</div>
               <ChevronDown size={16} className="text-muted" />
             </button>
 
@@ -388,7 +418,7 @@ export default function PainelSocialMobile() {
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
                   className="dropdown-menu"
                 >
-                  <button className="dropdown-item" onClick={() => { setShowUserDropdown(false); setToast({ show: true, message: "Abrindo perfil...", type: 'info' }); }}>
+                  <button className="dropdown-item" onClick={() => { setShowUserDropdown(false); navigate('/perfil'); }}>
                     <User size={18} /> Perfil
                   </button>
                   <button className="dropdown-item" onClick={() => { setShowUserDropdown(false); navigate("/meus-pedidos"); }}>
@@ -401,7 +431,7 @@ export default function PainelSocialMobile() {
                     <Settings size={18} /> Configurações
                   </button>
                   <div className="dropdown-divider" />
-                  <button className="dropdown-item danger" onClick={() => { setShowUserDropdown(false); navigate("/"); }}>
+                  <button className="dropdown-item danger" onClick={() => { setShowUserDropdown(false); logout(); navigate("/"); }}>
                     <LogOut size={18} /> Sair
                   </button>
                 </motion.div>
@@ -422,33 +452,6 @@ export default function PainelSocialMobile() {
       </div>
 
       <div className="panel-body">
-        <aside className="sidebar">
-          <div className="sidebar-stats">
-            <div className="stat-hero">
-              <span className="stat-hero-value">{stats.total}</span>
-              <span className="stat-hero-label">Famílias Cadastradas</span>
-            </div>
-            <div className="stat-grid">
-              <div className="stat-box"><span className="stat-box-value">{stats.pessoas}</span><span className="stat-box-label">Pessoas</span></div>
-              <div className="stat-box"><span className="stat-box-value">{stats.criancas}</span><span className="stat-box-label">Crianças</span></div>
-              <div className="stat-box"><span className="stat-box-value">{stats.idosos}</span><span className="stat-box-label">Idosos</span></div>
-              <div className="stat-box alert"><span className="stat-box-value">{stats.altaVuln}</span><span className="stat-box-label">Crítico</span></div>
-            </div>
-          </div>
-          <div className="sidebar-section">
-            <div className="section-header">Resumo de Status</div>
-            <div className="status-summary">
-              <div className="status-row"><span className="status-indicator green" /><span className="status-label">Em dia</span><span className="status-value">{stats.total - stats.pendentes - stats.atendidos}</span></div>
-              <div className="status-row"><span className="status-indicator amber" /><span className="status-label">Pendentes</span><span className="status-value">{stats.pendentes}</span></div>
-              <div className="status-row"><span className="status-indicator blue" /><span className="status-label">Atendidos</span><span className="status-value">{stats.atendidos}</span></div>
-            </div>
-          </div>
-          <div className="sidebar-actions">
-            <button className="action-primary" onClick={() => setShowForm(true)}><Plus size={18} /> Nova Família</button>
-            <button className="action-secondary" onClick={() => {}}><Download size={18} /> Exportar Relatório</button>
-          </div>
-        </aside>
-
         <main className="main-content">
           <AnimatePresence mode="wait">
             {view === "stats" ? (
@@ -511,6 +514,12 @@ export default function PainelSocialMobile() {
                     <div className="status-row"><span className="status-indicator amber" /><span className="status-label">Pendentes</span><span className="status-value">{stats.pendentes}</span></div>
                     <div className="status-row"><span className="status-indicator blue" /><span className="status-label">Atendidos</span><span className="status-value">{stats.atendidos}</span></div>
                   </div>
+                </div>
+
+                <div className="sidebar-actions" style={{ marginTop: '24px' }}>
+                  <button className="action-secondary" onClick={exportCSV} style={{ width: '100%', justifyContent: 'center' }}>
+                    <Download size={18} /> Exportar Relatório CSV
+                  </button>
                 </div>
               </motion.div>
             ) : (
@@ -674,6 +683,7 @@ export default function PainelSocialMobile() {
                           comercios={comerciosData}
                           ongs={ongsData}
                           onFamiliaClick={setSelectedFamily} 
+                          onPedidoClick={setSelectedPedido}
                           layers={mapLayers} 
                         />
                       </Suspense>
@@ -754,6 +764,92 @@ export default function PainelSocialMobile() {
       </AnimatePresence>
 
       <AnimatePresence>
+        {selectedPedido && (
+          <div className="modal-overlay" onClick={() => setSelectedPedido(null)}>
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="modal" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-head">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                  <div style={{ 
+                    background: selectedPedido.tipo === 'pedido' ? '#fee2e2' : '#dcfce7', 
+                    color: selectedPedido.tipo === 'pedido' ? '#dc2626' : '#16a34a',
+                    padding: '10px', 
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {selectedPedido.tipo === 'pedido' ? <AlertTriangle size={24} /> : <Heart size={24} />}
+                  </div>
+                  <div>
+                    <h2 style={{ fontSize: '1.1rem', margin: 0, lineHeight: 1.2 }}>{selectedPedido.titulo}</h2>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedPedido.categoria}</span>
+                  </div>
+                </div>
+                <button className="modal-close" onClick={() => setSelectedPedido(null)}><X size={20} /></button>
+              </div>
+              <div className="modal-body">
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                  <Badge variant={selectedPedido.status}>{selectedPedido.status}</Badge>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f1f5f9', padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem', color: '#64748b' }}>
+                    <Clock size={12} />
+                    <span>{new Date(selectedPedido.createdAt).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', marginBottom: '20px' }}>
+                  <h3 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1e293b', marginBottom: '8px', marginTop: 0 }}>Descrição</h3>
+                  <p style={{ fontSize: '0.95rem', color: '#475569', lineHeight: '1.6', margin: 0 }}>
+                    {selectedPedido.descricao || "Sem descrição detalhada."}
+                  </p>
+                </div>
+
+                <div className="detail-list">
+                  <div className="detail-row">
+                    <User size={18} className="text-muted" /> 
+                    <div style={{ flex: 1 }}>
+                      <span style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase' }}>Solicitante</span>
+                      <span style={{ color: '#1e293b', fontWeight: '500' }}>{selectedPedido.usuario?.nome || selectedPedido.usuario?.nomeCompleto || "Usuário da Comunidade"}</span>
+                    </div>
+                  </div>
+                  <div className="detail-row">
+                    <MapPin size={18} className="text-muted" /> 
+                    <div style={{ flex: 1 }}>
+                      <span style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase' }}>Localização</span>
+                      <span style={{ color: '#1e293b', fontWeight: '500' }}>{selectedPedido.endereco?.logradouro || "Localização aproximada no mapa"}</span>
+                    </div>
+                  </div>
+                  {selectedPedido.usuario?.telefone && (
+                    <div className="detail-row">
+                      <Phone size={18} className="text-muted" /> 
+                      <div style={{ flex: 1 }}>
+                        <span style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase' }}>Contato</span>
+                        <span style={{ color: '#1e293b', fontWeight: '500' }}>{selectedPedido.usuario.telefone}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-foot">
+                <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => {
+                   navigate(`/chat/${selectedPedido.id}`);
+                   setSelectedPedido(null);
+                }}>
+                  <MessageSquare size={18} /> Entrar em Contato
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
         {showForm && (
           <div className="modal-overlay" onClick={resetForm}>
             <motion.div 
@@ -782,6 +878,7 @@ export default function PainelSocialMobile() {
                   <div className="field">
                     <label>Renda Mensal</label>
                     <select value={formData.income} onChange={(e) => setFormData({ ...formData, income: e.target.value })}>
+                      <option value="" disabled>Selecione a renda...</option>
                       <option>Sem renda</option>
                       <option>Auxílio / Bolsa</option>
                       <option>1 salário mínimo</option>
@@ -791,6 +888,7 @@ export default function PainelSocialMobile() {
                   <div className="field">
                     <label>Vulnerabilidade</label>
                     <select value={formData.vulnerability} onChange={(e) => setFormData({ ...formData, vulnerability: e.target.value })}>
+                      <option value="" disabled>Selecione o nível...</option>
                       <option>Baixa</option>
                       <option>Média</option>
                       <option>Alta</option>

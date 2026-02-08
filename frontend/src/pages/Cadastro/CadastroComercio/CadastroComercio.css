@@ -401,7 +401,7 @@
   outline: none;
   background: #fff;
   border-color: var(--commerce-color);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
 }
 
 .comercio-form-input:focus ~ .comercio-field-icon {
@@ -460,7 +460,7 @@
 .comercio-selectable-item:hover .comercio-selectable-card {
   border-color: var(--commerce-color-light);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
 .comercio-selectable-item input:checked + .comercio-selectable-card {
@@ -595,6 +595,10 @@
   color: #1e293b;
 }
 
+.comercio-btn-prev:active {
+  transform: scale(0.98);
+}
+
 .comercio-btn-next,
 .comercio-btn-finish {
   color: white;
@@ -605,6 +609,11 @@
 .comercio-btn-finish:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.comercio-btn-next:active,
+.comercio-btn-finish:active {
+  transform: translateY(0);
 }
 
 .comercio-btn-cancel {

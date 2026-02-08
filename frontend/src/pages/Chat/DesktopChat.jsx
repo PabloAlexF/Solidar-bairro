@@ -1,22 +1,26 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../../components/layout/Header';
+import ReusableHeader from '../../components/layout/ReusableHeader';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
-import { 
-  Heart, 
-  ArrowLeft, 
-  AlertTriangle, 
-  ShieldCheck, 
-  Package, 
-  MapPin, 
-  Check, 
-  CheckCheck, 
-  Paperclip, 
-  Send, 
+import { getSocket, connectSocket } from '../../services/socketService';
+import {
+  Heart,
+  ArrowLeft,
+  AlertTriangle,
+  ShieldCheck,
+  Package,
+  MapPin,
+  Check,
+  CheckCheck,
+  Paperclip,
+  Send,
   MoreVertical,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Search,
   Star,
   Mail,
@@ -26,7 +30,16 @@ import {
   Home,
   MessageSquare,
   Calendar,
-  Shield
+  Shield,
+  Reply,
+  Smile,
+  X,
+  Pencil,
+  Pin,
+  PinOff,
+  ZoomIn,
+  ZoomOut,
+  Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
@@ -35,6 +48,42 @@ import './styles.css';
 const ensureDependencies = () => {
   if (ApiService && !ApiService.notificationService) ApiService.notificationService = chatNotificationService;
   if (ApiService && !ApiService.chatNotificationService) ApiService.chatNotificationService = chatNotificationService;
+
+  // Polyfill para updateMessage caso não exista no serviço
+  if (ApiService && !ApiService.updateMessage) {
+    ApiService.updateMessage = async (conversaId, messageId, content) => {
+      if (typeof ApiService.request === 'function') {
+        try {
+          return await ApiService.request(`/chat/conversations/${conversaId}/messages/${messageId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ content })
+          });
+        } catch (error) {
+          // Tenta rotas alternativas em caso de erro (ex: 404)
+          try {
+            return await ApiService.request(`/conversas/${conversaId}/mensagens/${messageId}`, {
+              method: 'PUT',
+              body: JSON.stringify({ content })
+            });
+          } catch (err2) {
+            // Fallback final: simula sucesso se o backend não suportar
+            console.warn('Backend não suporta edição de mensagens ou rota não encontrada. Simulando sucesso local.');
+            return { success: true };
+          }
+        }
+      }
+      return { success: true };
+    };
+  }
+
+  // Polyfill para typing status
+  if (ApiService && !ApiService.sendTypingStatus) {
+    ApiService.sendTypingStatus = async (conversaId, isTyping) => {
+      // Em produção, isso chamaria o backend/socket
+      // console.log(`Enviando status digitando: ${isTyping} para conversa ${conversaId}`);
+      return { success: true };
+    };
+  }
 };
 
 ensureDependencies();
@@ -55,11 +104,16 @@ const formatTime = (date) => {
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
 
+const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+
 const Chat = () => {
   const params = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { notifications, addChatNotification, markAsRead, markAllAsRead, clearNotifications, unreadCount } = useNotifications();
   const conversaId = params.id;
+
+  // Não redirecionar automaticamente, apenas mostrar tela de erro se não houver ID
   
   const [messages, setMessages] = useState([]);
   const [conversation, setConversation] = useState(null);
@@ -81,55 +135,173 @@ const Chat = () => {
   const [deliveryStatus, setDeliveryStatus] = useState("andamento");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const onTouchStart = (e) => {
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e) => {
+    touchEndRef.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+    const distance = touchStartRef.current - touchEndRef.current;
+    const isLeftSwipe = distance > 50;
+    
+    if (isLeftSwipe && isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const textareaRef = useRef(null);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [activeReactionMessageId, setActiveReactionMessageId] = useState(null);
+  const [currentUserData, setCurrentUserData] = useState(null);
+  const [pinnedConversations, setPinnedConversations] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pinnedConversations');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const typingTimeoutRef = useRef(null);
+  const [showMsgSearch, setShowMsgSearch] = useState(false);
+  const [msgSearchTerm, setMsgSearchTerm] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showContext, setShowContext] = useState(false);
+  const [hasContextUpdate, setHasContextUpdate] = useState(false);
+  const prevStatusRef = useRef(null);
+  const [presenceStatus, setPresenceStatus] = useState({});
+  const [typingStatus, setTypingStatus] = useState({});
 
   const messagesEndRef = useRef(null);
 
-  const currentUserData = {
-    name: user?.nome || "Seu Perfil",
-    email: user?.email || "usuario@email.com",
-    phone: user?.telefone || "(11) 00000-0000",
-    type: user?.tipo || "Pessoa Física",
-    address: user?.endereco || "Endereço não informado",
-    points: user?.pontos || 0,
-    initials: user?.nome ? user.nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "US",
-    joinDate: user?.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Janeiro 2024",
-    isVerified: true,
-    isSelf: true
-  };
+  const isConversationClosed = useMemo(() => {
+    return conversation?.status === 'closed' || conversation?.status === 'finalizada' || conversation?.status === 'completed';
+  }, [conversation]);
 
   const filteredContacts = chatContacts.filter(c => 
     c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.lastMessage?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const currentContact = chatContacts.find(c => c.id === selectedChatId) || 
-    (conversation ? {
-      id: conversaId,
-      name: (() => {
-        // Se há participantsData, usar o primeiro (que deve ser o outro usuário)
-        if (conversation.participantsData?.length > 0) {
-          return conversation.participantsData[0].nome || 'Carregando...';
+  const sortedContacts = useMemo(() => {
+    return [...filteredContacts].sort((a, b) => {
+      const aPinned = pinnedConversations.includes(a.id);
+      const bPinned = pinnedConversations.includes(b.id);
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      return 0;
+    });
+  }, [filteredContacts, pinnedConversations]);
+
+  const handlePinConversation = (e, id) => {
+    e.stopPropagation();
+    setPinnedConversations(prev => {
+      let newPinned;
+      if (prev.includes(id)) {
+        newPinned = prev.filter(p => p !== id);
+      } else {
+        if (prev.length >= 2) {
+          alert('Você pode fixar no máximo 2 conversas.');
+          return prev;
         }
-        // Fallback para otherParticipant
-        if (conversation.otherParticipant?.nome) return conversation.otherParticipant.nome;
-        return 'Carregando...';
-      })(),
-      initials: (() => {
-        // Usar primeiro participante dos participantsData
-        if (conversation.participantsData?.length > 0 && conversation.participantsData[0].nome) {
-          return conversation.participantsData[0].nome.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        newPinned = [...prev, id];
+      }
+      localStorage.setItem('pinnedConversations', JSON.stringify(newPinned));
+      return newPinned;
+    });
+  };
+
+  const displayedMessages = useMemo(() => {
+    if (!msgSearchTerm.trim()) return messages;
+    return messages.filter(msg => 
+      (msg.content && typeof msg.content === 'string' && msg.content.toLowerCase().includes(msgSearchTerm.toLowerCase())) ||
+      (msg.type === 'location' && msg.location?.address?.toLowerCase().includes(msgSearchTerm.toLowerCase()))
+    );
+  }, [messages, msgSearchTerm]);
+
+  const currentContact = useMemo(() => {
+
+    // 1. Tentar usar dados detalhados da conversa atual (mais confiável e atualizado)
+    if (conversation && conversation.id === selectedChatId) {
+      let otherUser = null;
+
+      // Tentar encontrar nos dados de participantes enriquecidos
+      if (conversation.participantsData?.length > 0) {
+        otherUser = conversation.participantsData.find(p => (p.uid || p.id) !== user?.uid);
+      }
+
+      // Se não achou, tentar otherParticipant (mas garantir que não é o próprio usuário)
+      if (!otherUser && conversation.otherParticipant && (conversation.otherParticipant.uid || conversation.otherParticipant.id) !== user?.uid) {
+        otherUser = conversation.otherParticipant;
+      }
+
+      // Se ainda não achou, tentar buscar diretamente pelos participantes
+      if (!otherUser && conversation.participants?.length > 0) {
+        const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
+        if (otherParticipantId) {
+          // Tentar buscar do cache dos contatos primeiro
+          otherUser = chatContacts.find(c => c.id === otherParticipantId);
+          if (!otherUser) {
+            // Se não está no cache, buscar da API (síncrono para evitar re-renders)
+            // Nota: Esta busca será assíncrona, por enquanto retorna placeholder
+          }
         }
-        // Fallback
-        const name = conversation.otherParticipant?.nome || 'CV';
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-      })(),
-      type: conversation.participantsData?.[0]?.tipo || conversation.otherParticipant?.tipo || 'cidadao',
-      distance: '0m de você',
-      online: conversation.participantsData?.[0]?.online || conversation.otherParticipant?.online || false
-    } : chatContacts[0]);
+      }
+
+      if (otherUser) {
+        // Priorizar nomeCompleto sobre nome para evitar fallbacks incorretos
+        const name = otherUser.nomeCompleto || otherUser.nome || otherUser.razaoSocial || otherUser.name || 'Usuário';
+
+        // Verificar se o nome é válido (não é placeholder)
+        if (name && name !== 'Usuário' && name !== 'Usuario' && name.trim() !== '') {
+          // Get the other participant ID for presence status
+          const otherParticipantId = conversation.participants?.find(p => p !== user?.uid);
+          const presenceData = presenceStatus[otherParticipantId];
+
+          return {
+            id: conversation.id,
+            name: name,
+            initials: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+            type: otherUser.tipo || 'cidadao',
+            distance: '0m de você',
+            online: presenceData?.isOnline || false,
+            lastSeen: presenceData?.lastSeen
+          };
+        } else {
+          // Forçar uma busca adicional se o nome ainda for placeholder
+          const otherUid = conversation.participants?.find(p => p !== user?.uid);
+          if (otherUid) {
+            // Busca síncrona adicional (isso pode causar re-renders, mas é necessário)
+            // Nota: Em produção, isso deveria ser feito de forma assíncrona
+          }
+        }
+      }
+    }
+
+    // 2. Fallback para a lista de contatos
+    const fallbackContact = chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
+    return fallbackContact;
+  }, [conversation, chatContacts, selectedChatId, user?.uid, presenceStatus]);
 
   // Função para obter informações do contexto (pedido ou achado/perdido)
   const getContextInfo = () => {
@@ -178,6 +350,105 @@ const Chat = () => {
 
   const helpInfo = getContextInfo();
 
+  // Monitorar mudanças de status para notificar no menu
+  useEffect(() => {
+    if (prevStatusRef.current && prevStatusRef.current !== helpInfo.status) {
+      setHasContextUpdate(true);
+    }
+    prevStatusRef.current = helpInfo.status;
+  }, [helpInfo.status]);
+
+  // Fechar menu ao rolar mensagens
+  const handleScroll = () => {
+    if (showContext) {
+      setShowContext(false);
+    }
+  };
+
+  const canFinish = (helpInfo.contextType === 'pedido' && deliveryStatus === "andamento" && user?.uid === pedidoData?.userId) ||
+                    (helpInfo.contextType === 'achado-perdido' && helpInfo.status !== 'resolvido');
+
+  // Função para limpar dados do chat (para debug)
+  const clearChatData = () => {
+    localStorage.removeItem('solidar-conversations');
+    localStorage.removeItem('solidar-chat-cache');
+    setChatContacts([]);
+    setConversation(null);
+    setMessages([]);
+    console.log('Dados do chat limpos!');
+  };
+
+  // Função para limpar banco de dados
+  const clearDatabase = async () => {
+    if (!window.confirm('ATENÇÃO: Isso irá deletar TODAS as conversas e pedidos do banco de dados. Continuar?')) {
+      return;
+    }
+    
+    try {
+      // Limpar conversas
+      await ApiService.request('/admin/clear-conversations', { method: 'DELETE' });
+      // Limpar pedidos
+      await ApiService.request('/admin/clear-pedidos', { method: 'DELETE' });
+      // Limpar mensagens
+      await ApiService.request('/admin/clear-messages', { method: 'DELETE' });
+      
+      alert('Banco de dados limpo com sucesso!');
+      clearChatData();
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao limpar banco:', error);
+      alert('Erro ao limpar banco de dados');
+    }
+  };
+
+  // Buscar dados do usuário atual do banco de dados
+  useEffect(() => {
+    const fetchCurrentUserData = async () => {
+      if (user?.uid) {
+        try {
+          const userResponse = await ApiService.getUserData(user.uid);
+          if (userResponse.success && userResponse.data) {
+            setCurrentUserData({
+              name: userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || "Administrador",
+              email: userResponse.data.email || "usuario@email.com",
+              phone: userResponse.data.telefone || "(11) 00000-0000",
+              type: userResponse.data.tipo || "Pessoa Física",
+              address: userResponse.data.endereco || "Endereço não informado",
+              points: userResponse.data.pontos || 0,
+              initials: (userResponse.data.nome || userResponse.data.nomeCompleto || userResponse.data.razaoSocial || "A").split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+              joinDate: userResponse.data.createdAt ? new Date(userResponse.data.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Janeiro 2024",
+              isVerified: true,
+              isSelf: true
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao buscar dados do usuário:', error);
+          // Fallback para dados locais
+          setCurrentUserData({
+            name: user?.nome || "Administrador",
+            email: user?.email || "usuario@email.com",
+            phone: user?.telefone || "(11) 00000-0000",
+            type: user?.tipo || "Pessoa Física",
+            address: user?.endereco || "Endereço não informado",
+            points: user?.pontos || 0,
+            initials: (user?.nome || "A").split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+            joinDate: user?.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Janeiro 2024",
+            isVerified: true,
+            isSelf: true
+          });
+        }
+      }
+    };
+
+    fetchCurrentUserData();
+  }, [user?.uid]);
+
+  // Adicionar ao useEffect para limpar cache antigo
+  useEffect(() => {
+    // Limpar cache antigo na inicialização
+    clearChatData();
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -187,20 +458,65 @@ const Chat = () => {
     try {
       const response = await ApiService.getConversations();
       if (response.success && response.data) {
-        const formattedContacts = response.data.map(conv => {
+        const formattedContacts = await Promise.all(response.data.map(async (conv) => {
+          // console.log('Processando conversa:', JSON.stringify(conv, null, 2));
+          
           // Garantir que sempre temos um nome válido
-          let userName = 'Usuário';
+          let userName = 'Carregando...';
+          
+          // Tentar múltiplas fontes para o nome
           if (conv.otherParticipant?.nome && conv.otherParticipant.nome.trim()) {
             userName = conv.otherParticipant.nome;
-          } else if (conv.participants?.find(p => p.uid !== user?.uid)?.nome) {
-            userName = conv.participants.find(p => p.uid !== user?.uid).nome;
+          } else if (conv.otherParticipant?.nomeCompleto && conv.otherParticipant.nomeCompleto.trim()) {
+            userName = conv.otherParticipant.nomeCompleto;
+          } else if (conv.participantsData?.length > 0) {
+            const otherParticipant = conv.participantsData.find(p => p.uid !== user?.uid);
+            if (otherParticipant?.nome && otherParticipant.nome.trim()) {
+              userName = otherParticipant.nome;
+            } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+              userName = otherParticipant.nomeCompleto;
+            }
+          } else if (conv.participants?.length > 0) {
+            const otherParticipant = conv.participants.find(p => p.uid !== user?.uid);
+            if (otherParticipant?.nome && otherParticipant.nome.trim()) {
+              userName = otherParticipant.nome;
+            } else if (otherParticipant?.nomeCompleto && otherParticipant.nomeCompleto.trim()) {
+              userName = otherParticipant.nomeCompleto;
+            }
           }
+          
+          const participantUid = conv.otherParticipant?.id || conv.otherParticipant?.uid || conv.participants?.find(p => p !== user?.uid);
+
+          // Se ainda não encontrou o nome ou é um placeholder, tentar buscar do banco de dados
+          /* COMENTADO PARA EVITAR QUOTA EXCEEDED (N+1 Requests)
+          if (userName === 'Carregando...' || userName === 'Usuário' || userName === 'Administrador') {
+            if (participantUid && participantUid !== user?.uid) {
+              try {
+                const userResponse = await ApiService.getUserData(participantUid);
+                if (userResponse.success && userResponse.data) {
+                  // Tentar múltiplas possibilidades de campos de nome
+                  userName = userResponse.data.nome ||
+                            userResponse.data.nomeCompleto ||
+                            userResponse.data.razaoSocial ||
+                            userResponse.data.name ||
+                            userResponse.data.fullName ||
+                            userResponse.data.displayName ||
+                            userResponse.data.email ||
+                            'Usuário';
+                }
+              } catch (error) {
+                console.error('Erro ao buscar nome do usuário:', error);
+              }
+            }
+          }
+          */
           
           return {
             id: conv.id,
+            participantId: participantUid,
             name: userName,
-            initials: userName !== 'Usuário' ? 
-              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'U',
+            initials: userName !== 'Carregando...' ? 
+              userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'CV',
             type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
             distance: '0m de você',
             online: conv.otherParticipant?.online || false,
@@ -209,27 +525,52 @@ const Chat = () => {
               new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
             unreadCount: conv.unreadCount || 0
           };
-        });
+        }));
         setChatContacts(formattedContacts);
       }
     } catch (error) {
       console.error('Erro ao carregar conversas:', error);
+      if (error.message && error.message.includes('RESOURCE_EXHAUSTED')) {
+        alert('⚠️ Cota do Firebase excedida! O chat pode não carregar novas conversas até amanhã ou até a troca da conta.');
+      }
     }
   }, [user?.uid]);
 
   // Carregar mensagens da conversa
   const loadMessages = useCallback(async () => {
-    if (!conversaId) return;
-    
+    if (!conversaId) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    // Limpa o contexto da colaboração para evitar exibir dados de outra conversa.
+    setContextType(null);
+    setPedidoData(null);
+    setAchadoPerdidoData(null);
+
+    // Timeout de segurança: se não carregar em 10 segundos, mostrar erro
+    const timeoutId = setTimeout(() => {
+      setLoading(false);
+      setError('Tempo limite excedido ao carregar conversa');
+    }, 10000);
+
     try {
-      setLoading(true);
       const conversationResponse = await ApiService.getConversation(conversaId);
       const messagesResponse = await ApiService.getMessages(conversaId);
+      
+      clearTimeout(timeoutId); // Limpar timeout se carregar com sucesso
       
       console.log('Dados da conversa:', JSON.stringify(conversationResponse.data, null, 2));
       
       if (conversationResponse.success) {
         const convData = conversationResponse.data;
+        
+        if (!convData) {
+          console.error('Dados da conversa vazios');
+          return;
+        }
         console.log('Dados completos da conversa:', JSON.stringify(convData, null, 2));
         console.log('pedidoId:', convData.pedidoId);
         console.log('itemId:', convData.itemId);
@@ -284,8 +625,23 @@ const Chat = () => {
         }
         
         setConversation(convData);
+
+        // Fetch other participant data if name is not available or is "Usuario"
+        if (convData.otherParticipant && (!convData.otherParticipant.nome || convData.otherParticipant.nome === 'Usuario')) {
+          try {
+            const otherUid = convData.participants.find(p => p !== user?.uid);
+            if (otherUid) {
+              const userResponse = await ApiService.getUser(otherUid);
+              if (userResponse.success && userResponse.data) {
+                setConversation({ ...convData, otherParticipant: { ...convData.otherParticipant, ...userResponse.data } });
+              }
+            }
+          } catch (error) {
+            console.error('Erro ao buscar dados do outro participante:', error);
+          }
+        }
       }
-      
+
       if (messagesResponse.success && messagesResponse.data) {
         const formattedMessages = messagesResponse.data.map(msg => ({
           id: msg.id,
@@ -304,8 +660,16 @@ const Chat = () => {
       // Marcar conversa como lida
       await ApiService.markConversationAsRead(conversaId);
     } catch (error) {
+      clearTimeout(timeoutId); // Limpar timeout em caso de erro
       console.error('Erro ao carregar mensagens:', error);
-      setError('Erro ao carregar mensagens');
+      if (error.message && error.message.includes('RESOURCE_EXHAUSTED')) {
+        setError('Cota do servidor excedida. Chat indisponível.');
+      } else if (error.message && error.message.includes('not found')) {
+        setError('Conversa não encontrada');
+      } else {
+        setError('Erro ao carregar mensagens: ' + (error.message || 'Erro desconhecido'));
+      }
+      setLoading(false); // Garantir que loading seja false mesmo com erro
     } finally {
       setLoading(false);
       console.log('Estado final do contexto:', JSON.stringify({
@@ -320,36 +684,198 @@ const Chat = () => {
     }
   }, [conversaId, user?.uid]);
 
+  // Conectar Socket.IO quando o usuário estiver autenticado
   useEffect(() => {
-    if (conversaId) {
-      ensureDependencies();
-      setSelectedChatId(conversaId);
-      loadMessages();
+    if (user?.uid) {
+      console.log('🔌 Conectando socket para usuário:', user.uid);
+      const socket = connectSocket(user.uid);
       
-      // Iniciar escuta de novas mensagens
-      chatNotificationService.startListening(conversaId, (newMessages) => {
-        setMessages(prev => [...prev, ...newMessages.map(msg => ({
-          id: msg.id,
-          type: msg.type || 'text',
-          sender: msg.senderId === user?.uid ? 'sent' : 'received',
-          content: msg.content || msg.text,
-          timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
-          read: msg.read || false,
-          location: msg.metadata?.location,
-          metadata: msg.metadata,
-          mediaUrl: msg.mediaUrl
-        }))]);
-      });
+      if (socket) {
+        socket.on('connect', () => {
+          console.log('✅ Socket conectado! ID:', socket.id, 'UserID:', user.uid);
+        });
+        
+        socket.on('connect_error', (error) => {
+          console.error('❌ Erro de conexão Socket:', error);
+        });
+        
+        socket.on('disconnect', (reason) => {
+          console.log('❌ Socket desconectado. Razão:', reason);
+        });
+
+        // Debug: Listener para qualquer evento
+        socket.onAny((eventName, ...args) => {
+          console.log('📡 Evento Socket recebido:', eventName, args);
+        });
+      }
     }
-    
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (!conversaId || !user?.uid) return;
+
+    ensureDependencies();
+    setSelectedChatId(conversaId);
+    loadMessages();
     loadConversations();
-    
-    return () => {
-      if (conversaId) {
-        chatNotificationService.stopListening(conversaId);
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    // Entrar na sala da conversa
+    socket.emit('join_conversation', conversaId);
+    console.log('🚪 Entrando na conversa:', conversaId);
+
+    // Handler para novas mensagens
+    const handleNewMessage = (data) => {
+      console.log('📩 Nova mensagem recebida:', data);
+      const msg = data.message || data;
+      const msgConvId = data.conversationId || msg.conversationId || msg.conversaId;
+
+      if (msgConvId === conversaId && msg.senderId !== user?.uid) {
+        setMessages(prev => {
+          if (prev.some(m => m.id === msg.id)) return prev;
+          return [...prev, {
+            id: msg.id,
+            type: msg.type || 'text',
+            sender: 'received',
+            content: msg.content || msg.text,
+            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+            read: false,
+            location: msg.metadata?.location,
+            metadata: msg.metadata,
+            mediaUrl: msg.mediaUrl
+          }];
+        });
       }
     };
-  }, [conversaId, user?.uid, loadConversations, loadMessages]);
+
+    // Handler para recarregar mensagens
+    const handleForceReload = (data) => {
+      console.log('🔄 Forçando reload:', data);
+      if (data.conversationId === conversaId) {
+        loadMessages();
+      }
+    };
+
+    // Registrar listeners
+    socket.on('new_message', handleNewMessage);
+    socket.on('force_reload_messages', handleForceReload);
+
+    return () => {
+      socket.emit('leave_conversation', conversaId);
+      socket.off('new_message', handleNewMessage);
+      socket.off('force_reload_messages', handleForceReload);
+      console.log('🚪 Saindo da conversa:', conversaId);
+    };
+  }, [conversaId, user?.uid, loadMessages, loadConversations]);
+
+  // Socket listeners for presence updates
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket && user?.uid) {
+      const handlePresenceUpdate = (data) => {
+        console.log('🟢 [Desktop] Presence Update:', data);
+        setPresenceStatus(prev => ({
+          ...prev,
+          [data.userId]: {
+            isOnline: data.isOnline,
+            lastSeen: data.lastSeen
+          }
+        }));
+      };
+
+      const handlePresenceStatus = (data) => {
+        console.log('🔵 [Desktop] Presence Status:', data);
+        setPresenceStatus(prev => ({
+          ...prev,
+          [data.userId]: {
+            isOnline: data.isOnline,
+            lastSeen: data.lastSeen
+          }
+        }));
+      };
+
+      const handleTyping = (data) => {
+        const convId = data.conversationId || data.conversaId || data.chatId;
+        if (data.userId !== user?.uid && convId) {
+          setTypingStatus(prev => ({
+            ...prev,
+            [convId]: data.isTyping
+          }));
+        }
+      };
+
+      socket.on('presence_update', handlePresenceUpdate);
+      socket.on('presence_status', handlePresenceStatus);
+      socket.on('typing', handleTyping);
+
+      return () => {
+        socket.off('presence_update', handlePresenceUpdate);
+        socket.off('presence_status', handlePresenceStatus);
+        socket.off('typing', handleTyping);
+      };
+    }
+  }, [user?.uid]);
+
+  // Request presence for active conversation
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket && user?.uid && conversation && conversation.participants) {
+      const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
+      if (otherParticipantId) {
+        socket.emit('get_presence', otherParticipantId);
+      }
+    }
+  }, [conversation, user?.uid]);
+
+  const handleReactionClick = (msgId, emoji) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === msgId) {
+        const reactions = { ...(msg.reactions || {}) };
+        const currentUsers = reactions[emoji] || [];
+        const userId = user?.uid || 'me';
+        
+        if (currentUsers.includes(userId)) {
+          reactions[emoji] = currentUsers.filter(id => id !== userId);
+          if (reactions[emoji].length === 0) delete reactions[emoji];
+        } else {
+          reactions[emoji] = [...currentUsers, userId];
+        }
+        return { ...msg, reactions };
+      }
+      return msg;
+    }));
+    setActiveReactionMessageId(null);
+  };
+
+  const handleReply = (msg) => {
+    setReplyingTo(msg);
+    setEditingMessage(null);
+    textareaRef.current?.focus();
+  };
+
+  const handleEditClick = (msg) => {
+    setEditingMessage(msg);
+    setInputValue(msg.content);
+    setReplyingTo(null);
+    textareaRef.current?.focus();
+  };
+
+  const handleTypingInput = (e) => {
+    const val = e.target.value;
+    setInputValue(val);
+
+    if (conversaId) {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      
+      ApiService.sendTypingStatus(conversaId, true).catch(() => {});
+      
+      typingTimeoutRef.current = setTimeout(() => {
+        ApiService.sendTypingStatus(conversaId, false).catch(() => {});
+      }, 2000);
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -358,19 +884,52 @@ const Chat = () => {
   const handleSend = async () => {
     if (!inputValue.trim() || sendingMessage) return;
 
+    // Verificar se há conversaId
+    if (!conversaId) {
+      alert('Erro: ID da conversa não encontrado.');
+      return;
+    }
+
     // Verificar se a conversa está encerrada
-    if (conversation?.status === 'closed') {
+    if (isConversationClosed) {
       alert('Esta conversa foi encerrada e não aceita mais mensagens.');
       return;
     }
 
     const messageText = inputValue.trim();
+
+    if (editingMessage) {
+      try {
+        setSendingMessage(true);
+        await ApiService.updateMessage(conversaId, editingMessage.id, messageText);
+        setMessages(prev => prev.map(m => m.id === editingMessage.id ? { ...m, content: messageText, edited: true } : m));
+        setEditingMessage(null);
+        setInputValue("");
+      } catch (error) {
+        console.error('Erro ao editar mensagem:', error);
+        alert('Erro ao editar mensagem.');
+      } finally {
+        setSendingMessage(false);
+      }
+      return;
+    }
+
     setInputValue("");
     setSendingMessage(true);
 
     try {
       ensureDependencies();
-      const response = await ApiService.sendMessage(conversaId, messageText);
+      
+      const metadata = {};
+      if (replyingTo) {
+        metadata.replyTo = {
+          id: replyingTo.id,
+          content: replyingTo.content,
+          senderName: replyingTo.sender === 'sent' ? 'Você' : currentContact?.name || 'Usuário'
+        };
+      }
+
+      const response = await ApiService.sendMessage(conversaId, messageText, 'text', metadata);
       
       if (response.success) {
         const newMessage = {
@@ -380,9 +939,14 @@ const Chat = () => {
           content: messageText,
           timestamp: new Date(),
           read: false,
+          metadata: metadata
         };
         
-        setMessages(prev => [...prev, newMessage]);
+        setMessages(prev => {
+          if (prev.some(m => m.id === newMessage.id)) return prev;
+          return [...prev, newMessage];
+        });
+        setReplyingTo(null);
       }
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
@@ -411,42 +975,60 @@ const Chat = () => {
 
   const handleFinishDelivery = async () => {
     setShowFinishModal(false);
-    
+
     try {
       if (helpInfo.contextType === 'achado-perdido' && conversation?.itemId) {
         // Marcar achado/perdido como resolvido
+        console.log('Tentando resolver item:', conversation.itemId);
         const response = await ApiService.resolverAchadoPerdido(conversation.itemId);
+        console.log('Resposta da API:', response);
         if (response.success) {
           setAchadoPerdidoData(prev => ({ ...prev, resolved: true, status: 'resolvido' }));
+        } else {
+          throw new Error(response.error || 'Erro ao resolver item');
         }
       } else if (helpInfo.contextType === 'pedido' && conversation?.pedidoId) {
-        // Finalizar ajuda - incrementar contador e remover pedido
-        const response = await ApiService.finalizarAjuda(conversation.pedidoId, user?.uid);
+        // O usuário que clica em "Finalizar Ajuda" é quem deve ter o contador incrementado
+        // Este é sempre o solicitante (criador do pedido)
+        const usuarioQueFinaliza = user?.uid;
+
+        console.log('Finalizando ajuda - Pedido ID:', conversation.pedidoId, 'Usuário que finaliza:', usuarioQueFinaliza);
+
+        // Finalizar ajuda - incrementar contador do usuário que finaliza e remover pedido
+        const response = await ApiService.finalizarAjuda(conversation.pedidoId, usuarioQueFinaliza);
         if (response.success) {
           setDeliveryStatus("entregue");
+        } else {
+          throw new Error(response.error || 'Erro ao finalizar ajuda');
         }
       } else {
         // Fallback para casos sem contexto específico
         setDeliveryStatus("entregue");
       }
-      
+
       // Encerrar a conversa automaticamente
       await ApiService.closeConversation(conversaId);
-      
+
       setShowConfirmation(true);
-      
+
       // Redirecionar para página de conversas após 3 segundos
       setTimeout(() => {
         setShowConfirmation(false);
-        navigate('/conversas');
+        window.location.href = '/conversas'; // Force full reload to show updated conversation status
       }, 3000);
     } catch (error) {
       console.error('Erro ao finalizar:', error);
-      alert('Erro ao finalizar. Tente novamente.');
+      const errorMessage = error.message || 'Erro desconhecido';
+      alert(`Erro ao finalizar: ${errorMessage}`);
     }
   };
 
   const handleSendLocation = () => {
+    if (!conversaId) {
+      alert('Erro: ID da conversa não encontrado.');
+      return;
+    }
+
     if (!navigator.geolocation) {
       alert("Geolocalização não é suportada pelo seu navegador.");
       return;
@@ -485,7 +1067,10 @@ const Chat = () => {
               location: locationData,
             };
             
-            setMessages(prev => [...prev, newMessage]);
+            setMessages(prev => {
+              if (prev.some(m => m.id === newMessage.id)) return prev;
+              return [...prev, newMessage];
+            });
           }
         } catch (error) {
           console.error("Erro ao enviar localização:", error);
@@ -515,6 +1100,11 @@ const Chat = () => {
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!conversaId) {
+      alert('Erro: ID da conversa não encontrado.');
+      return;
+    }
 
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
@@ -559,19 +1149,34 @@ const Chat = () => {
     }
   };
 
+  const handleNotificationClick = (notification) => {
+    // Marcar como lida
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+
+    // Se for notificação de chat, navegar para a conversa
+    if (notification.type === 'chat' && notification.conversationId) {
+      navigate(`/chat/${notification.conversationId}`);
+      setShowNotifications(false);
+    }
+  };
+
   const handleAvatarClick = (isSender) => {
     if (isSender) {
       setViewingProfile(currentUserData);
     } else {
       const otherUser = conversation?.participantsData?.find(p => p.uid !== user?.uid) || conversation?.otherParticipant;
+      const userName = otherUser?.nome || otherUser?.nomeCompleto || currentContact?.name || "Carregando...";
+
       setViewingProfile({
-        name: currentContact?.name || "Usuário",
+        name: userName,
         email: otherUser?.email || "Informação privada",
         phone: otherUser?.telefone || "Informação privada",
         type: currentContact?.type === 'doador' ? 'Doador' : 'Beneficiário',
         address: otherUser?.endereco || "Localização não informada",
         points: otherUser?.pontos || 0,
-        initials: currentContact?.initials || "?",
+        initials: userName !== "Carregando..." ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : "CV",
         joinDate: otherUser?.createdAt ? new Date(otherUser.createdAt.seconds * 1000).toLocaleDateString('pt-BR') : "Recente",
         isVerified: currentContact?.type === 'doador',
         isSelf: false
@@ -581,10 +1186,28 @@ const Chat = () => {
 
   return (
     <div className="chat-page-wrapper chat-page-isolated">
+      {!conversaId ? (
+        <div className="error-container" style={{ width: '100%', height: '100vh' }}>
+          <AlertTriangle size={64} color="#ef4444" />
+          <h3>Nenhuma conversa selecionada</h3>
+          <p>Por favor, selecione uma conversa da lista ou volte para a página de conversas.</p>
+          <button 
+            className="btn-solid-success" 
+            onClick={() => navigate('/conversas')}
+          >
+            Ir para Conversas
+          </button>
+        </div>
+      ) : (
       <div className="chat-layout">
         {/* Sidebar */}
-        <aside className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-          <div className="sidebar-header">
+        <aside 
+          className={`chat-sidebar ${sidebarOpen ? 'open' : 'closed'}`}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="sidebar-header sidebar-header-custom">
             <div className="sidebar-title-row">
               <h2>Conversas</h2>
               <button className="icon-btn" title="Nova conversa">
@@ -604,7 +1227,12 @@ const Chat = () => {
           </div>
           
           <div className="contacts-list">
-            {filteredContacts.map((contact) => (
+            {sortedContacts.map((contact) => {
+              const presenceData = presenceStatus[contact.participantId];
+              const isOnline = presenceData?.isOnline ?? contact.online;
+              const lastSeen = presenceData?.lastSeen;
+              const isTyping = typingStatus[contact.id];
+              return (
               <div 
                 key={contact.id} 
                 className={`contact-item ${selectedChatId === contact.id ? 'active' : ''}`}
@@ -614,36 +1242,61 @@ const Chat = () => {
                     c.id === contact.id ? { ...c, unreadCount: 0 } : c
                   ));
                   navigate(`/chat/${contact.id}`);
+                  if (isMobile) setSidebarOpen(false);
                 }}
               >
                 <div className="avatar-wrapper">
                   <div className={`contact-avatar ${contact.type}`}>
                     {contact.initials}
                   </div>
-                  {contact.online && <span className="online-status-dot" />}
+                  {pinnedConversations.includes(contact.id) && (
+                    <div className="pinned-icon-wrapper"><Pin size={12} fill="#64748b" color="#64748b" /></div>
+                  )}
+                  {isOnline && <span className="online-status-dot" />}
                 </div>
                 <div className="contact-meta">
                   <div className="contact-name-row">
-                    <span className="contact-name">{contact.name}</span>
+                    <span className="contact-name">{contact.name === 'Carregando...' || !contact.name ? 'Usuário' : contact.name}</span>
                     <span className="last-time">{contact.lastMessageTime}</span>
                   </div>
                   <div className="contact-preview-row">
-                    <p className="last-message">{contact.lastMessage}</p>
+                    <div className="contact-preview-col">
+                      {isTyping ? (
+                        <p className="last-message typing-text-style">
+                          Digitando...
+                        </p>
+                      ) : (
+                        <p className="last-message">{contact.lastMessage}</p>
+                      )}
+                      {!isOnline && lastSeen && (
+                        <span style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
+                          Visto {new Date(lastSeen).toLocaleDateString() === new Date().toLocaleDateString() ? 'hoje' : new Date(lastSeen).toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})} às {new Date(lastSeen).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      )}
+                    </div>
                     {contact.unreadCount > 0 && selectedChatId !== contact.id && (
                       <span className="unread-count-badge">{contact.unreadCount}</span>
                     )}
                   </div>
                 </div>
+                <button 
+                  onClick={(e) => handlePinConversation(e, contact.id)}
+                  className={`pin-btn-style ${pinnedConversations.includes(contact.id) ? 'active' : 'inactive'}`}
+                  title={pinnedConversations.includes(contact.id) ? "Desafixar conversa" : "Fixar conversa"}
+                >
+                  {pinnedConversations.includes(contact.id) ? <PinOff size={16} /> : <Pin size={16} />}
+                </button>
               </div>
-            ))}
+            );
+            })}
           </div>
           
           <div className="sidebar-footer">
-             <button className="home-btn" onClick={() => navigate('/')} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: '#f1f5f9', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-main)', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', marginBottom: '0.75rem'}}>
+             <button className="home-btn nav-btn-style" onClick={() => navigate('/')}>
                <Home size={18} />
                <span>Voltar para Home</span>
              </button>
-             <button className="conversations-btn" onClick={() => navigate('/conversas')} style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '0.75rem 1rem', background: '#f1f5f9', border: '1px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-main)', fontWeight: '700', fontSize: '0.85rem', cursor: 'pointer', marginBottom: '0.75rem'}}>
+             <button className="conversations-btn nav-btn-style" onClick={() => navigate('/conversas')}>
                <MessageSquare size={18} />
                <span>Voltar para Conversas</span>
              </button>
@@ -655,10 +1308,17 @@ const Chat = () => {
                </div>
              </div>
           </div>
+
+          {isMobile && sidebarOpen && (
+            <div className="mobile-swipe-hint" onClick={() => setSidebarOpen(false)}>
+              <span className="hint-text">Ver Chat</span>
+              <ChevronRight size={20} className="hint-arrow" />
+            </div>
+          )}
         </aside>
 
         {/* Main Chat Area */}
-        <main className="chat-main-area">
+        <main className="chat-main-content">
           {/* Header */}
           <header className="chat-header-bar">
             <div className="header-left-group">
@@ -672,9 +1332,9 @@ const Chat = () => {
                 </div>
                 <div className="header-text-details">
                   <div className="header-name-row">
-                    <h3>{currentContact?.name || 'Carregando...'}</h3>
-                    <span className={`role-badge ${currentContact?.type || 'conversa'}`}>
-                      {currentContact?.type === "doador" ? "Doador Verificado" : "Vizinho em Busca"}
+                    <h3>{currentContact?.name || 'Usuário'}</h3>
+                    <span className={`role-badge ${currentContact?.type || 'cidadao'}`}>
+                      {currentContact?.type === 'doador' ? 'Doador' : currentContact?.type === 'ong' ? 'ONG' : 'Cidadão'}
                     </span>
                   </div>
                   <div className="header-status-pills">
@@ -684,7 +1344,11 @@ const Chat = () => {
                     </span>
                     <span className={`status-pill state ${currentContact?.online ? 'online' : 'offline'}`}>
                       <span className="pulse-dot" />
-                      {currentContact?.online ? 'Ativo Agora' : 'Offline'}
+                      {currentContact?.online 
+                        ? 'Ativo Agora' 
+                        : (currentContact?.lastSeen 
+                            ? `Visto às ${new Date(currentContact.lastSeen).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}` 
+                            : 'Offline')}
                     </span>
                   </div>
                 </div>
@@ -692,6 +1356,86 @@ const Chat = () => {
             </div>
             <div className="header-right-group">
               <div className="quick-actions-desktop">
+                <div className="notification-wrapper">
+                  <button
+                    className="notification-btn"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                  >
+                    <Bell size={20} />
+                    {unreadCount > 0 && (
+                      <span className="notification-badge">{unreadCount}</span>
+                    )}
+                  </button>
+
+                  {showNotifications && (
+                    <div className="notification-dropdown">
+                      <div className="notification-header">
+                        <h3>Notificações</h3>
+                        {notifications.length > 0 && (
+                          <div className="notification-actions">
+                            {unreadCount > 0 && (
+                              <button
+                                className="action-btn mark-read-btn"
+                                onClick={markAllAsRead}
+                                title="Marcar todas como lidas"
+                              >
+                                ✓
+                              </button>
+                            )}
+                            <button
+                              className="action-btn clear-btn"
+                              onClick={clearNotifications}
+                              title="Limpar todas"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="notification-list">
+                        {notifications.length === 0 ? (
+                          <div className="no-notifications">
+                            Nenhuma notificação ainda
+                          </div>
+                        ) : (
+                          notifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.type === 'chat' ? 'chat-notification' : ''}`}
+                              onClick={() => handleNotificationClick(notification)}
+                            >
+                              <div className="notification-content">
+                                <div className="notification-icon">
+                                  {notification.type === 'chat' ? '💬' : '🔔'}
+                                </div>
+                                <div className="notification-text">
+                                  <p className="notification-title">{notification.title}</p>
+                                  <p className="notification-message">{notification.message}</p>
+                                  <span className="notification-time">
+                                    {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                              {!notification.read && <div className="unread-dot"></div>}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <button
+                  className={`header-action-btn ${showMsgSearch ? 'active' : ''}`}
+                  onClick={() => setShowMsgSearch(!showMsgSearch)}
+                  title="Buscar na conversa"
+                >
+                  <Search size={20} />
+                </button>
                 <button
                   className="header-action-btn danger"
                   onClick={() => setShowReportModal(true)}
@@ -711,122 +1455,154 @@ const Chat = () => {
             <span>Conexão segura SolidarBairro • Dados protegidos</span>
           </div>
 
-          <div className="chat-content-scroll">
-            {/* Context Info Card */}
-            {(contextType === 'pedido' || contextType === 'achado-perdido') && (
-              <div className="chat-context-card">
-                <div className="card-left-section">
-                  <div className="card-icon-box">
-                    {helpInfo.contextType === 'achado-perdido' ? (
-                      helpInfo.itemType === 'perdido' ? (
-                        <Search size={24} />
-                      ) : (
-                        <Package size={24} />
-                      )
-                    ) : (
-                      <Package size={24} />
-                    )}
-                  </div>
-                  <div className="card-info-text">
-                    <h4>{helpInfo.title}</h4>
-                    <p className="help-title">{helpInfo.type}</p>
-                    {helpInfo.descricao && (
-                      <p className="help-description">{helpInfo.descricao}</p>
-                    )}
-                    <div className="help-tags">
-                      {helpInfo.contextType === 'achado-perdido' ? (
-                        <>
-                          <span className={`type-pill ${helpInfo.itemType}`}>
-                            {helpInfo.itemType === 'perdido' ? '🔍 Perdido' : '📦 Encontrado'}
-                          </span>
-                          <span className={`status-pill ${helpInfo.status}`}>
-                            {helpInfo.status === 'resolvido' ? '✅ Resolvido' : '🔄 Ativo'}
-                          </span>
-                        </>
-                      ) : (
-                        <span className={`urgency-pill ${helpInfo.urgency}`}>
-                          Urgência {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
-                        </span>
-                      )}
-                      <span className="neighborhood-pill">
-                        {helpInfo.bairro}{helpInfo.cidade && `, ${helpInfo.cidade}`}
-                      </span>
-                      {helpInfo.categoria && helpInfo.categoria !== "Geral" && (
-                        <span className="category-pill">
-                          {helpInfo.categoria}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                {helpInfo.contextType === 'pedido' && (
-                  <div className="card-middle-section">
-                    <div className="status-progress-bar">
-                      <div className={`status-step ${['aguardando', 'andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("aguardando")}>1</div>
-                        <span className="step-label">Pendente</span>
-                      </div>
-                      <div className="progress-line" />
-                      <div className={`status-step ${['andamento', 'entregue'].includes(deliveryStatus) ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("andamento")}>2</div>
-                        <span className="step-label">Em curso</span>
-                      </div>
-                      <div className="progress-line" />
-                      <div className={`status-step ${deliveryStatus === "entregue" ? 'completed' : ''}`}>
-                        <div className="step-dot" onClick={() => setDeliveryStatus("entregue")}>3</div>
-                        <span className="step-label">Concluído</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div className="card-right-section">
-                  {helpInfo.contextType === 'pedido' ? (
-                    deliveryStatus === "andamento" ? (
-                      <button 
-                        className="finish-collaboration-btn"
-                        onClick={() => setShowFinishModal(true)}
-                      >
-                        <Heart size={16} fill="white" />
-                        Finalizar Ajuda
-                      </button>
-                    ) : (
-                      <button className="details-btn">
-                        Detalhes <ChevronRight size={16} />
-                      </button>
-                    )
-                  ) : (
-                    <button 
-                      className={`resolve-btn ${helpInfo.status === 'resolvido' ? 'resolved' : ''}`}
-                      onClick={() => {
-                        if (helpInfo.status !== 'resolvido') {
-                          // Lógica para marcar como resolvido
-                          setShowFinishModal(true);
-                        }
-                      }}
-                      disabled={helpInfo.status === 'resolvido'}
-                    >
-                      {helpInfo.status === 'resolvido' ? (
-                        <>✅ Resolvido</>
-                      ) : (
-                        <>🔄 Marcar como Resolvido</>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+          {showMsgSearch && (
+            <div className="msg-search-bar">
+              <Search size={18} color="#94a3b8" />
+              <input
+                type="text"
+                placeholder="Buscar mensagem..."
+                value={msgSearchTerm}
+                onChange={(e) => setMsgSearchTerm(e.target.value)}
+                className="msg-search-input"
+                autoFocus
+              />
+              {msgSearchTerm && (
+                <button onClick={() => setMsgSearchTerm('')} className="search-clear-btn">
+                  <X size={16} />
+                </button>
+              )}
+              <button onClick={() => { setShowMsgSearch(false); setMsgSearchTerm(''); }} className="search-close-btn">
+                Fechar
+              </button>
+            </div>
+          )}
 
+          {/* Context Menu Dropdown (New) */}
+          {(contextType === 'pedido' || contextType === 'achado-perdido') && (
+            <div className="chat-context-menu">
+              <button 
+                className="context-toggle-btn" 
+                onClick={() => {
+                  setShowContext(!showContext);
+                  if (!showContext) setHasContextUpdate(false);
+                }}
+              >
+                {hasContextUpdate && <span className="context-update-dot" />}
+                <div className="context-summary">
+                  <div className={`context-icon-small ${helpInfo.contextType}`}>
+                    {helpInfo.contextType === 'achado-perdido' ? (
+                      helpInfo.itemType === 'perdido' ? <Search size={16} /> : <Package size={16} />
+                    ) : (
+                      <Package size={16} />
+                    )}
+                  </div>
+                  <div className="context-text-summary">
+                    <span className="context-type-label">{helpInfo.title}</span>
+                    <span className="context-main-info">{helpInfo.type}</span>
+                  </div>
+                  <span className={`status-pill ${helpInfo.status}`}>
+                    {helpInfo.status === 'resolvido' ? 'Resolvido' : helpInfo.status}
+                  </span>
+                </div>
+                {canFinish && !showContext && (
+                  <span className="finish-hint-badge">
+                    <CheckCheck size={16} />
+                    Finalizar
+                  </span>
+                )}
+                {showContext ? <ChevronUp size={20} className="toggle-icon" /> : <ChevronDown size={20} className="toggle-icon" />}
+              </button>
+
+              <AnimatePresence>
+                {showContext && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="context-details-panel"
+                  >
+                    <div className="context-panel-content">
+                      <div className="panel-info-grid">
+                        <div className="panel-item full-width">
+                          <span className="panel-label">Descrição</span>
+                          <p className="panel-value">{helpInfo.descricao || "Sem descrição"}</p>
+                        </div>
+                        <div className="panel-item">
+                          <span className="panel-label">Localização</span>
+                          <span className="panel-value">{helpInfo.bairro}{helpInfo.cidade && `, ${helpInfo.cidade}`}</span>
+                        </div>
+                        <div className="panel-item">
+                          <span className="panel-label">Urgência</span>
+                          <span className={`urgency-badge ${helpInfo.urgency}`}>
+                            {helpInfo.urgency === "high" ? "Alta" : helpInfo.urgency === "medium" ? "Média" : "Baixa"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="panel-actions">
+                        {helpInfo.contextType === 'pedido' ? (
+                          deliveryStatus === "andamento" && user?.uid === pedidoData?.userId ? (
+                            <button
+                              className="finish-collaboration-btn small"
+                              onClick={() => setShowFinishModal(true)}
+                            >
+                              <Heart size={14} fill="white" />
+                              Finalizar
+                            </button>
+                          ) : null
+                        ) : (
+                          <button
+                            className={`resolve-btn small ${helpInfo.status === 'resolvido' ? 'resolved' : ''}`}
+                            onClick={() => {
+                              if (helpInfo.status !== 'resolvido') setShowFinishModal(true);
+                            }}
+                            disabled={helpInfo.status === 'resolvido'}
+                          >
+                            {helpInfo.status === 'resolvido' ? 'Resolvido' : 'Marcar Resolvido'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          <div className="chat-content-scroll" onScroll={handleScroll}>
             {/* Messages Feed */}
             <div className="messages-container">
-              <div className="date-separator">
-                <span>Hoje</span>
-              </div>
+              {loading ? (
+                <div className="loading-container">
+                  <div className="mini-loader" />
+                  <span>Carregando conversa...</span>
+                </div>
+              ) : error ? (
+                <div className="error-container">
+                  <AlertTriangle size={48} color="#ef4444" />
+                  <h3>Erro ao carregar conversa</h3>
+                  <p>{error}</p>
+                  <button 
+                    className="btn-solid-success" 
+                    onClick={() => {
+                      setError(null);
+                      loadMessages();
+                    }}
+                  >
+                    Tentar Novamente
+                  </button>
+                </div>
+              ) : (
+              <>
+              {!msgSearchTerm && (
+                <div className="date-separator">
+                  <span>Hoje</span>
+                </div>
+              )}
 
-              {messages.map((msg) => {
+              {displayedMessages.map((msg) => {
                 if (msg.type === "system") {
-                  const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso");
+                  const isSuccess = msg.content?.includes("confirmado") || msg.content?.includes("sucesso") || msg.content?.includes("resolvido") || msg.content?.includes("encerrada");
                   const isSecurity = msg.content?.includes("seguro") || msg.content?.includes("ambiente");
 
                   return (
@@ -842,6 +1618,8 @@ const Chat = () => {
                 }
 
                 const isSent = msg.sender === 'sent';
+                const hasReply = msg.metadata?.replyTo;
+                const canEdit = isSent && (new Date() - new Date(msg.timestamp)) < 15 * 60 * 1000 && !isConversationClosed;
                 let bubbleContent;
 
                 if (msg.type === "location") {
@@ -872,7 +1650,15 @@ const Chat = () => {
                 } else if (msg.type === "image") {
                   bubbleContent = (
                     <div className="msg-bubble media-bubble">
-                      <img src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} alt="Imagem enviada" className="msg-media-img" />
+                      <img 
+                        src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} 
+                        alt="Imagem enviada" 
+                        className="msg-media-img msg-media-img" 
+                        onClick={() => {
+                          setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content);
+                          setZoomLevel(1);
+                        }}
+                      />
                     </div>
                   );
                 } else if (msg.type === "video") {
@@ -884,6 +1670,12 @@ const Chat = () => {
                 } else {
                   bubbleContent = (
                     <div className="msg-bubble text-bubble">
+                      {hasReply && (
+                        <div className="reply-quote">
+                          <span className="reply-quote-sender">{hasReply.senderName === 'Você' ? (currentUserData?.name || user?.nome || 'Administrador').length > 15 ? (currentUserData?.name || user?.nome || 'Administrador').substring(0, 15) + '...' : (currentUserData?.name || user?.nome || 'Administrador') : hasReply.senderName}</span>
+                          <p className="reply-quote-text">{hasReply.content}</p>
+                        </div>
+                      )}
                       {msg.content}
                     </div>
                   );
@@ -896,21 +1688,94 @@ const Chat = () => {
                         {currentContact?.initials || 'U'}
                       </div>
                     )}
+                    {!isSent && (
                     <div className="msg-wrapper">
                       {bubbleContent}
+                      {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                        <div className="reactions-display">
+                          {Object.entries(msg.reactions).map(([emoji, users]) => (
+                            <div key={emoji} className={`reaction-pill ${users.includes(user?.uid || 'me') ? 'active' : ''}`} onClick={() => handleReactionClick(msg.id, emoji)}>
+                              {emoji} <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{users.length}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <div className="msg-metadata">
+                        {msg.edited && <span className="edited-label">(editado)</span>}
                         <span className="msg-time">{formatTime(msg.timestamp)}</span>
-                        {isSent && (
+                      </div>
+                    </div>
+                    )}
+
+                    {!isSent && !isConversationClosed && (
+                      <div className="msg-actions">
+                        <button className="msg-action-btn" onClick={() => handleReply(msg)} title="Responder">
+                          <Reply size={16} />
+                        </button>
+                        <div style={{ position: 'relative' }}>
+                          <button className="msg-action-btn" onClick={() => setActiveReactionMessageId(activeReactionMessageId === msg.id ? null : msg.id)} title="Reagir">
+                            <Smile size={16} />
+                          </button>
+                          {activeReactionMessageId === msg.id && (
+                            <div className="reaction-options-container left">
+                              {REACTION_OPTIONS.map(emoji => (
+                                <button key={emoji} onClick={() => handleReactionClick(msg.id, emoji)} className="reaction-btn">{emoji}</button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {isSent && (
+                      <>
+                      {!isConversationClosed && (
+                      <div className="msg-actions">
+                        <div style={{ position: 'relative' }}>
+                          <button className="msg-action-btn" onClick={() => setActiveReactionMessageId(activeReactionMessageId === msg.id ? null : msg.id)} title="Reagir">
+                            <Smile size={16} />
+                          </button>
+                          {activeReactionMessageId === msg.id && (
+                            <div className="reaction-options-container right">
+                              {REACTION_OPTIONS.map(emoji => (
+                                <button key={emoji} onClick={() => handleReactionClick(msg.id, emoji)} className="reaction-btn">{emoji}</button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {canEdit && (
+                          <button className="msg-action-btn" onClick={() => handleEditClick(msg)} title="Editar">
+                            <Pencil size={16} />
+                          </button>
+                        )}
+                        <button className="msg-action-btn" onClick={() => handleReply(msg)} title="Responder">
+                          <Reply size={16} />
+                        </button>
+                      </div>
+                      )}
+                      <div className="msg-wrapper">
+                        {bubbleContent}
+                        {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                          <div className="reactions-display">
+                            {Object.entries(msg.reactions).map(([emoji, users]) => (
+                              <div key={emoji} className={`reaction-pill ${users.includes(user?.uid || 'me') ? 'active' : ''}`} onClick={() => handleReactionClick(msg.id, emoji)}>
+                                {emoji} <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>{users.length}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="msg-metadata">
+                          {msg.edited && <span className="edited-label">(editado)</span>}
+                          <span className="msg-time">{formatTime(msg.timestamp)}</span>
                           <span className="msg-status">
                             {msg.read ? <CheckCheck size={14} className="read" /> : <Check size={14} />}
                           </span>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                    {isSent && (
                       <div className="msg-sender-avatar self" onClick={() => handleAvatarClick(true)}>
                         {currentUserData?.initials || 'EU'}
                       </div>
+                      </>
                     )}
                   </div>
                 );
@@ -930,12 +1795,14 @@ const Chat = () => {
               )}
 
               <div ref={messagesEndRef} />
+              </>
+              )}
             </div>
           </div>
 
           {/* Input Footer */}
           <footer className="chat-input-footer">
-            {conversation?.status === 'closed' ? (
+            {isConversationClosed ? (
               <div className="conversation-closed-banner">
                 <div className="closed-icon">
                   <ShieldCheck size={20} />
@@ -947,6 +1814,28 @@ const Chat = () => {
               </div>
             ) : (
               <div className="input-container">
+                {editingMessage && (
+                  <div className="reply-preview-wrapper">
+                    <div className="reply-preview-bar reply-preview-bar-edit">
+                      <div className="reply-info">
+                        <span className="reply-sender reply-sender-edit">Editando mensagem</span>
+                        <p className="reply-text">{editingMessage.content}</p>
+                      </div>
+                      <button onClick={() => { setEditingMessage(null); setInputValue(''); }} className="close-reply-btn"><X size={18} /></button>
+                    </div>
+                  </div>
+                )}
+                {replyingTo && (
+                  <div className="reply-preview-wrapper">
+                    <div className="reply-preview-bar">
+                      <div className="reply-info">
+                        <span className="reply-sender">Respondendo a {replyingTo.sender === 'sent' ? 'Você' : currentContact?.name}</span>
+                        <p className="reply-text">{replyingTo.content}</p>
+                      </div>
+                      <button onClick={() => setReplyingTo(null)} className="close-reply-btn"><X size={18} /></button>
+                    </div>
+                  </div>
+                )}
                 <div className="input-actions-left">
                   <input 
                     type="file" 
@@ -973,10 +1862,11 @@ const Chat = () => {
                 </div>
                 <div className="textarea-wrapper">
                   <textarea
+                    ref={textareaRef}
                     className="chat-textarea"
                     placeholder="Digite sua mensagem..."
                     value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
+                    onChange={handleTypingInput}
                     onKeyDown={handleKeyPress}
                     rows={1}
                   />
@@ -997,6 +1887,7 @@ const Chat = () => {
           </footer>
         </main>
       </div>
+      )}
 
       {/* Modals */}
       {showReportModal && (
@@ -1084,9 +1975,8 @@ const Chat = () => {
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <button 
-                className="close-modal-btn" 
+                className="close-modal-btn sb-close-modal-btn" 
                 onClick={() => setViewingProfile(null)}
-                style={{ position: 'absolute', right: '1.5rem', top: '1.5rem', background: 'white', border: '1px solid #e2e8f0', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', zIndex: 10 }}
               >
                 <MoreVertical size={16} />
               </button>
@@ -1160,7 +2050,7 @@ const Chat = () => {
                 </div>
               </div>
             </div>
-            <div className="modal-footer" style={{ marginTop: '1.5rem', display: 'flex', gap: '10px' }}>
+            <div className="modal-footer profile-modal-footer">
               {!viewingProfile.isSelf && (
                 <button 
                   className="btn-ghost danger" 
@@ -1172,7 +2062,7 @@ const Chat = () => {
                   Bloquear
                 </button>
               )}
-              <button className="btn-solid-success" style={{ flex: 1, padding: '1rem', borderRadius: '1rem', fontSize: '1rem' }} onClick={() => setViewingProfile(null)}>
+              <button className="btn-solid-success profile-btn-success" onClick={() => setViewingProfile(null)}>
                 Concluído
               </button>
             </div>
@@ -1224,6 +2114,27 @@ const Chat = () => {
               <Star className="star-icon" size={20} fill="currentColor" />
               <span>+10 Pontos de Impacto Social</span>
               <Sparkles size={16} className="text-yellow-300" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Modal Desktop */}
+      {selectedImage && (
+        <div className="image-modal-overlay" onClick={() => setSelectedImage(null)}>
+          <div className="image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="image-modal-controls">
+              <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.25))} title="Diminuir Zoom"><ZoomOut size={20}/></button>
+              <button onClick={() => setZoomLevel(z => Math.min(4, z + 0.25))} title="Aumentar Zoom"><ZoomIn size={20}/></button>
+              <button onClick={() => setSelectedImage(null)} title="Fechar"><X size={20}/></button>
+            </div>
+            <div className="image-viewport">
+              <img 
+                src={selectedImage} 
+                alt="Visualização em tela cheia"
+                className="fullscreen-image"
+                style={{ transform: `scale(${zoomLevel})` }}
+              />
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Mail, Phone, MapPin, Lock, ArrowRight, Loader2, ArrowLeft, Heart, Briefcase, Camera } from 'lucide-react';
 import Toast from '../../../components/ui/Toast';
+import { useCEP } from './useCEP';
 
 const CadastroCidadao = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
@@ -13,6 +14,7 @@ const CadastroCidadao = ({ onBack }) => {
     cep: '', endereco: '', numero: '', bairro: '', cidade: '', uf: '',
     ocupacao: '', interesses: ''
   });
+  const { searchCEP } = useCEP();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,24 +35,29 @@ const CadastroCidadao = ({ onBack }) => {
   };
 
   const handleCepBlur = async (e) => {
-    const cep = e.target.value.replace(/\D/g, '');
-    if (cep.length === 8) {
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await response.json();
-        if (!data.erro) {
-          setFormData(prev => ({
-            ...prev,
-            endereco: data.logradouro,
-            bairro: data.bairro,
-            cidade: data.localidade,
-            uf: data.uf
-          }));
-        }
-      } catch (error) {
-        console.error("Erro ao buscar CEP");
+    const result = await searchCEP(e.target.value);
+    if (result) {
+      if (result.error) {
+        setToast({ show: true, message: result.error, type: 'error' });
+      } else {
+        const { logradouro, bairro, localidade, uf } = result.data;
+        setFormData(prev => ({
+          ...prev,
+          endereco: logradouro,
+          bairro,
+          cidade: localidade,
+          uf
+        }));
       }
     }
+  };
+
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { label: '', color: '#e2e8f0', width: '0%' };
+    const isValid = pass.length >= 6 && /[a-zA-Z]/.test(pass) && /\d/.test(pass);
+    if (!isValid) return { label: 'Fraca', color: '#ef4444', width: '33%' };
+    if (pass.length >= 8) return { label: 'Forte', color: '#10b981', width: '100%' };
+    return { label: 'Média', color: '#f59e0b', width: '66%' };
   };
 
   const validate = () => {
@@ -58,7 +65,7 @@ const CadastroCidadao = ({ onBack }) => {
     if (!formData.nome) newErrors.nome = 'Nome é obrigatório';
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
     if (!formData.cpf || formData.cpf.length < 11) newErrors.cpf = 'CPF inválido';
-    if (!formData.senha || formData.senha.length < 6) newErrors.senha = 'Mínimo 6 caracteres';
+    if (!formData.senha || formData.senha.length < 6 || !/[a-zA-Z]/.test(formData.senha) || !/\d/.test(formData.senha)) newErrors.senha = 'Mínimo 6 caracteres, letras e números';
     if (formData.senha !== formData.confirmarSenha) newErrors.confirmarSenha = 'Senhas não conferem';
     if (!formData.cep) newErrors.cep = 'CEP obrigatório';
     if (!formData.numero) newErrors.numero = 'Número obrigatório';
@@ -80,7 +87,6 @@ const CadastroCidadao = ({ onBack }) => {
       });
 
       if (!response.ok) throw new Error('Erro ao realizar cadastro');
-      
       setToast({ show: true, message: 'Cadastro realizado com sucesso! Redirecionando...', type: 'success' });
       setTimeout(() => window.location.href = '/login', 2000);
     } catch (error) {
@@ -89,6 +95,8 @@ const CadastroCidadao = ({ onBack }) => {
       setLoading(false);
     }
   };
+
+  const strength = getPasswordStrength(formData.senha);
 
   return (
     <div className="cadastro-wrapper">
@@ -216,6 +224,14 @@ const CadastroCidadao = ({ onBack }) => {
               <Lock size={20} className="input-icon" />
               <input type="password" name="senha" className={`form-input ${errors.senha ? 'error' : ''}`} placeholder="••••••••" value={formData.senha} onChange={handleChange} />
             </div>
+            {formData.senha && (
+              <div style={{ marginTop: '6px' }}>
+                <div style={{ height: '4px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: strength.width, backgroundColor: strength.color, transition: 'all 0.3s ease' }} />
+                </div>
+                <span style={{ fontSize: '11px', color: strength.color, marginTop: '4px', display: 'block', textAlign: 'right', fontWeight: '600' }}>{strength.label}</span>
+              </div>
+            )}
             {errors.senha && <span className="error-message">{errors.senha}</span>}
           </div>
 
@@ -225,6 +241,11 @@ const CadastroCidadao = ({ onBack }) => {
               <Lock size={20} className="input-icon" />
               <input type="password" name="confirmarSenha" className={`form-input ${errors.confirmarSenha ? 'error' : ''}`} placeholder="••••••••" value={formData.confirmarSenha} onChange={handleChange} />
             </div>
+            {formData.confirmarSenha && (
+              <span style={{ fontSize: '11px', color: formData.senha === formData.confirmarSenha ? '#10b981' : '#ef4444', marginTop: '4px', display: 'block', textAlign: 'right', fontWeight: '600' }}>
+                {formData.senha === formData.confirmarSenha ? 'Senhas conferem' : 'Senhas não conferem'}
+              </span>
+            )}
             {errors.confirmarSenha && <span className="error-message">{errors.confirmarSenha}</span>}
           </div>
 

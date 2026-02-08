@@ -1044,6 +1044,7 @@
 .cards-grid {
   display: grid;
   gap: 2.5rem;
+  align-items: stretch;
 }
 
 @media (min-width: 1024px) {
@@ -1052,7 +1053,7 @@
   }
 }
 
-.action-card {
+.landing-action-card {
   position: relative;
   background: var(--sb-bg);
   padding: 2.5rem;
@@ -1067,36 +1068,39 @@
 }
 
 @media (min-width: 1024px) {
-  .action-card {
+  .landing-action-card {
     padding: 3rem;
   }
 }
 
-.action-card.teal:hover { box-shadow: 0 40px 80px -20px rgba(14, 165, 233, 0.1); }
-.action-card.orange:hover { box-shadow: 0 40px 80px -20px rgba(249, 115, 22, 0.1); }
-.action-card.purple:hover { box-shadow: 0 40px 80px -20px rgba(139, 92, 246, 0.1); }
+.landing-action-card.landing-card-teal:hover { box-shadow: 0 40px 80px -20px rgba(14, 165, 233, 0.1); }
+.landing-action-card.landing-card-orange:hover { box-shadow: 0 40px 80px -20px rgba(249, 115, 22, 0.1); }
+.landing-action-card.landing-card-purple:hover { box-shadow: 0 40px 80px -20px rgba(139, 92, 246, 0.1); }
 
-.action-card-gradient {
+.landing-card-gradient {
   position: absolute;
   inset: 0;
   opacity: 0;
   transition: opacity 0.7s ease;
 }
 
-.action-card.teal .action-card-gradient { background: linear-gradient(to bottom right, rgba(14, 165, 233, 0.1), transparent); }
-.action-card.orange .action-card-gradient { background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), transparent); }
-.action-card.purple .action-card-gradient { background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.1), transparent); }
+.landing-action-card.landing-card-teal .landing-card-gradient { background: linear-gradient(to bottom right, rgba(14, 165, 233, 0.1), transparent); }
+.landing-action-card.landing-card-orange .landing-card-gradient { background: linear-gradient(to bottom right, rgba(249, 115, 22, 0.1), transparent); }
+.landing-action-card.landing-card-purple .landing-card-gradient { background: linear-gradient(to bottom right, rgba(139, 92, 246, 0.1), transparent); }
 
-.action-card:hover .action-card-gradient {
+.landing-action-card:hover .landing-card-gradient {
   opacity: 1;
 }
 
-.action-card-body {
+.landing-card-body {
   position: relative;
   z-index: 10;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-.action-card-icon {
+.landing-card-icon {
   width: 5rem;
   height: 5rem;
   border-radius: 1.5rem;
@@ -1109,15 +1113,15 @@
   transition: all 0.5s ease;
 }
 
-.action-card.teal .action-card-icon { background: var(--sb-teal); }
-.action-card.orange .action-card-icon { background: var(--sb-orange); }
-.action-card.purple .action-card-icon { background: var(--sb-purple); }
+.landing-action-card.landing-card-teal .landing-card-icon { background: var(--sb-teal); }
+.landing-action-card.landing-card-orange .landing-card-icon { background: var(--sb-orange); }
+.landing-action-card.landing-card-purple .landing-card-icon { background: var(--sb-purple); }
 
-.action-card:hover .action-card-icon {
+.landing-action-card:hover .landing-card-icon {
   transform: scale(1.05);
 }
 
-.action-card-title {
+.landing-card-title {
   font-size: 1.875rem;
   font-weight: 900;
   color: var(--sb-text);
@@ -1127,12 +1131,12 @@
 }
 
 @media (min-width: 1024px) {
-  .action-card-title {
+  .landing-card-title {
     font-size: 2.25rem;
   }
 }
 
-.action-card-description {
+.landing-card-description {
   font-size: 1.125rem;
   font-weight: 500;
   color: var(--sb-text-light);
@@ -1140,12 +1144,13 @@
   margin-bottom: 2.5rem;
 }
 
-.action-card-button {
+.landing-card-button {
   margin-top: auto;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
-  padding: 1rem 2rem;
+  padding: 1rem 1rem;
   border-radius: 1rem;
   border: 2px solid var(--sb-text);
   background: transparent;
@@ -1154,21 +1159,22 @@
   font-size: 1.125rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  width: 100%;
 }
 
-.action-card.teal:hover .action-card-button { background: #0ea5e9; border-color: #0ea5e9; color: white; }
-.action-card.orange:hover .action-card-button { background: var(--sb-orange); border-color: var(--sb-orange); color: white; }
-.action-card.purple:hover .action-card-button { background: var(--sb-purple); border-color: var(--sb-purple); color: white; }
+.landing-action-card.landing-card-teal:hover .landing-card-button { background: #0ea5e9; border-color: #0ea5e9; color: white; }
+.landing-action-card.landing-card-orange:hover .landing-card-button { background: var(--sb-orange); border-color: var(--sb-orange); color: white; }
+.landing-action-card.landing-card-purple:hover .landing-card-button { background: var(--sb-purple); border-color: var(--sb-purple); color: white; }
 
-.button-icon {
+.landing-button-icon {
   transition: transform 0.3s ease;
 }
 
-.action-card-button:hover .button-icon {
+.landing-card-button:hover .landing-button-icon {
   transform: translateX(4px);
 }
 
-.action-card-sparkle {
+.landing-card-sparkle {
   position: absolute;
   top: 2rem;
   right: 2rem;
@@ -1178,7 +1184,7 @@
   transform: translate(1rem, -1rem);
 }
 
-.action-card:hover .action-card-sparkle {
+.landing-action-card:hover .landing-card-sparkle {
   opacity: 1;
   transform: translate(0, 0);
 }

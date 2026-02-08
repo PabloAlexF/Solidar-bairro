@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  User, 
-  MapPin, 
-  Calendar, 
-  Award, 
-  ShieldCheck, 
-  Pencil, 
-  Lock, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  User,
+  MapPin,
+  Calendar,
+  Award,
+  ShieldCheck,
+  Pencil,
+  Lock,
   Smartphone,
   CheckCircle2,
   ArrowRight,
@@ -25,7 +25,12 @@ import {
   Palette,
   Bell,
   Sparkles,
-  Mail
+  Mail,
+  MessageCircle,
+  AlertTriangle,
+  Clock,
+  Share2,
+  Copy
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -34,8 +39,47 @@ import { useToast } from '../../contexts/ToastContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { StatsManager } from '../../utils/statsManager';
 import apiService from '../../services/apiService';
+import ReusableHeader from '../../components/layout/ReusableHeader';
 import ProfileMobile from './ProfileMobile';
 import './profile.css';
+
+// Componente de Animação de Contagem
+const CountUp = ({ end, duration = 2000 }) => {
+  const [count, setCount] = useState(0);
+  const countRef = useRef(0);
+  
+  useEffect(() => {
+    let startTime = null;
+    let animationFrame;
+    const startValue = countRef.current;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      const percentage = Math.min(progress / duration, 1);
+      
+      // Easing function (easeOutExpo) - Começa rápido e desacelera suavemente
+      const easeOut = (x) => x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+      
+      const nextValue = Math.floor(startValue + (end - startValue) * easeOut(percentage));
+      setCount(nextValue);
+      countRef.current = nextValue;
+
+      if (progress < duration) {
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+        countRef.current = end;
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [end, duration]);
+
+  return <>{count}</>;
+};
 
 const ProfileComponent = () => {
   const { user, isAuthenticated, updateUser } = useAuth();
@@ -92,6 +136,7 @@ const ProfileComponent = () => {
   const [pontos, setPontos] = useState(0);
   const [pedidosCriados, setPedidosCriados] = useState(0);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -145,6 +190,22 @@ const ProfileComponent = () => {
     return StatsManager.calculateStats(user?.uid || user?.id);
   };
 
+  // Lógica de Completude do Perfil
+  const calculateProfileCompletion = () => {
+    let score = 0;
+    const total = 5;
+    
+    if (avatarUrl && !avatarUrl.includes('unsplash')) score++; // Foto personalizada
+    if (bio && bio.length > 20 && !bio.includes('Sou um cidadão')) score++; // Bio personalizada
+    if (isPhoneVerified) score++; // Telefone verificado
+    if (skills.length > 0) score++; // Habilidades adicionadas
+    if (user?.endereco) score++; // Endereço
+    
+    return Math.round((score / total) * 100);
+  };
+
+  const completionPercentage = calculateProfileCompletion();
+
   useEffect(() => {
     const profileContainer = document.querySelector('.profile-container');
     if (profileContainer) {
@@ -158,7 +219,7 @@ const ProfileComponent = () => {
   }, [accentColor]);
 
   useEffect(() => {
-    if (isSettingsOpen || isEditingBanner || isViewingHistory || isPhoneModalOpen || isEmailModalOpen) {
+    if (isSettingsOpen || isEditingBanner || isViewingHistory || isPhoneModalOpen || isEmailModalOpen || isShareModalOpen) {
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
       setTimeout(() => {
@@ -176,7 +237,7 @@ const ProfileComponent = () => {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
     };
-  }, [isSettingsOpen, isEditingBanner, isViewingHistory, isPhoneModalOpen, isEmailModalOpen]);
+  }, [isSettingsOpen, isEditingBanner, isViewingHistory, isPhoneModalOpen, isEmailModalOpen, isShareModalOpen]);
 
   if (!user) {
     return (
@@ -289,6 +350,15 @@ const ProfileComponent = () => {
     });
   };
 
+  const handleShareProfile = () => {
+    setIsShareModalOpen(true);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success('Link copiado para a área de transferência!');
+  };
+
   // Render mobile version if on mobile device
   if (isMobile) {
     return <ProfileMobile />;
@@ -315,104 +385,7 @@ const ProfileComponent = () => {
         </div>
       )}
       {/* Profile Header */}
-      <nav className="landing-nav scrolled">
-        <div className="section-container nav-container">
-          <div className="logo-wrapper" onClick={() => navigate('/')}>
-            <div className="logo-icon">
-              <Heart fill="white" size={24} />
-            </div>
-            <span className="logo-text">Solidar<span className="logo-accent">Bairro</span></span>
-          </div>
-          
-          <div className="nav-menu">
-            {(user?.role === 'admin' || user?.isAdmin || user?.tipo === 'admin' || user?.email === 'admin@solidarbairro.com') && (
-              <>
-                <button onClick={() => navigate('/painel-social')} title="Painel Social" className="panel-icon-button">
-                  <Globe size={20} />
-                </button>
-                <button onClick={() => navigate('/admin')} title="Painel Admin" className="panel-icon-button admin">
-                  <Settings size={20} />
-                </button>
-              </>
-            )}
-            
-            <button className="notification-btn" onClick={() => setShowNotifications(!showNotifications)}>
-              <Bell size={24} />
-              {getUnreadCount() > 0 && <span className="notification-badge">{getUnreadCount()}</span>}
-            </button>
-            
-            {showNotifications && (
-              <div className="notification-dropdown">
-                <div className="notification-header">
-                  <h3>Notificações</h3>
-                  {notifications.length > 0 && (
-                    <div className="notification-actions">
-                      {getUnreadCount() > 0 && <button className="action-btn" onClick={markAllAsRead}>✓</button>}
-                      <button className="action-btn" onClick={clearNotifications}>🗑️</button>
-                    </div>
-                  )}
-                </div>
-                <div className="notification-list">
-                  {notifications.length === 0 ? (
-                    <div className="no-notifications">Nenhuma notificação ainda</div>
-                  ) : (
-                    notifications.map((notification) => (
-                      <div key={notification.id} className={`notification-item ${notification.read ? 'read' : 'unread'}`} onClick={() => markAsRead(notification.id)}>
-                        <div className="notification-content">
-                          <div className="notification-icon">{notification.type === 'chat' ? '💬' : '🔔'}</div>
-                          <div className="notification-text">
-                            <p className="notification-title">{notification.title}</p>
-                            <p className="notification-message">{notification.message}</p>
-                          </div>
-                        </div>
-                        {!notification.read && <div className="unread-dot"></div>}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-            
-            <div className="user-menu-wrapper">
-              <button className="user-btn" onClick={() => setShowUserMenu(!showUserMenu)}>
-                <div className="user-avatar">
-                  {user?.fotoPerfil ? (
-                    <img src={user.fotoPerfil} alt="Perfil" className="avatar-image" />
-                  ) : (
-                    (user?.nome || user?.nomeCompleto || 'U')?.substring(0, 2).toUpperCase()
-                  )}
-                </div>
-              </button>
-              
-              {showUserMenu && (
-                <div className="user-dropdown">
-                  <div className="user-info">
-                    <div className="user-avatar-large">
-                      {user?.fotoPerfil ? (
-                        <img src={user.fotoPerfil} alt="Perfil" className="avatar-image-large" />
-                      ) : (
-                        (user?.nome || user?.nomeCompleto || 'U')?.substring(0, 2).toUpperCase()
-                      )}
-                    </div>
-                    <div className="user-details">
-                      <div className="user-name">{user?.nome || user?.nomeCompleto || 'Usuário'}</div>
-                      <div className="user-phone">{user?.telefone || user?.email}</div>
-                    </div>
-                  </div>
-                  <div className="user-actions">
-                    <button className="menu-item" onClick={() => { navigate('/perfil'); setShowUserMenu(false); }}>👤 Ver perfil</button>
-                    <button className="menu-item" onClick={() => { navigate('/conversas'); setShowUserMenu(false); }}>💬 Minhas conversas</button>
-                    {(user?.role === 'admin' || user?.isAdmin || user?.tipo === 'admin' || user?.email === 'admin@solidarbairro.com') && (
-                      <button className="menu-item admin-btn" onClick={() => { navigate('/admin'); setShowUserMenu(false); }}>⚙️ Dashboard Admin</button>
-                    )}
-                    <button className="menu-item logout-btn" onClick={() => { localStorage.removeItem('solidar-user'); window.location.reload(); }}>🚪 Sair</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <ReusableHeader scrolled={true} showPanelButtons={true} showNavLinks={false} />
       
       <div style={{ height: '80px' }}></div>
       
@@ -431,6 +404,11 @@ const ProfileComponent = () => {
             Customizar Fundo
           </button>
         </div>
+        
+        <button className="share-btn" onClick={handleShareProfile} title="Compartilhar Perfil">
+          <Share2 size={18} />
+          <span>Compartilhar</span>
+        </button>
       </header>
 
       {isSettingsOpen && (
@@ -671,6 +649,25 @@ const ProfileComponent = () => {
             <h1 className="name-title">{user?.nome || user?.nomeCompleto || user?.nomeEstabelecimento || user?.nomeEntidade || 'Usuário'} <span style={{ fontSize: '18px', verticalAlign: 'middle', opacity: 0.8 }}>{mood === 'Empolgado' ? '🚀' : mood === 'Zen' ? '🧘' : mood === 'Focado' ? '🎯' : mood === 'Criativo' ? '🎨' : '🙏'}</span></h1>
             <div className="badge">{user?.tipo === 'comercio' ? 'Comércio Local' : user?.tipo === 'ong' ? 'ONG Parceira' : user?.tipo === 'familia' ? 'Família Cadastrada' : `Nível ${Math.floor(pontos / 100) + 1} • ${pontos < 100 ? 'Iniciante' : pontos < 300 ? 'Ajudante' : pontos < 500 ? 'Colaborador' : 'Expert'}`}</div>
 
+            {/* Widget de Completude do Perfil */}
+            {completionPercentage < 100 && (
+              <div className="card-padding" style={{ paddingBottom: 0 }}>
+                <div className="profile-completion-card card-padding" style={{ padding: '16px' }}>
+                  <div className="completion-header">
+                    <span className="completion-title">Perfil {completionPercentage}% Completo</span>
+                    <span className="completion-percentage">{completionPercentage}%</span>
+                  </div>
+                  <div className="completion-bar-bg">
+                    <div className="completion-bar-fill" style={{ width: `${completionPercentage}%` }}></div>
+                  </div>
+                  <div className="completion-next-step">
+                    <Sparkles size={12} color="var(--primary)" />
+                    <span>Dica: {skills.length === 0 ? "Adicione suas habilidades" : !isPhoneVerified ? "Verifique seu telefone" : "Personalize sua bio"}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="level-container">
               <div className="level-header">
                 <span>Progresso de Nível</span>
@@ -727,7 +724,163 @@ const ProfileComponent = () => {
                 </div>
               )}
               
-              <button className="btn btn-outline" style={{ width: '100%', marginTop: '32px' }} onClick={() => setIsSettingsOpen(true)}>
+              {/* Notificações */}
+              <div className="notification-wrapper">
+                <button
+                  className="notification-btn"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                >
+                  <Bell size={18} />
+                  Notificações
+                  {getUnreadCount() > 0 && (
+                    <span style={{
+                      background: 'var(--primary)',
+                      color: 'white',
+                      borderRadius: '50%',
+                      width: '20px',
+                      height: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}>
+                      {getUnreadCount()}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div className="notification-dropdown-improved">
+                    <div className="notification-header-improved">
+                      <div className="notification-title-section">
+                        <h3>Notificações</h3>
+                        {getUnreadCount() > 0 && (
+                          <span>{getUnreadCount()} não lidas</span>
+                        )}
+                      </div>
+                      <button
+                        className="notification-close-btn"
+                        onClick={() => setShowNotifications(false)}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    {notifications.length === 0 ? (
+                      <div className="notification-empty-improved">
+                        <Bell size={32} />
+                        <p className="empty-title">Nenhuma notificação</p>
+                        <p className="empty-subtitle">Você receberá notificações sobre mensagens e atividades aqui</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="notification-list-improved">
+                          {notifications.slice(0, 10).map((notification) => {
+                            const timeAgo = (() => {
+                              const now = new Date();
+                              let time;
+
+                              // Verificar se é um timestamp do Firebase (objeto com seconds)
+                              if (notification.timestamp && typeof notification.timestamp === 'object' && notification.timestamp.seconds) {
+                                time = new Date(notification.timestamp.seconds * 1000);
+                              }
+                              // Verificar se é uma string ISO
+                              else if (typeof notification.timestamp === 'string') {
+                                time = new Date(notification.timestamp);
+                              }
+                              // Verificar se é um método toDate (Firebase Timestamp)
+                              else if (notification.timestamp && notification.timestamp.toDate) {
+                                time = notification.timestamp.toDate();
+                              }
+                              // Fallback para data atual
+                              else {
+                                time = new Date();
+                              }
+
+                              if (isNaN(time.getTime())) return 'Data desconhecida';
+
+                              const diffInMinutes = Math.floor((now - time) / (1000 * 60));
+
+                              if (diffInMinutes < 1) return 'Agora mesmo';
+                              if (diffInMinutes < 60) return `${diffInMinutes}min atrás`;
+
+                              const diffInHours = Math.floor(diffInMinutes / 60);
+                              if (diffInHours < 24) return `${diffInHours}h atrás`;
+
+                              const diffInDays = Math.floor(diffInHours / 24);
+                              if (diffInDays < 7) return `${diffInDays}d atrás`;
+
+                              return time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                            })();
+
+                            const getNotificationIcon = (type) => {
+                              switch (type) {
+                                case 'chat': return <MessageCircle size={16} style={{ color: '#3b82f6' }} />;
+                                case 'help': return <Heart size={16} style={{ color: '#ef4444' }} />;
+                                case 'success': return <CheckCircle2 size={16} style={{ color: '#10b981' }} />;
+                                case 'warning': return <AlertTriangle size={16} style={{ color: '#f97316' }} />;
+                                default: return <Bell size={16} style={{ color: '#6b7280' }} />;
+                              }
+                            };
+
+                            return (
+                              <div
+                                key={notification.id}
+                                className={`notification-item-improved ${!notification.read ? 'unread' : ''}`}
+                                onClick={() => {
+                                  if (!notification.read) {
+                                    markAsRead(notification.id);
+                                  }
+                                  // Se for notificação de chat, navegar para a conversa
+                                  if (notification.type === 'chat' && notification.conversationId) {
+                                    navigate(`/chat/${notification.conversationId}`);
+                                    setShowNotifications(false);
+                                  }
+                                }}
+                              >
+                                <div className="notification-icon-improved">
+                                  {getNotificationIcon(notification.type)}
+                                </div>
+                                <div className="notification-content-improved">
+                                  <div className="notification-content-header">
+                                    <h4>{notification.title}</h4>
+                                    <span>
+                                      <Clock size={12} />
+                                      {timeAgo}
+                                    </span>
+                                  </div>
+                                  <p>{notification.message}</p>
+                                </div>
+                                {!notification.read && <div className="notification-unread-dot" />}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="notification-footer-improved">
+                          <button
+                            className="notification-clear-btn"
+                            onClick={() => {
+                              clearNotifications();
+                              setShowNotifications(false);
+                            }}
+                          >
+                            Limpar todas
+                          </button>
+                          {notifications.length > 10 && (
+                            <span className="notification-more-count">
+                              +{notifications.length - 10} mais
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <button className="btn btn-outline" style={{ width: '100%', marginTop: '16px' }} onClick={() => setIsSettingsOpen(true)}>
                 <Settings size={18} />
                 Configurações
               </button>
@@ -740,15 +893,15 @@ const ProfileComponent = () => {
               Conquistas
             </h3>
             <div className="achievements-grid">
-              <div className="achievement-badge unlocked">
+              <div className="achievement-badge unlocked" data-tooltip="Primeiro acesso realizado!">
                 <div className="badge-icon"><Zap size={24} /></div>
                 <span className="badge-name">Pioneiro</span>
               </div>
-              <div className="achievement-badge">
+              <div className="achievement-badge" data-tooltip="Complete 5 ajudas para desbloquear">
                 <div className="badge-icon"><Star size={24} /></div>
                 <span className="badge-name">Ajudante</span>
               </div>
-              <div className="achievement-badge">
+              <div className="achievement-badge" data-tooltip="Receba 10 avaliações positivas">
                 <div className="badge-icon"><Coffee size={24} /></div>
                 <span className="badge-name">Amigável</span>
               </div>
@@ -773,15 +926,15 @@ const ProfileComponent = () => {
             {!zenMode && (
               <div className="impact-stats-grid">
                 <div className="impact-stat-item">
-                  <span className="value">{ajudasConcluidas}</span>
+                  <span className="value"><CountUp end={ajudasConcluidas} /></span>
                   <span className="label">Ajudas Concluídas</span>
                 </div>
                 <div className="impact-stat-item">
-                  <span className="value">{pontos}</span>
+                  <span className="value"><CountUp end={pontos} /></span>
                   <span className="label">Pontos</span>
                 </div>
                 <div className="impact-stat-item">
-                  <span className="value">{pedidosCriados}</span>
+                  <span className="value"><CountUp end={pedidosCriados} /></span>
                   <span className="label">Pedidos</span>
                 </div>
               </div>
@@ -1064,6 +1217,42 @@ const ProfileComponent = () => {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isShareModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsShareModalOpen(false)}>
+          <div className="modal-content share-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Compartilhar Perfil</h3>
+              <button className="close-btn" onClick={() => setIsShareModalOpen(false)}><X size={24} /></button>
+            </div>
+            <div className="share-body">
+              <div className="qr-container">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}&color=${accentColor.replace('#', '')}&bgcolor=ffffff&margin=10`} 
+                  alt="QR Code do Perfil" 
+                  className="qr-image"
+                />
+                <p>Escaneie para conectar</p>
+              </div>
+              
+              <div className="share-link-container">
+                <input type="text" value={window.location.href} readOnly className="share-input" />
+                <button className="btn-copy" onClick={handleCopyLink} title="Copiar Link">
+                  <Copy size={18} />
+                </button>
+              </div>
+
+              <button 
+                className="btn btn-primary" 
+                style={{ width: '100%', justifyContent: 'center' }}
+                onClick={() => window.open(`https://wa.me/?text=Olha meu perfil no SolidarBairro: ${window.location.href}`, '_blank')}
+              >
+                <MessageCircle size={18} /> Compartilhar no WhatsApp
+              </button>
             </div>
           </div>
         </div>

@@ -254,7 +254,7 @@
   outline: none;
   border-color: var(--fam-mob-primary);
   background: white;
-  box-shadow: 0 0 0 4px var(--fam-mob-primary-light);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
 }
 
 .fam-mob-input-icon {
@@ -295,6 +295,10 @@
   text-overflow: ellipsis;
 }
 
+.fam-mob-radio-label:active .fam-mob-radio-box {
+  transform: scale(0.98);
+}
+
 .fam-mob-radio-input:checked + .fam-mob-radio-box {
   border-color: var(--fam-mob-primary);
   background: var(--fam-mob-primary-light);
@@ -322,6 +326,11 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   height: 100%;
+}
+
+.fam-mob-radio-label:active .fam-mob-card-radio-box-enhanced,
+.fam-mob-radio-label:active .fam-mob-card-radio-box {
+  transform: scale(0.98);
 }
 
 .fam-mob-radio-input:checked + .fam-mob-card-radio-box-enhanced,
@@ -399,6 +408,11 @@
   width: 100%;
   flex-direction: column;
   text-align: center;
+}
+
+.fam-mob-map-button:active {
+  transform: scale(0.98);
+  background: #f8fafc;
 }
 
 .fam-mob-map-icon-box {
@@ -511,6 +525,10 @@
   transition: all 0.2s;
 }
 
+.fam-mob-counter-btn:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
 .fam-mob-counter-minus { background: #fee2e2; color: #dc2626; }
 .fam-mob-counter-plus { background: #dcfce7; color: #16a34a; }
 .fam-mob-counter-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -555,6 +573,10 @@
   justify-content: space-between;
   background: white;
   transition: all 0.2s;
+}
+
+.fam-mob-need-item:active .fam-mob-need-box {
+  transform: scale(0.98);
 }
 
 .fam-mob-need-input:checked + .fam-mob-need-box {
@@ -614,6 +636,10 @@
   order: 2;
 }
 
+.fam-mob-btn-prev:active {
+  background: #f1f5f9;
+}
+
 .fam-mob-btn-next, .fam-mob-btn-finish {
   padding: 0.875rem 2rem;
   border-radius: 12px;
@@ -634,6 +660,10 @@
   background: var(--fam-mob-primary-dark);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px -5px rgba(249, 115, 22, 0.4);
+}
+
+.fam-mob-btn-next:active, .fam-mob-btn-finish:active {
+  transform: translateY(0);
 }
 
 /* Success View */

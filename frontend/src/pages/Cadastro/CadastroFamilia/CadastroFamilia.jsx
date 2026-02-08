@@ -1,26 +1,10 @@
-import { useState, useEffect } from 'react';
+import React from 'react';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import CadastroFamiliaMobile from './CadastroFamiliaMobile';
 import CadastroFamiliaDesktop from './CadastroFamiliaDesktop';
 
 export default function CadastroFamilia() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
-    handleResize();
-    setIsLoading(false);
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  if (isLoading) {
-    return null;
-  }
+  const isMobile = useIsMobile();
 
   return isMobile ? <CadastroFamiliaMobile /> : <CadastroFamiliaDesktop />;
 }

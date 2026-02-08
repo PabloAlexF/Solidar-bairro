@@ -1,0 +1,6 @@
+src/
+node_modules/
+.env.hostinger
+package.json
+package-lock.json
+start-hostinger.sh

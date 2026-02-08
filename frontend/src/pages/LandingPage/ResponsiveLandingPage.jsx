@@ -3,7 +3,7 @@ import { useIsMobile } from '../../hooks/useIsMobile';
 import { useOnboarding } from '../../hooks/useOnboarding';
 import MobileLandingPage from './MobileLandingPage';
 import DesktopLandingPage from './DesktopLandingPage';
-import Onboarding from '../../components/Onboarding/Onboarding';
+import { OnboardingMobile, OnboardingDesktop } from '../../components/Onboarding';
 
 export default function ResponsiveLandingPage() {
   const isMobile = useIsMobile();
@@ -29,10 +29,17 @@ export default function ResponsiveLandingPage() {
     <>
       {isMobile ? <MobileLandingPage /> : <DesktopLandingPage />}
       {showOnboarding && (
-        <Onboarding 
-          onComplete={completeOnboarding}
-          onSkip={skipOnboarding}
-        />
+        isMobile ? (
+          <OnboardingMobile
+            onComplete={completeOnboarding}
+            onSkip={skipOnboarding}
+          />
+        ) : (
+          <OnboardingDesktop
+            onComplete={completeOnboarding}
+            onSkip={skipOnboarding}
+          />
+        )
       )}
     </>
   );

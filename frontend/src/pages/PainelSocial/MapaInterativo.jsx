@@ -1,6 +1,9 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import "leaflet.markercluster";
 import { Locate, Calendar, Flame } from "lucide-react";
 
 export function MapaInterativo({
@@ -100,7 +103,7 @@ export function MapaInterativo({
       </div>
     `;
 
-    marker.bindPopup(popupContent, { maxWidth: 320, className: "custom-popup" });
+    marker.bindPopup(popupContent, { className: "custom-popup" });
     
     if (onFamiliaClick) {
       marker.on('click', () => onFamiliaClick(familia));
@@ -140,7 +143,7 @@ export function MapaInterativo({
       </div>
     `;
 
-    marker.bindPopup(popupContent, { maxWidth: 280, className: "custom-popup" });
+    marker.bindPopup(popupContent, { className: "custom-popup" });
     
     if (onPedidoClick) {
       marker.on('click', () => onPedidoClick(pedido));
@@ -177,7 +180,7 @@ export function MapaInterativo({
       </div>
     `;
 
-    marker.bindPopup(popupContent, { maxWidth: 260, className: "custom-popup" });
+    marker.bindPopup(popupContent, { className: "custom-popup" });
     return marker;
   }, []);
 
@@ -210,7 +213,7 @@ export function MapaInterativo({
       </div>
     `;
 
-    marker.bindPopup(popupContent, { maxWidth: 280, className: "custom-popup" });
+    marker.bindPopup(popupContent, { className: "custom-popup" });
     return marker;
   }, []);
 
@@ -243,7 +246,7 @@ export function MapaInterativo({
       </div>
     `;
 
-    marker.bindPopup(popupContent, { maxWidth: 260, className: "custom-popup" });
+    marker.bindPopup(popupContent, { className: "custom-popup" });
     return marker;
   }, []);
 
@@ -281,7 +284,7 @@ export function MapaInterativo({
         </div>
         <p class="risco-desc">Área identificada como zona de risco. Famílias nesta região requerem atenção especial.</p>
       </div>
-    `, { maxWidth: 300, className: "custom-popup" });
+    `, { className: "custom-popup" });
 
     return polygon;
   }, []);
@@ -317,11 +320,40 @@ export function MapaInterativo({
       maxZoom: 19,
     }).addTo(map);
 
+    const createClusterIcon = (cluster) => {
+      const count = cluster.getChildCount();
+      let size = 'small';
+      if (count > 20) size = 'medium';
+      if (count > 50) size = 'large';
+      
+      const html = `
+        <div class="cluster-inner ${size}">
+          <span>${count}</span>
+        </div>
+      `;
+      
+      return L.divIcon({
+        html: html,
+        className: 'custom-marker-cluster',
+        iconSize: L.point(40, 40, true),
+      });
+    };
+
+    const clusterOptions = {
+      iconCreateFunction: createClusterIcon,
+      chunkedLoading: true,
+      maxClusterRadius: 80,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      disableClusteringAtZoom: 17,
+    };
+
     const layerGroups = {
-      familias: L.layerGroup(),
-      pedidos: L.layerGroup(),
-      comercios: L.layerGroup(),
-      ongs: L.layerGroup(),
+      familias: L.markerClusterGroup(clusterOptions),
+      pedidos: L.markerClusterGroup(clusterOptions),
+      comercios: L.markerClusterGroup(clusterOptions),
+      ongs: L.markerClusterGroup(clusterOptions),
       pontosColeta: L.layerGroup(),
       zonasRisco: L.layerGroup(),
       heatmap: L.layerGroup(),
@@ -409,7 +441,8 @@ export function MapaInterativo({
       .custom-pedido-marker,
       .custom-comercio-marker,
       .custom-ong-marker,
-      .custom-coleta-marker {
+      .custom-coleta-marker,
+      .custom-marker-cluster {
         background: transparent !important;
         border: none !important;
       }
@@ -533,6 +566,47 @@ export function MapaInterativo({
       .zona-alto {
         animation: zone-pulse 3s infinite;
       }
+
+      .cluster-inner {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: rgba(13, 148, 136, 0.85);
+        color: white;
+        font-weight: 700;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.4);
+        transition: all 0.2s ease;
+        cursor: pointer;
+      }
+
+      .cluster-inner:hover {
+        transform: scale(1.1);
+        background-color: #0f766e;
+      }
+
+      .cluster-inner.medium {
+        background-color: rgba(217, 119, 6, 0.85);
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+      }
+      .cluster-inner.medium:hover {
+        background-color: #ea580c;
+      }
+
+      .cluster-inner.large {
+        background-color: rgba(220, 38, 38, 0.85);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+      }
+      .cluster-inner.large:hover {
+        background-color: #b91c1c;
+      }
+      .cluster-inner span {
+        line-height: 1;
+      }
       
       @keyframes zone-pulse {
         0%, 100% { fill-opacity: 0.25; }
@@ -559,7 +633,7 @@ export function MapaInterativo({
       .map-popup {
         font-family: 'Inter', -apple-system, sans-serif;
         padding: 16px;
-        min-width: 220px;
+        max-width: 300px; /* Cap width on larger screens */
       }
       
       .map-popup h3 {
@@ -567,6 +641,7 @@ export function MapaInterativo({
         font-size: 15px;
         font-weight: 700;
         color: #0f172a;
+        word-break: break-word;
       }
       
       .map-popup .badge {
@@ -596,7 +671,7 @@ export function MapaInterativo({
       
       .popup-stats {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
         gap: 8px;
         margin-bottom: 12px;
       }
@@ -802,6 +877,35 @@ export function MapaInterativo({
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [familias, pedidos, comercios, ongs, pontosColeta, zonasRisco, layers, centro, zoom, createFamiliaMarker, createPedidoMarker, createComercioMarker, createONGMarker, createPontoColetaMarker, createZonaRisco, dateFilter, heatmapEnabled]);
+
+  // Monitorar redimensionamento da tela para ajustar o mapa
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    // Observer para mudanças no container (ex: teclado virtual, barra de endereço)
+    let resizeObserver;
+    if (mapRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      });
+      resizeObserver.observe(mapRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, []);
 
   const handleMyLocation = () => {
     const map = mapInstanceRef.current;

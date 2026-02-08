@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import chatNotificationService from '../services/chatNotificationService';
+import apiService from '../services/apiService';
+import { getSocket } from '../services/socketService';
 
 const NotificationContext = createContext();
 
@@ -40,33 +41,77 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const { user, isAuthenticated } = useAuth();
 
-  // Carregar notificações do localStorage
+  // Carregar notificações do banco de dados
   useEffect(() => {
-    const savedNotifications = localStorage.getItem('solidar-notifications');
-    if (savedNotifications) {
-      try {
-        const parsed = JSON.parse(savedNotifications);
-        // Filtrar notificações antigas (mais de 7 dias)
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const recentNotifications = parsed.filter(n => 
-          new Date(n.timestamp) > weekAgo
-        );
-        setNotifications(recentNotifications);
-      } catch (error) {
-        console.error('Erro ao carregar notificações:', error);
-        localStorage.removeItem('solidar-notifications');
+    if (isAuthenticated() && user) {
+      const loadNotificationsFromDB = async () => {
+        try {
+          const response = await apiService.getNotifications();
+          if (response.success && response.data) {
+            // Converter formato do banco para formato local
+            const dbNotifications = response.data.map(n => ({
+              id: n.id,
+              timestamp: n.createdAt?.seconds ? new Date(n.createdAt.seconds * 1000).toISOString() : new Date().toISOString(),
+              read: n.read || false,
+              type: n.type || 'system',
+              priority: 'normal',
+              title: n.title || 'Nova notificação',
+              message: n.message || '',
+              data: n.data || {}
+            }));
+            setNotifications(dbNotifications);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar notificações do banco:', error);
+        }
+      };
+
+      loadNotificationsFromDB();
+    }
+  }, [isAuthenticated, user]);
+
+  // Socket listeners para notificações em tempo real
+  useEffect(() => {
+    if (isAuthenticated() && user) {
+      const socket = getSocket();
+      if (socket) {
+        const handleNewNotification = (notificationData) => {
+          console.log('Nova notificação recebida via socket:', notificationData);
+
+          // Converter formato do socket para formato local
+          const newNotification = {
+            id: notificationData.id,
+            timestamp: notificationData.createdAt?.seconds ? new Date(notificationData.createdAt.seconds * 1000).toISOString() : notificationData.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+            read: notificationData.read || false,
+            type: notificationData.type || 'system',
+            priority: 'normal',
+            title: notificationData.title || 'Nova notificação',
+            message: notificationData.message || '',
+            data: notificationData.data || {}
+          };
+
+          // Adicionar à lista de notificações
+          setNotifications(prev => [newNotification, ...prev.slice(0, 49)]);
+        };
+
+        const handleNotificationRead = (data) => {
+          if (data.notificationId) {
+            setNotifications(prev =>
+              prev.map(n => n.id === data.notificationId ? { ...n, read: true } : n)
+            );
+          }
+        };
+
+        socket.on('notification', handleNewNotification);
+        socket.on('notification_read', handleNotificationRead);
+
+        return () => {
+          socket.off('notification', handleNewNotification);
+          socket.off('notification_read', handleNotificationRead);
+        };
       }
     }
-  }, []);
-
-  // Salvar notificações no localStorage sempre que mudarem
-  useEffect(() => {
-    if (notifications.length >= 0) {
-      localStorage.setItem('solidar-notifications', JSON.stringify(notifications));
-      // Disparar evento para atualizar o Header
-      window.dispatchEvent(new Event('notificationAdded'));
-    }
-  }, [notifications]);
+  }, [isAuthenticated, user]);
 
   const addNotification = (notification) => {
     const newNotification = {
@@ -77,24 +122,24 @@ export const NotificationProvider = ({ children }) => {
       priority: notification.priority || 'normal', // low, normal, high, urgent
       ...notification,
       title: notification.title || generateNotificationTitle(
-        notification.type, 
-        notification.senderName, 
+        notification.type,
+        notification.senderName,
         notification.category
       ),
       message: formatNotificationMessage(notification.message)
     };
-    
+
     // Evitar duplicatas baseadas no conteúdo
-    const isDuplicate = notifications.some(n => 
-      n.title === newNotification.title && 
+    const isDuplicate = notifications.some(n =>
+      n.title === newNotification.title &&
       n.message === newNotification.message &&
       Math.abs(new Date(n.timestamp) - new Date(newNotification.timestamp)) < 60000 // 1 minuto
     );
-    
+
     if (!isDuplicate) {
       setNotifications(prev => [newNotification, ...prev.slice(0, 49)]); // Manter apenas 50 notificações
     }
-    
+
     return newNotification.id;
   };
 
@@ -107,7 +152,7 @@ export const NotificationProvider = ({ children }) => {
       conversationTitle: conversationTitle || `Conversa com ${senderName}`,
       priority: 'high'
     };
-    
+
     return addNotification(notification);
   };
 
@@ -119,7 +164,7 @@ export const NotificationProvider = ({ children }) => {
       urgency,
       priority: urgency === 'critico' ? 'urgent' : urgency === 'urgente' ? 'high' : 'normal'
     };
-    
+
     return addNotification(notification);
   };
 
@@ -131,7 +176,7 @@ export const NotificationProvider = ({ children }) => {
       message: formatNotificationMessage(message || `${helperName} quer ajudar com ${category}`, 60),
       priority: 'high'
     };
-    
+
     return addNotification(notification);
   };
 
@@ -142,23 +187,38 @@ export const NotificationProvider = ({ children }) => {
       message: formatNotificationMessage(message),
       priority
     };
-    
+
     return addNotification(notification);
   };
 
-  const markAsRead = (notificationId) => {
-    setNotifications(prev => 
+  const markAsRead = async (notificationId) => {
+    // Marcar como lida no estado local
+    setNotifications(prev =>
       prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
     );
+
+    // Sincronizar com o banco de dados
+    try {
+      await apiService.markNotificationAsRead(notificationId);
+    } catch (error) {
+      console.error('Erro ao marcar notificação como lida no banco:', error);
+    }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    // Marcar todas como lidas no estado local
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+
+    // Sincronizar com o banco de dados
+    try {
+      await apiService.markAllNotificationsAsRead();
+    } catch (error) {
+      console.error('Erro ao marcar todas as notificações como lidas no banco:', error);
+    }
   };
 
   const clearNotifications = () => {
     setNotifications([]);
-    localStorage.removeItem('solidar-notifications');
   };
 
   const removeNotification = (notificationId) => {
@@ -179,7 +239,7 @@ export const NotificationProvider = ({ children }) => {
 
   const clearOldNotifications = () => {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.filter(n => new Date(n.timestamp) > weekAgo)
     );
   };

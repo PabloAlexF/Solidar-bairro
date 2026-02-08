@@ -11,15 +11,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Tooltip } from 'react-tooltip';
 import { motion } from 'framer-motion';
 import ApiService from '../../services/apiService';
-import { getCurrentLocation } from '../../utils/geolocation';
+import { getCurrentLocation, getLocationWithFallback } from '../../utils/geolocation';
+import ReusableHeader from '../../components/layout/ReusableHeader';
 import {
-  Bell,
-  LogOut,
-  Settings,
-  Shield,
   Sparkles,
   Heart,
-  HelpCircle,
   CheckCircle2
 } from 'lucide-react';
 import createGlobe from 'cobe';
@@ -60,6 +56,7 @@ import {
   Car
 } from 'lucide-react';
 import './styles-v4.css';
+import marca from '../../assets/images/marca.png';
 
 const CATEGORY_METADATA = {
   'Alimentos': { color: '#f97316', icon: <ShoppingCart size={18} aria-hidden="true" />, label: 'Alimentos' },
@@ -87,7 +84,6 @@ const URGENCY_OPTIONS = [
   { id: 'tranquilo', label: 'TRANQUILO', desc: 'Sem pressa', icon: <Coffee size={14} aria-hidden="true" />, color: '#10b981' },
   { id: 'recorrente', label: 'RECORRENTE', desc: 'Mensal', icon: <RefreshCcw size={14} aria-hidden="true" />, color: '#6366f1' },
 ];
-
 
 
 function CobeGlobe() {
@@ -579,7 +575,7 @@ function HeroSection({
                 boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
               }}
             >
-              <Shield size={20} style={{ color: '#7c3aed' }} />
+              <Users size={20} style={{ color: '#7c3aed' }} />
             </motion.div>
           </div>
         </motion.div>
@@ -713,7 +709,9 @@ function OrderCard({ order, onViewDetails, onHelp }) {
       </div>
 
       <p id={`order-desc-${order.id}`} className="card-description-v4">
-        {order.description?.substring(0, 150)}...
+        {order.description?.length > 36
+          ? `${order.description.substring(0, 36)}...`
+          : order.description}
       </p>
 
       <dl className="card-meta-v4">
@@ -937,7 +935,15 @@ function ModalDetalhes({ order, onClose, onHelp }) {
                   <h3 id="section-historia-title">O Relato de {order.userName.split(' ')[0]}</h3>
                 </div>
                 <div className="story-card-v4">
-                  <p>{order.description}</p>
+                  <p style={{
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    paddingRight: '10px',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word'
+                  }}>
+                    {order.description}
+                  </p>
                 </div>
               </section>
 
@@ -1176,6 +1182,14 @@ function FiltersModal({
               {userLocation && (
                 <>
                   <button 
+                    className={`filter-chip-v4 ${selectedLocation === 'meu_estado' ? 'active' : ''}`}
+                    onClick={() => setSelectedLocation('meu_estado')}
+                    role="radio"
+                    aria-checked={selectedLocation === 'meu_estado'}
+                  >
+                    Meu Estado ({userLocation.state})
+                  </button>
+                  <button 
                     className={`filter-chip-v4 ${selectedLocation === 'minha_cidade' ? 'active' : ''}`}
                     onClick={() => setSelectedLocation('minha_cidade')}
                     role="radio"
@@ -1201,14 +1215,14 @@ function FiltersModal({
                   onClick={async () => {
                     try {
                       console.log('Tentando obter localização manualmente...');
-                      const location = await getCurrentLocation();
+                      const location = await getLocationWithFallback();
                       console.log('Localização manual obtida:', location);
                       if (typeof setUserLocation === 'function') {
                         setUserLocation(location);
                       }
                     } catch (error) {
                       console.error('Erro na localização manual:', error);
-                      alert('Erro: ' + error.message);
+                      toast.error('Não foi possível obter sua localização. Usando São Paulo como padrão.');
                     }
                   }}
                   style={{ opacity: 0.7 }}
@@ -1289,6 +1303,86 @@ function FiltersModal({
           <button className="btn-apply-v4" onClick={onClose}>
             Aplicar
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AccessibilityModal({ show, onClose, fontSize, onFontSizeChange, highContrast, onContrastChange }) {
+  const modalRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (show && closeButtonRef.current) {
+      closeButtonRef.current.focus();
+    }
+  }, [show]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    
+    if (show) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [show, onClose]);
+
+  if (!show) return null;
+
+  return (
+    <div 
+      className="filters-modal-overlay-v4" 
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="accessibility-title"
+    >
+      <div 
+        className="filters-modal-v4" 
+        onClick={e => e.stopPropagation()}
+        ref={modalRef}
+        style={{ maxWidth: '500px' }}
+      >
+        <div className="filters-header-v4">
+          <div className="filters-title-v4">
+            <Accessibility size={20} aria-hidden="true" />
+            <h2 id="accessibility-title">Acessibilidade</h2>
+          </div>
+          <button 
+            ref={closeButtonRef}
+            className="filters-close-v4" 
+            onClick={onClose}
+            aria-label="Fechar acessibilidade"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="filters-content-v4">
+          <fieldset className="filter-group-v4">
+            <legend>Tamanho da Fonte</legend>
+            <div className="filter-chips-v4" role="group">
+              <button className={`filter-chip-v4 ${fontSize === 'small' ? 'active' : ''}`} onClick={() => onFontSizeChange('small')}>Pequeno</button>
+              <button className={`filter-chip-v4 ${fontSize === 'normal' ? 'active' : ''}`} onClick={() => onFontSizeChange('normal')}>Normal</button>
+              <button className={`filter-chip-v4 ${fontSize === 'large' ? 'active' : ''}`} onClick={() => onFontSizeChange('large')}>Grande</button>
+            </div>
+          </fieldset>
+          <fieldset className="filter-group-v4">
+            <legend>Contraste</legend>
+            <button className={`filter-chip-v4 ${highContrast ? 'active' : ''}`} onClick={onContrastChange}>
+              Ativar Alto Contraste
+            </button>
+          </fieldset>
         </div>
       </div>
     </div>
@@ -1385,52 +1479,55 @@ export default function QueroAjudarPage() {
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [pedidos, setPedidos] = useState([]);
   const [loadingPedidos, setLoadingPedidos] = useState(true);
-  const [highContrast, setHighContrast] = useState(false);
   const [liveMessage, setLiveMessage] = useState('');
   const [scrolled, setScrolled] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const [highContrast, setHighContrast] = useState(false);
+  const [fontSize, setFontSize] = useState('normal');
+  const [showAccessibilityModal, setShowAccessibilityModal] = useState(false);
 
   useEffect(() => {
     const loadPedidos = async () => {
       try {
         setLoadingPedidos(true);
-        
+
         // Simular delay mínimo para mostrar o skeleton
         await new Promise(resolve => setTimeout(resolve, 1500));
-        
+
         // Preparar filtros para a API
         const apiFilters = {};
-        
+
         // Filtro de categoria
         if (selectedCat !== 'Todas') {
           apiFilters.category = selectedCat;
         }
-        
+
         // Filtro de urgência
         if (selectedUrgency) {
           apiFilters.urgency = selectedUrgency;
         }
-        
+
         // Filtros de localização
         if (selectedLocation === 'minha_cidade' && userLocation) {
           apiFilters.city = userLocation.city;
+          apiFilters.state = userLocation.state;
+        } else if (selectedLocation === 'meu_estado' && userLocation) {
+          apiFilters.state = userLocation.state;
         } else if (selectedLocation === 'meu_bairro' && userLocation) {
           apiFilters.neighborhood = userLocation.neighborhood;
         }
-        
+
         // Localização do usuário para ordenação por proximidade
         if (userLocation) {
           apiFilters.userCity = userLocation.city;
           apiFilters.userState = userLocation.state;
         }
-        
+
         // Filtro "apenas novos"
         if (onlyNew) {
           apiFilters.onlyNew = true;
         }
-        
+
         const response = await ApiService.getPedidos(apiFilters);
         if (response.success && response.data) {
           // Mapear dados do backend para o formato esperado pelo frontend
@@ -1471,7 +1568,7 @@ export default function QueroAjudarPage() {
             let city = pedido.city || 'Não informado';
             let state = pedido.state || 'Não informado';
             let neighborhood = pedido.neighborhood || 'Não informado';
-            
+
             // Se não tem dados diretos, extrair da location string
             if ((!city || city === 'Não informado') && pedido.location) {
               const parts = pedido.location.split(',');
@@ -1519,23 +1616,11 @@ export default function QueroAjudarPage() {
       }
     };
 
-    // Get real user location
-    const loadLocation = async () => {
-      try {
-        console.log('Tentando obter localização...');
-        const location = await getCurrentLocation();
-        console.log('Localização obtida:', location);
-        setUserLocation(location);
-      } catch (error) {
-        console.warn('Erro ao obter localização:', error);
-        setUserLocation(null);
-      } finally {
-        setLocationLoading(false);
-      }
-    };
-
-    // Sempre carregar pedidos
-    loadPedidos();
+    // A localização é carregada em um useEffect separado.
+    // Carregamos os pedidos apenas quando a localização estiver disponível.
+    if (userLocation) {
+      loadPedidos();
+    }
   }, [selectedCat, selectedUrgency, selectedLocation, onlyNew, userLocation]);
 
   useEffect(() => {
@@ -1544,63 +1629,79 @@ export default function QueroAjudarPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Efeitos para acessibilidade
+  useEffect(() => {
+    const savedFontSize = localStorage.getItem('fontSize') || 'normal';
+    const savedContrast = localStorage.getItem('highContrast') === 'true';
+    setFontSize(savedFontSize);
+    setHighContrast(savedContrast);
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    // Limpa classes de acessibilidade anteriores para evitar conflitos
+    root.classList.remove('font-small', 'font-normal', 'font-large', 'high-contrast');
+
+    // Adiciona as classes atuais
+    root.classList.add(`font-${fontSize}`);
+    if (highContrast) {
+      root.classList.add('high-contrast');
+    }
+  }, [fontSize, highContrast]);
+
+  const handleFontSizeChange = (size) => {
+    setFontSize(size);
+    localStorage.setItem('fontSize', size);
+    toast.success(`Fonte alterada para ${size === 'large' ? 'Grande' : size === 'small' ? 'Pequena' : 'Normal'}`);
+  };
+
+  const handleContrastChange = () => {
+    const newContrast = !highContrast;
+    setHighContrast(newContrast);
+    localStorage.setItem('highContrast', newContrast.toString());
+    toast.success(newContrast ? 'Alto contraste ativado' : 'Alto contraste desativado');
+  };
+
   // UseEffect separado para carregar localização na inicialização
   useEffect(() => {
     const loadInitialLocation = async () => {
-      try {
-        console.log('Carregando localização inicial...');
-        const location = await getCurrentLocation();
-        console.log('Localização inicial obtida:', location);
-        setUserLocation(location);
-      } catch (error) {
-        console.warn('Erro ao obter localização inicial:', error);
-        setUserLocation(null);
-      } finally {
-        setLocationLoading(false);
+      // Prioridade 1: Usar endereço cadastrado do usuário
+      if (user && user.endereco) {
+        const userCity = user.endereco.cidade || user.endereco.city || user.endereco.localidade || '';
+        const userState = user.endereco.estado || user.endereco.state || user.endereco.uf || '';
+        const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || '';
+        
+        if (userCity && userState) {
+          setUserLocation({ 
+            city: userCity, 
+            state: userState,
+            neighborhood: userNeighborhood 
+          });
+          console.log('✅ Localização definida pelo endereço cadastrado:', { city: userCity, state: userState, neighborhood: userNeighborhood });
+          setLocationLoading(false);
+          return;
+        }
       }
+
+      // Prioridade 2: Tentar geolocalização do navegador
+      try {
+        console.log('Tentando obter localização do navegador...');
+        const currentLocation = await getCurrentLocation();
+        setUserLocation(currentLocation);
+        console.log('✅ Localização obtida do navegador:', currentLocation);
+      } catch (error) {
+        console.warn('⚠️ Não foi possível obter localização:', error.message);
+        // Prioridade 3: Mostrar TODOS os pedidos (sem filtro de localização)
+        setUserLocation({ city: '', state: '', showAll: true });
+        console.log('ℹ️ Mostrando todos os pedidos (sem filtro de localização)');
+      }
+      setLocationLoading(false);
     };
 
     loadInitialLocation();
-  }, []); // Executar apenas uma vez na inicialização
+  }, [user]); // Executar quando user mudar
 
-  useEffect(() => {
-    const loadNotifications = () => {
-      const savedNotifications = typeof window !== 'undefined' ? localStorage.getItem('solidar-notifications') : null;
-      if (savedNotifications) {
-        try {
-          setNotifications(JSON.parse(savedNotifications));
-        } catch (error) {
-          console.error('Error parsing notifications:', error);
-          setNotifications([]);
-        }
-      }
-    };
 
-    loadNotifications();
-
-    const handleClickOutside = (event) => {
-      if (showUserMenu || showNotifications) {
-        const userMenuElement = document.querySelector('.user-menu-wrapper');
-        const notificationElement = document.querySelector('.notification-wrapper');
-
-        if (userMenuElement && !userMenuElement.contains(event.target)) {
-          setShowUserMenu(false);
-        }
-
-        if (notificationElement && !notificationElement.contains(event.target)) {
-          setShowNotifications(false);
-        }
-      }
-    };
-
-    window.addEventListener('notificationAdded', loadNotifications);
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      window.removeEventListener('notificationAdded', loadNotifications);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showUserMenu, showNotifications]);
 
   const filteredOrders = useMemo(() => {
     // Como os filtros agora são aplicados no backend, apenas retornamos os pedidos
@@ -1636,48 +1737,21 @@ export default function QueroAjudarPage() {
     }
 
     try {
-      // Depois criar conversa
-      const conversationData = {
-        userId: currentUserId,
-        targetUserId: orderToHelp.userId,
-        pedidoId: orderToHelp.id
-      };
+      // Usar o método startConversation do ApiService que já implementa a lógica de busca/criação
+      console.log('Iniciando conversa para pedido:', orderToHelp.id);
+      const response = await ApiService.startConversation(
+        orderToHelp.userId,
+        orderToHelp.id,
+        'pedido',
+        `Ajuda: ${orderToHelp.category}`
+      );
 
-      console.log('Criando conversa com dados:', {
-        currentUserId,
-        orderUserId: orderToHelp.userId,
-        conversationData
-      });
-
-      let response;
-      try {
-        // Tenta endpoint /chat/conversations (baseado nos logs do backend: /api/chat + /conversations)
-        response = await ApiService.post('/chat/conversations', conversationData);
-      } catch (err) {
-        console.warn('Falha ao criar conversa via /chat/conversations, tentando alternativas...', err);
-        try {
-             // Tenta endpoint /conversas (padrão antigo)
-             response = await ApiService.post('/conversas', conversationData);
-        } catch (err2) {
-             try {
-                // Tenta endpoint /conversations (fallback em inglês)
-                response = await ApiService.post('/conversations', conversationData);
-             } catch (err3) {
-                 // Tenta endpoint /chats (fallback comum)
-                 try {
-                    response = await ApiService.post('/chats', conversationData);
-                 } catch (err4) {
-                    console.error('Todas as tentativas de endpoint falharam', err4);
-                    throw new Error('Não foi possível iniciar o chat. Verifique sua conexão.');
-                 }
-             }
-        }
-      }
-
-      if (response && response.success) {
-        toast.success('Conversa iniciada!');
+      if (response && response.success && response.data?.id) {
+        console.log('Conversa iniciada com sucesso:', response.data.id);
+        toast.success('Conversa iniciada com sucesso!');
         navigate(`/chat/${response.data.id}`);
       } else {
+        console.error('Resposta inválida da criação da conversa:', response);
         throw new Error(response?.error || 'Erro ao criar conversa');
       }
     } catch (error) {
@@ -1722,26 +1796,7 @@ export default function QueroAjudarPage() {
     setLiveMessage('Filtros limpos');
   };
 
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
 
-  const clearAllNotifications = () => {
-    setNotifications([]);
-    localStorage.removeItem('solidar-notifications');
-  };
-
-  const markAsRead = (notificationId) => {
-    const updatedNotifications = notifications.map(n =>
-      n.id === notificationId ? { ...n, read: true } : n
-    );
-    setNotifications(updatedNotifications);
-    localStorage.setItem('solidar-notifications', JSON.stringify(updatedNotifications));
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
 
   // Verificar se é administrador
@@ -1755,353 +1810,19 @@ export default function QueroAjudarPage() {
                   storedUser?.tipo === 'admin' ||
                   storedUser?.email === 'admin@solidarbairro.com';
 
+  const queroAjudarNavigationItems = [
+    { path: '/preciso-de-ajuda', label: 'Preciso de Ajuda' },
+    { path: '/achados-e-perdidos', label: 'Achados e Perdidos' }
+  ];
+
   return (
-    <div className={`qa-page-v4 ${highContrast ? 'high-contrast' : ''} ${selectedOrder ? 'modal-open' : ''}`}>
-      <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
-        <div className="section-container nav-container">
-          <div className="logo-wrapper" onClick={() => navigate('/')}>
-            <div className="logo-icon">
-              <Heart fill="white" size={24} />
-            </div>
-            <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
-          </div>
-
-          <div className="nav-menu">
-            <Link to="/preciso-de-ajuda" className="nav-link">
-              Preciso de Ajuda
-              <span className="link-underline" />
-            </Link>
-            <Link to="/achados-e-perdidos" className="nav-link">
-              Achados e Perdidos
-              <span className="link-underline" />
-            </Link>
-
-            {!isAuthenticated() ? (
-              <div className="auth-group">
-                <button
-                  className="auth-btn-login"
-                  onClick={() => navigate('/login')}
-                >
-                  Entrar
-                </button>
-                <button
-                  className="auth-btn-register"
-                  onClick={() => navigate('/cadastro')}
-                >
-                  Cadastrar
-                </button>
-              </div>
-            ) : (
-              <div className="user-section">
-                {isAdmin && (
-                  <>
-                    <button
-                      style={{
-                        background: 'linear-gradient(135deg, rgb(139, 92, 246), rgb(124, 58, 237))',
-                        border: 'none',
-                        color: 'white',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: '0.3s',
-                        boxShadow: 'rgba(139, 92, 246, 0.4) 0px 6px 20px',
-                        marginRight: '0.5rem',
-                        transform: 'translateY(-2px)'
-                      }}
-                      onClick={() => navigate('/admin')}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-settings"
-                        aria-hidden="true"
-                        style={{
-                          transform: 'translateY(0px)',
-                          boxShadow: 'rgba(139, 92, 246, 0.3) 0px 4px 12px'
-                        }}
-                      >
-                        <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    </button>
-                    <button
-                      title="Painel Social"
-                      style={{
-                        background: 'linear-gradient(135deg, rgb(13, 148, 136), rgb(20, 184, 166))',
-                        border: 'none',
-                        color: 'white',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        transition: '0.3s',
-                        boxShadow: 'rgba(13, 148, 136, 0.4) 0px 6px 20px',
-                        marginRight: '1rem',
-                        transform: 'translateY(-2px)'
-                      }}
-                      onClick={() => navigate('/painel-social')}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-shield"
-                        aria-hidden="true"
-                        style={{
-                          transform: 'translateY(0px)',
-                          boxShadow: 'rgba(13, 148, 136, 0.3) 0px 4px 12px'
-                        }}
-                      >
-                        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
-                      </svg>
-                    </button>
-                  </>
-                )}
-
-                <div className="notification-wrapper">
-                  <button
-                    className="notification-btn"
-                    onClick={() => setShowNotifications(!showNotifications)}
-                  >
-                    <Bell size={20} />
-                    {unreadCount > 0 && (
-                      <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
-                    )}
-                  </button>
-
-                  {showNotifications && (
-                    <div className="notification-dropdown-improved">
-                      <div className="notification-header-improved">
-                        <div className="notification-title-section">
-                          <h3>Notificações</h3>
-                          {unreadCount > 0 && (
-                            <span className="unread-count">{unreadCount} não lidas</span>
-                          )}
-                        </div>
-                        <button 
-                          className="notification-close-btn"
-                          onClick={() => setShowNotifications(false)}
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                      
-                      {notifications.length === 0 ? (
-                        <div className="notification-empty-improved">
-                          <Bell size={32} className="empty-icon" />
-                          <p className="empty-title">Nenhuma notificação</p>
-                          <p className="empty-subtitle">Você receberá notificações sobre mensagens e atividades aqui</p>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="notification-list-improved">
-                            {notifications.slice(0, 10).map((notification) => {
-                              const timeAgo = (() => {
-                                const now = new Date();
-                                const time = new Date(notification.timestamp);
-                                const diffInMinutes = Math.floor((now - time) / (1000 * 60));
-                                
-                                if (diffInMinutes < 1) return 'Agora mesmo';
-                                if (diffInMinutes < 60) return `${diffInMinutes}min atrás`;
-                                
-                                const diffInHours = Math.floor(diffInMinutes / 60);
-                                if (diffInHours < 24) return `${diffInHours}h atrás`;
-                                
-                                const diffInDays = Math.floor(diffInHours / 24);
-                                if (diffInDays < 7) return `${diffInDays}d atrás`;
-                                
-                                return time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                              })();
-                              
-                              const getNotificationIcon = (type) => {
-                                switch (type) {
-                                  case 'chat': return <MessageCircle size={16} className="text-blue-500" />;
-                                  case 'help': return <Heart size={16} className="text-red-500" />;
-                                  case 'success': return <CheckCircle2 size={16} className="text-green-500" />;
-                                  case 'warning': return <AlertTriangle size={16} className="text-orange-500" />;
-                                  default: return <Bell size={16} className="text-gray-500" />;
-                                }
-                              };
-                              
-                              return (
-                                <div
-                                  key={notification.id}
-                                  className={`notification-item-improved ${!notification.read ? 'unread' : ''}`}
-                                  onClick={() => !notification.read && markAsRead(notification.id)}
-                                >
-                                  <div className="notification-icon-improved">
-                                    {getNotificationIcon(notification.type)}
-                                  </div>
-                                  <div className="notification-content-improved">
-                                    <div className="notification-item-header">
-                                      <h4 className="notification-item-title">{notification.title}</h4>
-                                      <span className="notification-time">
-                                        <Clock size={12} />
-                                        {timeAgo}
-                                      </span>
-                                    </div>
-                                    <p className="notification-item-message">{notification.message}</p>
-                                  </div>
-                                  {!notification.read && <div className="unread-dot" />}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          
-                          <div className="notification-footer-improved">
-                            <button
-                              onClick={clearAllNotifications}
-                              className="clear-all-btn"
-                            >
-                              Limpar todas
-                            </button>
-                            {notifications.length > 10 && (
-                              <span className="more-notifications">
-                                +{notifications.length - 10} mais
-                              </span>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="user-menu-wrapper">
-                  <button
-                    className="user-btn"
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                  >
-                    <div className="user-avatar">
-                      {user?.fotoPerfil ? (
-                        <img
-                          src={user.fotoPerfil}
-                          alt="Foto do perfil"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                          onError={(e) => {
-                            console.log('Erro ao carregar imagem:', user.fotoPerfil);
-                            e.target.style.display = 'none';
-                            e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
-                          }}
-                        />
-                      ) : (
-                        userName?.substring(0, 2).toUpperCase()
-                      )}
-                    </div>
-                  </button>
-
-                  {showUserMenu && (
-                    <div className="user-dropdown">
-                      <div className="user-info">
-                        <div className="user-avatar-large">
-                          {user?.fotoPerfil ? (
-                            <img
-                              src={user.fotoPerfil}
-                              alt="Foto do perfil"
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-                              onError={(e) => {
-                                console.log('Erro ao carregar imagem grande:', user.fotoPerfil);
-                                e.target.style.display = 'none';
-                                e.target.parentElement.innerHTML = userName?.substring(0, 2).toUpperCase();
-                              }}
-                            />
-                          ) : (
-                            userName?.substring(0, 2).toUpperCase()
-                          )}
-                        </div>
-                        <div className="user-details">
-                          <div className="user-name">
-                            {userName}
-                            {user?.isVerified && (
-                              <span className="verified-text">Verificado</span>
-                            )}
-                          </div>
-                          <div className="user-phone">{user?.phone || user?.telefone || user?.email}</div>
-                        </div>
-                      </div>
-
-                      <div className="user-stats">
-                        <div className="stat">
-                          <div className="stat-number">{user?.helpedCount || 0}</div>
-                          <div className="stat-label">Pessoas ajudadas</div>
-                        </div>
-                        <div className="stat">
-                          <div className="stat-number">{user?.receivedHelpCount || 0}</div>
-                          <div className="stat-label">Ajudas recebidas</div>
-                        </div>
-                      </div>
-
-                      <div className="user-actions">
-                        <button
-                          className="menu-item profile-btn"
-                          onClick={() => {
-                            navigate('/perfil');
-                            setShowUserMenu(false);
-                          }}
-                        >
-                          👤 Ver perfil
-                        </button>
-
-                        <button
-                          className="menu-item"
-                          onClick={() => {
-                            navigate('/conversas');
-                            setShowUserMenu(false);
-                          }}
-                        >
-                          💬 Minhas conversas
-                        </button>
-
-                        {isAdmin && (
-                          <button
-                            className="menu-item"
-                            onClick={() => {
-                              navigate('/admin');
-                              setShowUserMenu(false);
-                            }}
-                          >
-                            ⚙️ Dashboard Admin
-                          </button>
-                        )}
-
-                        <button
-                          className="menu-item logout-btn"
-                          onClick={() => {
-                            localStorage.removeItem('solidar-user');
-                            window.location.reload();
-                          }}
-                        >
-                          🚪 Sair
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </nav>
+    <div className={`qa-page-v4 ${selectedOrder ? 'modal-open' : ''}`}>
+      <ReusableHeader
+        navigationItems={queroAjudarNavigationItems}
+        showAdminButtons={true}
+        showPainelSocial={true}
+        currentPage="quero-ajudar"
+      />
 
       <div className="skip-links">
         <a href="#main-content" className="skip-link">
@@ -2142,9 +1863,9 @@ export default function QueroAjudarPage() {
               
               <button
                 className={`btn-accessibility-section ${highContrast ? 'active' : ''}`}
-                onClick={() => setHighContrast(!highContrast)}
-                aria-label={highContrast ? 'Desativar alto contraste' : 'Ativar alto contraste'}
-                title={highContrast ? 'Desativar alto contraste' : 'Ativar alto contraste'}
+                onClick={() => setShowAccessibilityModal(true)}
+                aria-label="Abrir opções de acessibilidade"
+                title="Abrir opções de acessibilidade"
               >
                 <Accessibility size={18} aria-hidden="true" />
               </button>
@@ -2316,6 +2037,15 @@ export default function QueroAjudarPage() {
         onClear={clearFilters}
       />
 
+      <AccessibilityModal
+        show={showAccessibilityModal}
+        onClose={() => setShowAccessibilityModal(false)}
+        fontSize={fontSize}
+        onFontSizeChange={handleFontSizeChange}
+        highContrast={highContrast}
+        onContrastChange={handleContrastChange}
+      />
+
       {selectedOrder && (
         <div
           className="qa-modal-overlay"
@@ -2339,14 +2069,6 @@ export default function QueroAjudarPage() {
         onClose={() => setOrderToHelp(null)}
       />
 
-      <Toaster position="top-right" toastOptions={{
-        duration: 3000,
-        style: { background: '#1e293b', color: '#fff', borderRadius: '12px' },
-        ariaProps: {
-          role: 'status',
-          'aria-live': 'polite',
-        },
-      }} />
     </div>
   );
 }

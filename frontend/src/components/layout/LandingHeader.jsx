@@ -2,80 +2,52 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { Heart, Bell, User, LogOut, Settings, Globe, ArrowLeft } from 'lucide-react';
-import logo from '../../assets/images/marca.png';
-import chatNotificationService from '../../services/chatNotificationService';
-import ApiService from '../../services/apiService';
+import { Heart, Bell, User, LogOut, Settings, Globe, ArrowLeft, X, MessageCircle, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
+import { getSocket } from '../../services/socketService';
+import marca from '../../assets/images/marca.png';
 import apiService from '../../services/apiService';
 import './LandingHeader.css';
 
-const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastroButtons = false }) => {
+const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastroButtons = false, showNavLinks = true }) => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   
-  console.log('=== LANDING HEADER DEBUG ===');
-  console.log('showPanelButtons:', showPanelButtons);
-  console.log('isAuthenticated:', isAuthenticated());
-  console.log('user:', user);
-  const { 
-    notifications, 
-    addChatNotification, 
-    markAsRead, 
-    markAllAsRead, 
-    clearNotifications, 
-    getUnreadCount 
+  const {
+    notifications,
+    addChatNotification,
+    markAsRead,
+    markAllAsRead,
+    clearNotifications,
+    getUnreadCount
   } = useNotifications();
-  
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [globalMonitoringInterval, setGlobalMonitoringInterval] = useState(null);
   const [userStats, setUserStats] = useState({
     helpedCount: 0,
     receivedHelpCount: 0
   });
 
   // Verificar se é administrador
-  const storedUser = JSON.parse(localStorage.getItem('solidar-user') || '{}');
-  console.log('User data:', { user, storedUser }); // Debug
-  
-  const isAdmin = user?.role === 'admin' || 
-                  user?.isAdmin || 
-                  user?.tipo === 'admin' || 
-                  user?.email === 'admin@solidarbairro.com' ||
-                  storedUser?.role === 'admin' || 
-                  storedUser?.isAdmin || 
-                  storedUser?.tipo === 'admin' ||
-                  storedUser?.email === 'admin@solidarbairro.com';
-  
+  console.log('User data:', { user }); // Debug
+
+  const isAdmin = user?.role === 'admin' ||
+                  user?.isAdmin ||
+                  user?.tipo === 'admin' ||
+                  user?.email === 'admin@solidarbairro.com';
+
   const showAdminButton = isAdmin;
 
-  useEffect(() => {
-    // Iniciar monitoramento global de mensagens
-    const startChatMonitoring = () => {
-      if (isAuthenticated() && (user?.uid || user?.id)) {
-        const userId = user.uid || user.id;
-        
-        // Callback para novas mensagens
-        const handleNewChatMessage = (conversationId, senderName, message) => {
-          addChatNotification(conversationId, senderName, message);
-        };
-        
-        // Iniciar monitoramento global
-        const interval = chatNotificationService.startGlobalMessageMonitoring(
-          userId, 
-          handleNewChatMessage
-        );
-        
-        setGlobalMonitoringInterval(interval);
-      }
-    };
-    
-    if (isAuthenticated()) {
-      startChatMonitoring();
-    }
+  console.log('=== LANDING HEADER DEBUG ===');
+  console.log('showPanelButtons:', showPanelButtons);
+  console.log('isAuthenticated:', isAuthenticated());
+  console.log('user:', user);
+  console.log('isAdmin:', isAdmin);
+  console.log('showAdminButton:', showAdminButton);
 
+  useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showUserMenu || showNotifications) {
+      if (showUserMenu) {
         const userMenuElement = document.querySelector('.user-menu-wrapper');
         const notificationElement = document.querySelector('.notification-wrapper');
         
@@ -83,26 +55,42 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
           setShowUserMenu(false);
         }
         
+      }
+      if (showNotifications) {
+        const notificationElement = document.querySelector('.notification-wrapper');
         if (notificationElement && !notificationElement.contains(event.target)) {
           setShowNotifications(false);
         }
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      
-      // Limpar monitoramento global
-      if (globalMonitoringInterval) {
-        clearInterval(globalMonitoringInterval);
-      }
-      
-      // Limpar serviço de chat
-      chatNotificationService.cleanup();
     };
-  }, [showUserMenu, showNotifications, isAuthenticated, user, addChatNotification]);
+  }, [showUserMenu, showNotifications]);
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      // Iniciar monitoramento via Socket
+      const socket = getSocket();
+      if (socket) {
+        const handleNewNotification = (data) => {
+          if (data && (data.type === 'chat' || data.conversationId)) {
+            addChatNotification(
+              data.conversationId,
+              data.senderName || data.title || 'Usuário',
+              data.message,
+              data.timestamp
+            );
+          }
+        };
+        socket.on('notification', handleNewNotification);
+        return () => socket.off('notification', handleNewNotification);
+      }
+    }
+  }, [isAuthenticated, user, addChatNotification]);
 
   useEffect(() => {
     // Load user stats
@@ -187,84 +175,88 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
         )}
 
         <div className="logo-wrapper" onClick={() => navigate('/')}>
-          <div className="logo-icon">
-            <img src={logo} alt="SolidarBrasil" style={{ width: '48px', height: '48px' }} />
+          <div className="logo-icon" style={{ width: '48px', height: '48px', position: 'relative', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={marca} alt="SolidarBrasil" style={{ width: '80px', height: '80px', objectFit: 'contain', position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }} />
           </div>
           <span className="logo-text">Solidar<span className="logo-accent">Brasil</span></span>
         </div>
 
         <div className="nav-menu">
-          <a href="/#features" className="nav-link">
-            Funcionalidades
-            <span className="link-underline" />
-          </a>
-          <button className="nav-link" onClick={() => navigate('/quero-ajudar')}>
-            Quero Ajudar
-            <span className="link-underline" />
-          </button>
-          <button className="nav-link" onClick={() => navigate('/preciso-de-ajuda')}>
-            Preciso de Ajuda
-            <span className="link-underline" />
-          </button>
-          <button className="nav-link" onClick={() => navigate('/achados-perdidos')}>
-            <span className="link-underline" />
-          </button>
-          
-          {showPanelButtons && (
-            <div className="panel-buttons-container">
-              <button 
-                onClick={() => navigate('/painel-social')}
-                title="Painel Social"
-                className="panel-icon-button"
-              >
-                <Globe size={20} />
+          {showNavLinks && (
+            <>
+              <button className="nav-link" onClick={() => {
+                const footer = document.querySelector('.footer');
+                if (footer) {
+                  footer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}>
+                Contato
+                <span className="link-underline" />
               </button>
-              <button 
-                onClick={() => navigate('/admin')}
-                title="Painel Admin"
-                className="panel-icon-button admin"
-              >
-                <Settings size={20} />
-              </button>
-            </div>
+            </>
           )}
-          
-          {showCadastroButtons ? (
-            <button
-              className="cadastro-login-btn"
-              onClick={() => navigate('/login')}
-              style={{
-                background: 'linear-gradient(135deg, #64748b, #475569)',
-                border: 'none',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '8px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
-              onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-            >
-              Entrar
-            </button>
-          ) : !isAuthenticated() && !showPanelButtons ? (
-            <div className="auth-group">
+
+          {!isAuthenticated() ? (
+            <div className="auth-buttons">
               <button
-                className="auth-btn-login"
+                className="login-btn"
                 onClick={() => navigate('/login')}
+                style={{
+                  background: 'linear-gradient(135deg, #64748b, #475569)',
+                  border: 'none',
+                  color: 'white',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  marginRight: '8px'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
               >
                 Entrar
               </button>
               <button
-                className="auth-btn-register"
+                className="register-btn"
                 onClick={() => navigate('/cadastro')}
+                style={{
+                  background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
+                  border: 'none',
+                  color: 'white',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
               >
                 Cadastrar
               </button>
             </div>
           ) : isAuthenticated() ? (
             <>
+              {showAdminButton && (
+                <>
+                  <button
+                    onClick={() => navigate('/painel-social')}
+                    title="Painel Social"
+                    className="panel-icon-button"
+                  >
+                    <Globe size={20} />
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin')}
+                    title="Painel Admin"
+                    className="panel-icon-button admin"
+                  >
+                    <Settings size={20} />
+                  </button>
+                </>
+              )}
+
               <button
                 className="notification-btn"
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -276,64 +268,119 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
               </button>
 
               {showNotifications && (
-                <div className="notification-dropdown">
-                  <div className="notification-header">
-                    <h3>Notificações</h3>
-                    {notifications.length > 0 && (
-                      <div className="notification-actions">
-                        {unreadCount > 0 && (
-                          <button
-                            className="action-btn mark-read-btn"
-                            onClick={markAllAsRead}
-                            title="Marcar todas como lidas"
-                          >
-                            ✓
-                          </button>
-                        )}
+                <div className="notification-dropdown-improved">
+                  <div className="notification-header-improved">
+                    <div className="notification-title-section">
+                      <h3>Notificações</h3>
+                      {unreadCount > 0 && (
+                        <span className="unread-count">{unreadCount} não lidas</span>
+                      )}
+                    </div>
+                    <button
+                      className="notification-close-btn"
+                      onClick={() => setShowNotifications(false)}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {notifications.length === 0 ? (
+                    <div className="notification-empty-improved">
+                      <Bell size={32} className="empty-icon" />
+                      <p className="empty-title">Nenhuma notificação</p>
+                      <p className="empty-subtitle">Você receberá notificações sobre mensagens e atividades aqui</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="notification-list-improved">
+                        {notifications.slice(0, 10).map((notification) => {
+                          const timeAgo = (() => {
+                            const now = new Date();
+                            let time;
+
+                            // Verificar se é um timestamp do Firebase (objeto com seconds)
+                            if (notification.timestamp && typeof notification.timestamp === 'object' && notification.timestamp.seconds) {
+                              time = new Date(notification.timestamp.seconds * 1000);
+                            }
+                            // Verificar se é uma string ISO
+                            else if (typeof notification.timestamp === 'string') {
+                              time = new Date(notification.timestamp);
+                            }
+                            // Verificar se é um método toDate (Firebase Timestamp)
+                            else if (notification.timestamp && notification.timestamp.toDate) {
+                              time = notification.timestamp.toDate();
+                            }
+                            // Fallback para data atual
+                            else {
+                              time = new Date();
+                            }
+
+                            if (isNaN(time.getTime())) return 'Data inválida';
+
+                            const diffInMinutes = Math.floor((now - time) / (1000 * 60));
+
+                            if (diffInMinutes < 1) return 'Agora mesmo';
+                            if (diffInMinutes < 60) return `${diffInMinutes}min atrás`;
+
+                            const diffInHours = Math.floor(diffInMinutes / 60);
+                            if (diffInHours < 24) return `${diffInHours}h atrás`;
+
+                            const diffInDays = Math.floor(diffInHours / 24);
+                            if (diffInDays < 7) return `${diffInDays}d atrás`;
+
+                            return time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                          })();
+
+                          const getNotificationIcon = (type) => {
+                            switch (type) {
+                              case 'chat': return <MessageCircle size={16} className="text-blue-500" />;
+                              case 'help': return <Heart size={16} className="text-red-500" />;
+                              case 'success': return <CheckCircle2 size={16} className="text-green-500" />;
+                              case 'warning': return <AlertTriangle size={16} className="text-orange-500" />;
+                              default: return <Bell size={16} className="text-gray-500" />;
+                            }
+                          };
+
+                          return (
+                            <div
+                              key={notification.id}
+                              className={`notification-item-improved ${!notification.read ? 'unread' : ''}`}
+                              onClick={() => !notification.read && markAsRead(notification.id)}
+                            >
+                              <div className="notification-icon-improved">
+                                {getNotificationIcon(notification.type)}
+                              </div>
+                              <div className="notification-content-improved">
+                                <div className="notification-item-header">
+                                  <h4 className="notification-item-title">{notification.title}</h4>
+                                  <span className="notification-time">
+                                    <Clock size={12} />
+                                    {timeAgo}
+                                  </span>
+                                </div>
+                                <p className="notification-item-message">{notification.message}</p>
+                              </div>
+                              {!notification.read && <div className="unread-dot" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="notification-footer-improved">
                         <button
-                          className="action-btn clear-btn"
                           onClick={clearNotifications}
-                          title="Limpar todas"
+                          className="clear-all-btn"
                         >
-                          🗑️
+                          Limpar todas
                         </button>
+                        {notifications.length > 10 && (
+                          <span className="more-notifications">
+                            +{notifications.length - 10} mais
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="notification-list">
-                    {notifications.length === 0 ? (
-                      <div className="no-notifications">
-                        Nenhuma notificação ainda
-                      </div>
-                    ) : (
-                      notifications.map((notification) => (
-                        <div
-                          key={notification.id}
-                          className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.type === 'chat' ? 'chat-notification' : ''}`}
-                          onClick={() => handleNotificationClick(notification)}
-                        >
-                          <div className="notification-content">
-                            <div className="notification-icon">
-                              {notification.type === 'chat' ? '💬' : '🔔'}
-                            </div>
-                            <div className="notification-text">
-                              <p className="notification-title">{notification.title}</p>
-                              <p className="notification-message">{notification.message}</p>
-                              <span className="notification-time">
-                                {new Date(notification.timestamp).toLocaleString('pt-BR', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                          {!notification.read && <div className="unread-dot"></div>}
-                        </div>
-                      ))
-                    )}
-                  </div>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -451,9 +498,15 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
 
                       <button
                         className="menu-item logout-btn"
-                        onClick={() => {
-                          localStorage.removeItem('solidar-user');
-                          window.location.reload();
+                        onClick={async () => {
+                          try {
+                            await logout();
+                            navigate('/');
+                          } catch (error) {
+                            console.error('Erro ao fazer logout:', error);
+                            // Mesmo com erro, redirecionar
+                            navigate('/');
+                          }
                         }}
                       >
                         🚪 Sair

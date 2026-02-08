@@ -589,3 +589,32 @@
   70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(13, 148, 136, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(13, 148, 136, 0); }
 }
+
+.admin-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: #1e293b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease;
+}
+
+.admin-menu-item:hover, .admin-menu-item:active {
+  background-color: #f1f5f9;
+}
+
+.admin-menu-item.logout {
+  color: #ef4444;
+}
+
+.admin-menu-item.logout:hover, .admin-menu-item.logout:active {
+  background-color: #fef2f2;
+}

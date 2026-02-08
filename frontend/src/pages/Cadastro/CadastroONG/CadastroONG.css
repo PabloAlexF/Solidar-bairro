@@ -397,7 +397,7 @@
   outline: none;
   background: #fff;
   border-color: var(--ong-color);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
 }
 
 .fam-reg-form-input:focus ~ .fam-reg-input-icon {
@@ -446,6 +446,10 @@
   color: #1e293b;
 }
 
+.ong-reg-btn-prev:active {
+  transform: scale(0.98);
+}
+
 .ong-reg-btn-next,
 .ong-reg-btn-finish {
   background: linear-gradient(135deg, var(--ong-color), var(--ong-color-dark));
@@ -457,6 +461,11 @@
 .ong-reg-btn-finish:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
+.ong-reg-btn-next:active,
+.ong-reg-btn-finish:active {
+  transform: translateY(0);
 }
 
 .ong-reg-btn-cancel {

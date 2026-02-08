@@ -3,18 +3,23 @@ export class SecurityMiddleware {
   
   // Configurar Content Security Policy
   static setupCSP() {
+    // Skip CSP setup in development to avoid conflicts
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Necessário para React
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: https:",
-      "connect-src 'self' http://localhost:3001 https://nominatim.openstreetmap.org https://api.openstreetmap.org",
-      "frame-src 'none'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn-uicons.flaticon.com",
+      "font-src 'self' https://fonts.gstatic.com https://cdn-uicons.flaticon.com",
+      "img-src 'self' data: https: blob:",
+      "connect-src 'self' https://solidar-bairro-backend.onrender.com https://viacep.com.br https://nominatim.openstreetmap.org https://api.openstreetmap.org",
+      "frame-src 'self'",
       "object-src 'none'",
       "base-uri 'self'"
     ].join('; ');
-    
+
     const meta = document.createElement('meta');
     meta.httpEquiv = 'Content-Security-Policy';
     meta.content = csp;
@@ -23,18 +28,15 @@ export class SecurityMiddleware {
   
   // Configurar headers de segurança adicionais
   static setupSecurityHeaders() {
-    // X-Frame-Options
-    const frameOptions = document.createElement('meta');
-    frameOptions.httpEquiv = 'X-Frame-Options';
-    frameOptions.content = 'DENY';
-    document.head.appendChild(frameOptions);
-    
+    // Nota: X-Frame-Options deve ser configurado no servidor via headers HTTP
+    // Não pode ser definido via meta tag
+
     // X-Content-Type-Options
     const contentType = document.createElement('meta');
     contentType.httpEquiv = 'X-Content-Type-Options';
     contentType.content = 'nosniff';
     document.head.appendChild(contentType);
-    
+
     // Referrer Policy
     const referrer = document.createElement('meta');
     referrer.name = 'referrer';
@@ -120,6 +122,15 @@ export class SecurityMiddleware {
       console.error(`[${context}] Erro detalhado:`, error);
     }
     
+    // Para erros de autorização específicos, manter a mensagem original
+    if (error.message && (error.message.includes('autorizado') || error.message.includes('autenticado'))) {
+      return {
+        message: error.message,
+        code: 'AuthorizationError',
+        timestamp: new Date().toISOString()
+      };
+    }
+    
     // Mensagens genéricas para produção
     const userFriendlyMessages = {
       'NetworkError': 'Erro de conexão. Verifique sua internet.',
@@ -132,7 +143,7 @@ export class SecurityMiddleware {
     };
     
     const errorType = error.name || 'ServerError';
-    const userMessage = userFriendlyMessages[errorType] || 'Ocorreu um erro inesperado.';
+    const userMessage = userFriendlyMessages[errorType] || error.message || 'Ocorreu um erro inesperado.';
     
     return {
       message: userMessage,
