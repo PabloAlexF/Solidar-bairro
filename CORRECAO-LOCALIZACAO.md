@@ -6,23 +6,37 @@ O site estava mostrando "São Paulo" como localização padrão porque:
 2. Quando as APIs falhavam, o código usava "São Paulo" como fallback
 
 ## Solução Aplicada
-Atualizei o arquivo `backend/src/server.js` para incluir as URLs necessárias no CSP:
+Atualizei 2 arquivos para corrigir o problema:
+
+### 1. Backend (`backend/src/server.js`)
+Adicionei as URLs necessárias no CSP do servidor
+
+### 2. Frontend (`frontend/public/index.html`) ⭐ PRINCIPAL
+Adicionei meta tag CSP com as URLs:
 - `https://api.bigdatacloud.net` - API principal de geocodificação
 - `https://api.allorigins.win` - Proxy para Nominatim (fallback)
-- `wss://*.onrender.com` e `ws://*.onrender.com` - WebSocket para notificações em tempo real
+- `wss://*.onrender.com` e `ws://*.onrender.com` - WebSocket para notificações
 
 ## Como Fazer o Deploy
 
 ### 1. Commit e Push das Alterações
 ```bash
 cd c:\Users\Administrator\Desktop\solidar-bairro
-git add backend/src/server.js
-git commit -m "fix: adiciona APIs de geocodificação ao CSP para corrigir detecção de localização"
+git add backend/src/server.js frontend/public/index.html
+git commit -m "fix: adiciona APIs de geocodificação ao CSP (backend e frontend)"
 git push origin main
 ```
 
-### 2. Deploy no Render
-O Render detectará automaticamente as mudanças e fará o deploy. Aguarde alguns minutos.
+### 2. Rebuild e Deploy do Frontend
+```bash
+cd frontend
+npm run build
+npm run deploy
+```
+
+### 3. Aguardar Deploy
+- Frontend: GitHub Pages (2-3 minutos)
+- Backend: Render (automático, 2-3 minutos)
 
 ### 3. Verificar se Funcionou
 1. Acesse seu site: https://solidarbrasil.com.br
