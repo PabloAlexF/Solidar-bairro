@@ -301,6 +301,8 @@ const OnboardingStepContentMobile = ({
   interactionsComplete,
   steps,
   currentStep,
+  showSubmitButton,
+  setShowSubmitButton,
 }) => {
   const Icon = step.icon;
 
@@ -461,8 +463,9 @@ const OnboardingStepContentMobile = ({
                       placeholder="Ex: Familia com 3 criancas precisa de cesta basica urgente..."
                       value={helpDescription}
                       onChange={(e) => setHelpDescription(e.target.value)}
+                      onBlur={() => setShowSubmitButton(true)}
+                      onFocus={() => setShowSubmitButton(false)}
                       rows={3}
-                      autoFocus
                     />
                     <div className="onbm-char-count">
                       <span className={helpDescription.length > 0 ? 'active' : ''}>{helpDescription.length}</span> / 500
@@ -481,18 +484,27 @@ const OnboardingStepContentMobile = ({
                         <span>Vizinhos proximos notificados</span>
                       </div>
                     </div>
-                    <motion.button
-                      className="onbm-modal-btn primary"
-                      disabled={!helpDescription.trim()}
-                      onClick={() => {
-                        setHelpCreationStep('published');
-                        handleInteraction('need-help', 'completed');
-                      }}
-                      whileTap={helpDescription.trim() ? { scale: 0.97 } : {}}
-                    >
-                      <Sparkles size={14} />
-                      Enviar para Analise
-                    </motion.button>
+                    <AnimatePresence>
+                      {showSubmitButton && (
+                        <motion.button
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          transition={{ duration: 0.2 }}
+                          className="onbm-modal-btn primary"
+                          disabled={!helpDescription.trim()}
+                          onClick={() => {
+                            setHelpCreationStep('published');
+                            handleInteraction('need-help', 'completed');
+                            setShowSubmitButton(false);
+                          }}
+                          whileTap={helpDescription.trim() ? { scale: 0.97 } : {}}
+                        >
+                          <Sparkles size={14} />
+                          Enviar para Analise
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </motion.div>
               </motion.div>
@@ -757,6 +769,7 @@ const OnboardingMobile = ({ onComplete, onSkip }) => {
   const [lostFoundModal, setLostFoundModal] = useState(false);
   const [selectedLostFoundItem, setSelectedLostFoundItem] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showSubmitButton, setShowSubmitButton] = useState(true);
 
   useEffect(() => {
     document.body.classList.add('onbm-modal-open');
@@ -1014,6 +1027,8 @@ const OnboardingMobile = ({ onComplete, onSkip }) => {
                 interactionsComplete={interactionsComplete}
                 steps={steps}
                 currentStep={currentStep}
+                showSubmitButton={showSubmitButton}
+                setShowSubmitButton={setShowSubmitButton}
               />
             </motion.div>
           </AnimatePresence>

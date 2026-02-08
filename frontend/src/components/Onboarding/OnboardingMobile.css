@@ -897,6 +897,8 @@
   max-height: 90vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
 }
 
 .onbm-modal-sheet {
@@ -961,6 +963,9 @@
 
 .onbm-modal-body {
   padding: 16px;
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .onbm-modal-body.success {
@@ -982,8 +987,9 @@
   border-radius: 10px;
   font-size: 16px;
   font-family: inherit;
-  resize: vertical;
+  resize: none;
   min-height: 80px;
+  max-height: 120px;
   box-sizing: border-box;
   transition: border-color 0.15s ease;
   -webkit-appearance: none;
