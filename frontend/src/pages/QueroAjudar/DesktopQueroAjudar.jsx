@@ -1665,11 +1665,17 @@ export default function QueroAjudarPage() {
   // UseEffect separado para carregar localização na inicialização
   useEffect(() => {
     const loadInitialLocation = async () => {
+      console.log('🔍 [QueroAjudar] Iniciando detecção de localização...');
+      console.log('🔍 [QueroAjudar] User:', user);
+      console.log('🔍 [QueroAjudar] User.endereco:', user?.endereco);
+      
       // Prioridade 1: Usar endereço cadastrado do usuário
       if (user && user.endereco) {
         const userCity = user.endereco.cidade || user.endereco.city || user.endereco.localidade || '';
         const userState = user.endereco.estado || user.endereco.state || user.endereco.uf || '';
         const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || '';
+        
+        console.log('🔍 [QueroAjudar] Dados extraídos:', { userCity, userState, userNeighborhood });
         
         if (userCity && userState) {
           setUserLocation({ 
@@ -1677,23 +1683,27 @@ export default function QueroAjudarPage() {
             state: userState,
             neighborhood: userNeighborhood 
           });
-          console.log('✅ Localização definida pelo endereço cadastrado:', { city: userCity, state: userState, neighborhood: userNeighborhood });
+          console.log('✅ [QueroAjudar] Localização definida pelo endereço cadastrado:', { city: userCity, state: userState, neighborhood: userNeighborhood });
           setLocationLoading(false);
           return;
+        } else {
+          console.log('⚠️ [QueroAjudar] Endereço incompleto (falta cidade ou estado)');
         }
+      } else {
+        console.log('⚠️ [QueroAjudar] Usuário não tem endereço cadastrado');
       }
 
       // Prioridade 2: Tentar geolocalização do navegador
       try {
-        console.log('Tentando obter localização do navegador...');
+        console.log('🌍 [QueroAjudar] Tentando geolocalização do navegador...');
         const currentLocation = await getCurrentLocation();
         setUserLocation(currentLocation);
-        console.log('✅ Localização obtida do navegador:', currentLocation);
+        console.log('✅ [QueroAjudar] Localização obtida do navegador:', currentLocation);
       } catch (error) {
-        console.warn('⚠️ Não foi possível obter localização:', error.message);
+        console.warn('⚠️ [QueroAjudar] Geolocalização falhou:', error.message);
         // Prioridade 3: Mostrar TODOS os pedidos (sem filtro de localização)
         setUserLocation({ city: '', state: '', showAll: true });
-        console.log('ℹ️ Mostrando todos os pedidos (sem filtro de localização)');
+        console.log('ℹ️ [QueroAjudar] Mostrando todos os pedidos (sem filtro de localização)');
       }
       setLocationLoading(false);
     };

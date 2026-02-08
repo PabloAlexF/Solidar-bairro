@@ -207,11 +207,17 @@ export const MobileQueroAjudar = () => {
   // Efeito para carregar a localização e outros dados na inicialização
   useEffect(() => {
     const loadLocation = async () => {
+      console.log('🔍 [QueroAjudar Mobile] Iniciando detecção de localização...');
+      console.log('🔍 [QueroAjudar Mobile] User:', user);
+      console.log('🔍 [QueroAjudar Mobile] User.endereco:', user?.endereco);
+      
       // Prioridade 1: Usar endereço cadastrado do usuário
       if (user && user.endereco) {
         const userCity = user.endereco.cidade || user.endereco.city || user.endereco.localidade || '';
         const userState = user.endereco.estado || user.endereco.state || user.endereco.uf || '';
         const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || '';
+        
+        console.log('🔍 [QueroAjudar Mobile] Dados extraídos:', { userCity, userState, userNeighborhood });
         
         if (userCity && userState) {
           setUserLocation({ 
@@ -219,21 +225,26 @@ export const MobileQueroAjudar = () => {
             state: userState,
             neighborhood: userNeighborhood 
           });
-          console.log('✅ Localização definida pelo endereço cadastrado (Mobile):', { city: userCity, state: userState, neighborhood: userNeighborhood });
+          console.log('✅ [QueroAjudar Mobile] Localização definida pelo endereço cadastrado:', { city: userCity, state: userState, neighborhood: userNeighborhood });
           return;
+        } else {
+          console.log('⚠️ [QueroAjudar Mobile] Endereço incompleto (falta cidade ou estado)');
         }
+      } else {
+        console.log('⚠️ [QueroAjudar Mobile] Usuário não tem endereço cadastrado');
       }
 
       // Prioridade 2: Tentar geolocalização
       try {
+        console.log('🌍 [QueroAjudar Mobile] Tentando geolocalização...');
         const location = await getLocationWithFallback();
         setUserLocation(location);
-        console.log('✅ Localização obtida automaticamente (Mobile):', location);
+        console.log('✅ [QueroAjudar Mobile] Localização obtida:', location);
       } catch (error) {
-        console.warn('⚠️ Não foi possível obter localização (Mobile):', error.message);
+        console.warn('⚠️ [QueroAjudar Mobile] Geolocalização falhou:', error.message);
         // Prioridade 3: Mostrar TODOS os pedidos (sem filtro de localização)
         setUserLocation({ city: '', state: '', showAll: true });
-        console.log('ℹ️ Mostrando todos os pedidos (sem filtro de localização) (Mobile)');
+        console.log('ℹ️ [QueroAjudar Mobile] Mostrando todos os pedidos (sem filtro)');
       }
     };
 
