@@ -778,7 +778,7 @@ const OnboardingMobile = ({ onComplete, onSkip }) => {
         navLabel: 'Bem-vindo',
         icon: PartyPopper,
         color: 'orange',
-        title: 'Bem-vindo ao SolidarBairro!',
+        title: 'Bem-vindo ao SolidarBrasil!',
         description: 'Uma plataforma segura onde vizinhos se conectam para ajudar uns aos outros.',
       },
       {
@@ -873,7 +873,7 @@ const OnboardingMobile = ({ onComplete, onSkip }) => {
         icon: Sparkles,
         color: 'green',
         title: 'Tudo pronto!',
-        description: 'Agora voce conhece o SolidarBairro. Uma comunidade mais unida comeca com voce.',
+        description: 'Agora voce conhece o SolidarBrasil. Uma comunidade mais unida comeca com voce.',
       },
     ],
     []
@@ -946,7 +946,7 @@ const OnboardingMobile = ({ onComplete, onSkip }) => {
             <div className="onbm-logo">
               <Heart size={16} />
             </div>
-            <span className="onbm-logo-text">SolidarBairro</span>
+            <span className="onbm-logo-text">SolidarBrasil</span>
           </div>
           <button className="onbm-close" onClick={handleSkip}>
             <X size={18} />

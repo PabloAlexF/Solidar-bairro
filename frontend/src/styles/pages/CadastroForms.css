@@ -380,7 +380,7 @@
   border-radius: 1rem;
   background: var(--bg-white);
   border: 2px solid var(--border-gray-100);
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-gray-900);
   outline: none;

@@ -931,7 +931,7 @@ const OnboardingDesktop = ({ onComplete, onSkip }) => {
         navDesc: 'Conheca a plataforma',
         icon: PartyPopper,
         color: 'orange',
-        title: 'Bem-vindo ao SolidarBairro!',
+        title: 'Bem-vindo ao SolidarBrasil!',
         description:
           'Uma plataforma segura onde vizinhos se conectam para ajudar uns aos outros. Descubra como transformar sua comunidade.',
       },
@@ -1091,7 +1091,7 @@ const OnboardingDesktop = ({ onComplete, onSkip }) => {
         color: 'green',
         title: 'Voce esta pronto para fazer a diferenca!',
         description:
-          'Agora voce conhece o SolidarBairro. Uma comunidade mais unida e solidaria comeca com voce.',
+          'Agora voce conhece o SolidarBrasil. Uma comunidade mais unida e solidaria comeca com voce.',
       },
     ],
     []
@@ -1171,7 +1171,7 @@ const OnboardingDesktop = ({ onComplete, onSkip }) => {
             <div className="onbd-logo">
               <Heart size={22} />
             </div>
-            <span className="onbd-logo-text">SolidarBairro</span>
+            <span className="onbd-logo-text">SolidarBrasil</span>
           </div>
 
           <nav className="onbd-nav">
