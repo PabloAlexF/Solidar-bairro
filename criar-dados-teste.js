@@ -155,6 +155,53 @@ async function createTestData() {
         console.log('❌ Erro ao criar Cidadão:', error.message);
     }
     
+    // Criar Item de Achados e Perdidos
+    try {
+        console.log('📝 Criando item de achados e perdidos...');
+        const achadosPerdidosData = {
+            title: "asdasdas",
+            description: "Item de teste para achados e perdidos",
+            category: "Outros",
+            type: "lost",
+            location: "dsadasdsa",
+            neighborhood: "",
+            reward: "",
+            state: "",
+            tags: [],
+            contact_info: "teste@exemplo.com",
+            city: "São Paulo"
+        };
+
+        const achadosResponse = await fetch(`${API_BASE_URL}/achados-perdidos`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer test-token' // Você pode precisar ajustar isso baseado na autenticação
+            },
+            body: JSON.stringify(achadosPerdidosData)
+        });
+
+        if (achadosResponse.ok) {
+            const result = await achadosResponse.json();
+            console.log('✅ Item de achados e perdidos criado com sucesso!');
+            console.log('📅 Data de criação:', new Date(result.data.created_at.seconds * 1000).toLocaleString('pt-BR', {
+                timeZone: 'America/Sao_Paulo',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }));
+        } else {
+            console.log('❌ Erro ao criar item de achados e perdidos:', achadosResponse.status);
+            const errorText = await achadosResponse.text();
+            console.log('Erro detalhado:', errorText);
+        }
+    } catch (error) {
+        console.log('❌ Erro ao criar item de achados e perdidos:', error.message);
+    }
+
     console.log('\n🎉 Dados de teste criados! Agora o dashboard terá itens pendentes para análise.');
     console.log('🔄 Atualize o dashboard para ver os novos registros pendentes.');
 }

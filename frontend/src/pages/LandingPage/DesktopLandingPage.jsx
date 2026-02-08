@@ -842,7 +842,7 @@ export default function DesktopLandingPage() {
 
       {/* Action Cards */}
       <section id="action-cards" className="action-cards-section">
-        <div className="section-container">
+        <div className="section-container" style={{ maxWidth: '1400px' }}>
           <div className="cards-grid">
             <ActionCard
               icon={<Heart size={40} />}

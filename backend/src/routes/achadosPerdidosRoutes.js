@@ -13,6 +13,10 @@ router.put('/:id', authenticateToken, achadosPerdidosController.updateItem);
 router.delete('/:id', authenticateToken, achadosPerdidosController.deleteItem);
 router.patch('/:id/resolve', authenticateToken, achadosPerdidosController.markAsResolved);
 
+// Rotas para dicas
+router.get('/:itemId/tips', achadosPerdidosController.getTipsByItemId);
+router.post('/:itemId/tips', authenticateToken, achadosPerdidosController.createTip);
+
 // Rota com parâmetro deve vir por último
 router.get('/:id', achadosPerdidosController.getItemById);
 

@@ -198,6 +198,51 @@ const markAsResolved = async (req, res) => {
   }
 };
 
+const getTipsByItemId = async (req, res) => {
+  try {
+    const tips = await achadosPerdidosService.getTipsByItemId(req.params.itemId);
+    res.json({
+      success: true,
+      data: tips,
+      total: tips.length
+    });
+  } catch (error) {
+    console.error('Erro ao buscar dicas:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor'
+    });
+  }
+};
+
+const createTip = async (req, res) => {
+  try {
+    const userId = req.user?.uid || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    const tipData = {
+      item_id: req.params.itemId,
+      user_id: userId,
+      text: req.body.text
+    };
+
+    const tip = await achadosPerdidosService.createTip(tipData);
+    res.status(201).json({
+      success: true,
+      message: 'Dica criada com sucesso',
+      data: tip
+    });
+  } catch (error) {
+    console.error('Erro ao criar dica:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   createItem,
   getAllItems,
@@ -205,5 +250,7 @@ module.exports = {
   updateItem,
   deleteItem,
   getUserItems,
-  markAsResolved
+  markAsResolved,
+  getTipsByItemId,
+  createTip
 };

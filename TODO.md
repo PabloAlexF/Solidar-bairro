@@ -1,21 +1,17 @@
-# TODO: Add Conditional Navigation Links to Desktop Header
+# TODO: Implementar Dicas e Dados Reais no Modal de Achados e Perdidos
 
-## Steps to Complete
+## Backend Changes
+- [ ] Criar modelo tipsModel.js para armazenar dicas na coleção 'tips' (campos: item_id, user_id, text, created_at)
+- [ ] Atualizar achadosPerdidosController.js para incluir nome do usuário ao buscar detalhes do item (join com coleção de usuários)
+- [ ] Adicionar endpoints para buscar e postar dicas no achadosPerdidosController.js
 
-1. **Read Full SharedHeader.jsx**: Obtain the complete file content to identify the JSX return structure and where to insert the navigation links.
+## Frontend Changes
+- [ ] Atualizar DetailsModal.jsx para exibir nome real do usuário e horário de publicação do DB
+- [ ] Mudar aba "Comentários" para "Dicas" no DetailsModal.jsx
+- [ ] Substituir comentários simulados por dicas reais buscadas do backend no DetailsModal.jsx
+- [ ] Implementar postagem de novas dicas no backend no DetailsModal.jsx
 
-2. **Edit SharedHeader.jsx**: Add conditional navigation links based on currentPage prop.
-   - For currentPage === 'landing': Add links to "Quero Ajudar", "Achados e Perdidos", "Preciso de Ajuda".
-   - For currentPage === 'quero-ajudar': Add links to "Preciso de Ajuda", "Perfil", "Conversas".
-   - Use Link components from react-router-dom.
-   - Place the nav element in the appropriate location within the header (e.g., after the logo).
-
-3. **Verify Changes**: Ensure the navigation renders correctly and links work as expected on the respective pages.
-
-4. **Update Dependent Pages**: If necessary, ensure pages pass the correct currentPage prop to SharedHeader (e.g., Dashboard passes 'landing', QueroAjudar passes 'quero-ajudar').
-
-## Progress
-- [ ] Step 1: Read Full SharedHeader.jsx
-- [ ] Step 2: Edit SharedHeader.jsx
-- [ ] Step 3: Verify Changes
-- [ ] Step 4: Update Dependent Pages (if needed)
+## Testing
+- [ ] Testar modal para garantir que dados reais sejam exibidos
+- [ ] Verificar que dicas sejam salvas e buscadas corretamente
+- [ ] Verificar integração com banco de dados

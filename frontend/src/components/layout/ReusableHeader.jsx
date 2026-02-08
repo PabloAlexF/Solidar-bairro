@@ -42,8 +42,13 @@ const ReusableHeader = ({
             const pedidosResponse = await apiService.getMeusPedidos();
             const receivedHelpCount = pedidosResponse?.data?.length || 0;
 
-            const interessesResponse = await apiService.getMeusInteresses();
-            const helpedCount = interessesResponse?.data?.length || 0;
+            let helpedCount = 0;
+            try {
+              const interessesResponse = await apiService.getMeusInteresses();
+              helpedCount = interessesResponse?.data?.length || 0;
+            } catch (interesseError) {
+              // Rota de interesses ainda não implementada, ignorar erro silenciosamente
+            }
 
             setUserStats({ helpedCount, receivedHelpCount });
           } catch (error) {

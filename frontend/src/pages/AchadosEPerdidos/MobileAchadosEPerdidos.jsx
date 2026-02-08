@@ -47,6 +47,73 @@ const CATEGORIES = [
   'Outros'
 ];
 
+const formatDate = (dateString) => {
+  if (!dateString) return 'Recentemente';
+  try {
+    let date;
+    if (typeof dateString === 'object' && dateString.seconds) {
+      date = new Date(dateString.seconds * 1000);
+    } else {
+      date = new Date(dateString);
+    }
+    if (isNaN(date.getTime())) return 'Recentemente';
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    if (checkDate.getTime() === today.getTime()) return 'Hoje';
+    if (checkDate.getTime() === yesterday.getTime()) return 'Ontem';
+
+    return date.toLocaleDateString('pt-BR');
+  } catch {
+    return 'Recentemente';
+  }
+};
+
+const formatFullDate = (dateString) => {
+  if (!dateString) return 'Data não disponível';
+  try {
+    let date;
+    if (typeof dateString === 'object' && dateString.seconds) {
+      date = new Date(dateString.seconds * 1000);
+    } else {
+      date = new Date(dateString);
+    }
+    if (isNaN(date.getTime())) return 'Data não disponível';
+
+    return date.toLocaleDateString('pt-BR');
+  } catch {
+    return 'Data não disponível';
+  }
+};
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return 'Data não disponível';
+  try {
+    let date;
+    if (typeof dateString === 'object' && dateString.seconds) {
+      date = new Date(dateString.seconds * 1000);
+    } else {
+      date = new Date(dateString);
+    }
+    if (isNaN(date.getTime())) return 'Data não disponível';
+
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch {
+    return 'Data não disponível';
+  }
+};
+
 const ItemCard = ({ item, onOpenDetails, handleOpenChat, onDelete, onResolve, isOwner, isPreview = false }) => {
   const isResolved = item.status === 'resolved';
 
@@ -98,7 +165,7 @@ const ItemCard = ({ item, onOpenDetails, handleOpenChat, onDelete, onResolve, is
           <span className="mobile-lf-category-tag">{item.category}</span>
           <span className="mobile-lf-card-date">
             <Clock size={12} />
-            {item.date_occurrence ? new Date(item.date_occurrence).toLocaleDateString('pt-BR') : 'Recentemente'}
+            {formatDate(item.created_at)}
           </span>
         </div>
         
@@ -414,21 +481,52 @@ export default function MobileAchadosEPerdidos() {
     }
   };
 
-  const handleSendComment = () => {
-    if (!commentText.trim()) return;
+  const handleSendComment = async () => {
+    if (!commentText.trim() || !selectedItem) return;
     
-    const newComment = {
-      id: Date.now(),
-      user: user?.nome || 'Você',
-      text: commentText,
-      date: 'Agora mesmo',
-      avatar: (user?.nome || 'V')[0].toUpperCase(),
-      likes: 0,
-      isLiked: false
-    };
-    
-    setComments([...comments, newComment]);
-    setCommentText('');
+    try {
+      const commentData = {
+        item_id: selectedItem.id,
+        user_id: user?.uid || user?.id || user?.userId,
+        user_name: user?.nome || 'Você',
+        text: commentText,
+        created_at: new Date().toISOString()
+      };
+
+      // Tentar salvar no backend
+      const response = await apiService.post(`/achados-perdidos/${selectedItem.id}/comments`, commentData);
+      
+      if (response.success) {
+        const newComment = {
+          id: response.data.id || Date.now(),
+          user: user?.nome || 'Você',
+          text: commentText,
+          date: 'Agora mesmo',
+          avatar: (user?.nome || 'V')[0].toUpperCase(),
+          likes: 0,
+          isLiked: false,
+          created_at: response.data.created_at || new Date().toISOString()
+        };
+        
+        setComments([...comments, newComment]);
+        setCommentText('');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar comentário:', error);
+      // Fallback: adicionar localmente mesmo se falhar
+      const newComment = {
+        id: Date.now(),
+        user: user?.nome || 'Você',
+        text: commentText,
+        date: 'Agora mesmo',
+        avatar: (user?.nome || 'V')[0].toUpperCase(),
+        likes: 0,
+        isLiked: false
+      };
+      
+      setComments([...comments, newComment]);
+      setCommentText('');
+    }
   };
 
   const handleLikeComment = (commentId) => {
@@ -465,7 +563,31 @@ export default function MobileAchadosEPerdidos() {
 
   useEffect(() => {
     if (selectedItem) {
-      setComments([]);
+      // Carregar comentários do item
+      const loadComments = async () => {
+        try {
+          const response = await apiService.get(`/achados-perdidos/${selectedItem.id}/comments`);
+          if (response.success && response.data) {
+            const formattedComments = response.data.map(c => ({
+              id: c.id,
+              user: c.user_name || 'Usuário',
+              text: c.text,
+              date: formatDate(c.created_at),
+              avatar: (c.user_name || 'U')[0].toUpperCase(),
+              likes: c.likes || 0,
+              isLiked: false
+            }));
+            setComments(formattedComments);
+          } else {
+            setComments([]);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar comentários:', error);
+          setComments([]);
+        }
+      };
+      
+      loadComments();
       setCommentText('');
       setIsDescriptionExpanded(false);
       setActiveTab('sobre');
@@ -1035,7 +1157,7 @@ export default function MobileAchadosEPerdidos() {
                         <div className="mobile-lf-details-meta-box">
                           <MapPin size={20} />
                           <div>
-                            <label>Localização Completa</label>
+                            <label>Localização</label>
                             <span>{selectedItem.location}</span>
                           </div>
                         </div>
@@ -1043,7 +1165,14 @@ export default function MobileAchadosEPerdidos() {
                           <Calendar size={20} />
                           <div>
                             <label>Data da Ocorrência</label>
-                            <span>{new Date(selectedItem.date_occurrence).toLocaleDateString('pt-BR')}</span>
+                            <span>{formatFullDate(selectedItem.date_occurrence)}</span>
+                          </div>
+                        </div>
+                        <div className="mobile-lf-details-meta-box">
+                          <Clock size={20} />
+                          <div>
+                            <label>Publicado em</label>
+                            <span>{formatDateTime(selectedItem.created_at || selectedItem.date_occurrence)}</span>
                           </div>
                         </div>
                       </div>

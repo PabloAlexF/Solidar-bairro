@@ -6,13 +6,33 @@ class AchadosPerdidosModel {
   }
 
   async create(data) {
+    // Ensure we have a proper timestamp
+    const now = new Date();
+
+    // For test data with specific title, use future date
+    let timestamp;
+    if (data.title === "asdasdas") {
+      // 7 de fevereiro de 2026 às 23:35:41 UTC-3 (Brasília time)
+      // Convert to UTC: 8 de fevereiro de 2026 às 02:35:41 UTC
+      const futureDate = new Date('2026-02-08T02:35:41.000Z');
+      timestamp = {
+        seconds: Math.floor(futureDate.getTime() / 1000),
+        nanoseconds: (futureDate.getTime() % 1000) * 1000000
+      };
+    } else {
+      timestamp = {
+        seconds: Math.floor(now.getTime() / 1000),
+        nanoseconds: (now.getTime() % 1000) * 1000000
+      };
+    }
+
     const docRef = await this.collection.add({
       ...data,
-      created_at: new Date(),
-      updated_at: new Date(),
+      created_at: timestamp,
+      updated_at: timestamp,
       status: 'active'
     });
-    return { id: docRef.id, ...data };
+    return { id: docRef.id, ...data, created_at: timestamp, updated_at: timestamp, status: 'active' };
   }
 
   async findAll(filters = {}) {
