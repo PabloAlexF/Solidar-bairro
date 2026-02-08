@@ -2,7 +2,8 @@
 
 ## Problema Identificado
 O site estava mostrando "São Paulo" como localização padrão porque:
-1. O CSP (Content Security Policy) do backend estava bloqueando as APIs de geocodificação
+1. O CSP (Content Security Policy) do backend estava bloqueando as APIscd c:\Users\Administrator\Desktop\solidar-bairro\Frontend
+ de geocodificação
 2. Quando as APIs falhavam, o código usava "São Paulo" como fallback
 
 ## Solução Aplicada
