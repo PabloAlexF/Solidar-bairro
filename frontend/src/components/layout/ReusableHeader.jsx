@@ -191,7 +191,7 @@ const ReusableHeader = ({
         <div className="header-content">
           <div className="logo" onClick={() => navigate('/')}>
             <div className="logo-icon">
-              <img src={logo} alt="SolidarBrasil" style={{ width: '40px', height: '40px' }} />
+              <img src={logo} alt="SolidarBrasil" />
             </div>
             <span className="logo-text">
               Solidar<span className="logo-accent">Brasil</span>
@@ -224,7 +224,7 @@ const ReusableHeader = ({
               )}
               {!mobileLoginOnly && (
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primaryy"
                   onClick={() => navigate('/cadastro')}
                 >
                   Cadastrar

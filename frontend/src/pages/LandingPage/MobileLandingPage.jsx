@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import chatNotificationService from '../../services/chatNotificationService';
@@ -26,20 +26,37 @@ import {
 
 import './mobile.css';
 
-const NeighborhoodRadar = ({ size = "normal" }) => {
+const NeighborhoodRadar = ({ size = "normal", locationName }) => {
+  const [isVisible, setIsVisible] = useState(typeof document !== 'undefined' ? !document.hidden : true);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsVisible(!document.hidden);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  const animationPlayState = isVisible ? 'running' : 'paused';
+
   return (
     <div className={`radar-container ${size}`}>
       <div className="radar-circle">
         <div
           className="radar-ping"
           style={{
-            animation: 'radarPing 4s infinite ease-out'
+            animation: 'radarPing 4s infinite ease-out',
+            animationPlayState
           }}
         />
         <div
           className="radar-ping"
           style={{
-            animation: 'radarPing 4s infinite ease-out 2s'
+            animation: 'radarPing 4s infinite ease-out 2s',
+            animationPlayState
           }}
         />
         <div className="radar-center">
@@ -59,7 +76,8 @@ const NeighborhoodRadar = ({ size = "normal" }) => {
             style={{
               top: pos.top,
               left: pos.left,
-              animation: `neighborDot 3s infinite ease-in-out ${pos.delay}s`
+              animation: `neighborDot 3s infinite ease-in-out ${pos.delay}s`,
+              animationPlayState
             }}
           >
             <div className="dot-core" />
@@ -71,9 +89,8 @@ const NeighborhoodRadar = ({ size = "normal" }) => {
         <div className="radar-info">
           <div className="info-badge">
             <MapPin size={12} />
-            <span>Bairro de Pinheiros</span>
+            <span>{locationName || "Sua Vizinhança"}</span>
           </div>
-          <h4>12 Vizinhos online</h4>
         </div>
       )}
     </div>
@@ -153,6 +170,36 @@ export default function MobileLandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
   const { addChatNotification } = useNotifications();
+  const [locationName, setLocationName] = useState("Localizando...");
+
+  useEffect(() => {
+    if (user?.bairro) {
+      setLocationName(user.bairro);
+      return;
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            const address = data.address;
+            const neighborhood = address?.suburb || address?.neighbourhood || address?.quarter || address?.city_district || address?.town || "Sua Vizinhança";
+            setLocationName(neighborhood);
+          } catch (error) {
+            setLocationName("Sua Vizinhança");
+          }
+        },
+        () => {
+          setLocationName("Sua Vizinhança");
+        }
+      );
+    } else {
+      setLocationName("Sua Vizinhança");
+    }
+  }, [user]);
 
   // Monitoramento de notificações e som
   useEffect(() => {
@@ -285,7 +332,7 @@ export default function MobileLandingPage() {
       </header>
 
       <section className="mobile-radar-section">
-        <NeighborhoodRadar size="normal" />
+        <NeighborhoodRadar size="normal" locationName={locationName} />
       </section>
 
       <section className="mobile-pulse-section">
@@ -428,8 +475,8 @@ export default function MobileLandingPage() {
                   &copy; {new Date().getFullYear()} SolidarBrasil. Feito com 💚 para todos.
                 </p>
                 <div className="footer-bottom-links" style={{ display: 'flex', justifyContent: 'center', gap: '24px' }}>
-                  <a href="#" className="footer-bottom-link" style={{ color: '#475569', textDecoration: 'none', fontSize: '0.8rem' }}>Privacidade</a>
-                  <a href="#" className="footer-bottom-link" style={{ color: '#475569', textDecoration: 'none', fontSize: '0.8rem' }}>Termos de Uso</a>
+                  <Link to="/politica-privacidade" className="footer-bottom-link" style={{ color: '#475569', textDecoration: 'none', fontSize: '0.8rem' }}>Privacidade</Link>
+                  <Link to="/termos-uso" className="footer-bottom-link" style={{ color: '#475569', textDecoration: 'none', fontSize: '0.8rem' }}>Termos de Uso</Link>
                 </div>
               </div>
 

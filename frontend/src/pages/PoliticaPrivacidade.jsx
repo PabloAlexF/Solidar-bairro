@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield, Lock, Eye, Database, Users, Heart } from 'lucide-react';
-import LandingHeader from '../components/layout/LandingHeader';
+import ReusableHeader from '../components/layout/ReusableHeader';
 
 export default function PoliticaPrivacidade() {
   return (
     <div className="privacidade-page">
-      <LandingHeader scrolled={true} />
+      <ReusableHeader mobileLoginOnly={true} />
 
       <div className="privacidade-container" style={{
         maxWidth: '800px',
@@ -16,7 +16,7 @@ export default function PoliticaPrivacidade() {
       }}>
         <div className="privacidade-header" style={{ marginBottom: '3rem' }}>
           <Link
-            to="/cadastro"
+            to="/"
             className="privacidade-back-link"
             style={{
               display: 'inline-flex',
@@ -29,7 +29,7 @@ export default function PoliticaPrivacidade() {
             }}
           >
             <ArrowLeft size={16} />
-            Voltar ao Cadastro
+            Voltar
           </Link>
 
           <div style={{
