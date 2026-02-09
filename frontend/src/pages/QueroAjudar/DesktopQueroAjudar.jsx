@@ -1912,6 +1912,7 @@ export default function QueroAjudarPage() {
                 <span className="filter-tag-v4">
                   {selectedLocation === 'minha_cidade' ? `Minha Cidade (${userLocation?.city})` : 
                    selectedLocation === 'meu_bairro' ? `Meu Bairro (${userLocation?.neighborhood})` : 
+                   selectedLocation === 'meu_estado' ? `Meu Estado (${userLocation?.state})` :
                    selectedLocation}
                   <button 
                     onClick={() => setSelectedLocation('brasil')}
