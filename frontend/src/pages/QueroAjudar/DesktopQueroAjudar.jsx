@@ -1670,10 +1670,10 @@ export default function QueroAjudarPage() {
       console.log('🔍 [QueroAjudar] User.endereco:', user?.endereco);
       
       // Prioridade 1: Usar endereço cadastrado do usuário
-      if (user && user.endereco) {
-        const userCity = user.endereco.cidade || user.endereco.city || user.endereco.localidade || '';
-        const userState = user.endereco.estado || user.endereco.state || user.endereco.uf || '';
-        const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || '';
+      if (user) {
+        const userCity = user.endereco?.cidade || user.endereco?.city || user.endereco?.localidade || user.cidade || '';
+        const userState = user.endereco?.estado || user.endereco?.state || user.endereco?.uf || user.estado || '';
+        const userNeighborhood = user.endereco?.bairro || user.bairro || user.endereco?.neighborhood || '';
         
         console.log('🔍 [QueroAjudar] Dados extraídos:', { userCity, userState, userNeighborhood });
         
@@ -1690,7 +1690,7 @@ export default function QueroAjudarPage() {
           console.log('⚠️ [QueroAjudar] Endereço incompleto (falta cidade ou estado)');
         }
       } else {
-        console.log('⚠️ [QueroAjudar] Usuário não tem endereço cadastrado');
+        console.log('⚠️ [QueroAjudar] Usuário não logado ou sem dados');
       }
 
       // Prioridade 2: Tentar geolocalização do navegador

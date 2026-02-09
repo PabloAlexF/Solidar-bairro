@@ -149,16 +149,16 @@ const ReusableHeader = ({
   const renderNavigationLinks = () => {
     if (currentPage === 'landing') {
       return (
-        <nav className="nav-menu">
-          <Link to="/quero-ajudar" className="nav-link">
+        <nav className="nav-menu" style={{ gap: '10px' }}>
+          <Link to="/quero-ajudar" className="nav-link" style={{ whiteSpace: 'nowrap', fontSize: '0.9rem' }}>
             Quero Ajudar
             <span className="link-underline" />
           </Link>
-          <Link to="/achados-e-perdidos" className="nav-link">
+          <Link to="/achados-e-perdidos" className="nav-link" style={{ whiteSpace: 'nowrap', fontSize: '0.9rem' }}>
             Achados e Perdidos
             <span className="link-underline" />
           </Link>
-          <Link to="/preciso-de-ajuda" className="nav-link">
+          <Link to="/preciso-de-ajuda" className="nav-link" style={{ whiteSpace: 'nowrap', fontSize: '0.9rem' }}>
             Preciso de Ajuda
             <span className="link-underline" />
           </Link>
