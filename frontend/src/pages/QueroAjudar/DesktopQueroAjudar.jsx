@@ -56,6 +56,7 @@ import {
   Car
 } from 'lucide-react';
 import './styles-v4.css';
+import './visibility-fix.css';
 import marca from '../../assets/images/marca.png';
 
 const CATEGORY_METADATA = {

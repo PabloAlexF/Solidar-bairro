@@ -1,0 +1,24 @@
+/* Fix de visibilidade para página Quero Ajudar no deploy */
+.qa-page, .qa-page-v4, .qa-page-mobile {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.qa-content-v4, .qa-main-wrapper {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.orders-grid-v4, .orders-grid-layout {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.order-card-v4, .vibrant-order-card, .mobile-order-card {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

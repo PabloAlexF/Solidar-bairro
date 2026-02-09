@@ -32,6 +32,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import './mobile-quero-ajudar.css';
+import './visibility-fix.css';
 import { 
   CATEGORY_METADATA, 
   CATEGORIES, 

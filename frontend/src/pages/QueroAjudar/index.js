@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
+import './visibility-fix.css';
 
 // --- CONSTANTS ---
 const CATEGORY_METADATA = {
