@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiService from '../services/apiService';
-import { formatAddress } from '../utils/addressUtils';
 import { connectSocket, disconnectSocket } from '../services/socketService';
 
 const AuthContext = createContext();
@@ -31,22 +30,15 @@ export const AuthProvider = ({ children }) => {
       if (cachedUser && cachedToken) {
         try {
           const userData = JSON.parse(cachedUser);
-          // Ensure address data is properly formatted
-          let processedUserData = userData;
-          if (userData && typeof userData.endereco === 'object') {
-            processedUserData = {
-              ...userData,
-              endereco: formatAddress(userData.endereco)
-            };
-          }
-        setUser(processedUserData);
-        setToken(cachedToken);
+          // Keep endereco as object, don't format it
+          setUser(userData);
+          setToken(cachedToken);
 
-        // Connect socket for authenticated user
-        if (processedUserData && (processedUserData.uid || processedUserData.id)) {
-          console.log('🔌 [Auth] Conectando socket para usuário:', processedUserData.uid || processedUserData.id);
-          connectSocket(processedUserData.uid || processedUserData.id);
-        }
+          // Connect socket for authenticated user
+          if (userData && (userData.uid || userData.id)) {
+            console.log('🔌 [Auth] Conectando socket para usuário:', userData.uid || userData.id);
+            connectSocket(userData.uid || userData.id);
+          }
         } catch (parseError) {
           console.error('Erro ao parsear dados do usuário:', parseError);
           // Clear invalid data
@@ -72,28 +64,20 @@ export const AuthProvider = ({ children }) => {
         console.log('Login - userData completo:', JSON.stringify(userData, null, 2));
         console.log('Login - fotoPerfil:', userData.fotoPerfil);
         
-        // Ensure address data is properly formatted
-        let processedUserData = userData;
-        if (userData && typeof userData.endereco === 'object') {
-          processedUserData = {
-            ...userData,
-            endereco: formatAddress(userData.endereco)
-          };
-        }
-        
-        setUser(processedUserData);
+        // Keep endereco as object, don't format it
+        setUser(userData);
         setToken(userToken);
 
-        localStorage.setItem('solidar-user', JSON.stringify(processedUserData));
+        localStorage.setItem('solidar-user', JSON.stringify(userData));
         localStorage.setItem('solidar-token', userToken);
 
         // Connect socket for authenticated user
-        if (processedUserData && (processedUserData.uid || processedUserData.id)) {
-          console.log('🔌 [Auth] Conectando socket para usuário:', processedUserData.uid || processedUserData.id);
-          connectSocket(processedUserData.uid || processedUserData.id);
+        if (userData && (userData.uid || userData.id)) {
+          console.log('🔌 [Auth] Conectando socket para usuário:', userData.uid || userData.id);
+          connectSocket(userData.uid || userData.id);
         }
 
-        return { success: true, user: processedUserData };
+        return { success: true, user: userData };
       }
       
       throw new Error(response.message || 'Erro no login');
@@ -128,27 +112,19 @@ export const AuthProvider = ({ children }) => {
       if (response.success && response.data) {
         const { user: newUser, token: newToken } = response.data;
         
-        // Ensure address data is properly formatted
-        let processedUserData = newUser;
-        if (newUser && typeof newUser.endereco === 'object') {
-          processedUserData = {
-            ...newUser,
-            endereco: formatAddress(newUser.endereco)
-          };
-        }
-        
-        setUser(processedUserData);
+        // Keep endereco as object, don't format it
+        setUser(newUser);
         setToken(newToken);
 
-        localStorage.setItem('solidar-user', JSON.stringify(processedUserData));
+        localStorage.setItem('solidar-user', JSON.stringify(newUser));
         localStorage.setItem('solidar-token', newToken);
 
         // Connect socket for authenticated user
-        if (processedUserData && (processedUserData.uid || processedUserData.id)) {
-          connectSocket(processedUserData.uid || processedUserData.id);
+        if (newUser && (newUser.uid || newUser.id)) {
+          connectSocket(newUser.uid || newUser.id);
         }
 
-        return { success: true, user: processedUserData };
+        return { success: true, user: newUser };
       }
       
       throw new Error(response.message || 'Erro no cadastro');
@@ -158,14 +134,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUser = (userData) => {
-    // Ensure address data is properly formatted
-    if (userData && typeof userData.endereco === 'object') {
-      userData = {
-        ...userData,
-        endereco: formatAddress(userData.endereco)
-      };
-    }
-    
+    // Keep endereco as object, don't format it
     setUser(userData);
     localStorage.setItem('solidar-user', JSON.stringify(userData));
     window.dispatchEvent(new CustomEvent('userUpdated'));
