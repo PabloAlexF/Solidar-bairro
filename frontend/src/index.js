@@ -6,6 +6,10 @@ import { ConnectivityProvider } from './contexts/ConnectivityContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 
+// Build version: 2.0.0 - Force cache refresh
+const BUILD_VERSION = '2.0.0';
+console.log(`SolidarBrasil v${BUILD_VERSION}`);
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
