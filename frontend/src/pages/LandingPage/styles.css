@@ -1041,14 +1041,16 @@
   }
 }
 
-.cards-grid {
+.landing-cards-grid {
   display: grid;
   gap: 2.5rem;
   align-items: stretch;
+  grid-template-columns: 1fr;
 }
 
+
 @media (min-width: 1024px) {
-  .cards-grid {
+  .landing-cards-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }

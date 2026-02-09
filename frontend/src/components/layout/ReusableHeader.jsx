@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { X, Bell, MessageCircle, Heart, CheckCircle2, AlertTriangle, Clock, Settings, ShieldCheck } from 'lucide-react';
+import { X, Bell, MessageCircle, Heart, CheckCircle2, AlertTriangle, Clock, Settings, ShieldCheck, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 
@@ -31,6 +31,7 @@ const ReusableHeader = ({
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userStats, setUserStats] = useState({ helpedCount: 0, receivedHelpCount: 0 });
 
   useEffect(() => {
@@ -601,6 +602,57 @@ const ReusableHeader = ({
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Menu Principal"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Dropdown */}
+        <div className={`mobile-menu-dropdown ${mobileMenuOpen ? 'open' : ''}`}>
+          {currentPage === 'landing' ? (
+            <div className="mobile-nav-links">
+              <Link to="/quero-ajudar" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                Quero Ajudar
+              </Link>
+              <Link to="/achados-e-perdidos" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                Achados e Perdidos
+              </Link>
+              <Link to="/preciso-de-ajuda" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                Preciso de Ajuda
+              </Link>
+            </div>
+          ) : (
+            <div className="mobile-nav-links">
+              {navigationItems.filter(item => !item.path.includes('/contato')).map((item, index) => (
+                <Link key={index} to={item.path} className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {!isAuthenticated() && showLoginButton && (
+            <div className="mobile-auth-buttons">
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
+              >
+                Entrar
+              </button>
+              <button 
+                className="btn btn-primaryy" 
+                onClick={() => { navigate('/cadastro'); setMobileMenuOpen(false); }}
+              >
+                Cadastrar
+              </button>
             </div>
           )}
         </div>

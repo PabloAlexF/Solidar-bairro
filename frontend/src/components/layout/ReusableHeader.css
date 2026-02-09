@@ -717,7 +717,7 @@
 
   .reusable-header .notification-dropdown-improved {
     position: fixed;
-    top: 80px;
+    top: calc(70px + 8px); /* header-height-mobile + gap */
     left: 1rem !important;
     right: 1rem !important;
     transform: none;
@@ -731,7 +731,7 @@
 
   .reusable-header .user-dropdown {
     position: fixed;
-    top: 80px;
+    top: calc(70px + 8px); /* header-height-mobile + gap */
     left: 1rem;
     right: 1rem;
     transform: none;
@@ -745,11 +745,19 @@
     flex: 1;
     overflow-y: auto;
   }
+
+  .reusable-header .btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 480px) {
   .reusable-header .logo-text {
-    font-size: 1.1rem;
+    font-size: 1rem;
+  }
+  .reusable-header .logo {
+    gap: 8px;
   }
 
   .reusable-header .logo-icon {
@@ -789,6 +797,17 @@
   }
 }
 
+@media (max-width: 375px) {
+  .reusable-header .logo-text {
+    display: none;
+  }
+  .reusable-header .container {
+    padding: 0 0.75rem;
+  }
+  .reusable-header .user-section {
+    gap: 0.25rem;
+  }
+}
 
 /* Overlay para modais em mobile */
 @media (max-width: 768px) {
@@ -853,7 +872,7 @@
 @media (max-width: 768px) {
   .admin-dropdown-wrapper > div[style*="position: absolute"] {
     position: fixed !important;
-    top: 70px !important;
+    top: calc(70px + 8px) !important; /* header-height-mobile + gap */
     left: 50% !important;
     transform: translateX(-50%) !important;
     right: auto !important;
@@ -879,4 +898,98 @@
 
 .admin-dropdown-btn:hover {
   background: #f8fafc !important;
+}
+
+/* --- Menu Hambúrguer (para Notebooks/Telas Médias) --- */
+
+/* Por padrão (desktop e mobile), o botão do menu hambúrguer fica escondido */
+.mobile-menu-toggle {
+  display: none;
+}
+
+/* O menu dropdown também fica escondido por padrão */
+.mobile-menu-dropdown {
+  display: none;
+}
+
+/* Quando a tela fica apertada (notebooks, tablets em paisagem), mostramos o menu hambúrguer */
+@media (max-width: 1024px) {
+  /* Escondemos a navegação principal e os botões de autenticação, que serão movidos para o menu */
+  .reusable-header .nav-menu,
+  .reusable-header .auth-buttons {
+    display: none;
+  }
+
+  .reusable-header .user-section {
+    margin-left: auto;
+    margin-right: 0.5rem;
+  }
+
+  /* E mostramos o botão do menu hambúrguer */
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #1e293b;
+    padding: 8px;    
+    cursor: pointer;
+    border-radius: 8px;
+  }
+  .mobile-menu-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  /* Estilos para o menu dropdown quando aberto */
+  .mobile-menu-dropdown.open {
+    display: flex;
+    position: fixed;
+    top: 70px; /* Altura do header */
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid #f1f5f9;
+    z-index: 998;
+    flex-direction: column;
+    gap: 1rem;
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
+    animation: slideDown 0.3s ease-out;
+  }
+  .mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .mobile-nav-link {
+    padding: 12px 16px;
+    color: #1e293b;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 12px;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+  }
+  .mobile-nav-link:active {
+    background: #e2e8f0;
+    transform: scale(0.98);
+  }
+  .mobile-auth-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 8px;
+  }
+  .mobile-auth-buttons .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+    font-size: 1rem;
+  }
 }
