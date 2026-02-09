@@ -45,13 +45,13 @@ async function initializeServices() {
 
 // CORS configurado para desenvolvimento
 const corsOptions = {
-  origin: [
+  origin: process.env.FRONTEND_URL === '*' ? '*' : [
     'http://localhost:3000',
     'http://localhost:3001', 
     'http://127.0.0.1:3000',
     process.env.FRONTEND_URL
   ].filter(Boolean),
-  credentials: true,
+  credentials: process.env.FRONTEND_URL === '*' ? false : true,
   optionsSuccessStatus: 200
 };
 
