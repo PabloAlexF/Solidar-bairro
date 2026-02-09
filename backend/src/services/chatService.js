@@ -110,6 +110,14 @@ class ChatService {
       let otherParticipant = null;
       if (otherParticipantIds.length > 0) {
         otherParticipant = await userService.getUserData(otherParticipantIds[0]);
+        if (!otherParticipant) {
+          otherParticipant = {
+            id: otherParticipantIds[0],
+            nome: 'Usuário',
+            tipo: 'cidadao',
+            bairro: 'Não informado'
+          };
+        }
       }
 
       // Calcular unreadCount

@@ -1,33 +1,28 @@
 const firebase = require('./src/config/firebase');
 
 async function checkUser() {
-  try {
-    const db = firebase.getDb();
-    
-    console.log('🔍 Verificando usuários no banco...');
-    
-    const snapshot = await db.collection('cidadaos')
-      .where('email', '==', 'maria@teste.com')
-      .get();
-    
-    if (snapshot.empty) {
-      console.log('❌ Usuário não encontrado');
-      return;
-    }
-    
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      console.log('📄 Dados do usuário:');
-      console.log('ID:', doc.id);
-      console.log('Nome:', data.nome);
-      console.log('Email:', data.email);
-      console.log('Senha (hash):', data.senha ? data.senha.substring(0, 20) + '...' : 'Não definida');
-      console.log('Password:', data.password ? 'Existe' : 'Não existe');
-    });
-    
-  } catch (error) {
-    console.error('❌ Erro:', error.message);
+  const db = firebase.getDb();
+  const userId = '4b7oaeYmjPNO7CtcvZDu';
+  
+  console.log(`\n🔍 Verificando usuário: ${userId}\n`);
+  
+  // Verificar em cidadãos
+  const cidadaoDoc = await db.collection('cidadaos').doc(userId).get();
+  if (cidadaoDoc.exists) {
+    console.log('✅ Encontrado em cidadãos:', cidadaoDoc.data());
+  } else {
+    console.log('❌ NÃO encontrado em cidadãos');
   }
+  
+  // Listar todos os cidadãos
+  console.log('\n📋 Listando todos os cidadãos cadastrados:\n');
+  const cidadaosSnapshot = await db.collection('cidadaos').get();
+  cidadaosSnapshot.forEach(doc => {
+    const data = doc.data();
+    console.log(`ID: ${doc.id} | Nome: ${data.nome} | Email: ${data.email}`);
+  });
+  
+  process.exit(0);
 }
 
-checkUser();
+checkUser().catch(console.error);
