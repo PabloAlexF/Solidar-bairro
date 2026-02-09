@@ -9,14 +9,14 @@ router.use(authenticateToken);
 // POST /api/interesses - Registrar interesse em ajudar
 router.post('/', interesseController.create);
 
-// GET /api/interesses/:id - Buscar interesse específico
-router.get('/:id', interesseController.getById);
+// GET /api/interesses/meus - Listar interesses do usuário logado (DEVE VIR ANTES DE /:id)
+router.get('/meus', interesseController.getByUser);
 
 // GET /api/interesses/pedido/:pedidoId - Listar interesses de um pedido
 router.get('/pedido/:pedidoId', interesseController.getByPedido);
 
-// GET /api/interesses/meus - Listar interesses do usuário logado
-router.get('/meus', interesseController.getByUser);
+// GET /api/interesses/:id - Buscar interesse específico
+router.get('/:id', interesseController.getById);
 
 // PUT /api/interesses/:id - Atualizar interesse
 router.put('/:id', interesseController.update);
