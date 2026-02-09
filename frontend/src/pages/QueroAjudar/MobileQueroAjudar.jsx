@@ -343,14 +343,37 @@ export const MobileQueroAjudar = () => {
     setLocationLoading(true);
 
     try {
+      console.log('🔄 [Mobile] Atualizando localização...');
+      console.log('🔄 [Mobile] User.endereco:', user?.endereco);
+      
+      // Prioridade 1: Recarregar do endereço cadastrado
+      if (user && user.endereco && typeof user.endereco === 'object') {
+        const userCity = user.endereco.cidade || user.endereco.city || user.endereco.localidade || '';
+        const userState = user.endereco.estado || user.endereco.state || user.endereco.uf || '';
+        const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || '';
+        
+        if (userCity && userState) {
+          const location = { 
+            city: userCity, 
+            state: userState,
+            neighborhood: userNeighborhood 
+          };
+          setUserLocation(location);
+          console.log('✅ [Mobile] Localização atualizada do cadastro:', location);
+          toast.success(`Localização: ${userCity}, ${userState}`);
+          return;
+        }
+      }
+      
+      // Prioridade 2: Tentar geolocalização apenas se não tiver cadastro
+      console.log('⚠️ [Mobile] Sem endereço cadastrado, tentando geolocalização...');
       const location = await getCurrentLocation();
       console.log('Localização obtida:', location);
       setUserLocation(location);
       toast.success(`Localização atualizada: ${location.city}, ${location.state}`);
     } catch (error) {
       console.warn('Erro ao obter localização:', error);
-      toast.error('Não foi possível obter sua localização. Usando São Paulo como padrão.');
-      setUserLocation({ city: 'São Paulo', state: 'SP' });
+      toast.error('Não foi possível obter sua localização.');
     } finally {
       setLocationLoading(false);
       setLocationRequested(false);
