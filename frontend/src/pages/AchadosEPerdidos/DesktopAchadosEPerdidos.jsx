@@ -805,7 +805,7 @@ export default function DesktopAchadosEPerdidos() {
       };
 
       // Tentar salvar no backend
-      const response = await apiService.post(`/achados-perdidos/${selectedItem.id}/comments`, commentData);
+      const response = await apiService.post(`/achados-perdidos/${selectedItem.id}/tips`, { text: commentText });
       
       if (response.success) {
         const newComment = {
@@ -874,10 +874,10 @@ export default function DesktopAchadosEPerdidos() {
 
   useEffect(() => {
     if (selectedItem) {
-      // Carregar comentários do item
+      // Carregar dicas do item
       const loadComments = async () => {
         try {
-          const response = await apiService.get(`/achados-perdidos/${selectedItem.id}/comments`);
+          const response = await apiService.get(`/achados-perdidos/${selectedItem.id}/tips`);
           if (response.success && response.data) {
             const formattedComments = response.data.map(c => ({
               id: c.id,
@@ -912,11 +912,41 @@ export default function DesktopAchadosEPerdidos() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const userName = user?.nome || user?.nomeCompleto || user?.name || user?.nomeFantasia || user?.razaoSocial || "Vizinho";
-  const userLocation = user?.cidade && user?.estado ? `${user.cidade}, ${user.estado}` : 
-                      user?.bairro && user?.cidade ? `${user.bairro}, ${user.cidade}` :
-                      formatLocation(user?.endereco, user?.cidade, user?.estado) || 
-                      user?.bairro || 
-                      "São Paulo, SP";
+  
+  // Extrair localização do usuário com prioridade para dados estruturados
+  const getUserLocation = () => {
+    // Prioridade 1: Dados diretos do usuário
+    if (user?.cidade && user?.estado) {
+      return user.bairro ? `${user.bairro}, ${user.cidade} - ${user.estado}` : `${user.cidade}, ${user.estado}`;
+    }
+    
+    // Prioridade 2: Dados do objeto endereco
+    if (user?.endereco && typeof user.endereco === 'object') {
+      const cidade = user.endereco.cidade || user.endereco.city || user.endereco.localidade;
+      const estado = user.endereco.estado || user.endereco.state || user.endereco.uf;
+      const bairro = user.endereco.bairro || user.endereco.neighborhood;
+      
+      if (cidade && estado) {
+        return bairro ? `${bairro}, ${cidade} - ${estado}` : `${cidade}, ${estado}`;
+      }
+    }
+    
+    // Prioridade 3: Tentar formatLocation como fallback
+    const formatted = formatLocation(user?.endereco, user?.cidade, user?.estado);
+    if (formatted && formatted !== 'Localização não disponível') {
+      return formatted;
+    }
+    
+    // Prioridade 4: Apenas bairro se disponível
+    if (user?.bairro) {
+      return user.bairro;
+    }
+    
+    // Último recurso: mensagem genérica
+    return "Localização não cadastrada";
+  };
+  
+  const userLocation = getUserLocation();
 
   const renderStep = () => {
     switch (currentStep) {

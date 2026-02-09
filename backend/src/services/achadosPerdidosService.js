@@ -166,7 +166,28 @@ class AchadosPerdidosService {
       throw new Error('Item não encontrado');
     }
 
-    return await tipsModel.create(data);
+    // Buscar nome do usuário
+    let userName = 'Usuário';
+    try {
+      const cidadaoDoc = await db.collection('cidadaos').doc(data.user_id).get();
+      if (cidadaoDoc.exists) {
+        userName = cidadaoDoc.data().nome || 'Usuário';
+      } else {
+        const familiaDoc = await db.collection('familias').doc(data.user_id).get();
+        if (familiaDoc.exists) {
+          userName = familiaDoc.data().nomeCompleto || 'Usuário';
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar nome do usuário:', error);
+    }
+
+    const tipData = {
+      ...data,
+      user_name: userName
+    };
+
+    return await tipsModel.create(tipData);
   }
 
   async getTipsByItemId(itemId) {

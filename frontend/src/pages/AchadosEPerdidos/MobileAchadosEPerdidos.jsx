@@ -278,7 +278,7 @@ export default function MobileAchadosEPerdidos() {
   // Get user location for display
   const userLocation = user?.cidade && user?.estado ? `${user.cidade}, ${user.estado}` : 
                       user?.bairro && user?.cidade ? `${user.bairro}, ${user.cidade}` :
-                      "São Paulo, SP";
+                      "Localização não definida";
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -485,16 +485,12 @@ export default function MobileAchadosEPerdidos() {
     if (!commentText.trim() || !selectedItem) return;
     
     try {
-      const commentData = {
-        item_id: selectedItem.id,
-        user_id: user?.uid || user?.id || user?.userId,
-        user_name: user?.nome || 'Você',
-        text: commentText,
-        created_at: new Date().toISOString()
+      const tipData = {
+        text: commentText
       };
 
       // Tentar salvar no backend
-      const response = await apiService.post(`/achados-perdidos/${selectedItem.id}/comments`, commentData);
+      const response = await apiService.post(`/achados-perdidos/${selectedItem.id}/tips`, tipData);
       
       if (response.success) {
         const newComment = {
@@ -563,10 +559,10 @@ export default function MobileAchadosEPerdidos() {
 
   useEffect(() => {
     if (selectedItem) {
-      // Carregar comentários do item
+      // Carregar dicas do item
       const loadComments = async () => {
         try {
-          const response = await apiService.get(`/achados-perdidos/${selectedItem.id}/comments`);
+          const response = await apiService.get(`/achados-perdidos/${selectedItem.id}/tips`);
           if (response.success && response.data) {
             const formattedComments = response.data.map(c => ({
               id: c.id,
