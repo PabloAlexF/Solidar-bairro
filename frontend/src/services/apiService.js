@@ -1,5 +1,6 @@
 import { API_CONFIG, VALIDATION_CONFIG } from '../config';
 import SecurityMiddleware from '../utils/securityMiddleware';
+import requestCache from '../utils/requestCache';
 
 const ApiService = {
   baseURL: API_CONFIG.BASE_URL,
@@ -70,6 +71,15 @@ const ApiService = {
     // Validação de segurança
     this.validateRequest(endpoint, options.body ? JSON.parse(options.body) : null);
     
+    // Cache apenas para GET requests
+    if (!options.method || options.method === 'GET') {
+      const cached = requestCache.get(endpoint, options);
+      if (cached) return cached;
+      
+      const pending = requestCache.getPending(endpoint, options);
+      if (pending) return pending;
+    }
+    
     const url = `${this.baseURL}${endpoint}`;
     const token = localStorage.getItem('solidar-token');
 
@@ -108,19 +118,15 @@ const ApiService = {
       }
 
       if (response.status === 429) {
-        // Rate limit exceeded - implement exponential backoff
         if (retryCount < 3) {
-          const delay = Math.min(1000 * Math.pow(2, retryCount) + Math.random() * 1000, 30000); // Max 30 seconds
-          console.warn(`Rate limit atingido. Tentando novamente em ${delay}ms...`);
+          const delay = Math.min(2000 * Math.pow(2, retryCount), 10000);
           await new Promise(resolve => setTimeout(resolve, delay));
           return this.request(endpoint, options, retryCount + 1, isRetry);
-        } else {
-          throw new Error('Limite de requisições excedido. Tente novamente mais tarde.');
         }
+        throw new Error('Muitas requisições. Aguarde alguns segundos.');
       }
 
       if (!response.ok) {
-        // Tratamento específico para erro 404 (usuário não encontrado)
         if (response.status === 404) {
           console.warn('Recurso não encontrado (404):', endpoint);
           throw new Error('Recurso não encontrado');
@@ -129,6 +135,11 @@ const ApiService = {
         console.error('Erro na API:', data);
         const secureError = SecurityMiddleware.handleSecureError(new Error(data.error || `Erro HTTP: ${response.status}`));
         throw new Error(secureError.message);
+      }
+
+      // Cache GET requests
+      if (!options.method || options.method === 'GET') {
+        requestCache.set(endpoint, options, data);
       }
 
       return data;
