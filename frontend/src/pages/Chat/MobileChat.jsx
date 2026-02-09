@@ -1855,6 +1855,11 @@ const Chat = () => {
                     onChange={handleTypingInput}
                     onKeyDown={handleKeyPress}
                     rows={1}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="sentences"
+                    spellCheck="true"
+                    inputMode="text"
                   />
                 </div>
                 <button

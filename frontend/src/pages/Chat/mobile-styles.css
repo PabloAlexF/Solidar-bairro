@@ -920,6 +920,10 @@
   padding: 0;
   margin: 0;
   color: #1e293b;
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .sb-chat-textarea::placeholder {
