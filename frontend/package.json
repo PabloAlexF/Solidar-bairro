@@ -25,7 +25,7 @@
     "react-leaflet": "^5.0.0",
     "react-loading-skeleton": "^3.5.0",
     "react-router-dom": "^7.11.0",
-    "react-scripts": "5.0.1",
+    "react-scripts": "^5.0.1",
     "react-spring": "^10.0.3",
     "react-tooltip": "^5.30.0",
     "recharts": "^3.6.0",
