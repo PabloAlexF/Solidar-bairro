@@ -14,7 +14,7 @@ export class SecurityMiddleware {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn-uicons.flaticon.com",
       "font-src 'self' https://fonts.gstatic.com https://cdn-uicons.flaticon.com",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://solidar-bairro-backend.onrender.com https://viacep.com.br https://nominatim.openstreetmap.org https://api.openstreetmap.org",
+      "connect-src 'self' https://*.onrender.com wss://*.onrender.com https://viacep.com.br https://nominatim.openstreetmap.org https://api.openstreetmap.org",
       "frame-src 'self'",
       "object-src 'none'",
       "base-uri 'self'"
