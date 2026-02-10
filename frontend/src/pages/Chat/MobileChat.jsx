@@ -86,18 +86,28 @@ ensureDependencies();
 
 const formatTime = (date) => {
   if (!date) return 'Agora';
-  
+
   // Se for um timestamp do Firestore
   if (date.seconds) {
     date = new Date(date.seconds * 1000);
   }
-  
+
   // Se não for uma instância de Date válida
   if (!(date instanceof Date) || isNaN(date.getTime())) {
     return 'Agora';
   }
-  
+
   return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+};
+
+// FIX: Safe timestamp parser for Firestore
+const parseTimestamp = (createdAt) => {
+  if (!createdAt) return new Date();
+
+  if (createdAt.seconds) return new Date(createdAt.seconds * 1000);
+  if (createdAt.toDate) return createdAt.toDate();
+
+  return new Date(createdAt);
 };
 
 const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
@@ -198,6 +208,9 @@ const Chat = () => {
   const [hasContextUpdate, setHasContextUpdate] = useState(false);
   const prevStatusRef = useRef(null);
   const [typingStatus, setTypingStatus] = useState({});
+
+  // FIX: Race condition - Add state for other participant
+  const [otherParticipant, setOtherParticipant] = useState(null);
 
   const touchStartRef = useRef(null);
   const touchEndRef = useRef(null);
@@ -386,69 +399,76 @@ const Chat = () => {
     }
   }, [conversation, user?.uid]);
 
+  // FIX: Race condition - Load participant data asynchronously
+  useEffect(() => {
+    if (!conversation || !user?.uid) return;
+
+    const loadParticipantData = async () => {
+      try {
+        let otherUser = null;
+
+        // 1. Try enriched participant data first
+        if (conversation.participantsData?.length > 0) {
+          otherUser = conversation.participantsData.find(p => (p.uid || p.id) !== user?.uid);
+        }
+
+        // 2. Try otherParticipant (ensure it's not the current user)
+        if (!otherUser && conversation.otherParticipant && (conversation.otherParticipant.uid || conversation.otherParticipant.id) !== user?.uid) {
+          otherUser = conversation.otherParticipant;
+        }
+
+        // 3. Try direct participant lookup
+        if (!otherUser && conversation.participants?.length > 0) {
+          const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
+          if (otherParticipantId) {
+            // Try cache first
+            otherUser = chatContacts.find(c => c.id === otherParticipantId);
+            if (!otherUser) {
+              // Fetch from API if not in cache
+              try {
+                const userResponse = await ApiService.getUserData(otherParticipantId);
+                if (userResponse.success && userResponse.data) {
+                  otherUser = userResponse.data;
+                }
+              } catch (error) {
+                console.error('Error fetching participant data:', error);
+              }
+            }
+          }
+        }
+
+        if (otherUser) {
+          const name = otherUser.nomeCompleto || otherUser.nome || otherUser.razaoSocial || otherUser.name || 'Usuário';
+
+          if (name && name !== 'Usuário' && name !== 'Usuario' && name.trim() !== '') {
+            const otherParticipantId = conversation.participants?.find(p => p !== user?.uid);
+            const presenceData = presenceStatus[otherParticipantId];
+
+            const contactData = {
+              id: conversation.id,
+              name: name,
+              initials: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+              type: otherUser.tipo || 'cidadao',
+              distance: '0m de você',
+              online: presenceData?.isOnline || false,
+              lastSeen: presenceData?.lastSeen
+            };
+
+            setOtherParticipant(contactData);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading participant data:', error);
+      }
+    };
+
+    loadParticipantData();
+  }, [conversation, user?.uid, chatContacts, presenceStatus]);
+
+  // Use the loaded participant data
   const currentContact = useMemo(() => {
-
-    // 1. Tentar usar dados detalhados da conversa atual (mais confiável e atualizado)
-    if (conversation && conversation.id === selectedChatId) {
-      let otherUser = null;
-
-      // Tentar encontrar nos dados de participantes enriquecidos
-      if (conversation.participantsData?.length > 0) {
-        otherUser = conversation.participantsData.find(p => (p.uid || p.id) !== user?.uid);
-      }
-
-      // Se não achou, tentar otherParticipant (mas garantir que não é o próprio usuário)
-      if (!otherUser && conversation.otherParticipant && (conversation.otherParticipant.uid || conversation.otherParticipant.id) !== user?.uid) {
-        otherUser = conversation.otherParticipant;
-      }
-
-      // Se ainda não achou, tentar buscar diretamente pelos participantes
-      if (!otherUser && conversation.participants?.length > 0) {
-        const otherParticipantId = conversation.participants.find(p => p !== user?.uid);
-        if (otherParticipantId) {
-          // Tentar buscar do cache dos contatos primeiro
-          otherUser = chatContacts.find(c => c.id === otherParticipantId);
-          if (!otherUser) {
-            // Se não está no cache, buscar da API (síncrono para evitar re-renders)
-            // Nota: Esta busca será assíncrona, por enquanto retorna placeholder
-          }
-        }
-      }
-
-      if (otherUser) {
-        // Priorizar nomeCompleto sobre nome para evitar fallbacks incorretos
-        const name = otherUser.nomeCompleto || otherUser.nome || otherUser.razaoSocial || otherUser.name || 'Usuário';
-
-        // Verificar se o nome é válido (não é placeholder)
-        if (name && name !== 'Usuário' && name !== 'Usuario' && name.trim() !== '') {
-          // Get the other participant ID for presence status
-          const otherParticipantId = conversation.participants?.find(p => p !== user?.uid);
-          const presenceData = presenceStatus[otherParticipantId];
-
-          return {
-            id: conversation.id,
-            name: name,
-            initials: name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-            type: otherUser.tipo || 'cidadao',
-            distance: '0m de você',
-            online: presenceData?.isOnline || false,
-            lastSeen: presenceData?.lastSeen
-          };
-        } else {
-          // Forçar uma busca adicional se o nome ainda for placeholder
-          const otherUid = conversation.participants?.find(p => p !== user?.uid);
-          if (otherUid) {
-            // Busca síncrona adicional (isso pode causar re-renders, mas é necessário)
-            // Nota: Em produção, isso deveria ser feito de forma assíncrona
-          }
-        }
-      }
-    }
-
-    // 2. Fallback para a lista de contatos
-    const fallbackContact = chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
-    return fallbackContact;
-  }, [conversation, chatContacts, selectedChatId, user?.uid, presenceStatus]);
+    return otherParticipant || chatContacts.find(c => c.id === selectedChatId) || chatContacts[0];
+  }, [otherParticipant, chatContacts, selectedChatId]);
 
   // Função para obter informações do contexto (pedido ou achado/perdido)
   const getContextInfo = () => {
@@ -1180,14 +1200,36 @@ const Chat = () => {
     try {
       ensureDependencies();
 
-      // Fazer upload da mídia para o servidor
+      // CRITICAL FIX: Upload to Firebase Storage first, then use permanent URL
       const uploadResponse = await ApiService.uploadMedia(conversaId, file);
 
-      if (uploadResponse.success) {
-        // A mensagem será adicionada via Socket.IO listener
-        console.log('Mídia enviada com sucesso:', uploadResponse.data.id);
+      if (uploadResponse.success && uploadResponse.data?.url) {
+        // Use Firebase Storage URL, not temporary blob URL
+        const firebaseUrl = uploadResponse.data.url;
+        const type = isImage ? 'image' : 'video';
+        const content = isImage ? '📷 Imagem' : '🎥 Vídeo';
+
+        // Send message with permanent Firebase URL
+        const response = await ApiService.sendMessage(conversaId, content, type, { mediaUrl: firebaseUrl });
+
+        if (response.success) {
+          const newMessage = {
+            id: response.data.id,
+            type: type,
+            sender: "sent",
+            content: content,
+            timestamp: new Date(),
+            read: false,
+            mediaUrl: firebaseUrl
+          };
+
+          setMessages(prev => {
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
+        }
       } else {
-        throw new Error('Falha no upload da mídia');
+        throw new Error('Falha no upload da mídia ou URL não retornada');
       }
     } catch (error) {
       console.error("Erro ao enviar mídia:", error);

@@ -1192,26 +1192,41 @@ const Chat = () => {
 
     try {
       ensureDependencies();
-      // Simulação de URL local para preview imediato
-      const mediaUrl = URL.createObjectURL(file);
-      const type = isImage ? 'image' : 'video';
-      const content = isImage ? '📷 Imagem' : '🎥 Vídeo';
 
-      // Envia a mensagem com metadados de mídia
-      // Nota: Em produção, você faria o upload do arquivo primeiro e enviaria a URL retornada
-      const response = await ApiService.sendMessage(conversaId, content, type, { mediaUrl });
+      // CRITICAL FIX: Upload to Firebase Storage first, then use permanent URL
+      const uploadResponse = await ApiService.uploadMedia(conversaId, file);
 
-      if (response.success) {
-        // A mensagem será adicionada via listener ou reload, mas podemos otimizar adicionando localmente se necessário
+      if (uploadResponse.success && uploadResponse.data?.url) {
+        // Use Firebase Storage URL, not temporary blob URL
+        const firebaseUrl = uploadResponse.data.url;
+        const type = isImage ? 'image' : 'video';
+        const content = isImage ? '📷 Imagem' : '🎥 Vídeo';
+
+        // Send message with permanent Firebase URL
+        const response = await ApiService.sendMessage(conversaId, content, type, { mediaUrl: firebaseUrl });
+
+        if (response.success) {
+          const newMessage = {
+            id: response.data.id,
+            type: type,
+            sender: "sent",
+            content: content,
+            timestamp: new Date(),
+            read: false,
+            mediaUrl: firebaseUrl
+          };
+
+          setMessages(prev => {
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
+        }
+      } else {
+        throw new Error('Falha no upload da mídia ou URL não retornada');
       }
     } catch (error) {
       console.error("Erro ao enviar mídia:", error);
-      if (error.message && (error.message.includes('createMessageNotification') || error.message.includes('undefined'))) {
-        console.warn('Mídia salva, mas erro na notificação. Recarregando...');
-        loadMessages();
-      } else {
-        alert("Erro ao enviar arquivo.");
-      }
+      alert("Erro ao enviar arquivo. Tente novamente.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
