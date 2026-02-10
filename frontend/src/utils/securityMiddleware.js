@@ -15,7 +15,7 @@ export class SecurityMiddleware {
       "font-src 'self' https://fonts.gstatic.com https://cdn-uicons.flaticon.com",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https://*.onrender.com wss://*.onrender.com https://viacep.com.br https://nominatim.openstreetmap.org https://api.openstreetmap.org",
-      "frame-src 'self' https://www.openstreetmap.org",
+      "frame-src 'self' https://www.openstreetmap.org https://www.google.com https://*.google.com",
       "object-src 'none'",
       "base-uri 'self'"
     ].join('; ');
