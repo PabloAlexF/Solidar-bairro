@@ -262,6 +262,10 @@ const Chat = () => {
     setReplyingTo(msg);
     setEditingMessage(null);
     textareaRef.current?.focus();
+    // Scroll suave para o input quando responder
+    setTimeout(() => {
+      textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
   };
 
   const handleEditClick = (msg) => {
@@ -1805,7 +1809,12 @@ const Chat = () => {
                         <span className="reply-sender" style={{ color: '#3b82f6' }}>Editando mensagem</span>
                         <p className="reply-text">{editingMessage.content}</p>
                       </div>
-                      <button onClick={() => { setEditingMessage(null); setInputValue(''); }} className="cancel-reply-btn"><X size={18} /></button>
+                      <button onClick={() => { 
+                        setEditingMessage(null); 
+                        setInputValue('');
+                        // Scroll de volta ao final das mensagens
+                        setTimeout(() => scrollToBottom(), 100);
+                      }} className="cancel-reply-btn"><X size={18} /></button>
                     </div>
                     </motion.div>
                   )}
@@ -1821,7 +1830,11 @@ const Chat = () => {
                         <span className="reply-sender">Respondendo a {replyingTo.sender === 'sent' ? 'Você' : currentContact?.name}</span>
                         <p className="reply-text">{replyingTo.content}</p>
                       </div>
-                      <button onClick={() => setReplyingTo(null)} className="cancel-reply-btn"><X size={18} /></button>
+                      <button onClick={() => { 
+                        setReplyingTo(null);
+                        // Scroll de volta ao final das mensagens
+                        setTimeout(() => scrollToBottom(), 100);
+                      }} className="cancel-reply-btn"><X size={18} /></button>
                     </div>
                     </motion.div>
                   )}

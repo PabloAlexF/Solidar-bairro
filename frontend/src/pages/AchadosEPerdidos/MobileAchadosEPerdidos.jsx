@@ -281,9 +281,39 @@ export default function MobileAchadosEPerdidos() {
   const [uploading, setUploading] = useState(false);
 
   // Get user location for display
-  const userLocation = user?.cidade && user?.estado ? `${user.cidade}, ${user.estado}` : 
-                      user?.bairro && user?.cidade ? `${user.bairro}, ${user.cidade}` :
-                      "Localização não definida";
+  const userLocation = React.useMemo(() => {
+    if (!user) return "Localização não definida";
+    
+    console.log('[AchadosPerdidos] Dados do usuário:', {
+      cidade: user.cidade,
+      estado: user.estado,
+      bairro: user.bairro,
+      endereco: user.endereco
+    });
+    
+    // Prioridade: cidade+estado > bairro+cidade > endereco.cidade > bairro
+    if (user.cidade && user.estado) {
+      return `${user.cidade}, ${user.estado}`;
+    }
+    if (user.bairro && user.cidade) {
+      return `${user.bairro}, ${user.cidade}`;
+    }
+    if (user.endereco?.cidade && user.endereco?.estado) {
+      return `${user.endereco.cidade}, ${user.endereco.estado}`;
+    }
+    if (user.endereco?.bairro && user.endereco?.cidade) {
+      return `${user.endereco.bairro}, ${user.endereco.cidade}`;
+    }
+    if (user.bairro) {
+      return user.bairro;
+    }
+    if (user.cidade) {
+      return user.cidade;
+    }
+    
+    console.log('[AchadosPerdidos] Nenhuma localização encontrada');
+    return "Localização não definida";
+  }, [user]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -291,9 +321,23 @@ export default function MobileAchadosEPerdidos() {
     
     // Auto-fill location from user data
     if (user && !formData.location) {
-      const userAddr = user?.cidade && user?.estado ? `${user.cidade}, ${user.estado}` : 
-                      user?.bairro && user?.cidade ? `${user.bairro}, ${user.cidade}` :
-                      "";
+      let userAddr = "";
+      
+      // Prioridade na extração de localização
+      if (user.cidade && user.estado) {
+        userAddr = `${user.cidade}, ${user.estado}`;
+      } else if (user.bairro && user.cidade) {
+        userAddr = `${user.bairro}, ${user.cidade}`;
+      } else if (user.endereco?.cidade && user.endereco?.estado) {
+        userAddr = `${user.endereco.cidade}, ${user.endereco.estado}`;
+      } else if (user.endereco?.bairro && user.endereco?.cidade) {
+        userAddr = `${user.endereco.bairro}, ${user.endereco.cidade}`;
+      } else if (user.bairro) {
+        userAddr = user.bairro;
+      } else if (user.cidade) {
+        userAddr = user.cidade;
+      }
+      
       if (userAddr) {
         setFormData(prev => ({ ...prev, location: userAddr }));
       }

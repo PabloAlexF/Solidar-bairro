@@ -511,12 +511,12 @@ body:has(.sb-chat-root) {
 .sb-chat-content-scroll {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden; /* Prevenir scroll horizontal */
+  overflow-x: hidden;
   padding: 1rem;
+  padding-bottom: 80px; /* Espaço para o footer fixo */
   background: #f8fafc;
   display: flex;
   flex-direction: column;
-  /* Prevenir scroll horizontal */
   max-width: 100%;
 }
 
@@ -900,25 +900,23 @@ body:has(.sb-chat-root) {
   40% { transform: scale(1); }
 }
 
-/* Input Footer - SOLUÇÃO DEFINITIVA PARA MOBILE */
+/* Input Footer - SOLUÇÃO SIMPLIFICADA E EFICAZ */
 .sb-chat-input-footer {
   background: white;
   border-top: 1px solid #f1f5f9;
   padding: 10px;
-  /* Usar position sticky para garantir visibilidade */
-  position: sticky;
+  /* Fixar no bottom da viewport VISUAL (não da página) */
+  position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 1000;
   max-width: 100vw;
   overflow-x: hidden;
-  flex-shrink: 0;
   /* Safe area para dispositivos com notch */
   padding-bottom: max(10px, env(safe-area-inset-bottom));
-  /* Garantir que fique sempre visível acima do teclado */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  /* Garantir que fique acima de tudo */
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
 }
 
 .sb-input-container {
