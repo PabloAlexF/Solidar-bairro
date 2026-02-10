@@ -713,22 +713,34 @@ const Chat = () => {
       const socket = connectSocket(user.uid);
       
       if (socket) {
-        socket.on('connect', () => {
+        const onConnect = () => {
           console.log('✅ Socket conectado! ID:', socket.id, 'UserID:', user.uid);
-        });
+        };
         
-        socket.on('connect_error', (error) => {
+        const onConnectError = (error) => {
           console.error('❌ Erro de conexão Socket:', error);
-        });
+        };
         
-        socket.on('disconnect', (reason) => {
+        const onDisconnect = (reason) => {
           console.log('❌ Socket desconectado. Razão:', reason);
-        });
+        };
 
         // Debug: Listener para qualquer evento
-        socket.onAny((eventName, ...args) => {
+        const onAny = (eventName, ...args) => {
           console.log('📡 Evento Socket recebido:', eventName, args);
-        });
+        };
+
+        socket.on('connect', onConnect);
+        socket.on('connect_error', onConnectError);
+        socket.on('disconnect', onDisconnect);
+        socket.onAny(onAny);
+
+        return () => {
+          socket.off('connect', onConnect);
+          socket.off('connect_error', onConnectError);
+          socket.off('disconnect', onDisconnect);
+          socket.offAny(onAny);
+        };
       }
     }
   }, [user?.uid]);
@@ -780,14 +792,34 @@ const Chat = () => {
       }
     };
 
+    // Handler para reconexão
+    const handleReconnect = () => {
+      if (conversaId) {
+        console.log('🔄 Reconectado (Desktop). Reentrando na sala:', conversaId);
+        socket.emit('join_conversation', conversaId);
+      }
+    };
+
+    // Handler para typing na conversa ativa
+    const handleTyping = (data) => {
+      const convId = data.conversationId || data.conversaId || data.chatId;
+      if (convId === conversaId && data.userId !== user?.uid) {
+        setIsTyping(data.isTyping);
+      }
+    };
+
     // Registrar listeners
     socket.on('new_message', handleNewMessage);
     socket.on('force_reload_messages', handleForceReload);
+    socket.on('connect', handleReconnect);
+    socket.on('typing', handleTyping);
 
     return () => {
       socket.emit('leave_conversation', conversaId);
       socket.off('new_message', handleNewMessage);
       socket.off('force_reload_messages', handleForceReload);
+      socket.off('connect', handleReconnect);
+      socket.off('typing', handleTyping);
       console.log('🚪 Saindo da conversa:', conversaId);
     };
   }, [conversaId, user?.uid, loadMessages, loadConversations]);
@@ -883,6 +915,18 @@ const Chat = () => {
     setReplyingTo(null);
     textareaRef.current?.focus();
   };
+
+  // Limpar timeout de digitação e enviar status false ao desmontar ou trocar de conversa
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        if (conversaId) {
+          ApiService.sendTypingStatus(conversaId, false).catch(() => {});
+        }
+      }
+    };
+  }, [conversaId]);
 
   const handleTypingInput = (e) => {
     const val = e.target.value;
@@ -1125,6 +1169,7 @@ const Chat = () => {
 
     if (!conversaId) {
       alert('Erro: ID da conversa não encontrado.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -1133,11 +1178,13 @@ const Chat = () => {
 
     if (!isImage && !isVideo) {
       alert("Apenas imagens e vídeos são permitidos.");
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
       alert("O arquivo deve ter no máximo 10MB.");
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 

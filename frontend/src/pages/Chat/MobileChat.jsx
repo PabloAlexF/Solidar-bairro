@@ -4,8 +4,7 @@ import Header from '../../components/layout/Header';
 import { useAuth } from '../../contexts/AuthContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
-import { getSocket } from '../../services/socketService';
-import { useVisualViewport } from '../../hooks/useVisualViewport';
+import { getSocket, connectSocket } from '../../services/socketService';
 import { 
   Heart, 
   ArrowLeft, 
@@ -150,9 +149,6 @@ const Chat = () => {
   const { user } = useAuth();
   const conversaId = params.id;
   
-  // Hook para ajustar layout quando teclado virtual aparece
-  useVisualViewport();
-  
   const [messages, setMessages] = useState([]);
   const [conversation, setConversation] = useState(null);
   const [pedidoData, setPedidoData] = useState(null);
@@ -205,6 +201,13 @@ const Chat = () => {
 
   const touchStartRef = useRef(null);
   const touchEndRef = useRef(null);
+
+  // Conectar Socket.IO quando o usuário estiver autenticado
+  useEffect(() => {
+    if (user?.uid) {
+      connectSocket(user.uid);
+    }
+  }, [user?.uid]);
 
   useEffect(() => {
     if (sidebarOpen && !hasShownHintRef.current) {
@@ -804,37 +807,22 @@ const Chat = () => {
   useEffect(() => {
     let socket;
     let handleSocketMessage;
-    let unsubscribeTyping;
+    let handleReconnect;
+    let handleTyping;
 
     if (conversaId) {
       ensureDependencies();
       setSelectedChatId(conversaId);
       loadMessages();
       
-      // Iniciar escuta de novas mensagens
-      chatNotificationService.startListening(conversaId, (newMessages) => {
-        setMessages(prev => {
-          const existingIds = new Set(prev.map(m => m.id));
-          const uniqueNewMessages = newMessages.filter(msg => !existingIds.has(msg.id));
-          
-          if (uniqueNewMessages.length === 0) return prev;
-
-          return [...prev, ...uniqueNewMessages.map(msg => ({
-            id: msg.id,
-            type: msg.type || 'text',
-            sender: msg.senderId === user?.uid ? 'sent' : 'received',
-            content: msg.content || msg.text,
-            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
-            read: msg.read || false,
-            location: msg.metadata?.location,
-            metadata: msg.metadata,
-            mediaUrl: msg.mediaUrl
-          }))];
-        });
-      });
-
       // Listener direto do Socket.IO para mensagens em tempo real
       socket = getSocket();
+      
+      // Entrar na sala da conversa
+      if (socket) {
+        socket.emit('join_conversation', conversaId);
+      }
+
       handleSocketMessage = (data) => {
         console.log('📩 [Mobile] Mensagem recebida via Socket:', data);
         const msg = data.message || data; // Garante que pegamos o objeto da mensagem
@@ -861,31 +849,41 @@ const Chat = () => {
         }
       };
 
+      // Handler para reconexão
+      handleReconnect = () => {
+        if (socket && conversaId) {
+          console.log('🔄 Reconectado (Mobile). Reentrando na sala:', conversaId);
+          socket.emit('join_conversation', conversaId);
+        }
+      };
+
+      // Handler para typing
+      handleTyping = (data) => {
+        const convId = data.conversationId || data.conversaId || data.chatId;
+        if (convId === conversaId && data.userId !== user?.uid) {
+          setIsTyping(data.isTyping);
+        }
+      };
+
       if (socket) {
         socket.on('receive_message', handleSocketMessage);
         socket.on('new_message', handleSocketMessage); // Fallback para outro nome comum de evento
-      }
-
-      // Iniciar escuta de "digitando..."
-      if (chatNotificationService.subscribeToTyping) {
-        unsubscribeTyping = chatNotificationService.subscribeToTyping(conversaId, (isTypingStatus) => {
-          setIsTyping(isTypingStatus);
-        });
+        socket.on('connect', handleReconnect);
+        socket.on('typing', handleTyping);
       }
     }
     
     loadConversations();
     
     return () => {
-      if (conversaId) {
-        chatNotificationService.stopListening(conversaId);
-      }
       if (socket && handleSocketMessage) {
+        socket.emit('leave_conversation', conversaId);
         socket.off('receive_message', handleSocketMessage);
         socket.off('new_message', handleSocketMessage);
-      }
-      if (unsubscribeTyping) {
-        unsubscribeTyping();
+        if (handleTyping) socket.off('typing', handleTyping);
+        if (handleReconnect) {
+          socket.off('connect', handleReconnect);
+        }
       }
     };
   }, [conversaId, user?.uid, loadConversations, loadMessages]);
@@ -893,6 +891,46 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
+
+  // Ajustar layout para teclado virtual (Visual Viewport API)
+  useEffect(() => {
+    const handleResize = () => {
+      requestAnimationFrame(() => {
+        if (window.visualViewport) {
+          const chatRoot = document.querySelector('.sb-chat-root');
+          if (chatRoot) {
+            // Ajusta a altura para a área visível real (desconta o teclado no iOS/Android)
+            chatRoot.style.height = `${window.visualViewport.height}px`;
+            // Garante que o topo esteja alinhado (necessário em alguns scrolls do iOS)
+            chatRoot.style.top = `${window.visualViewport.offsetTop}px`;
+          }
+        }
+        // Scroll imediato (auto) para evitar pulos visuais durante a animação do teclado
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: "auto" });
+        }
+      });
+    };
+
+    window.visualViewport?.addEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('scroll', handleResize);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+    };
+  }, []);
+
+  // Limpar timeout de digitação e enviar status false ao desmontar ou trocar de conversa
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        if (conversaId) {
+          ApiService.sendTypingStatus(conversaId, false).catch(() => {});
+        }
+      }
+    };
+  }, [conversaId]);
 
   const handleTypingInput = (e) => {
     const val = e.target.value;
@@ -1105,16 +1143,24 @@ const Chat = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!conversaId) {
+      alert('Erro: ID da conversa não encontrado.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
 
     if (!isImage && !isVideo) {
       alert("Apenas imagens e vídeos são permitidos.");
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
       alert("O arquivo deve ter no máximo 10MB.");
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -1204,8 +1250,8 @@ const Chat = () => {
           background: #f1f5f9;
           border: none;
           border-radius: 50%;
-          width: 32px;
-          height: 32px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1377,10 +1423,10 @@ const Chat = () => {
           {/* Header */}
           <header className="sb-chat-header-bar">
             <div className="sb-header-left-group">
-              <button className="sb-mobile-menu-btn" onClick={() => setSidebarOpen(true)}>
+              <button className="sb-mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Abrir menu lateral">
                 <MoreVertical size={24} />
               </button>
-              <button className="sb-mobile-back-btn" onClick={() => navigate('/conversas')}>
+              <button className="sb-mobile-back-btn" onClick={() => navigate('/conversas')} aria-label="Voltar para conversas">
                 <ArrowLeft size={24} />
               </button>
               <div className="sb-current-user-info">
@@ -1419,6 +1465,7 @@ const Chat = () => {
                   <button 
                     className="sb-header-action-btn"
                     onClick={() => setShowMobileMenu(!showMobileMenu)}
+                    aria-label="Mais opções"
                   >
                     <MoreVertical size={20} />
                   </button>
@@ -1492,7 +1539,7 @@ const Chat = () => {
                 autoFocus
               />
               {msgSearchTerm && (
-                <button onClick={() => setMsgSearchTerm('')} className="sb-search-clear-btn">
+                <button onClick={() => setMsgSearchTerm('')} className="sb-search-clear-btn" aria-label="Limpar busca">
                   <X size={16} />
                 </button>
               )}
@@ -1814,7 +1861,7 @@ const Chat = () => {
                         setInputValue('');
                         // Scroll de volta ao final das mensagens
                         setTimeout(() => scrollToBottom(), 100);
-                      }} className="cancel-reply-btn"><X size={18} /></button>
+                      }} className="cancel-reply-btn" aria-label="Cancelar edição"><X size={18} /></button>
                     </div>
                     </motion.div>
                   )}
@@ -1834,7 +1881,7 @@ const Chat = () => {
                         setReplyingTo(null);
                         // Scroll de volta ao final das mensagens
                         setTimeout(() => scrollToBottom(), 100);
-                      }} className="cancel-reply-btn"><X size={18} /></button>
+                      }} className="cancel-reply-btn" aria-label="Cancelar resposta"><X size={18} /></button>
                     </div>
                     </motion.div>
                   )}
@@ -1847,14 +1894,15 @@ const Chat = () => {
                     accept="image/*,video/*" 
                     onChange={handleFileSelect}
                   />
-                  <button className="sb-action-icon-btn" title="Anexar" onClick={handleAttachmentClick} disabled={isUploading}>
+                  <button className="sb-action-icon-btn" title="Anexar" onClick={handleAttachmentClick} disabled={isUploading} aria-label="Anexar arquivo">
                     {isUploading ? <div className="sb-mini-loader" /> : <Paperclip size={20} />}
                   </button>
                   <button 
-                    className={`action-icon-btn ${isGettingLocation ? 'loading' : ''}`} 
+                    className={`sb-action-icon-btn ${isGettingLocation ? 'loading' : ''}`} 
                     title="Enviar Localização"
                     onClick={handleSendLocation}
                     disabled={isGettingLocation}
+                    aria-label="Enviar localização"
                   >
                     {isGettingLocation ? (
                       <div className="sb-mini-loader" />
@@ -1883,6 +1931,7 @@ const Chat = () => {
                   className={`send-msg-btn ${inputValue.trim() && !sendingMessage ? 'active' : ''}`}
                   onClick={handleSend}
                   disabled={!inputValue.trim() || sendingMessage}
+                  aria-label="Enviar mensagem"
                 >
                   {sendingMessage ? (
                     <div className="sb-mini-loader" />
@@ -2132,9 +2181,9 @@ const Chat = () => {
         <div className="sb-image-modal-overlay" onClick={() => setSelectedImage(null)}>
           <div className="sb-image-modal-content">
             <div className="sb-image-controls" style={{ position: 'absolute', top: 20, right: 20, zIndex: 3002, display: 'flex', gap: 10 }} onClick={(e) => e.stopPropagation()}>
-              <button className="sb-control-btn" onClick={() => setZoomLevel(z => Math.max(1, z - 0.5))}><ZoomOut size={24} color="white"/></button>
-              <button className="sb-control-btn" onClick={() => setZoomLevel(z => Math.min(4, z + 0.5))}><ZoomIn size={24} color="white"/></button>
-              <button className="sb-control-btn" onClick={() => setSelectedImage(null)}><X size={24} color="white"/></button>
+              <button className="sb-control-btn" onClick={() => setZoomLevel(z => Math.max(1, z - 0.5))} aria-label="Diminuir zoom"><ZoomOut size={24} color="white"/></button>
+              <button className="sb-control-btn" onClick={() => setZoomLevel(z => Math.min(4, z + 0.5))} aria-label="Aumentar zoom"><ZoomIn size={24} color="white"/></button>
+              <button className="sb-control-btn" onClick={() => setSelectedImage(null)} aria-label="Fechar imagem"><X size={24} color="white"/></button>
             </div>
             <div style={{ overflow: 'auto', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
               <img 

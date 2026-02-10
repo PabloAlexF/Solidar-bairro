@@ -1580,10 +1580,10 @@
 .contact-item.active { background-color: #ecfdf5 !important; border-left: none; border: 1px solid #d1fae5; }
 .chat-main-content { background-color: #f0f2f5; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
 .msg-bubble { border-radius: 16px; padding: 12px 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
-.msg-row.sent .msg-bubble { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-bottom-right-radius: 2px; }
+.msg-row.sent .msg-bubble { background: linear-gradient(135deg, #047857 0%, #065f46 100%); color: white; border-bottom-right-radius: 2px; }
 .msg-row.received .msg-bubble { background: #ffffff; color: #1f2937; border-bottom-left-radius: 2px; }
-.msg-row.sent .msg-time { color: rgba(255,255,255,0.9); }
-.msg-row.sent .msg-status svg { color: white !important; }
+.msg-row.sent .msg-time { color: #64748b; }
+.msg-row.sent .msg-status svg { color: #3b82f6 !important; }
 .input-container { border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
 
 /* Utility Classes for Inline Styles */
