@@ -1696,26 +1696,42 @@ const Chat = () => {
 
                 if (msg.type === "location") {
                   const { lat, lng } = msg.location || { lat: -23.5505, lng: -46.6333 };
-                  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.005}%2C${lat - 0.005}%2C${lng + 0.005}%2C${lat + 0.005}&layer=mapnik&marker=${lat}%2C${lng}`;
+                  const mapUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=16`;
+                  const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
 
                   bubbleContent = (
                     <div className="msg-bubble location-bubble">
-                      <div className="location-map-preview">
-                        <iframe
-                          title="Localização"
-                          width="100%"
-                          height="100%"
-                          frameBorder="0"
-                          scrolling="no"
-                          marginHeight={0}
-                          marginWidth={0}
-                          src={mapUrl}
-                          style={{ border: 0 }}
-                        />
+                      <div className="location-static-preview">
+                        <div className="location-icon-large">
+                          <MapPin size={32} />
+                        </div>
+                        <div className="location-coordinates">
+                          <span className="coords-text">
+                            {lat.toFixed(6)}, {lng.toFixed(6)}
+                          </span>
+                        </div>
                       </div>
                       <div className="location-details">
-                        <h5>{msg.location?.name}</h5>
-                        <p>{msg.location?.address}</p>
+                        <h5>{msg.location?.name || "Localização Compartilhada"}</h5>
+                        <p>{msg.location?.address || "Endereço não disponível"}</p>
+                        <div className="location-actions">
+                          <a
+                            href={googleMapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="location-link primary"
+                          >
+                            📍 Abrir no Google Maps
+                          </a>
+                          <a
+                            href={mapUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="location-link secondary"
+                          >
+                            🗺️ Ver no OpenStreetMap
+                          </a>
+                        </div>
                       </div>
                     </div>
                   );
