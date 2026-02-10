@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
 import { getSocket } from '../../services/socketService';
+import { useVisualViewport } from '../../hooks/useVisualViewport';
 import { 
   Heart, 
   ArrowLeft, 
@@ -148,6 +149,9 @@ const Chat = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const conversaId = params.id;
+  
+  // Hook para ajustar layout quando teclado virtual aparece
+  useVisualViewport();
   
   const [messages, setMessages] = useState([]);
   const [conversation, setConversation] = useState(null);
