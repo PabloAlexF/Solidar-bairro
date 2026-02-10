@@ -1,5 +1,22 @@
 /* mobile-styles.css */
 
+/* Fix para altura do viewport em dispositivos móveis */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari */
+  .sb-chat-root {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Garantir que o body não tenha scroll quando o chat estiver aberto */
+body:has(.sb-chat-root) {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+}
+
 .sb-chat-root {
   --sb-chat-bg: #fdfdfd;
   --sb-sidebar-bg: #ffffff;
@@ -19,18 +36,22 @@
   --sb-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
 
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height para mobile */
   width: 100%;
   background-color: #f8fafc;
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1000;
+  z-index: 9999; /* Z-index muito alto para ficar acima da barra do navegador */
+  overflow: hidden;
 }
 
 .sb-chat-page-wrapper {
   height: 100%;
   display: flex;
   flex-direction: column;
+  /* Suporte para iOS Safari */
+  height: -webkit-fill-available;
 }
 
 .sb-chat-layout {
@@ -331,6 +352,8 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  /* Garantir que o conteúdo não fique atrás da barra do navegador */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .sb-chat-header-bar {
@@ -863,6 +886,11 @@
   background: white;
   border-top: 1px solid #f1f5f9;
   padding: 10px;
+  /* Adicionar padding para safe area em dispositivos com notch */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  /* Garantir que fique acima da barra do navegador */
+  position: relative;
+  z-index: 100;
 }
 
 .sb-input-container {
