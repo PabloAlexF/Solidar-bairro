@@ -18,6 +18,9 @@ export const connectSocket = (userId) => {
     reconnectionAttempts: 5
   });
   
+  // Armazenar instância global para evitar duplicação
+  window.socketInstance = socket;
+  
   socket.on('connect', () => {
     console.log('✅ [SocketService] Socket conectado! ID:', socket.id, 'UserID:', userId);
   });
@@ -45,5 +48,6 @@ export const disconnectSocket = () => {
     console.log('🔌 [SocketService] Desconectando socket...');
     socket.disconnect();
     socket = null;
+    window.socketInstance = null;
   }
 };

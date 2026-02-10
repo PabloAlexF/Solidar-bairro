@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import AppRoutes from './routes/AppRoutes';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { useAuth } from './contexts/AuthContext';
-import { connectSocket } from './services/socketService';
+
 import SecurityMiddleware from './utils/securityMiddleware';
 import './styles/globals.css';
 import './styles/visibility-fix.css';
@@ -19,10 +19,12 @@ function App() {
     SecurityMiddleware.initialize();
   }, []);
 
+  // Socket já é conectado no AuthContext, não conectar novamente aqui
+  // Apenas escutar notificações do socket existente
   useEffect(() => {
-    let socket;
     if (isAuthenticated() && user) {
-      socket = connectSocket(user.uid || user.id);
+      const socket = window.socketInstance; // Usar instância global do socket
+      if (!socket) return;
 
       const handleNewNotification = (notification) => {
         // Tocar som
@@ -36,7 +38,6 @@ function App() {
           <div 
             onClick={() => {
               if (notification.type === 'chat' && notification.data?.conversationId) {
-                  // Usar window.location para garantir navegação independente do contexto do Router neste nível
                   window.location.href = `/chat/${notification.data.conversationId}`;
               }
               toast.dismiss(t.id);
@@ -51,14 +52,11 @@ function App() {
       };
 
       socket.on('notification', handleNewNotification);
-    }
 
-    return () => {
-      if (socket) socket.off('notification');
-      if (socket) {
-        socket.disconnect();
-      }
-    };
+      return () => {
+        socket.off('notification', handleNewNotification);
+      };
+    }
   }, [isAuthenticated, user, notificationSound]);
 
   return (
