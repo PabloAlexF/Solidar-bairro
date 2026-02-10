@@ -36,8 +36,7 @@ body:has(.sb-chat-root) {
   --sb-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
 
   /* Usar visualViewport para altura real disponível */
-  height: 100vh;
-  height: 100dvh;
+  height: 100%; /* JS vai controlar a altura exata via visualViewport */
   width: 100%;
   background-color: #f8fafc;
   position: fixed;
@@ -371,6 +370,7 @@ body:has(.sb-chat-root) {
   align-items: center;
   background: white;
   z-index: 10;
+  flex-shrink: 0; /* Impedir que o header encolha ou suma */
 }
 
 .sb-header-left-group {
@@ -506,6 +506,7 @@ body:has(.sb-chat-root) {
   justify-content: center;
   gap: 6px;
   border-bottom: 1px solid #bbf7d0;
+  flex-shrink: 0;
 }
 
 .sb-chat-content-scroll {

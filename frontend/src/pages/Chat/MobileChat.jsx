@@ -895,6 +895,9 @@ const Chat = () => {
   // Ajustar layout para teclado virtual (Visual Viewport API)
   useEffect(() => {
     const handleResize = () => {
+      // Forçar o scroll do documento para o topo para evitar que o header suma
+      window.scrollTo(0, 0);
+      
       requestAnimationFrame(() => {
         if (window.visualViewport) {
           const chatRoot = document.querySelector('.sb-chat-root');
@@ -906,14 +909,15 @@ const Chat = () => {
           }
         }
         // Scroll imediato (auto) para evitar pulos visuais durante a animação do teclado
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: "auto" });
-        }
       });
     };
 
     window.visualViewport?.addEventListener('resize', handleResize);
     window.visualViewport?.addEventListener('scroll', handleResize);
+    
+    // Executar imediatamente ao montar para corrigir a posição inicial (barra de endereços)
+    handleResize();
+
     return () => {
       window.visualViewport?.removeEventListener('resize', handleResize);
       window.visualViewport?.removeEventListener('scroll', handleResize);
