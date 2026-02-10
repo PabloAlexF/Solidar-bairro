@@ -36,10 +36,12 @@ body:has(.sb-chat-root) {
   --sb-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
 
   /* Usar visualViewport para altura real disponível */
-  height: 100%; /* JS vai controlar a altura exata via visualViewport */
+  height: 100dvh; /* Fallback moderno */
   width: 100%;
   background-color: #f8fafc;
   position: fixed;
+  display: flex;
+  flex-direction: column;
   top: 0;
   left: 0;
   z-index: 9999;
@@ -48,7 +50,7 @@ body:has(.sb-chat-root) {
 }
 
 .sb-chat-page-wrapper {
-  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   /* Suporte para iOS Safari */
@@ -56,10 +58,11 @@ body:has(.sb-chat-root) {
   /* Prevenir scroll horizontal */
   max-width: 100vw;
   overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .sb-chat-layout {
-  height: 100%;
+  flex: 1;
   display: flex;
   position: relative;
   overflow: hidden;
@@ -354,7 +357,7 @@ body:has(.sb-chat-root) {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: #f0f2f5;
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -513,8 +516,8 @@ body:has(.sb-chat-root) {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* Importante para iOS */
   padding: 1rem;
-  padding-bottom: 80px; /* Espaço para o footer fixo */
   background: #f8fafc;
   display: flex;
   flex-direction: column;
@@ -906,11 +909,9 @@ body:has(.sb-chat-root) {
   background: white;
   border-top: 1px solid #f1f5f9;
   padding: 10px;
-  /* Fixar no bottom da viewport VISUAL (não da página) */
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  /* Flexbox vai empurrar isso para o final naturalmente */
+  position: relative;
+  width: 100%;
   z-index: 1000;
   max-width: 100vw;
   overflow: visible;

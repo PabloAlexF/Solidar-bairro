@@ -895,21 +895,16 @@ const Chat = () => {
   // Ajustar layout para teclado virtual (Visual Viewport API)
   useEffect(() => {
     const handleResize = () => {
-      // Forçar o scroll do documento para o topo para evitar que o header suma
-      window.scrollTo(0, 0);
-      
-      requestAnimationFrame(() => {
-        if (window.visualViewport) {
-          const chatRoot = document.querySelector('.sb-chat-root');
-          if (chatRoot) {
-            // Ajusta a altura para a área visível real (desconta o teclado no iOS/Android)
-            chatRoot.style.height = `${window.visualViewport.height}px`;
-            // Garante que o topo esteja alinhado (necessário em alguns scrolls do iOS)
-            chatRoot.style.top = `${window.visualViewport.offsetTop}px`;
-          }
+      if (window.visualViewport) {
+        const chatRoot = document.querySelector('.sb-chat-root');
+        if (chatRoot) {
+          // Ajusta a altura para a área visível real (desconta o teclado no iOS/Android)
+          // Isso força o footer a subir, pois o container encolhe
+          chatRoot.style.height = `${window.visualViewport.height}px`;
+          // Mantém o topo alinhado caso o Safari tente rolar a viewport
+          chatRoot.style.top = `${window.visualViewport.offsetTop}px`;
         }
-        // Scroll imediato (auto) para evitar pulos visuais durante a animação do teclado
-      });
+      }
     };
 
     window.visualViewport?.addEventListener('resize', handleResize);
