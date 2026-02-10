@@ -35,6 +35,9 @@ socketService.init(httpServer);
 
 // Initialize cache service
 async function initializeServices() {
+  // Default Redis to disabled if not configured
+  process.env.REDIS_ENABLED = process.env.REDIS_ENABLED || 'false';
+
   try {
     await cacheService.connect();
     logger.info('Services initialized successfully');
