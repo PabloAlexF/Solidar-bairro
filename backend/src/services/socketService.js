@@ -27,7 +27,8 @@ const init = (httpServer) => {
 
     // Entrar nas salas das conversas do usuário
     if (userId) {
-      socket.join(`user_${userId}`);
+      socket.join(userId); // Sala principal do usuário
+      socket.join(`user_${userId}`); // Sala alternativa
 
       // Marcar usuário como online
       presenceService.userConnected(userId, socket.id).catch(error => {
@@ -46,6 +47,13 @@ const init = (httpServer) => {
         logger.error('Erro ao buscar conversas para socket:', error);
       }
     }
+
+    // Evento para entrar na sala do usuário (redundante mas útil)
+    socket.on('join_user_room', (targetUserId) => {
+      socket.join(targetUserId);
+      socket.join(`user_${targetUserId}`);
+      logger.info(`Usuário ${targetUserId} entrou na própria sala`);
+    });
 
     // Evento para entrar em uma conversa específica
     socket.on('join_conversation', (conversationId) => {

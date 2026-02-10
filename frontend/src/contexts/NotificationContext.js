@@ -75,12 +75,16 @@ export const NotificationProvider = ({ children }) => {
     if (isAuthenticated() && user) {
       const socket = getSocket();
       if (socket) {
+        // Entrar na sala do usuário para receber notificações
+        const userId = user.uid || user.id;
+        socket.emit('join_user_room', userId);
+
         const handleNewNotification = (notificationData) => {
-          console.log('Nova notificação recebida via socket:', notificationData);
+          console.log('🔔 Nova notificação recebida via socket:', notificationData);
 
           // Converter formato do socket para formato local
           const newNotification = {
-            id: notificationData.id,
+            id: notificationData.id || `notif-${Date.now()}`,
             timestamp: notificationData.createdAt?.seconds ? new Date(notificationData.createdAt.seconds * 1000).toISOString() : notificationData.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
             read: notificationData.read || false,
             type: notificationData.type || 'system',
@@ -92,6 +96,15 @@ export const NotificationProvider = ({ children }) => {
 
           // Adicionar à lista de notificações
           setNotifications(prev => [newNotification, ...prev.slice(0, 49)]);
+
+          // Tocar som de notificação (opcional)
+          try {
+            const audio = new Audio('/notification.mp3');
+            audio.volume = 0.3;
+            audio.play().catch(() => {});
+          } catch (error) {
+            // Ignorar erro de áudio
+          }
         };
 
         const handleNotificationRead = (data) => {

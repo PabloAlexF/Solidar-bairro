@@ -1,9 +1,21 @@
 const notificationModel = require('../models/notificationModel');
 const userService = require('./userService');
+const { getIO } = require('../config/socket');
 
 class NotificationService {
   async createNotification(data) {
     const notification = await notificationModel.createNotification(data);
+
+    // Emitir notificação via Socket.IO em tempo real
+    try {
+      const io = getIO();
+      if (io && data.userId) {
+        io.to(data.userId).emit('notification', notification);
+        console.log(`📢 Notificação emitida para usuário ${data.userId}:`, notification.title);
+      }
+    } catch (error) {
+      console.error('Erro ao emitir notificação via socket:', error);
+    }
 
     return notification;
   }
@@ -27,6 +39,17 @@ class NotificationService {
         }
       });
 
+      // Emitir via Socket.IO
+      try {
+        const io = getIO();
+        if (io) {
+          io.to(receiverId).emit('notification', notification);
+          console.log(`💬 Notificação de chat emitida para ${receiverId}`);
+        }
+      } catch (error) {
+        console.error('Erro ao emitir notificação de chat via socket:', error);
+      }
+
       return notification;
     } catch (error) {
       console.error('Erro ao criar notificação de chat:', error);
@@ -43,7 +66,11 @@ class NotificationService {
 
     // Emitir evento de notificação lida via socket
     try {
-      emitNotificationRead(userId, notificationId);
+      const io = getIO();
+      if (io && userId) {
+        io.to(userId).emit('notification_read', { notificationId });
+        console.log(`✅ Notificação ${notificationId} marcada como lida para ${userId}`);
+      }
     } catch (error) {
       console.error('Erro ao emitir notificação lida via socket:', error);
     }
