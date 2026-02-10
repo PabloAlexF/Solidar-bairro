@@ -87,20 +87,23 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       connectSrc: [
-        "'self'", 
-        "https://viacep.com.br/*", 
+        "'self'",
+        "https://viacep.com.br/*",
         "https://nominatim.openstreetmap.org",
         "https://api.openstreetmap.org",
         "https://www.openstreetmap.org",
         "https://api.bigdatacloud.net",
         "https://api.allorigins.win",
         "wss://*.onrender.com",
-        "ws://*.onrender.com"
+        "ws://*.onrender.com",
+        "blob:"
       ],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn-uicons.flaticon.com"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
       fontSrc: ["'self'", "https://cdn-uicons.flaticon.com"],
+      mediaSrc: ["'self'", "data:", "https:", "blob:"],
+      objectSrc: ["'none'"],
     },
   },
   frameguard: { action: 'deny' }, // X-Frame-Options: DENY
