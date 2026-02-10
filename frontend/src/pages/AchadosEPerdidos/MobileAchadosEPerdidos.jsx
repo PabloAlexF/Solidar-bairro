@@ -177,7 +177,12 @@ const ItemCard = ({ item, onOpenDetails, handleOpenChat, onDelete, onResolve, is
         <div className="mobile-lf-card-meta">
           <div className="mobile-lf-meta-item">
             <MapPin size={14} />
-            <span>{item.location || 'Local a definir'}</span>
+            <span>
+              {item.location || 
+               (item.city && item.state ? `${item.city}, ${item.state}` : 
+                item.bairro && item.city ? `${item.bairro}, ${item.city}` : 
+                'Localização não informada')}
+            </span>
           </div>
           {item.reward && item.type === 'lost' && (
             <div className="mobile-lf-meta-item reward">
@@ -1154,7 +1159,12 @@ export default function MobileAchadosEPerdidos() {
                           <MapPin size={20} />
                           <div>
                             <label>Localização</label>
-                            <span>{selectedItem.location}</span>
+                            <span>
+                              {selectedItem.location || 
+                               (selectedItem.city && selectedItem.state ? `${selectedItem.city}, ${selectedItem.state}` : 
+                                selectedItem.bairro && selectedItem.city ? `${selectedItem.bairro}, ${selectedItem.city}` : 
+                                'Localização não informada')}
+                            </span>
                           </div>
                         </div>
                         <div className="mobile-lf-details-meta-box">
