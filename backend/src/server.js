@@ -110,6 +110,7 @@ app.use(helmet({
     },
   },
   frameguard: { action: 'deny' }, // X-Frame-Options: DENY
+  crossOriginEmbedderPolicy: false,
 }));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
