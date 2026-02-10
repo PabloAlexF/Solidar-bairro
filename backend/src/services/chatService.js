@@ -447,7 +447,7 @@ class ChatService {
     try {
       // Verificar se o usuário faz parte da conversa
       const conversation = await chatModel.getConversation(conversationId);
-      
+
       if (!conversation.participants.includes(userId)) {
         throw new Error('Usuário não autorizado nesta conversa');
       }
@@ -478,6 +478,44 @@ class ChatService {
       return { success: true, message: 'Conversa encerrada com sucesso' };
     } catch (error) {
       console.error('Erro ao encerrar conversa:', error);
+      throw error;
+    }
+  }
+
+  async uploadMedia(conversationId, senderId, file) {
+    try {
+      // Verificar se o usuário faz parte da conversa
+      const conversation = await chatModel.getConversation(conversationId);
+
+      if (!conversation.participants.includes(senderId)) {
+        throw new Error('Usuário não autorizado nesta conversa');
+      }
+
+      // Upload do arquivo para Firebase Storage
+      const uploadService = require('./uploadService');
+      const uploadResult = await uploadService.uploadFile(file, 'chat-media');
+
+      // Determinar tipo baseado no mimetype
+      let messageType = 'image';
+      if (file.mimetype.startsWith('video/')) {
+        messageType = 'video';
+      }
+
+      // Criar mensagem com a mídia
+      const message = await chatModel.createMessage({
+        conversationId,
+        senderId,
+        type: messageType,
+        content: messageType === 'image' ? '📷 Imagem' : '🎥 Vídeo',
+        metadata: {
+          mediaUrl: uploadResult.publicUrl,
+          fileName: uploadResult.originalName
+        }
+      });
+
+      return message;
+    } catch (error) {
+      console.error('Erro ao fazer upload de mídia:', error);
       throw error;
     }
   }

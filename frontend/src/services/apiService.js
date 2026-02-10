@@ -6,6 +6,12 @@ const ApiService = {
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
 
+  // Método auxiliar para obter headers de autenticação
+  getAuthHeaders() {
+    const token = localStorage.getItem('solidar-token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  },
+
   // Validação de segurança antes de requisições
   validateRequest(endpoint, data = null) {
     // Validar endpoint
@@ -345,17 +351,33 @@ const ApiService = {
   async sendMessage(conversationId, text, type = 'text', metadata = null) {
     const response = await this.request(`/chat/conversations/${conversationId}/messages`, {
       method: 'POST',
-      body: JSON.stringify({ 
-        text, 
+      body: JSON.stringify({
+        text,
         content: text,
         type,
-        metadata 
+        metadata
       })
     });
-    
+
     // Notificações são criadas automaticamente pelo backend via Socket.IO
     // Não precisamos criar notificações aqui para evitar duplicação
-    
+
+    return response;
+  },
+
+  async uploadMedia(conversationId, file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await this.request(`/chat/conversations/${conversationId}/upload`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Não definir Content-Type para que o navegador defina automaticamente com boundary
+        ...this.getAuthHeaders()
+      }
+    });
+
     return response;
   },
 

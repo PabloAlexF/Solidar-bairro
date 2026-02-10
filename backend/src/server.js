@@ -86,8 +86,9 @@ app.use(helmet({
       connectSrc: [
         "'self'", 
         "https://viacep.com.br/*", 
-        "https://nominatim.openstreetmap.org", 
+        "https://nominatim.openstreetmap.org",
         "https://api.openstreetmap.org",
+        "https://www.openstreetmap.org",
         "https://api.bigdatacloud.net",
         "https://api.allorigins.win",
         "wss://*.onrender.com",

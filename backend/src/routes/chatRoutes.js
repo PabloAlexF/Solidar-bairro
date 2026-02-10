@@ -19,6 +19,10 @@ router.get('/conversations/:id/messages', authenticateToken, chatController.getM
 router.put('/conversations/:id/read', authenticateToken, chatController.markAsRead);
 router.put('/conversations/:id/close', authenticateToken, chatController.closeConversation);
 
+// Upload de mídia
+const uploadService = require('../services/uploadService');
+router.post('/conversations/:id/upload', authenticateToken, uploadService.getChatMediaConfig().single('file'), chatController.uploadMedia);
+
 console.log('✅ Rotas de chat registradas, incluindo PUT /conversations/:id/close');
 
 module.exports = router;

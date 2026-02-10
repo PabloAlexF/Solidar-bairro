@@ -69,13 +69,14 @@ class ChatModel {
 
   // Mensagens
   async createMessage(data) {
+    const now = new Date();
     const messageData = {
       conversationId: data.conversationId,
       senderId: data.senderId,
       type: data.type || 'text',
       content: data.content,
       metadata: data.metadata || null,
-      createdAt: new Date(),
+      createdAt: now,
       readBy: [data.senderId]
     };
 
@@ -84,10 +85,15 @@ class ChatModel {
     // Atualizar conversa
     await this.updateConversation(data.conversationId, {
       lastMessage: messageData.content,
-      lastMessageAt: messageData.createdAt
+      lastMessageAt: now
     });
 
-    return { id: docRef.id, ...messageData };
+    // Retornar com timestamp serializado para o frontend
+    return { 
+      id: docRef.id, 
+      ...messageData,
+      createdAt: { seconds: Math.floor(now.getTime() / 1000), nanoseconds: 0 }
+    };
   }
 
   async getMessages(conversationId, limit = 50, lastMessageId = null) {

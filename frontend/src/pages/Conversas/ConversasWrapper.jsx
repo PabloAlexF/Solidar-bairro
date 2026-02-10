@@ -15,20 +15,38 @@ const normalizeStatus = (status) => {
 
 const formatTimeAgo = (dateInput) => {
   if (!dateInput) return 'Agora';
+  
   let date;
-  if (dateInput instanceof Date) date = dateInput;
-  else if (dateInput && typeof dateInput === 'object' && dateInput.seconds) date = new Date(dateInput.seconds * 1000);
-  else date = new Date(dateInput);
+  if (dateInput instanceof Date) {
+    date = dateInput;
+  } else if (dateInput && typeof dateInput === 'object' && dateInput.seconds) {
+    date = new Date(dateInput.seconds * 1000);
+  } else {
+    date = new Date(dateInput);
+  }
+  
   if (isNaN(date.getTime())) return 'Data inválida';
+  
+  // Debug: log do timestamp
+  console.log('[Conversas] formatTimeAgo:', {
+    input: dateInput,
+    parsed: date.toISOString(),
+    displayTime: date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  });
+  
   const now = new Date();
   const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+  
   if (diffInMinutes < 1) return 'Agora';
   if (diffInMinutes < 60) return `${diffInMinutes}min`;
+  
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) return `${diffInHours}h`;
+  
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays === 1) return 'Ontem';
   if (diffInDays < 7) return `${diffInDays}d`;
+  
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 };
 

@@ -13,16 +13,36 @@ class UploadService {
     return multer({
       storage: multer.memoryStorage(),
       limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB
+        fileSize: 10 * 1024 * 1024, // 10MB para mídia
       },
       fileFilter: (req, file, cb) => {
-        const allowedTypes = ['.pdf', '.doc', '.docx'];
+        const allowedTypes = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.gif', '.mp4', '.mov', '.avi'];
         const ext = path.extname(file.originalname).toLowerCase();
-        
+
         if (allowedTypes.includes(ext)) {
           cb(null, true);
         } else {
-          cb(new Error('Tipo de arquivo não permitido. Use PDF, DOC ou DOCX.'));
+          cb(new Error('Tipo de arquivo não permitido. Use PDF, DOC, DOCX, imagens ou vídeos.'));
+        }
+      }
+    });
+  }
+
+  // Configuração específica para mídia do chat
+  getChatMediaConfig() {
+    return multer({
+      storage: multer.memoryStorage(),
+      limits: {
+        fileSize: 10 * 1024 * 1024, // 10MB
+      },
+      fileFilter: (req, file, cb) => {
+        const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const allowedVideoTypes = ['video/mp4', 'video/quicktime', 'video/avi'];
+
+        if (allowedImageTypes.includes(file.mimetype) || allowedVideoTypes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Tipo de arquivo não permitido. Use apenas imagens ou vídeos.'));
         }
       }
     });

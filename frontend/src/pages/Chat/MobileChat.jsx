@@ -771,17 +771,28 @@ const Chat = () => {
       }
       
       if (messagesResponse.success && messagesResponse.data) {
-        const formattedMessages = messagesResponse.data.map(msg => ({
-          id: msg.id,
-          type: msg.type || 'text',
-          sender: msg.senderId === user?.uid ? 'sent' : 'received',
-          content: msg.content || msg.text,
-          timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
-          read: msg.read || false,
-          location: msg.metadata?.location,
-          metadata: msg.metadata,
-          mediaUrl: msg.mediaUrl
-        }));
+        const formattedMessages = messagesResponse.data.map(msg => {
+          // Debug: verificar timestamp do banco
+          console.log('[Chat] Mensagem do banco:', {
+            id: msg.id,
+            content: msg.content?.substring(0, 20),
+            createdAt: msg.createdAt,
+            createdAtSeconds: msg.createdAt?.seconds,
+            createdAtDate: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000).toISOString() : 'N/A'
+          });
+          
+          return {
+            id: msg.id,
+            type: msg.type || 'text',
+            sender: msg.senderId === user?.uid ? 'sent' : 'received',
+            content: msg.content || msg.text,
+            timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
+            read: msg.read || false,
+            location: msg.metadata?.location,
+            metadata: msg.metadata,
+            mediaUrl: msg.mediaUrl
+          };
+        });
         setMessages(formattedMessages);
       }
       
@@ -996,7 +1007,8 @@ const Chat = () => {
           type: "text",
           sender: "sent",
           content: messageText,
-          timestamp: new Date(),
+          // SEMPRE usar timestamp do servidor
+          timestamp: new Date(response.data.createdAt),
           read: false,
           metadata: metadata
         };
@@ -1103,7 +1115,7 @@ const Chat = () => {
               type: "location",
               sender: "sent",
               content: "",
-              timestamp: new Date(),
+              timestamp: new Date(response.data.createdAt),
               read: false,
               location: locationData,
             };
@@ -1167,25 +1179,19 @@ const Chat = () => {
 
     try {
       ensureDependencies();
-      // Simulação de URL local para preview imediato
-      const mediaUrl = URL.createObjectURL(file);
-      const type = isImage ? 'image' : 'video';
-      const content = isImage ? '📷 Imagem' : '🎥 Vídeo';
 
-      // Envia a mensagem com metadados de mídia
-      const response = await ApiService.sendMessage(conversaId, content, type, { mediaUrl });
+      // Fazer upload da mídia para o servidor
+      const uploadResponse = await ApiService.uploadMedia(conversaId, file);
 
-      if (response.success) {
-        // A mensagem será adicionada via listener
+      if (uploadResponse.success) {
+        // A mensagem será adicionada via Socket.IO listener
+        console.log('Mídia enviada com sucesso:', uploadResponse.data.id);
+      } else {
+        throw new Error('Falha no upload da mídia');
       }
     } catch (error) {
       console.error("Erro ao enviar mídia:", error);
-      if (error.message && (error.message.includes('createMessageNotification') || error.message.includes('undefined'))) {
-        console.warn('Mídia salva, mas erro na notificação. Recarregando...');
-        loadMessages();
-      } else {
-        alert("Erro ao enviar arquivo.");
-      }
+      alert("Erro ao enviar arquivo. Tente novamente.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

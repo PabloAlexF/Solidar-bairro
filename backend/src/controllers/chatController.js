@@ -158,6 +158,42 @@ class ChatController {
       res.status(500).json({ success: false, error: error.message });
     }
   }
+
+  async uploadMedia(req, res) {
+    try {
+      console.log('📤 Fazendo upload de mídia para conversa:', req.params.id);
+
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: 'Nenhum arquivo enviado' });
+      }
+
+      const message = await chatService.uploadMedia(req.params.id, req.user.uid, req.file);
+
+      console.log('✅ Mídia enviada:', message.id);
+
+      // Emitir evento Socket.IO para tempo real
+      try {
+        const socketService = require('../services/socketService');
+        const io = socketService.getIo();
+
+        console.log('📡 Emitindo evento de nova mensagem de mídia...');
+
+        io.to(`conversation_${req.params.id}`).emit('new_message', {
+          conversationId: req.params.id,
+          message
+        });
+
+        console.log('📤 Mensagem de mídia emitida via Socket.IO');
+      } catch (socketError) {
+        console.error('❌ Erro ao emitir evento Socket.IO:', socketError);
+      }
+
+      res.status(201).json({ success: true, data: message });
+    } catch (error) {
+      console.error('❌ Erro ao fazer upload de mídia:', error);
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
 }
 
 module.exports = new ChatController();
