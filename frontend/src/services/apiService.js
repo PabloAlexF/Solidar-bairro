@@ -372,10 +372,13 @@ const ApiService = {
     const formData = new FormData();
     formData.append('file', file);
 
+    const token = localStorage.getItem('solidar-token');
     const response = await this.request(`/chat/conversations/${conversationId}/upload`, {
       method: 'POST',
       body: formData,
-      headers: {}
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
 
     return response;

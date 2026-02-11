@@ -4,7 +4,6 @@ const path = require('path');
 
 class UploadService {
   constructor() {
-    // Use Google Cloud Storage for Firebase Storage compatibility
     this.storage = new Storage({
       projectId: process.env.FIREBASE_PROJECT_ID,
       keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS || undefined,
@@ -22,8 +21,8 @@ class UploadService {
       } : undefined
     });
 
-    // Firebase Storage bucket name (usually project-id.appspot.com)
     const bucketName = process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
+    console.log('\ud83d\udce6 Usando bucket:', bucketName);
     this.bucket = this.storage.bucket(bucketName);
   }
 
