@@ -39,7 +39,8 @@ class UserService {
       nomeCompleto,
       tipo,
       bairro: data.endereco?.bairro,
-      isOnline: true // Placeholder
+      isOnline: true, // Placeholder
+      foto: data.foto || data.photoUrl || null
     };
   }
 

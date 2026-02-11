@@ -2,6 +2,8 @@ import React, { useEffect, useMemo } from 'react';
 import AppRoutes from './routes/AppRoutes';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { useAuth } from './contexts/AuthContext';
+import ApiService from './services/apiService';
+import { getMessaging, getToken } from 'firebase/messaging';
 
 import SecurityMiddleware from './utils/securityMiddleware';
 import './styles/globals.css';
@@ -58,6 +60,46 @@ function App() {
       };
     }
   }, [isAuthenticated, user, notificationSound]);
+
+  // Configuração de Notificações Push (FCM)
+  useEffect(() => {
+    const setupFCM = async () => {
+      if (isAuthenticated && user?.uid) {
+        try {
+          const messaging = getMessaging();
+          const permission = await Notification.requestPermission();
+          
+          if (permission === 'granted') {
+            // Obter token FCM
+            // IMPORTANTE: Substitua pela sua VAPID Key do Firebase Console -> Project Settings -> Cloud Messaging
+            const token = await getToken(messaging, { 
+              vapidKey: "BDwC7fGsTw2dNTpQimAm5KCQTQHjqsAes6jIsjoY6-wQNE31ycsVOl5XfMPw0mfUH4CbK_1RvdgIWlVfY4GPJVQ" 
+            });
+            
+            if (token) {
+              console.log('FCM Token:', token);
+              
+              // Determinar endpoint baseado no tipo de usuário para salvar o token
+              let endpoint = `/users/${user.uid}`;
+              if (user.tipo === 'cidadao') endpoint = `/cidadaos/${user.uid}`;
+              else if (user.tipo === 'comercio') endpoint = `/comercios/${user.uid}`;
+              else if (user.tipo === 'ong') endpoint = `/ongs/${user.uid}`;
+              else if (user.tipo === 'familia') endpoint = `/familias/${user.uid}`;
+
+              await ApiService.request(endpoint, {
+                method: 'PATCH',
+                body: JSON.stringify({ fcmToken: token })
+              }).catch(() => {});
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao configurar FCM:', error);
+        }
+      }
+    };
+
+    setupFCM();
+  }, [isAuthenticated, user]);
 
   return (
     <div className="App">

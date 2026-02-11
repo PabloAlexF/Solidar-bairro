@@ -1,6 +1,7 @@
 const notificationModel = require('../models/notificationModel');
 const userService = require('./userService');
 const { getIO } = require('../config/socket');
+const firebase = require('../config/firebase');
 
 class NotificationService {
   async createNotification(data) {
@@ -17,6 +18,9 @@ class NotificationService {
       console.error('Erro ao emitir notificação via socket:', error);
     }
 
+    // Tentar enviar Push Notification (FCM) para mobile/background
+    this.sendPushNotification(data.userId, data.title, data.message, data.data).catch(() => {});
+
     return notification;
   }
 
@@ -25,6 +29,7 @@ class NotificationService {
       // Buscar dados do remetente
       const senderData = await userService.getUserData(senderId);
       const senderName = senderData?.nome || 'Usuário';
+      const senderPhoto = senderData?.foto || senderData?.photoUrl;
 
       // Criar notificação para o destinatário
       const notification = await notificationModel.createNotification({
@@ -49,6 +54,14 @@ class NotificationService {
       } catch (error) {
         console.error('Erro ao emitir notificação de chat via socket:', error);
       }
+
+      // Enviar Push Notification
+      this.sendPushNotification(receiverId, `Nova mensagem de ${senderName}`, message, { 
+        conversationId, 
+        senderId, 
+        type: 'chat',
+        ...(senderPhoto && { icon: senderPhoto })
+      }).catch(() => {});
 
       return notification;
     } catch (error) {
@@ -168,6 +181,56 @@ class NotificationService {
     } catch (error) {
       console.error('Erro ao criar notificação de achado/perdido:', error);
       throw error;
+    }
+  }
+
+  // Helper para enviar Push Notification via Firebase Cloud Messaging (FCM)
+  async sendPushNotification(userId, title, body, data = {}) {
+    try {
+      // 1. Buscar dados do usuário para obter o token FCM
+      const user = await userService.getUserData(userId);
+      
+      // O token deve estar salvo no perfil do usuário (campo fcmToken ou array fcmTokens)
+      const tokens = [];
+      if (user.fcmToken) tokens.push(user.fcmToken);
+      if (user.fcmTokens && Array.isArray(user.fcmTokens)) tokens.push(...user.fcmTokens);
+      
+      // Remover duplicatas e nulos
+      const uniqueTokens = [...new Set(tokens.filter(t => t))];
+
+      if (uniqueTokens.length === 0) return;
+
+      // 2. Obter instância do Messaging
+      let messaging;
+      if (firebase.getMessaging) {
+        messaging = firebase.getMessaging();
+      } else {
+        // Fallback para firebase-admin direto se não exposto no config
+        const admin = require('firebase-admin');
+        // Verifica se já foi inicializado para evitar erro
+        messaging = admin.messaging();
+      }
+
+      // 3. Enviar mensagem
+      const messagePayload = {
+        notification: { 
+          title, 
+          body,
+          ...(data.image && { image: data.image }) // Inclui imagem grande se disponível
+        },
+        data: Object.keys(data).reduce((acc, key) => {
+          acc[key] = String(data[key]); // FCM requer strings nos dados
+          return acc;
+        }, {}),
+        tokens: uniqueTokens
+      };
+
+      const response = await messaging.sendMulticast(messagePayload);
+      console.log(`📲 Push enviado para ${userId}: ${response.successCount} sucessos`);
+      
+    } catch (error) {
+      // Silenciar erro para não travar o fluxo principal
+      // console.error('Erro ao enviar push notification:', error.message);
     }
   }
 }

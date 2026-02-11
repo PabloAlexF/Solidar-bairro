@@ -154,6 +154,17 @@ const init = (httpServer) => {
         logger.error('Erro ao consultar presença:', error);
       }
     });
+
+    // Evento de digitação (Typing Status)
+    socket.on('typing', (data) => {
+      const { conversationId, userId, isTyping } = data;
+      // Envia para todos na sala da conversa, exceto o remetente (socket.to faz o broadcast exceto sender)
+      socket.to(`conversation_${conversationId}`).emit('typing', {
+        conversationId,
+        userId,
+        isTyping
+      });
+    });
   });
 
   logger.info('✅ Socket.IO server initialized');

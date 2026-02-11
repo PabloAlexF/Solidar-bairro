@@ -950,17 +950,35 @@ const Chat = () => {
     };
   }, []);
 
+  // Helper para enviar status de digitação via Socket e API
+  const sendTypingStatus = useCallback((isTyping) => {
+    if (!conversaId || !user?.uid) return;
+
+    // 1. Enviar via Socket.IO (Prioridade para Realtime)
+    const socket = getSocket();
+    if (socket) {
+      socket.emit('typing', {
+        conversationId: conversaId,
+        userId: user.uid,
+        isTyping
+      });
+    }
+
+    // 2. Fallback para API (se implementado)
+    ApiService.sendTypingStatus(conversaId, isTyping).catch(() => {});
+  }, [conversaId, user?.uid]);
+
   // Limpar timeout de digitação e enviar status false ao desmontar ou trocar de conversa
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
         if (conversaId) {
-          ApiService.sendTypingStatus(conversaId, false).catch(() => {});
+          sendTypingStatus(false);
         }
       }
     };
-  }, [conversaId]);
+  }, [conversaId, sendTypingStatus]);
 
   const handleTypingInput = (e) => {
     const val = e.target.value;
@@ -969,10 +987,10 @@ const Chat = () => {
     if (conversaId) {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       
-      ApiService.sendTypingStatus(conversaId, true).catch(() => {});
+      sendTypingStatus(true);
       
       typingTimeoutRef.current = setTimeout(() => {
-        ApiService.sendTypingStatus(conversaId, false).catch(() => {});
+        sendTypingStatus(false);
       }, 2000);
     }
   };
