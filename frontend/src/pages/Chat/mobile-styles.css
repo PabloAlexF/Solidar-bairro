@@ -479,6 +479,7 @@ body:has(.sb-chat-root) {
 .sb-header-right-group {
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .sb-header-actions {

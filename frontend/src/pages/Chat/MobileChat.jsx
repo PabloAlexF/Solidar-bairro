@@ -1618,7 +1618,7 @@ const Chat = () => {
                 </div>
                 <div className="sb-header-text-details">
                   <div className="sb-header-name-row">
-                    <h3>{currentContact?.name || 'Usuário'}</h3>
+                    <h3>{(currentContact?.name || 'Usuário').split(' ')[0]}</h3>
                     <span className={`role-badge ${currentContact?.type || 'conversa'}`}>
                       {currentContact?.type === "doador" ? "Doador Verificado" : "Vizinho em Busca"}
                     </span>
