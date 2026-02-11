@@ -1216,16 +1216,13 @@ const Chat = () => {
     try {
       ensureDependencies();
 
-      // CRITICAL FIX: Upload to Firebase Storage first, then use permanent URL
       const uploadResponse = await ApiService.uploadMedia(conversaId, file);
 
       if (uploadResponse.success && uploadResponse.data?.url) {
-        // Use Firebase Storage URL, not temporary blob URL
         const firebaseUrl = uploadResponse.data.url;
         const type = isImage ? 'image' : 'video';
         const content = isImage ? '📷 Imagem' : '🎥 Vídeo';
 
-        // Send message with permanent Firebase URL
         const response = await ApiService.sendMessage(conversaId, content, type, { mediaUrl: firebaseUrl });
 
         if (response.success) {
@@ -1234,7 +1231,7 @@ const Chat = () => {
             type: type,
             sender: "sent",
             content: content,
-            timestamp: new Date(),
+            timestamp: response.data.createdAt ? new Date(response.data.createdAt) : new Date(),
             read: false,
             mediaUrl: firebaseUrl
           };
