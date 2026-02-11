@@ -22,29 +22,14 @@ const init = (httpServer) => {
   });
 
   io.on('connection', async (socket) => {
-    const firebaseUid = socket.handshake.query.userId;
-    logger.info(`🔌 Usuário conectado: ${firebaseUid} (socket: ${socket.id})`);
+    const userId = socket.handshake.query.userId;
+    logger.info(`🔌 Usuário conectado: ${userId} (socket: ${socket.id})`);
 
-    let userId = firebaseUid; // fallback para Firebase UID
-
-    // Buscar o ID do documento do usuário no banco de dados
-    if (firebaseUid) {
-      try {
-        const userData = await chatService.getUserData(firebaseUid);
-        if (userData && userData.id && userData.id !== firebaseUid) {
-          userId = userData.id; // Usar ID do documento
-          logger.info(`🔄 Mapeando Firebase UID ${firebaseUid} para Document ID ${userId}`);
-        }
-      } catch (error) {
-        logger.error('Erro ao buscar userId para socket:', error);
-        // Continua com firebaseUid como fallback
-      }
-    }
-
-    // Entrar nas salas das conversas do usuário
+    // Entrar nas salas do usuário
     if (userId) {
-      socket.join(userId); // Sala principal do usuário (usando document ID)
-      socket.join(`user_${userId}`); // Sala alternativa
+      socket.join(userId);
+      socket.join(`user_${userId}`);
+      logger.info(`📬 Usuário ${userId} entrou nas salas: [${userId}, user_${userId}]`);
 
       // Marcar usuário como online
       presenceService.userConnected(userId, socket.id)

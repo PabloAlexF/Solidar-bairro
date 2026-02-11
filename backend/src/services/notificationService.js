@@ -8,24 +8,13 @@ class NotificationService {
 
     // Emitir notificação via Socket.IO em tempo real
     try {
-      // Dynamic require para evitar dependências circulares e garantir a instância correta
       const { getIo } = require('./socketService');
       const io = getIo();
       if (io && data.userId) {
-        // Mapear Firebase UID para Document ID se necessário
-        let socketUserId = data.userId;
-        try {
-          const userData = await require('./chatService').getUserData(data.userId);
-          if (userData && userData.id && userData.id !== data.userId) {
-            socketUserId = userData.id; // Usar document ID para socket
-            console.log(`🔄 Mapeando notificação: Firebase UID ${data.userId} -> Document ID ${socketUserId}`);
-          }
-        } catch (mappingError) {
-          console.warn('Erro ao mapear userId para socket, usando original:', mappingError.message);
-        }
-
-        io.to(socketUserId).emit('notification', notification);
-        console.log(`📢 Notificação emitida para usuário ${socketUserId}:`, notification.title);
+        // Emitir para múltiplas salas para garantir entrega
+        io.to(data.userId).emit('notification', notification);
+        io.to(`user_${data.userId}`).emit('notification', notification);
+        console.log(`📢 Notificação emitida para ${data.userId}:`, notification.title);
       }
     } catch (error) {
       console.error('Erro ao emitir notificação via socket:', error);
@@ -65,20 +54,10 @@ class NotificationService {
         const { getIo } = require('./socketService');
         const io = getIo();
         if (io) {
-          // Mapear Firebase UID para Document ID se necessário
-          let socketUserId = receiverId;
-          try {
-            const userData = await require('./chatService').getUserData(receiverId);
-            if (userData && userData.id && userData.id !== receiverId) {
-              socketUserId = userData.id; // Usar document ID para socket
-              console.log(`🔄 Mapeando notificação de chat: Firebase UID ${receiverId} -> Document ID ${socketUserId}`);
-            }
-          } catch (mappingError) {
-            console.warn('Erro ao mapear userId para socket, usando original:', mappingError.message);
-          }
-
-          io.to(socketUserId).emit('notification', notification);
-          console.log(`💬 Notificação de chat emitida para ${socketUserId}`);
+          // Emitir para múltiplas salas
+          io.to(receiverId).emit('notification', notification);
+          io.to(`user_${receiverId}`).emit('notification', notification);
+          console.log(`💬 Notificação de chat emitida para ${receiverId}`);
         }
       } catch (error) {
         console.error('Erro ao emitir notificação de chat via socket:', error);
@@ -114,20 +93,9 @@ class NotificationService {
       const { getIo } = require('./socketService');
       const io = getIo();
       if (io && userId) {
-        // Mapear Firebase UID para Document ID se necessário
-        let socketUserId = userId;
-        try {
-          const userData = await require('./chatService').getUserData(userId);
-          if (userData && userData.id && userData.id !== userId) {
-            socketUserId = userData.id; // Usar document ID para socket
-            console.log(`🔄 Mapeando notificação lida: Firebase UID ${userId} -> Document ID ${socketUserId}`);
-          }
-        } catch (mappingError) {
-          console.warn('Erro ao mapear userId para socket, usando original:', mappingError.message);
-        }
-
-        io.to(socketUserId).emit('notification_read', { notificationId });
-        console.log(`✅ Notificação ${notificationId} marcada como lida para ${socketUserId}`);
+        io.to(userId).emit('notification_read', { notificationId });
+        io.to(`user_${userId}`).emit('notification_read', { notificationId });
+        console.log(`✅ Notificação ${notificationId} marcada como lida para ${userId}`);
       }
     } catch (error) {
       console.error('Erro ao emitir notificação lida via socket:', error);

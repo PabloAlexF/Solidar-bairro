@@ -74,13 +74,19 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     if (isAuthenticated() && user) {
       const socket = getSocket();
-      if (socket) {
-        // Entrar na sala do usuário para receber notificações
-        const userId = user.uid || user.id;
-        socket.emit('join_user_room', userId);
+      
+      if (!socket || !socket.connected) {
+        console.warn('⚠️ [NotificationContext] Socket não conectado, tentando reconectar...');
+        return;
+      }
 
-        const handleNewNotification = (notificationData) => {
-          console.log('🔔 Nova notificação recebida via socket:', notificationData);
+      // Entrar na sala do usuário para receber notificações
+      const userId = user.uid || user.id;
+      socket.emit('join_user_room', userId);
+      console.log('📬 [NotificationContext] Entrando na sala do usuário:', userId);
+
+      const handleNewNotification = (notificationData) => {
+        console.log('🔔 [NotificationContext] Nova notificação recebida via socket:', notificationData);
 
           // Converter formato do socket para formato local
           const newNotification = {
@@ -117,10 +123,12 @@ export const NotificationProvider = ({ children }) => {
 
         socket.on('notification', handleNewNotification);
         socket.on('notification_read', handleNotificationRead);
+        console.log('✅ [NotificationContext] Listeners de notificação registrados');
 
         return () => {
           socket.off('notification', handleNewNotification);
           socket.off('notification_read', handleNotificationRead);
+          console.log('🗑️ [NotificationContext] Listeners de notificação removidos');
         };
       }
     }
