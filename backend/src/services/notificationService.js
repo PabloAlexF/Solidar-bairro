@@ -62,8 +62,20 @@ class NotificationService {
       try {
         const io = getIO();
         if (io) {
-          io.to(receiverId).emit('notification', notification);
-          console.log(`💬 Notificação de chat emitida para ${receiverId}`);
+          // Mapear Firebase UID para Document ID se necessário
+          let socketUserId = receiverId;
+          try {
+            const userData = await require('./chatService').getUserData(receiverId);
+            if (userData && userData.id && userData.id !== receiverId) {
+              socketUserId = userData.id; // Usar document ID para socket
+              console.log(`🔄 Mapeando notificação de chat: Firebase UID ${receiverId} -> Document ID ${socketUserId}`);
+            }
+          } catch (mappingError) {
+            console.warn('Erro ao mapear userId para socket, usando original:', mappingError.message);
+          }
+
+          io.to(socketUserId).emit('notification', notification);
+          console.log(`💬 Notificação de chat emitida para ${socketUserId}`);
         }
       } catch (error) {
         console.error('Erro ao emitir notificação de chat via socket:', error);
