@@ -74,8 +74,11 @@ const ApiService = {
   },
 
   async request(endpoint, options = {}, retryCount = 0, isRetry = false) {
-    // Validação de segurança
-    this.validateRequest(endpoint, options.body ? JSON.parse(options.body) : null);
+    // Validação de segurança (skip para FormData)
+    const isFormData = options.body instanceof FormData;
+    if (!isFormData) {
+      this.validateRequest(endpoint, options.body ? JSON.parse(options.body) : null);
+    }
     
     // Cache apenas para GET requests
     if (!options.method || options.method === 'GET') {
@@ -91,8 +94,8 @@ const ApiService = {
 
     const config = {
       headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest', // Header de segurança adicional
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        'X-Requested-With': 'XMLHttpRequest',
         ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
@@ -372,10 +375,7 @@ const ApiService = {
     const response = await this.request(`/chat/conversations/${conversationId}/upload`, {
       method: 'POST',
       body: formData,
-      headers: {
-        // Não definir Content-Type para que o navegador defina automaticamente com boundary
-        ...this.getAuthHeaders()
-      }
+      headers: {}
     });
 
     return response;

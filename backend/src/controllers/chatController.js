@@ -188,7 +188,14 @@ class ChatController {
         console.error('❌ Erro ao emitir evento Socket.IO:', socketError);
       }
 
-      res.status(201).json({ success: true, data: message });
+      // CRITICAL FIX: Return URL in the expected format
+      res.status(201).json({ 
+        success: true, 
+        data: {
+          ...message,
+          url: message.metadata?.mediaUrl || message.mediaUrl
+        }
+      });
     } catch (error) {
       console.error('❌ Erro ao fazer upload de mídia:', error);
       res.status(400).json({ success: false, error: error.message });

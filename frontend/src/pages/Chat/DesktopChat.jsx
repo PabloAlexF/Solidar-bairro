@@ -1100,6 +1100,11 @@ const Chat = () => {
       return;
     }
 
+    if (isConversationClosed) {
+      alert('Esta conversa foi encerrada e não aceita mais mensagens.');
+      return;
+    }
+
     setIsGettingLocation(true);
 
     navigator.geolocation.getCurrentPosition(
@@ -1111,8 +1116,8 @@ const Chat = () => {
           const locationData = {
             lat: latitude,
             lng: longitude,
-            name: "Minha Localização",
-            address: "Compartilhada em tempo real",
+            name: "📍 Minha Localização",
+            address: `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`,
           };
           
           const response = await ApiService.sendMessage(
@@ -1128,7 +1133,7 @@ const Chat = () => {
               type: "location",
               sender: "sent",
               content: "",
-              timestamp: new Date(),
+              timestamp: new Date(response.data.createdAt),
               read: false,
               location: locationData,
             };
@@ -1152,10 +1157,28 @@ const Chat = () => {
       },
       (error) => {
         console.error("Erro ao obter localização:", error);
-        alert("Não foi possível obter sua localização. Verifique as permissões.");
+        let errorMessage = "Não foi possível obter sua localização.";
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Permissão de localização negada. Ative nas configurações do navegador.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Localização indisponível no momento.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Tempo esgotado ao buscar localização.";
+            break;
+        }
+        
+        alert(errorMessage);
         setIsGettingLocation(false);
       },
-      { enableHighAccuracy: true }
+      { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
     );
   };
 
