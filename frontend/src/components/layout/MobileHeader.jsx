@@ -41,7 +41,7 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
   const isAdmin = user?.role === 'admin' || user?.isAdmin || user?.tipo === 'admin';
 
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (isAuthenticated() && user) {
       const socket = connectSocket(user?.uid || user?.id);
       if (socket) {
         const handleNewNotification = (data) => {
@@ -61,7 +61,7 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
         return () => socket.off('notification', handleNewNotification);
       }
     }
-  }, [isAuthenticated, addChatNotification]);
+  }, [isAuthenticated, user, addChatNotification]);
 
   const handleNavigation = (path) => {
     navigate(path);

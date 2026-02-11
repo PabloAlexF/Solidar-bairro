@@ -66,23 +66,75 @@ function App() {
           }
         }
 
-        const timeString = !isNaN(date.getTime()) ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        toast((t) => (
-          <div 
+        const senderPhoto = notification.data?.senderPhoto;
+
+        toast.custom((t) => (
+          <div
+            className={`${t.visible ? 'animate-enter' : 'animate-leave'}`}
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '12px',
+              background: '#fff',
+              color: '#1e293b',
+              padding: '16px',
+              borderRadius: '12px',
+              boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+              width: '350px',
+              border: '1px solid #e2e8f0',
+              cursor: 'pointer',
+              maxWidth: 'calc(100vw - 32px)'
+            }}
             onClick={() => {
               const conversationId = notification.conversationId || notification.data?.conversationId;
               if (notification.type === 'chat' && conversationId) {
                   window.location.href = `/chat/${conversationId}`;
               }
               toast.dismiss(t.id);
-            }} 
-            style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '4px' }}
+            }}
           >
-            <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{notification.title}</div>
-            <div style={{ fontSize: '0.85rem' }}>{notification.message}</div>
-            <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '2px' }}>{timeString}</div>
+            {/* Avatar */}
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e2e8f0', flexShrink: 0, overflow: 'hidden' }}>
+              {senderPhoto ? (
+                <img src={senderPhoto} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#64748b' }}>
+                  {notification.title?.split(' ').pop()?.charAt(0) || 'U'}
+                </div>
+              )}
+            </div>
+            {/* Content */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+              <div style={{ fontWeight: 'bold', fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{notification.title}</div>
+              <div style={{ fontSize: '0.85rem', color: '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{notification.message}</div>
+              <button 
+                style={{ 
+                  marginTop: '6px', 
+                  background: '#eff6ff', 
+                  color: '#2563eb', 
+                  border: 'none', 
+                  padding: '6px 12px', 
+                  borderRadius: '6px', 
+                  fontSize: '0.75rem', 
+                  fontWeight: '600', 
+                  cursor: 'pointer', 
+                  width: 'fit-content',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.background = '#dbeafe'}
+                onMouseLeave={(e) => e.target.style.background = '#eff6ff'}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
+                Responder
+              </button>
+            </div>
+            {/* Close button */}
+            <button onClick={(e) => { e.stopPropagation(); toast.dismiss(t.id); }} style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '4px', alignSelf: 'flex-start' }} > <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> </button>
           </div>
-        ), { duration: 5000, position: 'top-right', icon: notification.type === 'chat' ? '💬' : '🔔', style: { background: '#1e293b', color: '#fff', border: '1px solid #334155' } });
+        ), { duration: 6000, position: 'top-right' });
       };
 
       socket.on('notification', handleNewNotification);

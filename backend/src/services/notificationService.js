@@ -1,6 +1,5 @@
 const notificationModel = require('../models/notificationModel');
 const userService = require('./userService');
-const { getIO } = require('../config/socket');
 const firebase = require('../config/firebase');
 
 class NotificationService {
@@ -9,7 +8,9 @@ class NotificationService {
 
     // Emitir notificação via Socket.IO em tempo real
     try {
-      const io = getIO();
+      // Dynamic require para evitar dependências circulares e garantir a instância correta
+      const { getIo } = require('./socketService');
+      const io = getIo();
       if (io && data.userId) {
         // Mapear Firebase UID para Document ID se necessário
         let socketUserId = data.userId;
@@ -54,13 +55,15 @@ class NotificationService {
           conversationId,
           senderId,
           senderName,
+          senderPhoto,
           timestamp: timestamp.toISOString()
         }
       });
 
       // Emitir via Socket.IO
       try {
-        const io = getIO();
+        const { getIo } = require('./socketService');
+        const io = getIo();
         if (io) {
           // Mapear Firebase UID para Document ID se necessário
           let socketUserId = receiverId;
@@ -108,7 +111,8 @@ class NotificationService {
 
     // Emitir evento de notificação lida via socket
     try {
-      const io = getIO();
+      const { getIo } = require('./socketService');
+      const io = getIo();
       if (io && userId) {
         // Mapear Firebase UID para Document ID se necessário
         let socketUserId = userId;
