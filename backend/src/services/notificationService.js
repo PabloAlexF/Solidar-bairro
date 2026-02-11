@@ -11,8 +11,20 @@ class NotificationService {
     try {
       const io = getIO();
       if (io && data.userId) {
-        io.to(data.userId).emit('notification', notification);
-        console.log(`📢 Notificação emitida para usuário ${data.userId}:`, notification.title);
+        // Mapear Firebase UID para Document ID se necessário
+        let socketUserId = data.userId;
+        try {
+          const userData = await require('./chatService').getUserData(data.userId);
+          if (userData && userData.id && userData.id !== data.userId) {
+            socketUserId = userData.id; // Usar document ID para socket
+            console.log(`🔄 Mapeando notificação: Firebase UID ${data.userId} -> Document ID ${socketUserId}`);
+          }
+        } catch (mappingError) {
+          console.warn('Erro ao mapear userId para socket, usando original:', mappingError.message);
+        }
+
+        io.to(socketUserId).emit('notification', notification);
+        console.log(`📢 Notificação emitida para usuário ${socketUserId}:`, notification.title);
       }
     } catch (error) {
       console.error('Erro ao emitir notificação via socket:', error);
@@ -86,8 +98,20 @@ class NotificationService {
     try {
       const io = getIO();
       if (io && userId) {
-        io.to(userId).emit('notification_read', { notificationId });
-        console.log(`✅ Notificação ${notificationId} marcada como lida para ${userId}`);
+        // Mapear Firebase UID para Document ID se necessário
+        let socketUserId = userId;
+        try {
+          const userData = await require('./chatService').getUserData(userId);
+          if (userData && userData.id && userData.id !== userId) {
+            socketUserId = userData.id; // Usar document ID para socket
+            console.log(`🔄 Mapeando notificação lida: Firebase UID ${userId} -> Document ID ${socketUserId}`);
+          }
+        } catch (mappingError) {
+          console.warn('Erro ao mapear userId para socket, usando original:', mappingError.message);
+        }
+
+        io.to(socketUserId).emit('notification_read', { notificationId });
+        console.log(`✅ Notificação ${notificationId} marcada como lida para ${socketUserId}`);
       }
     } catch (error) {
       console.error('Erro ao emitir notificação lida via socket:', error);
