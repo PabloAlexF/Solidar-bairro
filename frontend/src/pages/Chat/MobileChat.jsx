@@ -1754,17 +1754,7 @@ const Chat = () => {
                         <div className="sb-location-map-preview">
                           <div className="sb-map-placeholder">
                             <div className="sb-map-pin-center">
-                              <MapPin size={24} fill="#ef4444" color="white" />
-                            </div>
-                            <div className="sb-map-overlay">
-                              <span className="sb-map-label">Mapa</span>
-                            </div>
-                            {/* Grid lines to simulate map */}
-                            <div className="sb-map-grid">
-                              <div className="sb-map-grid-line horizontal"></div>
-                              <div className="sb-map-grid-line horizontal"></div>
-                              <div className="sb-map-grid-line vertical"></div>
-                              <div className="sb-map-grid-line vertical"></div>
+                              <MapPin size={32} fill="#10b981" color="white" />
                             </div>
                           </div>
                         </div>
@@ -2005,16 +1995,6 @@ const Chat = () => {
                   )}
                 </AnimatePresence>
                 <div className="sb-input-actions-left">
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    style={{ display: 'none' }} 
-                    accept="image/*,video/*" 
-                    onChange={handleFileSelect}
-                  />
-                  <button className="sb-action-icon-btn" title="Anexar" onClick={handleAttachmentClick} disabled={isUploading} aria-label="Anexar arquivo">
-                    {isUploading ? <div className="sb-mini-loader" /> : <Paperclip size={20} />}
-                  </button>
                   <button 
                     className={`sb-action-icon-btn ${isGettingLocation ? 'loading' : ''}`} 
                     title="Enviar Localização"

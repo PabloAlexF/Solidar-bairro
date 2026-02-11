@@ -1960,16 +1960,6 @@ const Chat = () => {
                   </div>
                 )}
                 <div className="input-actions-left">
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    style={{ display: 'none' }} 
-                    accept="image/*,video/*" 
-                    onChange={handleFileSelect}
-                  />
-                  <button className="action-icon-btn" title="Anexar foto ou vídeo" onClick={handleAttachmentClick} disabled={isUploading}>
-                    {isUploading ? <div className="mini-loader" /> : <Paperclip size={20} />}
-                  </button>
                   <button 
                     className={`action-icon-btn ${isGettingLocation ? 'loading' : ''}`} 
                     title="Enviar Localização"
