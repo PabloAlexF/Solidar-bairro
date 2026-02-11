@@ -52,10 +52,13 @@ const Header = ({ showLoginButton = false }) => {
       if (socket) {
         const handleNewNotification = (data) => {
           // Verifica se é uma notificação de chat e adiciona
-          if (data && (data.type === 'chat' || data.conversationId)) {
+          if (data && (data.type === 'chat' || data.conversationId || data.data?.conversationId)) {
+            const conversationId = data.conversationId || data.data?.conversationId;
+            const senderName = data.senderName || data.data?.senderName || data.title || 'Usuário';
+            
             addChatNotification(
-              data.conversationId, 
-              data.senderName || data.title || 'Usuário', 
+              conversationId, 
+              senderName, 
               data.message
             );
           }
@@ -98,8 +101,9 @@ const Header = ({ showLoginButton = false }) => {
     }
     
     // Se for notificação de chat, navegar para a conversa
-    if (notification.type === 'chat' && notification.conversationId) {
-      navigate(`/chat/${notification.conversationId}`);
+    const conversationId = notification.conversationId || notification.data?.conversationId;
+    if (notification.type === 'chat' && conversationId) {
+      navigate(`/chat/${conversationId}`);
       setShowNotifications(false);
     }
   };

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
 import { getSocket, connectSocket } from '../../services/socketService';
@@ -157,6 +158,7 @@ const Chat = () => {
   const params = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addChatNotification } = useNotifications();
   const conversaId = params.id;
   
   const [messages, setMessages] = useState([]);
@@ -218,7 +220,32 @@ const Chat = () => {
   // Conectar Socket.IO quando o usuário estiver autenticado
   useEffect(() => {
     if (user?.uid) {
-      connectSocket(user.uid);
+      console.log('🔌 [Mobile] Conectando socket para usuário:', user.uid);
+      const socket = connectSocket(user.uid);
+      
+      if (socket) {
+        const onConnect = () => {
+          console.log('✅ [Mobile] Socket conectado! ID:', socket.id);
+        };
+        
+        const onConnectError = (error) => {
+          console.error('❌ [Mobile] Erro de conexão Socket:', error);
+        };
+        
+        const onDisconnect = (reason) => {
+          console.log('❌ [Mobile] Socket desconectado. Razão:', reason);
+        };
+
+        socket.on('connect', onConnect);
+        socket.on('connect_error', onConnectError);
+        socket.on('disconnect', onDisconnect);
+
+        return () => {
+          socket.off('connect', onConnect);
+          socket.off('connect_error', onConnectError);
+          socket.off('disconnect', onDisconnect);
+        };
+      }
     }
   }, [user?.uid]);
 
@@ -609,7 +636,7 @@ const Chat = () => {
             lastMessage: conv.lastMessage?.content || 'Nova conversa',
             lastMessageTime: conv.lastMessage?.createdAt?.seconds ?
               new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
-            unreadCount: conv.unreadCount || 0
+            unreadCount: conv.id === conversaId ? 0 : (conv.unreadCount || 0)
           };
         });
         const contacts = await Promise.all(formattedContacts);
@@ -621,7 +648,7 @@ const Chat = () => {
         alert('⚠️ Cota do Firebase excedida! O chat pode não carregar novas conversas até amanhã ou até a troca da conta.');
       }
     }
-  }, [user?.uid]);
+  }, [user?.uid, conversaId]);
 
   // Carregar mensagens da conversa
   const loadMessages = useCallback(async () => {
@@ -818,6 +845,8 @@ const Chat = () => {
       
       // Marcar conversa como lida
       await ApiService.markConversationAsRead(conversaId);
+      const socket = getSocket();
+      if (socket) socket.emit('mark_as_read', conversaId);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
       if (error.message && error.message.includes('RESOURCE_EXHAUSTED')) {
@@ -840,6 +869,8 @@ const Chat = () => {
     let handleSocketMessage;
     let handleReconnect;
     let handleTyping;
+    let handleNotification;
+    let handleConversationRead;
 
     if (conversaId) {
       ensureDependencies();
@@ -859,7 +890,12 @@ const Chat = () => {
         const msg = data.message || data; // Garante que pegamos o objeto da mensagem
         const msgConvId = msg.conversationId || msg.conversaId || msg.chatId;
 
-        // Só adiciona se for da conversa atual
+        // Limpar status de digitando ao receber mensagem
+        if (msg.senderId !== user?.uid) {
+          setTypingStatus(prev => ({ ...prev, [msgConvId]: false }));
+        }
+
+        // 1. Atualizar mensagens da conversa atual
         if (msgConvId && msgConvId === conversaId) {
           setMessages(prev => {
             // Evita duplicatas
@@ -877,7 +913,39 @@ const Chat = () => {
               mediaUrl: msg.mediaUrl
             }];
           });
+          
+          // Se a mensagem for recebida na conversa aberta, marcar como lida
+          if (msg.senderId !== user?.uid) {
+            ApiService.markConversationAsRead(conversaId).catch(() => {});
+            socket.emit('mark_as_read', conversaId);
+          }
         }
+
+        // 2. Atualizar lista de contatos (Sidebar)
+        setChatContacts(prev => {
+          const contactExists = prev.some(c => c.id === msgConvId);
+          if (contactExists) {
+            return prev.map(c => {
+              if (c.id === msgConvId) {
+                let previewText = msg.content || msg.text;
+                if (msg.type === 'image') previewText = '📷 Imagem';
+                else if (msg.type === 'video') previewText = '🎥 Vídeo';
+                else if (msg.type === 'location') previewText = '📍 Localização';
+
+                return {
+                  ...c,
+                  lastMessage: previewText || 'Nova mensagem',
+                  lastMessageTime: 'Agora',
+                  unreadCount: msgConvId === conversaId ? 0 : (msg.senderId === user?.uid ? (Number(c.unreadCount) || 0) : (Number(c.unreadCount) || 0) + 1)
+                };
+              }
+              return c;
+            });
+          } else {
+            loadConversations();
+            return prev;
+          }
+        });
       };
 
       // Handler para reconexão
@@ -896,11 +964,35 @@ const Chat = () => {
         }
       };
 
+      // Handler para notificações de outras conversas
+      handleNotification = (data) => {
+        const notifConvId = data.data?.conversationId || data.conversationId;
+        // Se for notificação de outra conversa, adiciona à lista global
+        if (notifConvId && notifConvId !== conversaId) {
+          addChatNotification(
+            notifConvId,
+            data.data?.senderName || data.title || 'Usuário',
+            data.message
+          );
+        }
+      };
+
+      // Handler para atualização de leitura (double check azul)
+      handleConversationRead = (data) => {
+        if (data.conversationId === conversaId) {
+          setMessages(prev => prev.map(msg => 
+            msg.sender === 'sent' ? { ...msg, read: true } : msg
+          ));
+        }
+      };
+
       if (socket) {
         socket.on('receive_message', handleSocketMessage);
         socket.on('new_message', handleSocketMessage); // Fallback para outro nome comum de evento
         socket.on('connect', handleReconnect);
         socket.on('typing', handleTyping);
+        socket.on('notification', handleNotification);
+        socket.on('conversation_read', handleConversationRead);
       }
     }
     
@@ -912,12 +1004,14 @@ const Chat = () => {
         socket.off('receive_message', handleSocketMessage);
         socket.off('new_message', handleSocketMessage);
         if (handleTyping) socket.off('typing', handleTyping);
+        if (handleNotification) socket.off('notification', handleNotification);
+        if (handleConversationRead) socket.off('conversation_read', handleConversationRead);
         if (handleReconnect) {
           socket.off('connect', handleReconnect);
         }
       }
     };
-  }, [conversaId, user?.uid, loadConversations, loadMessages]);
+  }, [conversaId, user?.uid, loadConversations, loadMessages, addChatNotification]);
 
   useEffect(() => {
     scrollToBottom();

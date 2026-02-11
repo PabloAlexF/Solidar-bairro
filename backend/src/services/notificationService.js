@@ -24,7 +24,7 @@ class NotificationService {
     return notification;
   }
 
-  async createChatNotification(conversationId, senderId, receiverId, message) {
+  async createChatNotification(conversationId, senderId, receiverId, message, timestamp = new Date(), isOnline = false) {
     try {
       // Buscar dados do remetente
       const senderData = await userService.getUserData(senderId);
@@ -37,10 +37,12 @@ class NotificationService {
         type: 'chat',
         title: `Nova mensagem de ${senderName}`,
         message: message.length > 50 ? `${message.substring(0, 50)}...` : message,
+        createdAt: timestamp,
         data: {
           conversationId,
           senderId,
-          senderName
+          senderName,
+          timestamp: timestamp.toISOString()
         }
       });
 
@@ -55,13 +57,16 @@ class NotificationService {
         console.error('Erro ao emitir notificação de chat via socket:', error);
       }
 
-      // Enviar Push Notification
-      this.sendPushNotification(receiverId, `Nova mensagem de ${senderName}`, message, { 
-        conversationId, 
-        senderId, 
-        type: 'chat',
-        ...(senderPhoto && { icon: senderPhoto })
-      }).catch(() => {});
+      // Enviar Push Notification APENAS se o usuário estiver OFFLINE
+      if (!isOnline) {
+        this.sendPushNotification(receiverId, `Nova mensagem de ${senderName}`, message, { 
+          conversationId, 
+          senderId, 
+          type: 'chat',
+          timestamp: timestamp.toISOString(),
+          ...(senderPhoto && { icon: senderPhoto })
+        }).catch(() => {});
+      }
 
       return notification;
     } catch (error) {

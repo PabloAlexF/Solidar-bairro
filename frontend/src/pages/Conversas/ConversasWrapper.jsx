@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import ReusableHeader from '../../components/layout/ReusableHeader';
 import ConversasDesktop from './ConversasDesktop';
 import ConversasMobile from './ConversasMobile';
 import ApiService from '../../services/apiService';
 import chatNotificationService from '../../services/chatNotificationService';
+import { getSocket } from '../../services/socketService';
 import './styles.css';
 
 const normalizeStatus = (status) => {
@@ -27,12 +28,12 @@ const formatTimeAgo = (dateInput) => {
   
   if (isNaN(date.getTime())) return 'Data inválida';
   
-  // Debug: log do timestamp
-  console.log('[Conversas] formatTimeAgo:', {
-    input: dateInput,
-    parsed: date.toISOString(),
-    displayTime: date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-  });
+  // Debug: log do timestamp (removido para produção)
+  // console.log('[Conversas] formatTimeAgo:', {
+  //   input: dateInput,
+  //   parsed: date.toISOString(),
+  //   displayTime: date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  // });
   
   const now = new Date();
   const diffInMinutes = Math.floor((now - date) / (1000 * 60));
@@ -72,7 +73,7 @@ export default function ConversasWrapper() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     try {
       setLoading(true);
       const response = await ApiService.getConversations();
@@ -91,14 +92,14 @@ export default function ConversasWrapper() {
             userType: otherParticipant.tipo || 'cidadao',
             isOnline: otherParticipant.isOnline,
             isTyping: conv.isTyping,
-            time: formatTimeAgo(lastMessage.createdAt),
+            time: formatTimeAgo(lastMessage.createdAt || conv.createdAt),
             subject: conv.subject || 'Conversa',
             neighborhood: otherParticipant.bairro || 'Não informado',
             status: normalizeStatus(conv.status),
             lastMessage: lastMessage.content || 'Nova conversa iniciada',
             unreadCount: conv.unreadCount || 0,
             urgency: conv.urgency || 'medium',
-            rawTimestamp: lastMessage.createdAt
+            rawTimestamp: lastMessage.createdAt || conv.createdAt
           };
         });
         setConversations(formattedConversations);
@@ -109,7 +110,7 @@ export default function ConversasWrapper() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -130,14 +131,14 @@ export default function ConversasWrapper() {
               userType: otherParticipant.tipo || 'cidadao',
               isOnline: otherParticipant.isOnline,
               isTyping: conv.isTyping,
-              time: formatTimeAgo(lastMessage.createdAt),
+              time: formatTimeAgo(lastMessage.createdAt || conv.createdAt),
               subject: conv.subject || 'Conversa',
               neighborhood: otherParticipant.bairro || 'Não informado',
               status: normalizeStatus(conv.status),
               lastMessage: lastMessage.content || 'Nova conversa iniciada',
               unreadCount: conv.unreadCount || 0,
               urgency: conv.urgency || 'medium',
-              rawTimestamp: lastMessage.createdAt
+              rawTimestamp: lastMessage.createdAt || conv.createdAt
             };
           });
           setConversations(formatted);
@@ -145,7 +146,46 @@ export default function ConversasWrapper() {
       });
       return () => { if (interval) clearInterval(interval); };
     }
-  }, [user]);
+  }, [user, loadConversations]);
+
+  // Listener para atualizações em tempo real via Socket
+  useEffect(() => {
+    const socket = getSocket();
+    if (socket && user) {
+      const handleNewMessage = (data) => {
+        const msg = data.message || data;
+        const conversationId = data.conversationId || msg.conversationId;
+        
+        setConversations(prev => {
+          const convIndex = prev.findIndex(c => c.id === conversationId);
+          
+          if (convIndex >= 0) {
+            // Atualizar conversa existente e mover para o topo
+            const currentConv = prev[convIndex];
+            const timestamp = msg.createdAt ? (msg.createdAt.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(msg.createdAt)) : new Date();
+            
+            const updatedConv = {
+              ...currentConv,
+              lastMessage: msg.content || msg.text || 'Nova mensagem',
+              time: formatTimeAgo(timestamp),
+              rawTimestamp: timestamp,
+              unreadCount: (Number(currentConv.unreadCount) || 0) + (msg.senderId !== user.uid ? 1 : 0)
+            };
+            
+            const newConversations = [...prev];
+            newConversations.splice(convIndex, 1);
+            return [updatedConv, ...newConversations];
+          } else {
+            loadConversations();
+            return prev;
+          }
+        });
+      };
+
+      socket.on('new_message', handleNewMessage);
+      return () => socket.off('new_message', handleNewMessage);
+    }
+  }, [user, loadConversations]);
 
   const togglePin = (e, convId) => {
     e.stopPropagation();

@@ -408,12 +408,20 @@ class ChatService {
     try {
       const otherParticipants = conversation.participants.filter(p => p !== senderId);
       
+      // Obter timestamp da mensagem criada (converter de Firestore Timestamp se necessário)
+      const timestamp = message.createdAt && message.createdAt.toDate ? message.createdAt.toDate() : (message.createdAt ? new Date(message.createdAt) : new Date());
+      
       for (const participantId of otherParticipants) {
+        // Verificar se o usuário está online para evitar Push Notification desnecessário
+        const isOnline = presenceService.isUserOnline(participantId);
+
         await notificationService.createChatNotification(
           conversationId,
           senderId,
           participantId,
-          messageData.text || messageData.content || 'Nova mensagem'
+          messageData.text || messageData.content || 'Nova mensagem',
+          timestamp,
+          isOnline
         );
       }
     } catch (error) {

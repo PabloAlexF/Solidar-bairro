@@ -77,10 +77,13 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
       const socket = getSocket();
       if (socket) {
         const handleNewNotification = (data) => {
-          if (data && (data.type === 'chat' || data.conversationId)) {
+          if (data && (data.type === 'chat' || data.conversationId || data.data?.conversationId)) {
+            const conversationId = data.conversationId || data.data?.conversationId;
+            const senderName = data.senderName || data.data?.senderName || data.title || 'Usuário';
+
             addChatNotification(
-              data.conversationId,
-              data.senderName || data.title || 'Usuário',
+              conversationId,
+              senderName,
               data.message,
               data.timestamp
             );
@@ -124,8 +127,9 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
     }
     
     // Se for notificação de chat, navegar para a conversa
-    if (notification.type === 'chat' && notification.conversationId) {
-      navigate(`/chat/${notification.conversationId}`);
+    const conversationId = notification.conversationId || notification.data?.conversationId;
+    if (notification.type === 'chat' && conversationId) {
+      navigate(`/chat/${conversationId}`);
       setShowNotifications(false);
     }
   };

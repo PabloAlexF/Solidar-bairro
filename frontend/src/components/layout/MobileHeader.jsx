@@ -45,10 +45,13 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
       const socket = getSocket();
       if (socket) {
         const handleNewNotification = (data) => {
-          if (data && (data.type === 'chat' || data.conversationId)) {
+          if (data && (data.type === 'chat' || data.conversationId || data.data?.conversationId)) {
+            const conversationId = data.conversationId || data.data?.conversationId;
+            const senderName = data.senderName || data.data?.senderName || data.title || 'Usuário';
+
             addChatNotification(
-              data.conversationId,
-              data.senderName || data.title || 'Usuário',
+              conversationId,
+              senderName,
               data.message,
               data.timestamp
             );
@@ -239,8 +242,9 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
                   <div key={n.id} 
                     onClick={() => {
                       markAsRead(n.id);
-                      if (n.type === 'chat' && n.conversationId) {
-                        navigate(`/chat/${n.conversationId}`);
+                      const conversationId = n.conversationId || n.data?.conversationId;
+                      if (n.type === 'chat' && conversationId) {
+                        navigate(`/chat/${conversationId}`);
                         setShowNotifications(false);
                       }
                     }}

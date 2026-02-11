@@ -2,7 +2,7 @@ const firebase = require('../config/firebase');
 
 class PresenceService {
   constructor() {
-    this.onlineUsers = new Map(); // userId -> { socketId, lastSeen, isOnline }
+    this.onlineUsers = new Map(); // userId -> { sockets: Set<socketId>, lastSeen: Date }
     this.db = firebase.getDb();
     this.presenceCollection = 'user_presence';
   }
@@ -11,30 +11,28 @@ class PresenceService {
   async userConnected(userId, socketId) {
     try {
       const now = new Date();
+      
+      // Gerenciar conexões em memória (suporte a múltiplas abas/dispositivos)
+      let userEntry = this.onlineUsers.get(userId);
+      if (!userEntry) {
+        userEntry = { sockets: new Set(), lastSeen: now };
+        this.onlineUsers.set(userId, userEntry);
+      }
+      userEntry.sockets.add(socketId);
+      userEntry.lastSeen = now;
+
       const userPresence = {
         userId,
-        socketId,
         isOnline: true,
         lastSeen: now,
         connectedAt: now,
         updatedAt: firebase.getTimestamp()
       };
 
-      // Atualizar mapa em memória
-      this.onlineUsers.set(userId, {
-        socketId,
-        lastSeen: now,
-        isOnline: true,
-        connectedAt: now
-      });
-
       // Salvar no Firestore
       await this.db.collection(this.presenceCollection).doc(userId).set(userPresence, { merge: true });
 
-      console.log(`👤 Usuário ${userId} ficou online (socket: ${socketId})`);
-
-      // Notificar contatos sobre mudança de status
-      await this.notifyContactsStatusChange(userId, true);
+      console.log(`👤 Usuário ${userId} conectado (socket: ${socketId}). Conexões ativas: ${userEntry.sockets.size}`);
 
       return userPresence;
     } catch (error) {
@@ -46,35 +44,37 @@ class PresenceService {
   // Quando um usuário desconecta
   async userDisconnected(userId, socketId) {
     try {
-      const userPresence = this.onlineUsers.get(userId);
+      const userEntry = this.onlineUsers.get(userId);
 
-      if (userPresence && userPresence.socketId === socketId) {
+      if (userEntry && userEntry.sockets.has(socketId)) {
+        userEntry.sockets.delete(socketId);
         const now = new Date();
+        userEntry.lastSeen = now;
 
-        // Marcar como offline após um delay para reconexões rápidas
-        setTimeout(async () => {
-          const currentPresence = this.onlineUsers.get(userId);
-          if (currentPresence && currentPresence.socketId === socketId) {
-            // Usuário ainda não reconectou, marcar como offline
-            this.onlineUsers.set(userId, {
-              ...currentPresence,
-              isOnline: false,
-              lastSeen: now
-            });
+        console.log(`👤 Usuário ${userId} desconectou socket ${socketId}. Restantes: ${userEntry.sockets.size}`);
 
-            // Atualizar no Firestore
-            await this.db.collection(this.presenceCollection).doc(userId).update({
-              isOnline: false,
-              lastSeen: firebase.getTimestamp(),
-              updatedAt: firebase.getTimestamp()
-            });
+        // Se não há mais conexões, marcar como offline após delay
+        if (userEntry.sockets.size === 0) {
+          // Marcar como offline após um delay para reconexões rápidas
+          setTimeout(async () => {
+            const currentEntry = this.onlineUsers.get(userId);
+            // Verifica se ainda está vazio (pode ter reconectado)
+            if (currentEntry && currentEntry.sockets.size === 0) {
 
-            console.log(`👤 Usuário ${userId} ficou offline`);
+              // Atualizar no Firestore
+              await this.db.collection(this.presenceCollection).doc(userId).update({
+                isOnline: false,
+                lastSeen: firebase.getTimestamp(),
+                updatedAt: firebase.getTimestamp()
+              });
 
-            // Notificar contatos sobre mudança de status
-            await this.notifyContactsStatusChange(userId, false);
-          }
-        }, 5000); // 5 segundos de tolerância para reconexão
+              // Remover da memória para evitar vazamento e garantir consistência
+              this.onlineUsers.delete(userId);
+
+              console.log(`👤 Usuário ${userId} ficou totalmente offline`);
+            }
+          }, 5000); // 5 segundos de tolerância para reconexão
+        }
       }
     } catch (error) {
       console.error('Erro ao marcar usuário como offline:', error);
@@ -84,20 +84,20 @@ class PresenceService {
 
   // Verificar se usuário está online
   isUserOnline(userId) {
-    const presence = this.onlineUsers.get(userId);
-    return presence ? presence.isOnline : false;
+    const userEntry = this.onlineUsers.get(userId);
+    return userEntry ? userEntry.sockets.size > 0 : false;
   }
 
   // Obter status de presença de um usuário
   async getUserPresence(userId) {
     try {
       // Primeiro verificar na memória
-      const memoryPresence = this.onlineUsers.get(userId);
-      if (memoryPresence) {
+      const userEntry = this.onlineUsers.get(userId);
+      if (userEntry) {
         return {
           userId,
-          isOnline: memoryPresence.isOnline,
-          lastSeen: memoryPresence.lastSeen
+          isOnline: userEntry.sockets.size > 0,
+          lastSeen: userEntry.lastSeen
         };
       }
 
@@ -107,7 +107,8 @@ class PresenceService {
         const data = doc.data();
         return {
           userId,
-          isOnline: data.isOnline || false,
+          // Se não está na memória, assumimos offline (evita falso positivo após reinício do servidor)
+          isOnline: false,
           lastSeen: data.lastSeen?.toDate() || new Date()
         };
       }
@@ -141,49 +142,6 @@ class PresenceService {
     } catch (error) {
       console.error('Erro ao obter presença de múltiplos usuários:', error);
       return {};
-    }
-  }
-
-  // Notificar contatos sobre mudança de status
-  async notifyContactsStatusChange(userId, isOnline) {
-    try {
-      const io = require('./socketService').getIo();
-
-      // Buscar conversas do usuário para encontrar contatos
-      const conversations = await this.getUserConversations(userId);
-
-      // Para cada conversa, notificar o outro participante
-      for (const conv of conversations) {
-        const otherParticipantId = conv.participants.find(p => p !== userId);
-        if (otherParticipantId) {
-          // Enviar notificação para o contato
-          io.to(`user_${otherParticipantId}`).emit('user_status_change', {
-            userId,
-            isOnline,
-            lastSeen: new Date()
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Erro ao notificar mudança de status:', error);
-    }
-  }
-
-  // Buscar conversas do usuário (método auxiliar)
-  async getUserConversations(userId) {
-    try {
-      const snapshot = await this.db.collection('conversations')
-        .where('participants', 'array-contains', userId)
-        .limit(50)
-        .get();
-
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    } catch (error) {
-      console.error('Erro ao buscar conversas do usuário:', error);
-      return [];
     }
   }
 

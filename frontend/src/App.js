@@ -39,8 +39,9 @@ function App() {
         toast((t) => (
           <div 
             onClick={() => {
-              if (notification.type === 'chat' && notification.data?.conversationId) {
-                  window.location.href = `/chat/${notification.data.conversationId}`;
+              const conversationId = notification.conversationId || notification.data?.conversationId;
+              if (notification.type === 'chat' && conversationId) {
+                  window.location.href = `/chat/${conversationId}`;
               }
               toast.dismiss(t.id);
             }} 

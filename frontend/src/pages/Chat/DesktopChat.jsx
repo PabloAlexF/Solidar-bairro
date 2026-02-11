@@ -545,7 +545,7 @@ const Chat = () => {
             lastMessage: conv.lastMessage?.content || 'Nova conversa',
             lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
               new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
-            unreadCount: conv.unreadCount || 0
+            unreadCount: conv.id === conversaId ? 0 : (conv.unreadCount || 0)
           };
         }));
         setChatContacts(formattedContacts);
@@ -556,7 +556,7 @@ const Chat = () => {
         alert('⚠️ Cota do Firebase excedida! O chat pode não carregar novas conversas até amanhã ou até a troca da conta.');
       }
     }
-  }, [user?.uid]);
+  }, [user?.uid, conversaId]);
 
   // Carregar mensagens da conversa
   const loadMessages = useCallback(async () => {
@@ -681,6 +681,8 @@ const Chat = () => {
       
       // Marcar conversa como lida
       await ApiService.markConversationAsRead(conversaId);
+      const socket = getSocket();
+      if (socket) socket.emit('mark_as_read', conversaId);
     } catch (error) {
       clearTimeout(timeoutId); // Limpar timeout em caso de erro
       console.error('Erro ao carregar mensagens:', error);
@@ -766,13 +768,19 @@ const Chat = () => {
       const msg = data.message || data;
       const msgConvId = data.conversationId || msg.conversationId || msg.conversaId;
 
-      if (msgConvId === conversaId && msg.senderId !== user?.uid) {
+      // Limpar status de digitando ao receber mensagem
+      if (msg.senderId !== user?.uid) {
+        setTypingStatus(prev => ({ ...prev, [msgConvId]: false }));
+      }
+
+      // 1. Atualizar mensagens da conversa atual
+      if (msgConvId === conversaId) {
         setMessages(prev => {
           if (prev.some(m => m.id === msg.id)) return prev;
           return [...prev, {
             id: msg.id,
             type: msg.type || 'text',
-            sender: 'received',
+            sender: msg.senderId === user?.uid ? 'sent' : 'received',
             content: msg.content || msg.text,
             timestamp: msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000) : new Date(),
             read: false,
@@ -781,7 +789,39 @@ const Chat = () => {
             mediaUrl: msg.mediaUrl
           }];
         });
+        
+        // Se a mensagem for recebida na conversa aberta, marcar como lida
+        if (msg.senderId !== user?.uid) {
+          ApiService.markConversationAsRead(conversaId).catch(() => {});
+          socket.emit('mark_as_read', conversaId);
+        }
       }
+
+      // 2. Atualizar lista de contatos (Sidebar)
+      setChatContacts(prev => {
+        const contactExists = prev.some(c => c.id === msgConvId);
+        if (contactExists) {
+          return prev.map(c => {
+            if (c.id === msgConvId) {
+              let previewText = msg.content || msg.text;
+              if (msg.type === 'image') previewText = '📷 Imagem';
+              else if (msg.type === 'video') previewText = '🎥 Vídeo';
+              else if (msg.type === 'location') previewText = '📍 Localização';
+
+              return {
+                ...c,
+                lastMessage: previewText || 'Nova mensagem',
+                lastMessageTime: 'Agora',
+                unreadCount: msgConvId === conversaId ? 0 : (msg.senderId === user?.uid ? (Number(c.unreadCount) || 0) : (Number(c.unreadCount) || 0) + 1)
+              };
+            }
+            return c;
+          });
+        } else {
+          loadConversations();
+          return prev;
+        }
+      });
     };
 
     // Handler para recarregar mensagens
@@ -808,11 +848,35 @@ const Chat = () => {
       }
     };
 
+    // Handler para notificações de outras conversas (atualizar contador)
+    const handleNotification = (data) => {
+      const notifConvId = data.data?.conversationId || data.conversationId;
+      // Se for notificação de outra conversa, adiciona à lista global
+      if (notifConvId && notifConvId !== conversaId) {
+        addChatNotification(
+          notifConvId,
+          data.data?.senderName || data.title || 'Usuário',
+          data.message
+        );
+      }
+    };
+
+    // Handler para atualização de leitura (double check azul)
+    const handleConversationRead = (data) => {
+      if (data.conversationId === conversaId) {
+        setMessages(prev => prev.map(msg => 
+          msg.sender === 'sent' ? { ...msg, read: true } : msg
+        ));
+      }
+    };
+
     // Registrar listeners
     socket.on('new_message', handleNewMessage);
     socket.on('force_reload_messages', handleForceReload);
     socket.on('connect', handleReconnect);
     socket.on('typing', handleTyping);
+    socket.on('notification', handleNotification);
+    socket.on('conversation_read', handleConversationRead);
 
     return () => {
       socket.emit('leave_conversation', conversaId);
@@ -820,9 +884,11 @@ const Chat = () => {
       socket.off('force_reload_messages', handleForceReload);
       socket.off('connect', handleReconnect);
       socket.off('typing', handleTyping);
+      socket.off('notification', handleNotification);
+      socket.off('conversation_read', handleConversationRead);
       console.log('🚪 Saindo da conversa:', conversaId);
     };
-  }, [conversaId, user?.uid, loadMessages, loadConversations]);
+  }, [conversaId, user?.uid, loadMessages, loadConversations, addChatNotification]);
 
   // Socket listeners for presence updates
   useEffect(() => {
@@ -1387,7 +1453,7 @@ const Chat = () => {
                   <div className="contact-preview-row">
                     <div className="contact-preview-col">
                       {isTyping ? (
-                        <p className="last-message typing-text-style">
+                        <p className="last-message typing-text-style" style={{ color: '#10b981', fontStyle: 'italic' }}>
                           Digitando...
                         </p>
                       ) : (
@@ -1537,12 +1603,16 @@ const Chat = () => {
                                   <p className="notification-title">{notification.title}</p>
                                   <p className="notification-message">{notification.message}</p>
                                   <span className="notification-time">
-                                    {new Date(notification.timestamp).toLocaleString('pt-BR', {
-                                      day: '2-digit',
-                                      month: '2-digit',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    })}
+                                    {(() => {
+                                      const dateVal = notification.createdAt || notification.timestamp || new Date();
+                                      const dateObj = dateVal.seconds ? new Date(dateVal.seconds * 1000) : new Date(dateVal);
+                                      return dateObj.toLocaleString('pt-BR', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      });
+                                    })()}
                                   </span>
                                 </div>
                               </div>
