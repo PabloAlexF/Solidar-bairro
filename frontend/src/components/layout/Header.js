@@ -4,7 +4,7 @@ import { X, Bell, MessageCircle, Heart, CheckCircle2, AlertTriangle, Clock } fro
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import apiService from '../../services/apiService';
-import { getSocket } from '../../services/socketService';
+import { getSocket, connectSocket } from '../../services/socketService';
 import logo from '../../assets/images/marca.png';
 import '../../styles/components/Header.css';
 
@@ -45,8 +45,8 @@ const Header = ({ showLoginButton = false }) => {
 
       loadUserStats();
 
-      // Iniciar monitoramento via Socket (Substituindo o serviço antigo)
-      const socket = getSocket();
+      // Iniciar monitoramento via Socket (Garantindo conexão)
+      const socket = connectSocket(user?.uid || user?.id);
       
       if (socket) {
         const handleNewNotification = (data) => {

@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 
 import apiService from '../../services/apiService';
-import { getSocket } from '../../services/socketService';
+import { getSocket, connectSocket } from '../../services/socketService';
 import toast from 'react-hot-toast';
 import logo from '../../assets/images/marca.png';
 import './ReusableHeader.css';
@@ -61,7 +61,7 @@ const ReusableHeader = ({
       loadUserStats();
 
       // Iniciar monitoramento via Socket
-      const socket = getSocket();
+      const socket = connectSocket(user?.uid || user?.id);
 
       if (socket) {
         const handleNewNotification = (data) => {

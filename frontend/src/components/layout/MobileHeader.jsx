@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { SecurityUtils } from '../../utils/security';
-import { getSocket } from '../../services/socketService';
+import { getSocket, connectSocket } from '../../services/socketService';
 import logo from '../../assets/images/marca.png';
 import { 
   Menu, 
@@ -42,7 +42,7 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
 
   useEffect(() => {
     if (isAuthenticated()) {
-      const socket = getSocket();
+      const socket = connectSocket(user?.uid || user?.id);
       if (socket) {
         const handleNewNotification = (data) => {
           if (data && (data.type === 'chat' || data.conversationId || data.data?.conversationId)) {

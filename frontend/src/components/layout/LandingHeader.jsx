@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { Heart, Bell, User, LogOut, Settings, Globe, ArrowLeft, X, MessageCircle, CheckCircle2, AlertTriangle, Clock } from 'lucide-react';
-import { getSocket } from '../../services/socketService';
+import { getSocket, connectSocket } from '../../services/socketService';
 import marca from '../../assets/images/marca.png';
 import apiService from '../../services/apiService';
 import './LandingHeader.css';
@@ -74,7 +74,7 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
   useEffect(() => {
     if (isAuthenticated()) {
       // Iniciar monitoramento via Socket
-      const socket = getSocket();
+      const socket = connectSocket(user?.uid || user?.id);
       if (socket) {
         const handleNewNotification = (data) => {
           if (data && (data.type === 'chat' || data.conversationId || data.data?.conversationId)) {

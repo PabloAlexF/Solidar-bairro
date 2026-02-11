@@ -4,7 +4,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { useAuth } from './contexts/AuthContext';
 import ApiService from './services/apiService';
 import { getMessaging, getToken } from 'firebase/messaging';
-import { getSocket } from './services/socketService';
+import { getSocket, connectSocket } from './services/socketService';
 import { initializeApp, getApps } from 'firebase/app';
 
 import SecurityMiddleware from './utils/securityMiddleware';
@@ -35,8 +35,8 @@ function App() {
 
   useEffect(() => {
     if (isAuthenticated() && user) {
-      // Usar getSocket() em vez de window.socketInstance para garantir a instância correta
-      const socket = getSocket();
+      // Garantir que o socket esteja conectado globalmente
+      const socket = connectSocket(user.uid || user.id);
       if (!socket) return;
 
       const handleNewNotification = (notification) => {
