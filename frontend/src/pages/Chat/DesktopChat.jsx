@@ -542,7 +542,7 @@ const Chat = () => {
             initials: userName !== 'Carregando...' ? 
               userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'CV',
             type: conv.otherParticipant?.tipo || conv.participants?.find(p => p.uid !== user?.uid)?.tipo || 'cidadao',
-            distance: '0m de você',
+            distance: conv.otherParticipant?.distance || '0m de você',
             online: conv.otherParticipant?.online || false,
             lastMessage: conv.lastMessage?.content || 'Nova conversa',
             lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 

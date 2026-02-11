@@ -1,0 +1,45 @@
+{
+  "appId": "br.com.solidarbrasil.app",
+  "appName": "SolidarBrasil",
+  "webDir": "build",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://solidarbrasil.com.br",
+    "cleartext": false,
+    "androidScheme": "https",
+    "allowNavigation": [
+      "solidarbrasil.com.br",
+      "*.onrender.com",
+      "*.googleapis.com",
+      "*.firebaseio.com"
+    ]
+  },
+  "android": {
+    "buildOptions": {
+      "keystorePath": "",
+      "keystorePassword": "",
+      "keystoreAlias": "",
+      "keystoreAliasPassword": "",
+      "releaseType": "APK"
+    }
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#4CAF50",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "PushNotifications": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon_config_sample",
+      "iconColor": "#4CAF50"
+    }
+  }
+}

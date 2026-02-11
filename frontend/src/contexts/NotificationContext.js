@@ -88,49 +88,48 @@ export const NotificationProvider = ({ children }) => {
       const handleNewNotification = (notificationData) => {
         console.log('🔔 [NotificationContext] Nova notificação recebida via socket:', notificationData);
 
-          // Converter formato do socket para formato local
-          const newNotification = {
-            id: notificationData.id || `notif-${Date.now()}`,
-            timestamp: notificationData.createdAt?.seconds ? new Date(notificationData.createdAt.seconds * 1000).toISOString() : notificationData.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-            read: notificationData.read || false,
-            type: notificationData.type || 'system',
-            priority: 'normal',
-            title: notificationData.title || 'Nova notificação',
-            message: notificationData.message || '',
-            data: notificationData.data || {}
-          };
-
-          // Adicionar à lista de notificações
-          setNotifications(prev => [newNotification, ...prev.slice(0, 49)]);
-
-          // Tocar som de notificação (opcional)
-          try {
-            const audio = new Audio('/notification.mp3');
-            audio.volume = 0.3;
-            audio.play().catch(() => {});
-          } catch (error) {
-            // Ignorar erro de áudio
-          }
+        // Converter formato do socket para formato local
+        const newNotification = {
+          id: notificationData.id || `notif-${Date.now()}`,
+          timestamp: notificationData.createdAt?.seconds ? new Date(notificationData.createdAt.seconds * 1000).toISOString() : notificationData.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          read: notificationData.read || false,
+          type: notificationData.type || 'system',
+          priority: 'normal',
+          title: notificationData.title || 'Nova notificação',
+          message: notificationData.message || '',
+          data: notificationData.data || {}
         };
 
-        const handleNotificationRead = (data) => {
-          if (data.notificationId) {
-            setNotifications(prev =>
-              prev.map(n => n.id === data.notificationId ? { ...n, read: true } : n)
-            );
-          }
-        };
+        // Adicionar à lista de notificações
+        setNotifications(prev => [newNotification, ...prev.slice(0, 49)]);
 
-        socket.on('notification', handleNewNotification);
-        socket.on('notification_read', handleNotificationRead);
-        console.log('✅ [NotificationContext] Listeners de notificação registrados');
+        // Tocar som de notificação (opcional)
+        try {
+          const audio = new Audio('/notification.mp3');
+          audio.volume = 0.3;
+          audio.play().catch(() => {});
+        } catch (error) {
+          // Ignorar erro de áudio
+        }
+      };
 
-        return () => {
-          socket.off('notification', handleNewNotification);
-          socket.off('notification_read', handleNotificationRead);
-          console.log('🗑️ [NotificationContext] Listeners de notificação removidos');
-        };
-      }
+      const handleNotificationRead = (data) => {
+        if (data.notificationId) {
+          setNotifications(prev =>
+            prev.map(n => n.id === data.notificationId ? { ...n, read: true } : n)
+          );
+        }
+      };
+
+      socket.on('notification', handleNewNotification);
+      socket.on('notification_read', handleNotificationRead);
+      console.log('✅ [NotificationContext] Listeners de notificação registrados');
+
+      return () => {
+        socket.off('notification', handleNewNotification);
+        socket.off('notification_read', handleNotificationRead);
+        console.log('🗑️ [NotificationContext] Listeners de notificação removidos');
+      };
     }
   }, [isAuthenticated, user]);
 

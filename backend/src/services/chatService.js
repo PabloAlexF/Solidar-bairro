@@ -3,6 +3,7 @@ const notificationService = require('./notificationService');
 const presenceService = require('./presenceService');
 const firebase = require('../config/firebase');
 const userService = require('./userService');
+const { calculateUserDistance } = require('../utils/distanceCalculator');
 
 class ChatService {
   constructor() {
@@ -100,6 +101,9 @@ class ChatService {
   async getConversations(userId) {
     const conversations = await chatModel.getConversationsByUser(userId);
 
+    // Buscar dados do usuário atual para cálculo de distância
+    const currentUserData = await userService.getUserData(userId);
+
     // Enriquecer com informações dos participantes
     const enrichedConversations = [];
 
@@ -108,6 +112,8 @@ class ChatService {
 
       // Buscar dados do outro participante
       let otherParticipant = null;
+      let distance = 'Calculando...';
+      
       if (otherParticipantIds.length > 0) {
         otherParticipant = await userService.getUserData(otherParticipantIds[0]);
         if (!otherParticipant) {
@@ -117,6 +123,9 @@ class ChatService {
             tipo: 'cidadao',
             bairro: 'Não informado'
           };
+        } else {
+          // Calcular distância entre usuários
+          distance = await calculateUserDistance(currentUserData, otherParticipant);
         }
       }
 
@@ -144,7 +153,8 @@ class ChatService {
         ...conv,
         otherParticipant: {
           ...otherParticipant,
-          id: otherParticipantIds[0] // Include user ID for proper status tracking
+          id: otherParticipantIds[0],
+          distance // Adicionar distância
         },
         unreadCount,
         lastMessage
@@ -405,16 +415,12 @@ class ChatService {
     }
 
     // Criar notificações para outros participantes
-    try {
-      const otherParticipants = conversation.participants.filter(p => p !== senderId);
-      
-      // Obter timestamp da mensagem criada (converter de Firestore Timestamp se necessário)
-      const timestamp = message.createdAt && message.createdAt.toDate ? message.createdAt.toDate() : (message.createdAt ? new Date(message.createdAt) : new Date());
-      
-      for (const participantId of otherParticipants) {
-        // Verificar se o usuário está online para evitar Push Notification desnecessário
-        const isOnline = presenceService.isUserOnline(participantId);
-
+    const otherParticipants = conversation.participants.filter(p => p !== senderId);
+    const timestamp = message.createdAt && message.createdAt.toDate ? message.createdAt.toDate() : (message.createdAt ? new Date(message.createdAt) : new Date());
+    
+    for (const participantId of otherParticipants) {
+      try {
+        const isOnline = await presenceService.isUserOnline(participantId);
         await notificationService.createChatNotification(
           conversationId,
           senderId,
@@ -423,10 +429,10 @@ class ChatService {
           timestamp,
           isOnline
         );
+        console.log(`📨 Notificação criada para ${participantId}`);
+      } catch (error) {
+        console.error(`Erro ao criar notificação para ${participantId}:`, error);
       }
-    } catch (error) {
-      console.error('Erro ao criar notificações de chat:', error);
-      // Não falhar o envio da mensagem por causa da notificação
     }
 
     return message;
