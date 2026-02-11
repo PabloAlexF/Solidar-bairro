@@ -61,7 +61,8 @@ const ReusableHeader = ({
       loadUserStats();
 
       // Iniciar monitoramento via Socket
-      const socket = connectSocket(user?.uid || user?.id);
+      const userId = user?.uid || user?.id;
+      const socket = userId ? connectSocket(userId) : null;
 
       if (socket) {
         const handleNewNotification = (data) => {

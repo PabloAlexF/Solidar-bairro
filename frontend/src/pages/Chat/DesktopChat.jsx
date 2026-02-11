@@ -757,7 +757,8 @@ const Chat = () => {
     loadMessages();
     loadConversations();
 
-    const socket = getSocket();
+    // Garantir conexão e obter instância
+    const socket = connectSocket(user.uid);
     if (!socket) return;
 
     // Entrar na sala da conversa
@@ -839,6 +840,8 @@ const Chat = () => {
       if (conversaId) {
         console.log('🔄 Reconectado (Desktop). Reentrando na sala:', conversaId);
         socket.emit('join_conversation', conversaId);
+        // Reenviar status de leitura ao reconectar
+        socket.emit('mark_as_read', conversaId);
       }
     };
 
@@ -1868,6 +1871,7 @@ const Chat = () => {
                         src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} 
                         alt="Imagem enviada" 
                         className="msg-media-img msg-media-img" 
+                        onError={(e) => { e.target.style.display = 'none'; }}
                         onClick={() => {
                           setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content);
                           setZoomLevel(1);

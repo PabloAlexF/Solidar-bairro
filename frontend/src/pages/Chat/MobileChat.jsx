@@ -880,7 +880,8 @@ const Chat = () => {
       loadMessages();
       
       // Listener direto do Socket.IO para mensagens em tempo real
-      socket = getSocket();
+      // Garantir conexão e obter instância
+      socket = connectSocket(user?.uid);
       
       // Entrar na sala da conversa
       if (socket) {
@@ -955,6 +956,8 @@ const Chat = () => {
         if (socket && conversaId) {
           console.log('🔄 Reconectado (Mobile). Reentrando na sala:', conversaId);
           socket.emit('join_conversation', conversaId);
+          // Reenviar status de leitura ao reconectar
+          socket.emit('mark_as_read', conversaId);
         }
       };
 
@@ -1920,11 +1923,7 @@ const Chat = () => {
                           setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content);
                           setZoomLevel(1);
                         }}
-                        onError={(e) => {
-                          console.error('Erro ao carregar imagem:', e.target.src);
-                          e.target.style.display = 'none';
-                          e.target.parentElement.innerHTML = '<p style="padding: 20px; color: #ef4444;">❌ Erro ao carregar imagem</p>';
-                        }}
+                        onError={(e) => { e.target.style.display = 'none'; }}
                       />
                     </div>
                   );

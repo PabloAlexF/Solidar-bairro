@@ -40,6 +40,13 @@ function App() {
       if (!socket) return;
 
       const handleNewNotification = (notification) => {
+        // Verificar se o usuário já está na conversa da notificação
+        const currentPath = window.location.pathname;
+        const conversationId = notification.conversationId || notification.data?.conversationId;
+        
+        // Se estiver na mesma conversa, não mostrar Toast nem tocar som (já está vendo a mensagem)
+        if (conversationId && currentPath.includes(`/chat/${conversationId}`)) return;
+
         // Tocar som
         if (notification.type === 'chat' && notificationSound) {
           notificationSound.play().catch(e => console.error("Erro ao tocar som de notificação:", e));
