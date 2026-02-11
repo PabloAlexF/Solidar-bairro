@@ -1716,29 +1716,70 @@ const Chat = () => {
                 if (msg.type === "location") {
                   const { lat, lng } = msg.location || { lat: -23.5505, lng: -46.6333 };
                   const mapUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=16`;
+                  const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
 
                   bubbleContent = (
                     <div className="sb-msg-bubble location-bubble">
-                      <div className="sb-location-static-preview">
-                        <div className="sb-location-icon-large">
-                          <MapPin size={32} />
+                      <div className="sb-location-header">
+                        <div className="sb-location-icon-wrapper">
+                          <MapPin size={20} className="sb-location-pin-icon" />
                         </div>
-                        <div className="sb-location-coordinates">
-                          <span className="sb-coords-text">
-                            {lat.toFixed(6)}, {lng.toFixed(6)}
-                          </span>
+                        <div className="sb-location-title-section">
+                          <h5 className="sb-location-title">{msg.location?.name || "📍 Localização Compartilhada"}</h5>
+                          <span className="sb-location-timestamp">{formatTime(msg.timestamp)}</span>
                         </div>
                       </div>
-                      <div className="sb-location-details">
-                        <h5>{msg.location?.name || "Localização Compartilhada"}</h5>
-                        <p>{msg.location?.address || "Endereço não disponível"}</p>
+
+                      <div className="sb-location-content">
+                        <div className="sb-location-map-preview">
+                          <div className="sb-map-placeholder">
+                            <div className="sb-map-pin-center">
+                              <MapPin size={24} fill="#ef4444" color="white" />
+                            </div>
+                            <div className="sb-map-overlay">
+                              <span className="sb-map-label">Mapa</span>
+                            </div>
+                            {/* Grid lines to simulate map */}
+                            <div className="sb-map-grid">
+                              <div className="sb-map-grid-line horizontal"></div>
+                              <div className="sb-map-grid-line horizontal"></div>
+                              <div className="sb-map-grid-line vertical"></div>
+                              <div className="sb-map-grid-line vertical"></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="sb-location-info">
+                          <div className="sb-location-address">
+                            <span className="sb-address-text">
+                              {msg.location?.address || "Endereço compartilhado em tempo real"}
+                            </span>
+                          </div>
+                          <div className="sb-location-coordinates">
+                            <span className="sb-coords-label">Coordenadas:</span>
+                            <span className="sb-coords-text">{lat.toFixed(6)}, {lng.toFixed(6)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="sb-location-actions">
+                        <a
+                          href={googleMapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="sb-location-link primary"
+                        >
+                          <span className="sb-link-icon">🗺️</span>
+                          <span className="sb-link-text">Google Maps</span>
+                        </a>
                         <a
                           href={mapUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="sb-location-link"
+                          className="sb-location-link secondary"
                         >
-                          Ver no mapa ↗
+                          <span className="sb-link-icon">🗺️</span>
+                          <span className="sb-link-text">OpenStreetMap</span>
                         </a>
                       </div>
                     </div>
@@ -1746,10 +1787,10 @@ const Chat = () => {
                 } else if (msg.type === "image") {
                   bubbleContent = (
                     <div className="sb-msg-bubble media-bubble">
-                      <img 
-                        src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content} 
-                        alt="Imagem enviada" 
-                        className="sb-msg-media-img" 
+                      <img
+                        src={msg.metadata?.mediaUrl || msg.mediaUrl || msg.content}
+                        alt="Imagem enviada"
+                        className="sb-msg-media-img"
                         onClick={() => {
                           setSelectedImage(msg.metadata?.mediaUrl || msg.mediaUrl || msg.content);
                           setZoomLevel(1);
