@@ -403,6 +403,10 @@ const ReusableHeader = ({
                               if (notification.timestamp && typeof notification.timestamp === 'object' && notification.timestamp.seconds) {
                                 time = new Date(notification.timestamp.seconds * 1000);
                               }
+                              // Verificar se é um timestamp do Firestore com _seconds
+                              else if (notification.timestamp && typeof notification.timestamp === 'object' && notification.timestamp._seconds) {
+                                time = new Date(notification.timestamp._seconds * 1000);
+                              }
                               // Verificar se é uma string ISO
                               else if (typeof notification.timestamp === 'string') {
                                 time = new Date(notification.timestamp);
@@ -595,6 +599,8 @@ const ReusableHeader = ({
                       <button
                         className="menu-item logout-btn"
                         onClick={() => {
+                          const socket = getSocket();
+                          if (socket) socket.disconnect();
                           localStorage.removeItem('solidar-user');
                           window.location.reload();
                         }}

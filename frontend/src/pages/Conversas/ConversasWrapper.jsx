@@ -18,15 +18,21 @@ const formatTimeAgo = (dateInput) => {
   if (!dateInput) return 'Agora';
   
   let date;
-  if (dateInput instanceof Date) {
-    date = dateInput;
-  } else if (dateInput && typeof dateInput === 'object' && dateInput.seconds) {
-    date = new Date(dateInput.seconds * 1000);
-  } else {
-    date = new Date(dateInput);
+  try {
+    if (dateInput instanceof Date) {
+      date = dateInput;
+    } else if (dateInput && typeof dateInput === 'object' && dateInput.seconds) {
+      date = new Date(dateInput.seconds * 1000);
+    } else if (dateInput && typeof dateInput === 'object' && dateInput._seconds) {
+      date = new Date(dateInput._seconds * 1000);
+    } else {
+      date = new Date(dateInput);
+    }
+    
+    if (isNaN(date.getTime())) return 'Agora'; // Fallback seguro
+  } catch (e) {
+    return 'Agora';
   }
-  
-  if (isNaN(date.getTime())) return 'Data inválida';
   
   // Debug: log do timestamp (removido para produção)
   // console.log('[Conversas] formatTimeAgo:', {

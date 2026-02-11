@@ -116,6 +116,8 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
           </button>
         </nav>
         <button className="mob-logout-btn" onClick={() => {
+        const socket = getSocket();
+        if (socket) socket.disconnect();
           SecurityUtils.clearUserSession();
           handleNavigation('/login');
         }}>
@@ -235,8 +237,10 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
                         let time;
                         if (n.timestamp && n.timestamp.seconds) {
                           time = new Date(n.timestamp.seconds * 1000);
+                        } else if (n.timestamp && n.timestamp._seconds) {
+                          time = new Date(n.timestamp._seconds * 1000);
                         } else {
-                          time = new Date(n.timestamp);
+                          time = new Date(n.timestamp || Date.now());
                         }
                         return (
                   <div key={n.id} 

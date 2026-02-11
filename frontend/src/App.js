@@ -4,6 +4,8 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { useAuth } from './contexts/AuthContext';
 import ApiService from './services/apiService';
 import { getMessaging, getToken } from 'firebase/messaging';
+import { getSocket } from './services/socketService';
+import { initializeApp, getApps } from 'firebase/app';
 
 import SecurityMiddleware from './utils/securityMiddleware';
 import './styles/globals.css';
@@ -11,6 +13,16 @@ import './styles/visibility-fix.css';
 import './pages/Chat/styles.css';
 import './pages/Chat/MobileChat.css';
 import toast, { Toaster } from 'react-hot-toast';
+
+// Configuração do Firebase (mesma do service worker)
+const firebaseConfig = {
+  apiKey: "AIzaSyCRWDyB6xS2swKULP6IunF8plpkrbFOsCM",
+  authDomain: "solidar-bairro-novo.firebaseapp.com",
+  projectId: "solidar-bairro-novo",
+  storageBucket: "solidar-bairro-novo.firebasestorage.app",
+  messagingSenderId: "440503349998",
+  appId: "1:440503349998:web:7012dc38f9ff79382079ff"
+};
 
 function App() {
   const { user, isAuthenticated } = useAuth();
@@ -21,11 +33,10 @@ function App() {
     SecurityMiddleware.initialize();
   }, []);
 
-  // Socket já é conectado no AuthContext, não conectar novamente aqui
-  // Apenas escutar notificações do socket existente
   useEffect(() => {
     if (isAuthenticated() && user) {
-      const socket = window.socketInstance; // Usar instância global do socket
+      // Usar getSocket() em vez de window.socketInstance para garantir a instância correta
+      const socket = getSocket();
       if (!socket) return;
 
       const handleNewNotification = (notification) => {
@@ -35,7 +46,20 @@ function App() {
         }
 
         // Exibir Toast Global
-        const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        let date = new Date();
+        const timestamp = notification.timestamp || notification.createdAt;
+        
+        if (timestamp) {
+          if (timestamp.seconds) {
+            date = new Date(timestamp.seconds * 1000);
+          } else if (timestamp._seconds) {
+            date = new Date(timestamp._seconds * 1000);
+          } else {
+            date = new Date(timestamp);
+          }
+        }
+
+        const timeString = !isNaN(date.getTime()) ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         toast((t) => (
           <div 
             onClick={() => {
@@ -67,7 +91,20 @@ function App() {
     const setupFCM = async () => {
       if (isAuthenticated && user?.uid) {
         try {
-          const messaging = getMessaging();
+          // Inicializar Firebase App se ainda não estiver inicializado
+          if (getApps().length === 0) {
+            initializeApp(firebaseConfig);
+          }
+
+          // Verificar se o Firebase foi inicializado antes de chamar getMessaging
+          let messaging;
+          try {
+            messaging = getMessaging();
+          } catch (e) {
+            console.warn('FCM não inicializado ou não suportado:', e.message);
+            return;
+          }
+
           const permission = await Notification.requestPermission();
           
           if (permission === 'granted') {

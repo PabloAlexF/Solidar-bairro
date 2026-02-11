@@ -306,6 +306,10 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
                             if (notification.timestamp && typeof notification.timestamp === 'object' && notification.timestamp.seconds) {
                               time = new Date(notification.timestamp.seconds * 1000);
                             }
+                            // Verificar se é um timestamp do Firestore com _seconds
+                            else if (notification.timestamp && typeof notification.timestamp === 'object' && notification.timestamp._seconds) {
+                              time = new Date(notification.timestamp._seconds * 1000);
+                            }
                             // Verificar se é uma string ISO
                             else if (typeof notification.timestamp === 'string') {
                               time = new Date(notification.timestamp);
@@ -504,6 +508,8 @@ const LandingHeader = ({ scrolled = false, showPanelButtons = false, showCadastr
                         className="menu-item logout-btn"
                         onClick={async () => {
                           try {
+                            const socket = getSocket();
+                            if (socket) socket.disconnect();
                             await logout();
                             navigate('/');
                           } catch (error) {

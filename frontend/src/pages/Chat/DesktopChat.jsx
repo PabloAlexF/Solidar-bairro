@@ -94,6 +94,8 @@ const formatTime = (date) => {
   // Se for um timestamp do Firestore
   if (date.seconds) {
     date = new Date(date.seconds * 1000);
+  } else if (date._seconds) {
+    date = new Date(date._seconds * 1000);
   }
   
   // Se não for uma instância de Date válida
@@ -863,6 +865,7 @@ const Chat = () => {
 
     // Handler para atualização de leitura (double check azul)
     const handleConversationRead = (data) => {
+      console.log('👀 Conversa visualizada pelo outro usuário:', data);
       if (data.conversationId === conversaId) {
         setMessages(prev => prev.map(msg => 
           msg.sender === 'sent' ? { ...msg, read: true } : msg

@@ -126,11 +126,16 @@ const init = (httpServer) => {
         try {
           await presenceService.userDisconnected(userId, socket.id);
           const presence = await presenceService.getUserPresence(userId);
-          io.emit('presence_update', {
-            userId,
-            isOnline: presence.isOnline,
-            lastSeen: presence.lastSeen
-          });
+          
+          // Apenas emitir se o usuário ainda estiver online (outras abas/dispositivos)
+          // Se estiver offline (sem conexões), o presenceService emitirá o evento após o timeout de tolerância
+          if (presence.isOnline) {
+            io.emit('presence_update', {
+              userId,
+              isOnline: presence.isOnline,
+              lastSeen: presence.lastSeen
+            });
+          }
         } catch (error) {
           logger.error('Erro ao marcar usuário como offline:', error);
         }

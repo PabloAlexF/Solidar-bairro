@@ -72,6 +72,20 @@ class PresenceService {
               this.onlineUsers.delete(userId);
 
               console.log(`👤 Usuário ${userId} ficou totalmente offline`);
+
+              // Emitir evento de offline globalmente via Socket.IO
+              try {
+                // Require dinâmico para evitar dependência circular
+                const { getIo } = require('./socketService');
+                const io = getIo();
+                io.emit('presence_update', {
+                  userId,
+                  isOnline: false,
+                  lastSeen: now
+                });
+              } catch (e) {
+                console.error('Erro ao emitir evento de offline:', e);
+              }
             }
           }, 5000); // 5 segundos de tolerância para reconexão
         }

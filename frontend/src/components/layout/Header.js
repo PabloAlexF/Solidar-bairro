@@ -5,13 +5,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import apiService from '../../services/apiService';
 import { getSocket } from '../../services/socketService';
-import LogoutButton from '../LogoutButton';
 import logo from '../../assets/images/marca.png';
 import '../../styles/components/Header.css';
 
 const Header = ({ showLoginButton = false }) => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const { 
     notifications, 
     addChatNotification, 
@@ -373,9 +372,17 @@ const Header = ({ showLoginButton = false }) => {
                         )}
                       </button>
                       
-                      <LogoutButton className="menu-item logout-btn">
+                      <button 
+                        className="menu-item logout-btn"
+                        onClick={async () => {
+                          const socket = getSocket();
+                          if (socket) socket.disconnect();
+                          if (logout) await logout();
+                          navigate('/login');
+                        }}
+                      >
                         🚪 Sair
-                      </LogoutButton>
+                      </button>
                     </div>
                   </div>
                 )}
