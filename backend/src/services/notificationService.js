@@ -43,19 +43,24 @@ class NotificationService {
 
       console.log('👤 [NotificationService] Dados do remetente:', { senderName, senderPhoto });
 
+      // Garantir timestamp válido
+      const validTimestamp = timestamp instanceof Date && !isNaN(timestamp.getTime()) 
+        ? timestamp 
+        : new Date();
+
       // Criar notificação para o destinatário
       const notification = await notificationModel.createNotification({
         userId: receiverId,
         type: 'chat',
         title: `Nova mensagem de ${senderName}`,
         message: message.length > 50 ? `${message.substring(0, 50)}...` : message,
-        createdAt: timestamp,
+        createdAt: validTimestamp,
         data: {
           conversationId,
           senderId,
           senderName,
           senderPhoto,
-          timestamp: timestamp.toISOString()
+          timestamp: validTimestamp.toISOString()
         }
       });
 
@@ -84,7 +89,7 @@ class NotificationService {
           conversationId, 
           senderId, 
           type: 'chat',
-          timestamp: timestamp.toISOString(),
+          timestamp: validTimestamp.toISOString(),
           ...(senderPhoto && { icon: senderPhoto })
         }).catch(() => {});
       }
