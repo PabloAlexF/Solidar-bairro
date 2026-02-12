@@ -35,17 +35,34 @@ function App() {
 
   useEffect(() => {
     if (isAuthenticated() && user) {
+      console.log('🔔 [App.js] Configurando listener de notificações para:', user.uid);
+      
       // Garantir que o socket esteja conectado globalmente
       const socket = connectSocket(user.uid || user.id);
-      if (!socket) return;
+      if (!socket) {
+        console.error('❌ [App.js] Socket não conectado!');
+        return;
+      }
+
+      console.log('✅ [App.js] Socket conectado, registrando listener...');
 
       const handleNewNotification = (notification) => {
+        console.log('🔔 [App.js] Notificação recebida:', notification);
+        
         // Verificar se o usuário já está na conversa da notificação
         const currentPath = window.location.pathname;
+        console.log('📍 [App.js] Caminho atual:', currentPath);
+        
         const conversationId = notification.conversationId || notification.data?.conversationId;
+        console.log('💬 [App.js] ConversationId da notificação:', conversationId);
         
         // Se estiver na mesma conversa, não mostrar Toast nem tocar som (já está vendo a mensagem)
-        if (conversationId && currentPath.includes(`/chat/${conversationId}`)) return;
+        if (conversationId && currentPath.includes(`/chat/${conversationId}`)) {
+          console.log('⚠️ [App.js] Usuário já está na conversa, não exibir toast');
+          return;
+        }
+
+        console.log('✅ [App.js] Exibindo toast de notificação...');
 
         // Tocar som
         if (notification.type === 'chat' && notificationSound) {
@@ -135,12 +152,16 @@ function App() {
             <button onClick={(e) => { e.stopPropagation(); toast.dismiss(t.id); }} style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '4px', alignSelf: 'flex-start' }} > <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> </button>
           </div>
         ), { duration: 6000, position: 'top-right' });
+        
+        console.log('✅ [App.js] Toast exibido com sucesso!');
       };
 
       socket.on('notification', handleNewNotification);
+      console.log('✅ [App.js] Listener registrado com sucesso!');
 
       return () => {
         socket.off('notification', handleNewNotification);
+        console.log('🗑️ [App.js] Listener removido');
       };
     }
   }, [isAuthenticated, user, notificationSound]);

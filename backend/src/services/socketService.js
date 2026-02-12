@@ -30,6 +30,10 @@ const init = (httpServer) => {
       socket.join(userId);
       socket.join(`user_${userId}`);
       logger.info(`📬 Usuário ${userId} entrou nas salas: [${userId}, user_${userId}]`);
+      
+      // Debug: Listar todas as salas do socket
+      const rooms = Array.from(socket.rooms);
+      logger.info(`📊 Salas do socket ${socket.id}: ${rooms.join(', ')}`);
 
       // Marcar usuário como online
       presenceService.userConnected(userId, socket.id)

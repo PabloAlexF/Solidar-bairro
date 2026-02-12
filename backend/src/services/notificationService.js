@@ -28,10 +28,20 @@ class NotificationService {
 
   async createChatNotification(conversationId, senderId, receiverId, message, timestamp = new Date(), isOnline = false) {
     try {
+      console.log('📨 [NotificationService] Criando notificação de chat:', {
+        conversationId,
+        senderId,
+        receiverId,
+        message: message.substring(0, 50),
+        isOnline
+      });
+      
       // Buscar dados do remetente
       const senderData = await userService.getUserData(senderId);
       const senderName = senderData?.nome || 'Usuário';
       const senderPhoto = senderData?.foto || senderData?.photoUrl;
+
+      console.log('👤 [NotificationService] Dados do remetente:', { senderName, senderPhoto });
 
       // Criar notificação para o destinatário
       const notification = await notificationModel.createNotification({
@@ -49,6 +59,8 @@ class NotificationService {
         }
       });
 
+      console.log('✅ [NotificationService] Notificação criada no banco:', notification.id);
+
       // Emitir via Socket.IO
       try {
         const { getIo } = require('./socketService');
@@ -57,10 +69,13 @@ class NotificationService {
           // Emitir para múltiplas salas
           io.to(receiverId).emit('notification', notification);
           io.to(`user_${receiverId}`).emit('notification', notification);
-          console.log(`💬 Notificação de chat emitida para ${receiverId}`);
+          console.log(`📡 [NotificationService] Notificação emitida via socket para ${receiverId}`);
+          console.log(`📡 [NotificationService] Salas: [${receiverId}, user_${receiverId}]`);
+        } else {
+          console.error('❌ [NotificationService] Socket.IO não disponível!');
         }
       } catch (error) {
-        console.error('Erro ao emitir notificação de chat via socket:', error);
+        console.error('❌ [NotificationService] Erro ao emitir notificação de chat via socket:', error);
       }
 
       // Enviar Push Notification APENAS se o usuário estiver OFFLINE
