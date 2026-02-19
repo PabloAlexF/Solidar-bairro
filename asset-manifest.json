@@ -1,12 +1,12 @@
 {
   "files": {
-    "main.css": "/static/css/main.90189816.css",
-    "main.js": "/static/js/main.5039b139.js",
+    "main.css": "/static/css/main.1cefe7b4.css",
+    "main.js": "/static/js/main.bf93dcf4.js",
     "static/media/marca.png": "/static/media/marca.015d54838c05cd9d4adf.png",
     "index.html": "/index.html"
   },
   "entrypoints": [
-    "static/css/main.90189816.css",
-    "static/js/main.5039b139.js"
+    "static/css/main.1cefe7b4.css",
+    "static/js/main.bf93dcf4.js"
   ]
 }
