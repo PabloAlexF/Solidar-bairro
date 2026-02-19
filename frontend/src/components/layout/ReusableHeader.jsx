@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { X, Bell, MessageCircle, Heart, CheckCircle2, AlertTriangle, Clock, Settings, ShieldCheck, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { getRelativeTime } from '../../utils/timeUtils';
 
 import apiService from '../../services/apiService';
 import { getSocket, connectSocket } from '../../services/socketService';
@@ -396,46 +397,7 @@ const ReusableHeader = ({
                       <>
                         <div className="notification-list-improved">
                           {notifications.slice(0, 10).map((notification) => {
-                            const timeAgo = (() => {
-                              const now = new Date();
-                              let time;
-
-                              // Verificar se é um timestamp do Firebase (objeto com seconds)
-                              if (notification.timestamp && typeof notification.timestamp === 'object' && notification.timestamp.seconds) {
-                                time = new Date(notification.timestamp.seconds * 1000);
-                              }
-                              // Verificar se é um timestamp do Firestore com _seconds
-                              else if (notification.timestamp && typeof notification.timestamp === 'object' && notification.timestamp._seconds) {
-                                time = new Date(notification.timestamp._seconds * 1000);
-                              }
-                              // Verificar se é uma string ISO
-                              else if (typeof notification.timestamp === 'string') {
-                                time = new Date(notification.timestamp);
-                              }
-                              // Verificar se é um método toDate (Firebase Timestamp)
-                              else if (notification.timestamp && notification.timestamp.toDate) {
-                                time = notification.timestamp.toDate();
-                              }
-                              // Fallback para data atual
-                              else {
-                                time = new Date();
-                              }
-
-                              if (isNaN(time.getTime())) return 'Data desconhecida';
-
-                              const diffInMinutes = Math.floor((now - time) / (1000 * 60));
-
-                              if (diffInMinutes < 1) return 'Agora mesmo';
-                              if (diffInMinutes < 60) return `${diffInMinutes}min atrás`;
-
-                              const diffInHours = Math.floor(diffInMinutes / 60);
-                              if (diffInHours < 24) return `${diffInHours}h atrás`;
-
-                              const diffInDays = Math.floor(diffInHours / 24);
-                              if (diffInDays < 7) return `${diffInDays}d atrás`;
-
-                              return time.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                            })();
+                            const timeAgo = getRelativeTime(notification.timestamp || notification.createdAt);
 
                             const getNotificationIcon = (type) => {
                               switch (type) {

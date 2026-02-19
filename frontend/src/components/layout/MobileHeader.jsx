@@ -75,7 +75,7 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
       <aside className={`mob-sidebar ${mobileMenuOpen ? "mob-open" : ""}`}>
         <div className="mob-sidebar-header">
           <div className="mob-logo">
-            <img src={logo} alt="SolidarBrasil" style={{ width: '40px', height: '40px' }} />
+            <img src={logo} alt="SolidarBrasil" />
             <span>SolidarBrasil</span>
           </div>
         </div>
@@ -132,7 +132,7 @@ const MobileHeader = ({ title = "SolidarBrasil", showBackButton = false, backPat
         </button>
         <div className="mob-header-title">
           {title === "SolidarBrasil" ? (
-            <img src={logo} alt="SolidarBrasil" style={{ height: '36px' }} />
+            <img src={logo} alt="SolidarBrasil" />
           ) : (
             <h1>{title}</h1>
           )}

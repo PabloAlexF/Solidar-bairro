@@ -37,7 +37,8 @@ import {
   Pin,
   PinOff,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Menu
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import './mobile-styles.css';
@@ -1609,7 +1610,7 @@ const Chat = () => {
           <header className="sb-chat-header-bar">
             <div className="sb-header-left-group">
               <button className="sb-mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Abrir menu lateral">
-                <MoreVertical size={24} />
+                <Menu size={24} />
               </button>
               <button className="sb-mobile-back-btn" onClick={() => navigate('/conversas')} aria-label="Voltar para conversas">
                 <ArrowLeft size={24} />

@@ -15,7 +15,6 @@ import {
   MapPin,
   Check,
   CheckCheck,
-  Paperclip,
   Send,
   MoreVertical,
   ChevronRight,
@@ -30,7 +29,6 @@ import {
   Home,
   MessageSquare,
   Calendar,
-  Shield,
   Reply,
   Smile,
   X,
@@ -38,8 +36,7 @@ import {
   Pin,
   PinOff,
   ZoomIn,
-  ZoomOut,
-  Bell
+  ZoomOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './styles.css';
@@ -112,7 +109,6 @@ const Chat = () => {
   const params = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { notifications, addChatNotification, markAsRead, markAllAsRead, clearNotifications, unreadCount } = useNotifications();
   const conversaId = params.id;
 
   // Não redirecionar automaticamente, apenas mostrar tela de erro se não houver ID
@@ -187,7 +183,6 @@ const Chat = () => {
   const typingTimeoutRef = useRef(null);
   const [showMsgSearch, setShowMsgSearch] = useState(false);
   const [msgSearchTerm, setMsgSearchTerm] = useState("");
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showContext, setShowContext] = useState(false);
   const [hasContextUpdate, setHasContextUpdate] = useState(false);
   const prevStatusRef = useRef(null);
@@ -207,11 +202,16 @@ const Chat = () => {
 
   const sortedContacts = useMemo(() => {
     return [...filteredContacts].sort((a, b) => {
+      // 1. Conversas fixadas primeiro
       const aPinned = pinnedConversations.includes(a.id);
       const bPinned = pinnedConversations.includes(b.id);
       if (aPinned && !bPinned) return -1;
       if (!aPinned && bPinned) return 1;
-      return 0;
+      
+      // 2. Ordenar por timestamp da última mensagem (mais recente primeiro)
+      const aTime = a.lastMessageTimestamp || 0;
+      const bTime = b.lastMessageTimestamp || 0;
+      return bTime - aTime;
     });
   }, [filteredContacts, pinnedConversations]);
 
@@ -547,6 +547,7 @@ const Chat = () => {
             lastMessage: conv.lastMessage?.content || 'Nova conversa',
             lastMessageTime: conv.lastMessage?.createdAt?.seconds ? 
               new Date(conv.lastMessage.createdAt.seconds * 1000).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Agora',
+            lastMessageTimestamp: conv.lastMessage?.createdAt?.seconds || Date.now() / 1000,
             unreadCount: conv.id === conversaId ? 0 : (conv.unreadCount || 0)
           };
         }));
@@ -804,7 +805,8 @@ const Chat = () => {
       setChatContacts(prev => {
         const contactExists = prev.some(c => c.id === msgConvId);
         if (contactExists) {
-          return prev.map(c => {
+          // Mover conversa para o topo e atualizar
+          const updatedContacts = prev.map(c => {
             if (c.id === msgConvId) {
               let previewText = msg.content || msg.text;
               if (msg.type === 'image') previewText = '📷 Imagem';
@@ -815,11 +817,23 @@ const Chat = () => {
                 ...c,
                 lastMessage: previewText || 'Nova mensagem',
                 lastMessageTime: 'Agora',
+                lastMessageTimestamp: Date.now() / 1000,
                 unreadCount: msgConvId === conversaId ? 0 : (msg.senderId === user?.uid ? (Number(c.unreadCount) || 0) : (Number(c.unreadCount) || 0) + 1)
               };
             }
             return c;
           });
+          
+          // Reordenar: mover conversa atualizada para o topo (exceto fixadas)
+          const updatedConv = updatedContacts.find(c => c.id === msgConvId);
+          const isPinned = pinnedConversations.includes(msgConvId);
+          
+          if (!isPinned) {
+            const otherContacts = updatedContacts.filter(c => c.id !== msgConvId);
+            return [updatedConv, ...otherContacts];
+          }
+          
+          return updatedContacts;
         } else {
           loadConversations();
           return prev;
@@ -856,13 +870,9 @@ const Chat = () => {
     // Handler para notificações de outras conversas (atualizar contador)
     const handleNotification = (data) => {
       const notifConvId = data.data?.conversationId || data.conversationId;
-      // Se for notificação de outra conversa, adiciona à lista global
+      // Se for notificação de outra conversa, apenas atualiza o contador na sidebar
       if (notifConvId && notifConvId !== conversaId) {
-        addChatNotification(
-          notifConvId,
-          data.data?.senderName || data.title || 'Usuário',
-          data.message
-        );
+        console.log('📬 Notificação de outra conversa:', notifConvId);
       }
     };
 
@@ -894,7 +904,7 @@ const Chat = () => {
       socket.off('conversation_read', handleConversationRead);
       console.log('🚪 Saindo da conversa:', conversaId);
     };
-  }, [conversaId, user?.uid, loadMessages, loadConversations, addChatNotification]);
+  }, [conversaId, user?.uid, loadMessages, loadConversations]);
 
   // Socket listeners for presence updates
   useEffect(() => {
@@ -1344,16 +1354,7 @@ const Chat = () => {
   };
 
   const handleNotificationClick = (notification) => {
-    // Marcar como lida
-    if (!notification.read) {
-      markAsRead(notification.id);
-    }
-
-    // Se for notificação de chat, navegar para a conversa
-    if (notification.type === 'chat' && notification.conversationId) {
-      navigate(`/chat/${notification.conversationId}`);
-      setShowNotifications(false);
-    }
+    // Função removida - botão de notificações foi removido
   };
 
   const handleAvatarClick = (isSender) => {
@@ -1553,83 +1554,6 @@ const Chat = () => {
             </div>
             <div className="header-right-group">
               <div className="quick-actions-desktop">
-                <div className="notification-wrapper">
-                  <button
-                    className="notification-btn"
-                    onClick={() => setShowNotifications(!showNotifications)}
-                  >
-                    <Bell size={20} />
-                    {unreadCount > 0 && (
-                      <span className="notification-badge">{unreadCount}</span>
-                    )}
-                  </button>
-
-                  {showNotifications && (
-                    <div className="notification-dropdown">
-                      <div className="notification-header">
-                        <h3>Notificações</h3>
-                        {notifications.length > 0 && (
-                          <div className="notification-actions">
-                            {unreadCount > 0 && (
-                              <button
-                                className="action-btn mark-read-btn"
-                                onClick={markAllAsRead}
-                                title="Marcar todas como lidas"
-                              >
-                                ✓
-                              </button>
-                            )}
-                            <button
-                              className="action-btn clear-btn"
-                              onClick={clearNotifications}
-                              title="Limpar todas"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <div className="notification-list">
-                        {notifications.length === 0 ? (
-                          <div className="no-notifications">
-                            Nenhuma notificação ainda
-                          </div>
-                        ) : (
-                          notifications.map((notification) => (
-                            <div
-                              key={notification.id}
-                              className={`notification-item ${notification.read ? 'read' : 'unread'} ${notification.type === 'chat' ? 'chat-notification' : ''}`}
-                              onClick={() => handleNotificationClick(notification)}
-                            >
-                              <div className="notification-content">
-                                <div className="notification-icon">
-                                  {notification.type === 'chat' ? '💬' : '🔔'}
-                                </div>
-                                <div className="notification-text">
-                                  <p className="notification-title">{notification.title}</p>
-                                  <p className="notification-message">{notification.message}</p>
-                                  <span className="notification-time">
-                                    {(() => {
-                                      const dateVal = notification.createdAt || notification.timestamp || new Date();
-                                      const dateObj = dateVal.seconds ? new Date(dateVal.seconds * 1000) : new Date(dateVal);
-                                      return dateObj.toLocaleString('pt-BR', {
-                                        day: '2-digit',
-                                        month: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      });
-                                    })()}
-                                  </span>
-                                </div>
-                              </div>
-                              {!notification.read && <div className="unread-dot"></div>}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
                 <button
                   className={`header-action-btn ${showMsgSearch ? 'active' : ''}`}
                   onClick={() => setShowMsgSearch(!showMsgSearch)}
@@ -1645,7 +1569,10 @@ const Chat = () => {
                   <AlertTriangle size={20} />
                 </button>
                 <button className="header-action-btn">
-                  <MoreVertical size={20} />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
                 </button>
               </div>
             </div>

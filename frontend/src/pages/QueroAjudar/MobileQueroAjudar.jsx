@@ -95,10 +95,15 @@ export const MobileQueroAjudar = () => {
       if (selectedLocation === 'minha_cidade' && userLocation) {
         apiFilters.city = userLocation.city;
         apiFilters.state = userLocation.state;
+        console.log('🔍 Filtrando por cidade:', userLocation.city, userLocation.state);
       } else if (selectedLocation === 'meu_estado' && userLocation) {
         apiFilters.state = userLocation.state;
-      } else if (selectedLocation === 'meu_bairro' && userLocation) {
+        console.log('🔍 Filtrando por estado:', userLocation.state);
+      } else if (selectedLocation === 'meu_bairro' && userLocation && userLocation.neighborhood) {
         apiFilters.neighborhood = userLocation.neighborhood;
+        apiFilters.city = userLocation.city;
+        apiFilters.state = userLocation.state;
+        console.log('🔍 Filtrando por bairro:', userLocation.neighborhood, userLocation.city, userLocation.state);
       }
 
       // Localização do usuário para ordenação por proximidade
@@ -116,27 +121,39 @@ export const MobileQueroAjudar = () => {
       }
 
       // Verificar se a API está disponível
+      console.log('📡 Enviando filtros para API:', apiFilters);
       const response = await ApiService.getPedidos(apiFilters);
+      console.log('📥 Resposta da API:', response.data?.length, 'pedidos encontrados');
 
       if (response.success && response.data) {
-        const transformedPedidos = response.data.map(pedido => ({
-          id: pedido.id,
-          userId: pedido.userId, // ID do usuário que criou o pedido
-          userName: pedido.usuario?.nome || 'Usuário',
-          userType: pedido.usuario?.tipo || 'Cidadão',
-          city: pedido.city || extractCityFromLocation(pedido.location),
-          state: pedido.state || extractStateFromLocation(pedido.location),
-          neighborhood: pedido.neighborhood || extractNeighborhoodFromLocation(pedido.location),
-          urgency: pedido.urgency,
-          category: pedido.category,
-          title: pedido.title || pedido.category,
-          description: pedido.description,
-          subCategories: pedido.subCategory || [],
-          items: (pedido.subCategory || []).map(sc => ({ name: sc, details: pedido.subQuestionAnswers?.[sc] || null })),
-          subQuestionAnswers: pedido.subQuestionAnswers || {},
-          isNew: isNewPedido(pedido.createdAt),
-          createdAt: pedido.createdAt
-        }));
+        const transformedPedidos = response.data.map(pedido => {
+          // Extrair bairro de forma mais robusta
+          let neighborhood = pedido.neighborhood || pedido.bairro || extractNeighborhoodFromLocation(pedido.location);
+          let city = pedido.city || pedido.cidade || extractCityFromLocation(pedido.location);
+          let state = pedido.state || pedido.estado || pedido.uf || extractStateFromLocation(pedido.location);
+          
+          // Log para debug
+          console.log('📍 Pedido:', pedido.id, '| Bairro:', neighborhood, '| Cidade:', city, '| Estado:', state);
+          
+          return {
+            id: pedido.id,
+            userId: pedido.userId,
+            userName: pedido.usuario?.nome || 'Usuário',
+            userType: pedido.usuario?.tipo || 'Cidadão',
+            city: city,
+            state: state,
+            neighborhood: neighborhood,
+            urgency: pedido.urgency,
+            category: pedido.category,
+            title: pedido.title || pedido.category,
+            description: pedido.description,
+            subCategories: pedido.subCategory || [],
+            items: (pedido.subCategory || []).map(sc => ({ name: sc, details: pedido.subQuestionAnswers?.[sc] || null })),
+            subQuestionAnswers: pedido.subQuestionAnswers || {},
+            isNew: isNewPedido(pedido.createdAt),
+            createdAt: pedido.createdAt
+          };
+        });
 
         setPedidos(transformedPedidos);
       } else {
@@ -216,7 +233,7 @@ export const MobileQueroAjudar = () => {
       if (user && user.endereco && typeof user.endereco === 'object') {
         const userCity = user.endereco.cidade || user.endereco.city || user.endereco.localidade || '';
         const userState = user.endereco.estado || user.endereco.state || user.endereco.uf || '';
-        const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || '';
+        const userNeighborhood = user.endereco.bairro || user.endereco.neighborhood || user.endereco.district || '';
         
         console.log('🔍 [QueroAjudar Mobile] Dados extraídos:', { userCity, userState, userNeighborhood });
         
@@ -224,9 +241,9 @@ export const MobileQueroAjudar = () => {
           setUserLocation({ 
             city: userCity, 
             state: userState,
-            neighborhood: userNeighborhood 
+            neighborhood: userNeighborhood || 'Centro' // Fallback para Centro se não tiver bairro
           });
-          console.log('✅ [QueroAjudar Mobile] Localização definida pelo endereço cadastrado:', { city: userCity, state: userState, neighborhood: userNeighborhood });
+          console.log('✅ [QueroAjudar Mobile] Localização definida pelo endereço cadastrado:', { city: userCity, state: userState, neighborhood: userNeighborhood || 'Centro' });
           return;
         } else {
           console.log('⚠️ [QueroAjudar Mobile] Endereço incompleto (falta cidade ou estado)');
@@ -613,6 +630,28 @@ export const MobileQueroAjudar = () => {
         <MobileHeader title="Quero Ajudar" />
         
         <div style={{ padding: '12px 16px 4px 16px' }}>
+          {/* Debug Info */}
+          {userLocation && selectedLocation !== 'brasil' && (
+            <div style={{ 
+              background: '#eff6ff', 
+              padding: '8px 12px', 
+              borderRadius: '8px', 
+              marginBottom: '12px',
+              fontSize: '0.75rem',
+              color: '#1e40af',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <MapPin size={14} />
+              <span>
+                Filtrando: {selectedLocation === 'meu_bairro' ? `Bairro ${userLocation.neighborhood}` : 
+                           selectedLocation === 'minha_cidade' ? `${userLocation.city}` : 
+                           `${userLocation.state}`}
+              </span>
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <div>
               <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1e293b', letterSpacing: '-0.5px', margin: 0 }}>
@@ -964,8 +1003,14 @@ export const MobileQueroAjudar = () => {
                         {userLocation.city !== userLocation.state && (
                           <button className={`pill-mobile ${selectedLocation === 'minha_cidade' ? 'active' : ''}`} onClick={() => setSelectedLocation('minha_cidade')}>{userLocation.city}</button>
                         )}
-                        {userLocation.neighborhood && (
-                          <button className={`pill-mobile ${selectedLocation === 'meu_bairro' ? 'active' : ''}`} onClick={() => setSelectedLocation('meu_bairro')}>
+                        {userLocation.neighborhood && userLocation.neighborhood !== 'Não informado' && (
+                          <button 
+                            className={`pill-mobile ${selectedLocation === 'meu_bairro' ? 'active' : ''}`} 
+                            onClick={() => {
+                              console.log('🏘️ Filtro de bairro selecionado:', userLocation.neighborhood);
+                              setSelectedLocation('meu_bairro');
+                            }}
+                          >
                             {userLocation.neighborhood}
                           </button>
                         )}

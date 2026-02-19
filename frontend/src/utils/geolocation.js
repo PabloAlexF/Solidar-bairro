@@ -53,7 +53,46 @@ export const getCurrentLocation = () => {
 const reverseGeocode = async (lat, lon) => {
   // Try multiple geocoding services in order of preference
   const services = [
-    // Service 1: BigDataCloud (free, no CORS issues)
+    // Service 1: Nominatim (more accurate for neighborhoods)
+    async () => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=pt-BR`,
+          {
+            headers: {
+              'User-Agent': 'SolidarBrasil/1.0'
+            }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Nominatim failed');
+        }
+
+        const data = await response.json();
+
+        if (!data || !data.address) {
+          throw new Error('Invalid Nominatim data');
+        }
+
+        console.log('🗺️ Nominatim address data:', data.address);
+
+        const neighborhood = data.address?.suburb || data.address?.neighbourhood || data.address?.quarter || data.address?.hamlet || data.address?.residential || null;
+        
+        return {
+          city: data.address?.city || data.address?.town || data.address?.village || 'São Paulo',
+          state: data.address?.state || 'SP',
+          neighborhood: neighborhood && neighborhood !== data.address?.city ? neighborhood : null,
+          country: data.address?.country || 'Brasil',
+          coordinates: { lat, lon }
+        };
+      } catch (error) {
+        console.warn('Nominatim geocoding failed:', error.message);
+        throw error;
+      }
+    },
+
+    // Service 2: BigDataCloud (fallback)
     async () => {
       try {
         const response = await fetch(
@@ -66,53 +105,20 @@ const reverseGeocode = async (lat, lon) => {
 
         const data = await response.json();
 
+        console.log('🗺️ BigDataCloud data:', data);
+        
+        const neighborhood = data.localityInfo?.administrative?.[3]?.name || data.localityInfo?.administrative?.[4]?.name || null;
+        const city = data.city || data.locality || 'São Paulo';
+        
         return {
-          city: data.city || data.locality || 'São Paulo',
+          city: city,
           state: data.principalSubdivision || 'SP',
-          neighborhood: data.localityInfo?.administrative?.[2]?.name || null,
+          neighborhood: neighborhood && neighborhood !== city ? neighborhood : null,
           country: data.countryName || 'Brasil',
           coordinates: { lat, lon }
         };
       } catch (error) {
         console.warn('BigDataCloud geocoding failed:', error.message);
-        throw error;
-      }
-    },
-
-    // Service 2: Nominatim with CORS proxy as fallback
-    async () => {
-      try {
-        const response = await fetch(
-          `https://api.allorigins.win/get?url=${encodeURIComponent(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=pt-BR`
-          )}`,
-          {
-            headers: {
-              'User-Agent': 'SolidarBrasil/1.0'
-            }
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error('Nominatim proxy failed');
-        }
-
-        const proxyData = await response.json();
-        const data = JSON.parse(proxyData.contents);
-
-        if (!data || !data.address) {
-          throw new Error('Invalid Nominatim data');
-        }
-
-        return {
-          city: data.address?.city || data.address?.town || data.address?.village || 'São Paulo',
-          state: data.address?.state || 'SP',
-          neighborhood: data.address?.suburb || data.address?.neighbourhood || data.address?.quarter || null,
-          country: data.address?.country || 'Brasil',
-          coordinates: { lat, lon }
-        };
-      } catch (error) {
-        console.warn('Nominatim proxy geocoding failed:', error.message);
         throw error;
       }
     }
