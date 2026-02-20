@@ -20,6 +20,7 @@ import AchadosEPerdidos from '../pages/AchadosEPerdidos/ResponsiveAchadosEPerdid
 import PainelSocial from '../pages/PainelSocial/PainelSocialWrapper';
 import TermosUso from '../pages/TermosUso';
 import PoliticaPrivacidade from '../pages/PoliticaPrivacidade';
+import ExcluirConta from '../pages/ExcluirConta';
 
 // Components
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -36,6 +37,7 @@ function AppRoutes() {
       <Route path="/cadastro/*" element={<Cadastro />} />
       <Route path="/termos-uso" element={<TermosUso />} />
       <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+      <Route path="/excluir-conta" element={<ExcluirConta />} />
 
       {/* Protected Routes */}
       <Route

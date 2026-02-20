@@ -653,6 +653,27 @@ const ApiService = {
     return this.request('/admin/clear-messages', {
       method: 'DELETE'
     });
+  },
+
+  // Excluir conta do usuário
+  async deleteAccount() {
+    try {
+      const response = await this.request('/auth/conta', {
+        method: 'DELETE'
+      });
+
+      // Se a exclusão for bem-sucedida, fazer logout local
+      if (response.success) {
+        localStorage.removeItem('solidar-token');
+        localStorage.removeItem('solidar-refresh-token');
+        localStorage.removeItem('solidar-user');
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Erro ao excluir conta:', error);
+      throw error;
+    }
   }
 };
 

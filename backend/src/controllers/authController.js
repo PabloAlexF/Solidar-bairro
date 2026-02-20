@@ -141,6 +141,36 @@ class AuthController {
       });
     }
   }
+
+  async deleteAccount(req, res) {
+    try {
+      const userId = req.user.id;
+      console.log('🗑️ Solicitação de exclusão de conta para usuário:', userId);
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          error: 'ID do usuário é obrigatório'
+        });
+      }
+
+      const result = await authService.deleteAccount(userId);
+      
+      if (result.success) {
+        console.log('✅ Conta excluída com sucesso:', userId);
+        res.json(result);
+      } else {
+        console.log('❌ Falha ao excluir conta:', result.error);
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error('💥 Erro ao excluir conta:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new AuthController();

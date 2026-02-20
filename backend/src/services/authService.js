@@ -266,6 +266,212 @@ class AuthService {
 
     return null;
   }
+
+  // Excluir conta do usuário
+  async deleteAccount(userId) {
+    try {
+      console.log('🗑️ Iniciando exclusão de conta para:', userId);
+
+      // 1. Buscar dados do usuário
+      const userData = await this.getUserDataById(userId);
+      if (!userData) {
+        return {
+          success: false,
+          error: 'Usuário não encontrado'
+        };
+      }
+
+      console.log('📋 Usuário encontrado:', { id: userId, tipo: userData.tipo, email: userData.email });
+
+      // 2. Deletar conversas e mensagens do usuário
+      await this.deleteUserConversations(userId);
+
+      // 3. Deletar pedidos criados pelo usuário
+      await this.deleteUserPedidos(userId);
+
+      // 4. Deletar interesses do usuário
+      await this.deleteUserInteresses(userId);
+
+      // 5. Deletar notificações do usuário
+      await this.deleteUserNotifications(userId);
+
+      // 6. Deletar dados do usuário da coleção correta
+      let collectionName;
+      if (userData.tipo === 'admin') {
+        collectionName = 'admins';
+      } else {
+        collectionName = userData.tipo + 's'; // cidadaos, comercios, ongs, familias
+      }
+
+      console.log('🗑️ Deletando documento da coleção:', collectionName);
+      await this.db.collection(collectionName).doc(userId).delete();
+
+      // 7. Tentar deletar do Firebase Auth (pode falhar se não tiver permissões)
+      try {
+        if (firebase.getAuth()) {
+          await firebase.getAuth().deleteUser(userId);
+          console.log('✅ Usuário deletado do Firebase Auth');
+        }
+      } catch (authError) {
+        console.log('⚠️ Não foi possível deletar do Firebase Auth:', authError.message);
+        // Continuar mesmo se falhar - o documento principal já foi deletado
+      }
+
+      console.log('✅ Conta excluída com sucesso');
+      return {
+        success: true,
+        message: 'Conta excluída com sucesso'
+      };
+
+    } catch (error) {
+      console.error('💥 Erro ao excluir conta:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  // Deletar conversas do usuário
+  async deleteUserConversations(userId) {
+    try {
+      console.log('🗑️ Deletando conversas do usuário:', userId);
+
+      // Buscar conversas onde o usuário é participante
+      const conversationsSnapshot = await this.db.collection('conversations')
+        .where('participants', 'array-contains', userId)
+        .get();
+
+      if (conversationsSnapshot.empty) {
+        console.log('Nenhuma conversa encontrada para este usuário');
+        return;
+      }
+
+      console.log(`Encontradas ${conversationsSnapshot.size} conversas`);
+
+      // Para cada conversa, deletar as mensagens
+      for (const convDoc of conversationsSnapshot.docs) {
+        const conversationId = convDoc.id;
+        console.log('Processando conversa:', conversationId);
+
+        // Deletar todas as mensagens da conversa
+        const messagesSnapshot = await this.db.collection('messages')
+          .where('conversationId', '==', conversationId)
+          .get();
+
+        const deletePromises = messagesSnapshot.docs.map(msgDoc => 
+          msgDoc.ref.delete()
+        );
+        await Promise.all(deletePromises);
+        console.log(`Deletadas ${messagesSnapshot.size} mensagens da conversa ${conversationId}`);
+
+        // Deletar a conversa
+        await convDoc.ref.delete();
+        console.log('Conversa', conversationId, 'deletada');
+      }
+
+      console.log('✅ Conversas deletadas com sucesso');
+    } catch (error) {
+      console.error('Erro ao deletar conversas:', error);
+    }
+  }
+
+  // Deletar pedidos do usuário
+  async deleteUserPedidos(userId) {
+    try {
+      console.log('🗑️ Deletando pedidos do usuário:', userId);
+
+      // Buscar pedidos criados pelo usuário
+      const pedidosSnapshot = await this.db.collection('pedidos')
+        .where('userId', '==', userId)
+        .get();
+
+      if (pedidosSnapshot.empty) {
+        console.log('Nenhum pedido encontrado para este usuário');
+        return;
+      }
+
+      console.log(`Encontrados ${pedidosSnapshot.size} pedidos`);
+
+      // Deletar cada pedido
+      for (const pedidoDoc of pedidosSnapshot.docs) {
+        // Deletar interesses relacionados ao pedido
+        const interessesSnapshot = await this.db.collection('interesses')
+          .where('pedidoId', '==', pedidoDoc.id)
+          .get();
+
+        const deleteInteressePromises = interessesSnapshot.docs.map(intDoc => 
+          intDoc.ref.delete()
+        );
+        await Promise.all(deleteInteressePromises);
+
+        // Deletar o pedido
+        await pedidoDoc.ref.delete();
+      }
+
+      console.log('✅ Pedidos deletados com sucesso');
+    } catch (error) {
+      console.error('Erro ao deletar pedidos:', error);
+    }
+  }
+
+  // Deletar interesses do usuário
+  async deleteUserInteresses(userId) {
+    try {
+      console.log('🗑️ Deletando interesses do usuário:', userId);
+
+      // Buscar interesses do usuário
+      const interessesSnapshot = await this.db.collection('interesses')
+        .where('userId', '==', userId)
+        .get();
+
+      if (interessesSnapshot.empty) {
+        console.log('Nenhum interesse encontrado para este usuário');
+        return;
+      }
+
+      console.log(`Encontrados ${interessesSnapshot.size} interesses`);
+
+      // Deletar cada interesse
+      const deletePromises = interessesSnapshot.docs.map(intDoc => 
+        intDoc.ref.delete()
+      );
+      await Promise.all(deletePromises);
+
+      console.log('✅ Interesses deletados com sucesso');
+    } catch (error) {
+      console.error('Erro ao deletar interesses:', error);
+    }
+  }
+
+  // Deletar notificações do usuário
+  async deleteUserNotifications(userId) {
+    try {
+      console.log('🗑️ Deletando notificações do usuário:', userId);
+
+      // Buscar notificações do usuário
+      const notificationsSnapshot = await this.db.collection('notifications')
+        .where('userId', '==', userId)
+        .get();
+
+      if (notificationsSnapshot.empty) {
+        console.log('Nenhuma notificação encontrada para este usuário');
+        return;
+      }
+
+      console.log(`Encontradas ${notificationsSnapshot.size} notificações`);
+
+      // Deletar cada notificação
+      const deletePromises = notificationsSnapshot.docs.map(notifDoc => 
+        notifDoc.ref.delete()
+      );
+      await Promise.all(deletePromises);
+
+      console.log('✅ Notificações deletadas com sucesso');
+    } catch (error) {
+      console.error('Erro ao deletar notificações:', error);
+    }
+  }
 }
 
 module.exports = new AuthService();
