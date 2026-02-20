@@ -2,11 +2,17 @@
   "short_name": "SolidarBrasil",
   "name": "SolidarBrasil - Plataforma de Solidariedade Comunitária",
   "description": "Conecte-se com sua comunidade. Ajude e seja ajudado. Plataforma de solidariedade que une pessoas, comércios, ONGs e famílias.",
+  "id": "com.solidarbrasil.solidarbairro",
   "icons": [
     {
       "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "logoo.png",
+      "sizes": "any",
+      "type": "image/png"
     },
     {
       "src": "logo192.png",
@@ -21,8 +27,8 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "https://solidarbrasil.com.br/",
-  "scope": "https://solidarbrasil.com.br/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#4CAF50",

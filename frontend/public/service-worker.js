@@ -1,12 +1,11 @@
-const CACHE_NAME = 'solidarbrasil-v1';
+const CACHE_NAME = 'solidarbrasil-v1.0.0';
 const urlsToCache = [
   '/',
   '/index.html',
   '/static/css/main.css',
   '/static/js/main.js',
-  '/manifest.json',
-  '/logo192.png',
-  '/logo512.png'
+  '/logoo.png',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
