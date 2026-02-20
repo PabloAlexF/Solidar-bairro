@@ -10,11 +10,6 @@
       "type": "image/png"
     },
     {
-      "src": "logoo.png",
-      "sizes": "any",
-      "type": "image/png"
-    },
-    {
       "src": "logo192.png",
       "type": "image/png",
       "sizes": "192x192",
@@ -33,8 +28,32 @@
   "orientation": "portrait-primary",
   "theme_color": "#4CAF50",
   "background_color": "#ffffff",
-  "categories": ["social", "lifestyle", "utilities"],
+  "categories": ["social", "lifestyle"],
   "lang": "pt-BR",
   "dir": "ltr",
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "logo512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quero Ajudar",
+      "short_name": "Ajudar",
+      "description": "Encontre oportunidades de voluntariado",
+      "url": "/quero-ajudar",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Preciso de Ajuda",
+      "short_name": "Ajuda",
+      "description": "Solicite apoio da comunidade",
+      "url": "/preciso-de-ajuda",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    }
+  ]
 }
