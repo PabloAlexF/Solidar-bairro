@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield, Lock, Eye, Database, Users, Heart } from 'lucide-react';
 import ReusableHeader from '../components/layout/ReusableHeader';
+import SimpleFooter from '../components/layout/SimpleFooter';
 
 export default function PoliticaPrivacidade() {
   return (
@@ -360,6 +361,8 @@ export default function PoliticaPrivacidade() {
           </p>
         </div>
       </div>
+      
+      <SimpleFooter />
     </div>
   );
 }

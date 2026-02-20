@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText, Shield, Users, Heart } from 'lucide-react';
 import ReusableHeader from '../components/layout/ReusableHeader';
+import SimpleFooter from '../components/layout/SimpleFooter';
 import './TermosUso.css';
 
 export default function TermosUso() {
@@ -158,6 +159,8 @@ export default function TermosUso() {
           </p>
         </div>
       </div>
+      
+      <SimpleFooter />
     </div>
   );
 }

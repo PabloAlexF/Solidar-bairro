@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import marca from '../../assets/images/marca.png';
 import './Footer.css';
@@ -46,6 +47,14 @@ const Footer = () => {
         </div>
         
         <div className="footer-bottom">
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+            <Link to="/politica-privacidade" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.target.style.color = '#10b981'} onMouseLeave={(e) => e.target.style.color = '#94a3b8'}>
+              Política de Privacidade
+            </Link>
+            <Link to="/termos-uso" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem', transition: 'color 0.2s' }} onMouseEnter={(e) => e.target.style.color = '#10b981'} onMouseLeave={(e) => e.target.style.color = '#94a3b8'}>
+              Termos de Uso
+            </Link>
+          </div>
           <p className="copyright">
             &copy; {new Date().getFullYear()} SolidarBrasil. Conectando comunidades, transformando vidas. 💚
           </p>

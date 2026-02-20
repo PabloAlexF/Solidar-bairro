@@ -349,11 +349,8 @@ function CadastroSelectionPage() {
             </p>
           </div>
           <div className="cadastro-footer-nav">
-            {['Privacidade', 'Termos', 'Suporte'].map((link) => (
-              <Link key={link} to="#" className="cadastro-footer-navlink">
-                {link}
-              </Link>
-            ))}
+            <Link to="/politica-privacidade" className="cadastro-footer-navlink">Privacidade</Link>
+            <Link to="/termos-uso" className="cadastro-footer-navlink">Termos</Link>
           </div>
         </div>
       </footer>

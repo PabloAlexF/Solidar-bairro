@@ -268,7 +268,6 @@ export default function CadastroMobile() {
           <div className="vlt-reg-footer-links">
             <Link to="/termos-uso" className="vlt-reg-footer-link">Termos de Uso</Link>
             <Link to="/politica-privacidade" className="vlt-reg-footer-link">Privacidade</Link>
-            <Link to="#" className="vlt-reg-footer-link">Ajuda</Link>
           </div>
           <div className="vlt-reg-footer-logo">
             <p className="vlt-reg-footer-copy">
